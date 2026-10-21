@@ -30,7 +30,7 @@ async function fixture(overrides = {}) {
     configureRegistryStorage: async value => { calls.push(['save', selected.sessionId, value]); configs.set(selected.sessionId, value); },
     syncRegistryStorage: async () => { calls.push(['sync', selected.sessionId]); return { verified: true, digest }; },
     listRegistrySnapshots: async () => { calls.push(['list', selected.sessionId]); return [snapshot()]; },
-    restoreRegistrySnapshot: async value => { calls.push(['restore', selected.sessionId, value]); return { restored: true, requiresUnlock: true }; },
+    restoreRegistrySnapshot: async value => { calls.push(['restore', selected.sessionId, value]); return { restored: true, requiresUnlock: true, destination: 'C:\\Restored vault' }; },
     cancelRegistryStorage: async () => { calls.push(['cancel', selected.sessionId]); return { cancelling: true }; },
     ...overrides,
   };
@@ -47,7 +47,7 @@ test('schedule validation bounds every field without accepting URLs, credentials
   assert.throws(() => registrySnapshots([{ ...snapshot(), digest: 'latest' }]));
   assert.throws(() => registrySnapshots([snapshot(), snapshot()]));
   for (const state of ['idle', 'unconfigured', 'verified', 'incomplete', 'cancelled']) assert.equal(registryBusy({ state }), false);
-  for (const state of ['discovering', 'downloading', 'preparing', 'uploading', 'restoring']) assert.equal(registryBusy({ state }), true);
+  for (const state of ['discovering', 'downloading', 'preparing', 'uploading', 'restoring', 'native-release-unverified']) assert.equal(registryBusy({ state }), true);
 });
 
 test('real component sends full saved schedule and never synchronizes on configuration save', async () => {
@@ -115,4 +115,50 @@ test('all labels translate and important state has accessible text without inter
   panel.setLanguage('bilingual'); assert.match(panel.buttons.save.textContent, /Save destination and schedule · 儲存/);
   assert.equal(panel.statusText.attributes.role, 'status'); assert.equal(panel.error.attributes.role, 'alert');
   await panel.list(); assert.equal(panel.revision.children[1].children[0].textContent, `<script>bad</script> · ${digest}`);
+});
+
+test('fresh computer can save a destination and restore its first vault without an existing source', async () => {
+  const { panel, calls, setState } = await fixture();
+  setState(vault('fresh', '')); await tick();
+  assert.equal(panel.buttons.save.disabled, false);
+  assert.equal(panel.buttons.sync.disabled, true);
+  assert.equal(panel.fields.enabled.disabled, true);
+  assert.equal(panel.copyNodes.sourceRequired.hidden, false);
+  assert.deepEqual(panel.current().draft.days, [0, 1, 2, 3, 4, 5, 6]);
+  assert.equal(panel.current().draft.times, '02:00');
+  edit(panel, 'repository', 'docker.io/owner/backup'); await panel.save();
+  assert.equal(calls[0][0], 'save'); assert.equal(calls[0][2].repository, 'owner/backup');
+  assert.equal(calls[0][2].schedule.enabled, false);
+  assert.equal(panel.current().status.source, ''); assert.equal(panel.buttons.sync.disabled, true);
+  await panel.sync(); assert.equal(calls.filter(call => call[0] === 'sync').length, 0);
+  await panel.list(); panel.revision.value = digest; panel.revision.listeners.change(); await panel.restore();
+  assert.deepEqual(calls.at(-1), ['restore', 'fresh', { digest }]);
+  assert.match(panel.statusText.textContent, /Unlock it separately/);
+  assert.equal(panel.restoredLocation.textContent, 'C:\\Restored vault');
+  assert.equal(panel.restoreResult.hidden, false);
+  assert.equal(panel.vaultState.storageDir, '');
+  assert.match(panel.copyNodes.unlockRestored.textContent, /Unlock existing drive/);
+  setState(vault('another', '')); await tick(); assert.equal(panel.restoreResult.hidden, true);
+});
+
+test('source-less scheduling is rejected locally and an unsupported transport still permits independent restore', async () => {
+  const { panel, calls, setState } = await fixture();
+  setState(vault('fresh', '')); await tick(); edit(panel, 'repository', 'owner/backup');
+  panel.current().draft.enabled = true; await panel.save();
+  assert.equal(calls.length, 0); assert.match(panel.error.textContent, /Choose or restore/);
+  assert.equal(panel.fields.enabled.disabled, false); // An existing enabled draft can always be turned off.
+  panel.fields.enabled.checked = false; panel.edit('enabled'); await panel.save();
+  setState({ ...vault(), transport: { mode: 'privateGit' } }); await tick();
+  assert.equal(panel.buttons.sync.disabled, true); assert.equal(panel.buttons.list.disabled, false);
+  await panel.list(); panel.revision.value = digest; panel.revision.listeners.change(); await panel.restore();
+  assert.deepEqual(calls.at(-1), ['restore', 'main', { digest }]);
+});
+
+test('repository normalization and native lease recovery retain bounded action admission', async () => {
+  const result = registryConfiguration({ ...registryDraft(configuration()), repository: ' docker.io/owner/vault ' });
+  assert.equal(result.repository, 'owner/vault');
+  const { panel } = await fixture();
+  panel.services.registryStorageStatus = async () => ({ sessionId: 'main', source: 'C:\\main', configured: true, configuration: configuration(), state: 'native-release-unverified' });
+  await panel.refresh(); assert.equal(panel.buttons.cancel.disabled, false); assert.equal(panel.buttons.sync.disabled, true);
+  assert.match(panel.statusText.textContent, /native-release-unverified/);
 });

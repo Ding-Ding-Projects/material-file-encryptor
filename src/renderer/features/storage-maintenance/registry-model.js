@@ -1,5 +1,5 @@
 export const REGISTRY_METHODS = ['registryStorageStatus', 'configureRegistryStorage', 'syncRegistryStorage', 'listRegistrySnapshots', 'restoreRegistrySnapshot', 'cancelRegistryStorage'];
-export const DEFAULT_SCHEDULE = Object.freeze({ enabled: false, mode: 'interval', intervalMinutes: 60, days: [1, 2, 3, 4, 5], times: ['09:00'], timeZone: 'UTC', missed: 'run-once', retryMinutes: 15, background: false });
+export const DEFAULT_SCHEDULE = Object.freeze({ enabled: false, mode: 'interval', intervalMinutes: 60, days: [0, 1, 2, 3, 4, 5, 6], times: ['02:00'], timeZone: 'UTC', missed: 'run-once', retryMinutes: 15, background: false });
 export const DIGEST = /^sha256:[a-f0-9]{64}$/;
 const REPOSITORY = /^(?:docker\.io\/)?[a-z0-9][a-z0-9_-]{1,38}\/[a-z0-9]+(?:(?:[._]|__|-+)[a-z0-9]+)*$/;
 export function registrySource(state) { return String(state?.storageDir || ''); }
@@ -22,7 +22,7 @@ export function registryConfiguration(draft) {
   const timeZone = String(draft.timeZone || '').trim();
   try { if (!timeZone || timeZone.length > 100) throw Error(); new Intl.DateTimeFormat('en', { timeZone }); } catch { invalid('timeZone'); }
   if (!['run-once', 'skip'].includes(draft.missed)) invalid('missed');
-  return { repository, schedule: { enabled: Boolean(draft.enabled), mode: draft.mode, intervalMinutes, days, times, timeZone, missed: draft.missed, retryMinutes, background: Boolean(draft.background) } };
+  return { repository: repository.replace(/^docker\.io\//, ''), schedule: { enabled: Boolean(draft.enabled), mode: draft.mode, intervalMinutes, days, times, timeZone, missed: draft.missed, retryMinutes, background: Boolean(draft.background) } };
 }
 export function registryBusy(status) {
   return Boolean(status && !['idle', 'ready', 'completed', 'verified', 'incomplete', 'cancelled', 'failed', 'error', 'unverified', 'disabled', 'unconfigured'].includes(status.state));

@@ -2,7 +2,7 @@ import { SurfaceElement, element, localized, register } from '../../../shared/su
 import { REGISTRY_COPY } from './registry-copy.js';
 import { REGISTRY_METHODS, DIGEST, registryDraft, registryConfiguration, registrySource, registryBusy, registrySnapshots } from './registry-model.js';
 
-const entry = () => ({ draft: registryDraft(), edited: false, status: null, snapshots: null, selected: '', pending: null, cancelling: false, generation: 0, message: '', error: '' });
+const entry = () => ({ draft: registryDraft(), edited: false, status: null, snapshots: null, selected: '', restoredDestination: '', pending: null, cancelling: false, generation: 0, message: '', error: '' });
 const transfer = kind => ['syncing', 'restoring'].includes(kind);
 
 export class RegistryStoragePanel extends SurfaceElement {
@@ -40,14 +40,16 @@ export class RegistryStoragePanel extends SurfaceElement {
     for (const key of ['savedRepository', 'nextDue', 'lastResult']) { const label = element('dt'), value = element('dd'); this.metrics[key] = { label, value }; metrics.append(label, value); }
     this.revision = element('select'); this.revision.addEventListener('change', () => { const current = this.current(); if (current && !current.pending) { current.selected = this.revision.value; this.render(); } });
     this.revisionMessage = element('p'); this.revisionDetails = element('dl', { class: 'metrics' }); this.rows = {};
+    this.restoredLocation = element('p', { style: 'user-select:text;white-space:pre-wrap;overflow-wrap:anywhere' });
+    this.restoreResult = element('div', {}, [copy('restoredDestination', 'h3'), this.restoredLocation, copy('unlockRestored')]);
     for (const key of ['digest', 'vaultId', 'deviceId', 'parents', 'fileCount']) { const label = element('dt'), value = element('dd'); this.rows[key] = { label, value }; this.revisionDetails.append(label, value); }
     this.shadowRoot.append(element('section', { 'aria-labelledby': 'registry-title' }, [
-      copy('title', 'h2', { id: 'registry-title' }), copy('destination', 'h3'), field('repository'), copy('destinationNote'), copy('snapshotNote'),
+      copy('title', 'h2', { id: 'registry-title' }), copy('destination', 'h3'), field('repository'), copy('destinationNote'), copy('snapshotNote'), copy('sourceRequired'),
       copy('schedule', 'h3'), field('enabled', 'checkbox'), field('mode', 'text', ['interval', 'calendar']), this.interval, this.calendar,
       element('div', { class: 'fields' }, [field('missed', 'text', ['run-once', 'skip']), field('retryMinutes', 'number')]), field('background', 'checkbox'), copy('backgroundNote'),
       element('div', { class: 'actions' }, [button('save')]), copy('operation', 'h3'), this.statusText, this.error, this.progress, metrics,
       element('div', { class: 'actions' }, ['sync', 'refresh', 'cancel'].map(button)), copy('revisions', 'h3'), copy('restoreNote'), this.revisionMessage, this.revision, this.revisionDetails,
-      element('div', { class: 'actions' }, ['list', 'restore'].map(button)),
+      element('div', { class: 'actions' }, ['list', 'restore'].map(button)), this.restoreResult,
     ]));
     this.fields.repository.autocomplete = 'off'; this.fields.repository.spellcheck = false;
     this.fields.retryMinutes.min = '5'; this.fields.retryMinutes.max = '1440'; this.fields.retryMinutes.step = '1';
@@ -58,7 +60,8 @@ export class RegistryStoragePanel extends SurfaceElement {
     this.services = services; this.getVaultState = getVaultState; this.translateText = translate; this.language = language; this.setVaultState(getVaultState()); return this;
   }
   current() { return this.sessions.get(this.key); }
-  available() { return REGISTRY_METHODS.every(name => typeof this.services[name] === 'function') && Boolean(this.vaultState?.sessionId && registrySource(this.vaultState)) && (this.vaultState?.transport?.mode || this.vaultState?.preferences?.transport || 'folder') === 'folder'; }
+  available() { return REGISTRY_METHODS.every(name => typeof this.services[name] === 'function') && Boolean(this.vaultState?.sessionId); }
+  canSyncSource() { return Boolean(registrySource(this.vaultState)) && (this.vaultState?.transport?.mode || this.vaultState?.preferences?.transport || 'folder') === 'folder'; }
   setVaultState(state) {
     if (this.disposed) return;
     const key = state?.sessionId ? JSON.stringify([state.sessionId, registrySource(state)]) : null, changed = key !== this.key;
@@ -102,7 +105,7 @@ export class RegistryStoragePanel extends SurfaceElement {
   async save() {
     const current = this.synchronize(); if (!current || this.buttons.save.disabled) return;
     let configuration;
-    try { configuration = registryConfiguration(current.draft); }
+    try { configuration = registryConfiguration(current.draft); if (configuration.schedule.enabled && !this.canSyncSource()) { const error = new Error('sourceRequired'); error.field = 'enabled'; throw error; } }
     catch (error) { current.error = error.message; this.render(); (error.field === 'days' ? this.days[0] : this.fields[error.field])?.focus(); return; }
     await this.perform('saving', async (row, id, source) => {
       await this.services.configureRegistryStorage(configuration);
@@ -132,9 +135,12 @@ export class RegistryStoragePanel extends SurfaceElement {
     const current = this.synchronize(); if (!current || this.buttons.restore.disabled) return;
     const digest = current.selected;
     await this.perform('restoring', async (row, id, source) => {
+      row.restoredDestination = ''; this.render();
       const result = await this.services.restoreRegistrySnapshot({ digest });
       if (!this.isCurrent(row)) return;
-      row.message = result?.cancelled === true ? 'cancelled' : result?.restored === true && result?.requiresUnlock === true ? 'restored' : 'unverified';
+      const restored = result?.restored === true && result?.requiresUnlock === true && typeof result?.destination === 'string' && result.destination.length > 0 && result.destination.length <= 32768;
+      row.restoredDestination = restored ? result.destination : '';
+      row.message = result?.cancelled === true ? 'cancelled' : restored ? 'restored' : 'unverified';
       await this.readStatus(row, id, source);
     });
   }
@@ -154,15 +160,18 @@ export class RegistryStoragePanel extends SurfaceElement {
       if (['enabled', 'background'].includes(key)) node.checked = Boolean(draft[key]); else node.value = String(draft[key]);
     }
     for (const values of Object.values(this.options)) for (const option of values) { option.node.replaceChildren(element('span', { slot: 'headline', text: this.t(option.value) })); }
+    this.fields.enabled.disabled ||= !this.canSyncSource() && !draft.enabled;
+    this.copyNodes.sourceRequired.hidden = this.canSyncSource();
     this.daysLegend.textContent = this.t('days');
     this.days.forEach((node, day) => { node.checked = draft.days.includes(day); node.disabled = !editable; node.setAttribute('aria-label', this.t(`day${day}`)); this.dayLabels[day].textContent = this.t(`day${day}`); });
     this.calendar.hidden = draft.mode !== 'calendar'; this.interval.hidden = draft.mode !== 'interval';
-    const actions = { save: editable, sync: editable && status?.configured, refresh: available && !pending, cancel: available && active && !current?.cancelling, list: editable && status?.configured, restore: editable && status?.configured && current?.snapshots?.some(row => row.digest === current.selected) };
+    const actions = { save: editable, sync: editable && status?.configured && this.canSyncSource(), refresh: available && !pending, cancel: available && active && !current?.cancelling, list: editable && status?.configured, restore: editable && status?.configured && current?.snapshots?.some(row => row.digest === current.selected) };
     for (const [key, node] of Object.entries(this.buttons)) { node.textContent = this.t(key); node.disabled = !actions[key]; }
     this.buttons.cancel.hidden = !active; this.progress.hidden = !active; this.progress.setAttribute('aria-label', this.t('operation'));
     const message = !available ? 'unavailable' : current?.cancelling ? 'cancelling' : current?.pending || current?.message || (!status ? 'unverified' : !status.configured ? 'unconfigured' : status.state === 'incomplete' ? 'unverified' : busy ? 'syncing' : 'idle');
     this.statusText.textContent = this.t(message) + (busy ? ` (${String(status.state).slice(0,80)})` : '');
     this.error.textContent = current?.error ? this.t(current.error) : status?.lastError ? this.t('error') : ''; this.error.hidden = !this.error.textContent;
+    this.restoredLocation.textContent = current?.restoredDestination || ''; this.restoreResult.hidden = !current?.restoredDestination;
     const last = status?.lastResult;
     const values = { savedRepository: status?.configuration?.repository, nextDue: status?.nextDue, lastResult: last?.verified === true && DIGEST.test(last.digest) ? last.digest : last ? this.t('unverified') : null };
     for (const [key, row] of Object.entries(this.metrics)) { row.label.textContent = this.t(key); row.value.textContent = values[key] == null ? this.t('unknown') : String(values[key]).slice(0,512); }
