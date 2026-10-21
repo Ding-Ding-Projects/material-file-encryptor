@@ -17,7 +17,7 @@ import {createRegistryAdapters} from './gui-acceptance-registry.mjs';
 import {createMountedFoundationFixtures,createKeyboardFoundationFixtures} from './gui-acceptance-native-files.mjs';
 import {createModernProbeEvidence} from './modern-ui-check.mjs';
 import {makeLaunch,modernNativeObservation,createPlanRecorder,helperFailure} from './local-headless-desktop-check.mjs';
-import {withCdpConnectionProof} from './cdp-connection-plan.mjs';
+import {createNativePlanExecutor} from './gui-acceptance-native-plan.mjs';
 
 const scriptRoot=fileURLToPath(new URL('./',import.meta.url));
 export async function packagedVerifierHash(root=scriptRoot){
@@ -87,18 +87,18 @@ export async function acquirePackagedBaseline({opened,inventory,buildReceiptPath
  const binding=bindingFor({inventory,sourceCommit:target.sourceCommit,executableSha256:target.hashes.executable,resourceSha256:target.hashes.asar,verifierSha256:await packagedVerifierHash(),referenceSha256:sha256(await fs.readFile(referencePath))});
  const skillRoot=path.join(os.homedir(),'.agents','skills');
  const installed=path.join(skillRoot,'run-lowlevel-headless-app','scripts','lowlevel_mcp_client.py');
- const cdp=path.join(skillRoot,'drive-electron-cdp-headless','scripts','cdp_driver.mjs');
+ const nativePlan=await createNativePlanExecutor({opened});
+ const cdp=nativePlan.helperPath;
  const lowlevel=path.join(scriptRoot,'test-renderer-browser-cli.py');
  const cli=process.env.MFE_LOWLEVEL_CLI;assert.ok(cli,'Exact installed Lowlevel CLI path required');
  const python=process.env.MFE_LOWLEVEL_PYTHON||path.join(path.dirname(cli),'python.exe');
  const env={...process.env,PYTHONUTF8:'1',MFE_LOWLEVEL_CLIENT:installed,MFE_LOWLEVEL_CLI:cli,MFE_LOWLEVEL_PYTHON:python,MFE_RENDERER_NODE_EXECUTABLE:process.execPath,MFE_RENDERER_PROCESS_BACKEND:'native-v1',MFE_RENDERER_SOURCE_COMMIT:opened.receipt.verifierSourceCommit};delete env.MFE_LOWLEVEL_URL;
- const executePlan=createPlanRecorder(opened.runRoot,plan=>runEvidenceJson(process.execPath,[cdp,'run'],plan,env));
+ const executePlan=createPlanRecorder(opened.runRoot,plan=>nativePlan.execute(plan));
  const observe=async()=>{
   assert.equal(await packagedVerifierHash(),binding.verifierSha256);
   assert.equal(sha256(await fs.readFile(build.originalBuildReceiptPath)),build.originalBuildReceiptSha256);
   const window=await runEvidenceJson(python,[lowlevel,'wait-window','--state',receipt,'--title-pattern','^Material File Encryptor','--class-pattern','^Chrome_WidgetWin_1$','--timeout','30'],undefined,env);
-  const inspectionPlan=withCdpConnectionProof({version:1,receipt,endpoint:`http://127.0.0.1:${launch.cdp.port}`,expectedUrl:launch.cdp.expectedUrl,allowEvaluate:true,timeoutMs:30000,steps:[]},'capture');
-  const bytes=await fs.readFile(receipt),current=JSON.parse(bytes),inspection=await runEvidenceJson(process.execPath,[cdp,'inspect'],inspectionPlan,env);
+  const bytes=await fs.readFile(receipt),current=JSON.parse(bytes),inspection=await nativePlan.inspect();
   const native=await runEvidenceJson(python,[path.join(scriptRoot,'native-window-observation.py')],{helper:installed,receipt},env);
   return modernNativeObservation({window,state:current,launch,sourceCommit:target.sourceCommit,launchReceiptSha256:sha256(bytes),processSha256:sha256(await fs.readFile(target.executable)),inspection,profileResolved:await fs.realpath(path.join(opened.runRoot,'profile')),native});
  };

@@ -7,12 +7,72 @@ import contextlib
 import io
 import json
 import threading
+from unittest.mock import patch
+from types import SimpleNamespace
 
 spec = importlib.util.spec_from_file_location('observer', Path(__file__).resolve().parents[1] / 'scripts/native-window-observation.py')
 observer = importlib.util.module_from_spec(spec); spec.loader.exec_module(observer)
 
 
 class NativeObservation(unittest.TestCase):
+    def test_explicit_native_backend_is_installed_before_state_read(self):
+        calls = []
+        lifecycle = SimpleNamespace(_read_state=lambda _: calls.append('legacy-read'))
+        class Backend:
+            def __init__(inner, supplied, receipt, source, helper):
+                self.assertIs(supplied, lifecycle)
+                calls.append(('binding', receipt, source, helper))
+            def install(inner):
+                lifecycle._read_state = lambda _: calls.append('native-read')
+                return inner
+        request = {'receipt': 'exact-receipt', 'helper': 'exact-helper'}
+        context = observer.DiagnosticContext()
+        observer.install_process_backend(lifecycle, request, context,
+            {'MFE_RENDERER_PROCESS_BACKEND': 'native-v1', 'MFE_RENDERER_SOURCE_COMMIT': 'a' * 40}, SimpleNamespace(RendererNativeBackend=Backend))
+        lifecycle._read_state('exact-receipt')
+        self.assertEqual(calls, [('binding', 'exact-receipt', 'a' * 40, 'exact-helper'), 'native-read'])
+        self.assertEqual(context.stage, 'native-backend')
+
+    def test_absent_backend_preserves_legacy_and_unknown_selection_fails(self):
+        read = lambda _: 'legacy'
+        lifecycle = SimpleNamespace(_read_state=read)
+        for environment in ({}, {'MFE_RENDERER_PROCESS_BACKEND': 'cim'}):
+            self.assertIsNone(observer.install_process_backend(lifecycle, {}, observer.DiagnosticContext(), environment))
+            self.assertIs(lifecycle._read_state, read)
+        with self.assertRaises(observer.ObservationFailure):
+            observer.install_process_backend(lifecycle, {}, observer.DiagnosticContext(), {'MFE_RENDERER_PROCESS_BACKEND': 'unknown'})
+
+    def test_real_native_backend_rejects_missing_and_changed_provenance(self):
+        source = Path(__file__).resolve().parents[1] / 'scripts/renderer-process-snapshot.py'
+        spec = importlib.util.spec_from_file_location('observer_native_backend_test', source)
+        snapshot = importlib.util.module_from_spec(spec); spec.loader.exec_module(snapshot)
+        class ClientFailure(RuntimeError):
+            def __init__(self, code, message): self.code = code; super().__init__(message)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            receipt = root / 'lifecycle.json'; receipt.write_text('{}')
+            helper = root / 'helper.py'; helper.write_text('# synthetic lifecycle helper')
+            identity = {'pid': 7, 'parentPid': 1, 'creationDate': '2026-10-09T00:00:00.0000001Z', 'executablePath': str(root / 'synthetic.exe')}
+            state = {'process': identity}
+            lifecycle = SimpleNamespace(ClientFailure=ClientFailure, _reject_link_components=lambda _: None,
+                _read_state=lambda _: (receipt, state), _atomic_write_json=lambda *_: None,
+                _validate_process_identity=lambda _: None)
+            context = observer.DiagnosticContext()
+            with patch.object(snapshot, 'Native', return_value=object()):
+                backend = observer.install_process_backend(lifecycle, {'receipt': str(receipt), 'helper': str(helper)}, context,
+                    {'MFE_RENDERER_PROCESS_BACKEND': 'native-v1', 'MFE_RENDERER_SOURCE_COMMIT': 'a' * 40}, snapshot)
+            with self.assertRaises(ClientFailure) as missing:
+                lifecycle._read_state(str(receipt))
+            self.assertEqual(missing.exception.code, 'PROCESS_PROOF_FAILED')
+            marker = {**backend.binding, 'rootIdentity': identity}
+            backend.marker.write_text(json.dumps(marker))
+            self.assertEqual(lifecycle._read_state(str(receipt))[1], state)
+            for changed in ({'sourceCommit': 'b' * 40}, {'lifecycleHelperSha256': '0' * 64}, {'rootIdentity': {**identity, 'pid': 8}}):
+                backend.marker.write_text(json.dumps({**marker, **changed}))
+                with self.assertRaises(ClientFailure): lifecycle._read_state(str(receipt))
+            backend.marker.write_text(json.dumps(marker))
+            self.assertEqual(lifecycle._read_state(str(receipt))[1], state)
+
     def test_failure_projection_is_fixed_and_preserves_rejection(self):
         class ClientFailure(RuntimeError):
             def __init__(self, code):

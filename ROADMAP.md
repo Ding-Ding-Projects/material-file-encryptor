@@ -862,7 +862,7 @@ Initial acquisition also writes its actual tuple directories and original PNGs u
 
 ## Encrypted registry synchronization, 2026-10-21
 
-- [ ] Finish implementation-first completion of live progress, scheduled-owner selection, owned-trigger repair, durable restore recovery and real native workflow fixtures; integrated source awaits focused and packaged verification.
+- [x] Implement live progress, scheduled-owner selection, owned-trigger repair, durable restore recovery and real native workflow fixtures; focused and live WSL checks passed. Packaged runtime acceptance remains separate below.
 - [ ] Verify immutable backup, first-vault restore, mounted snapshots and independent-device conflict preservation in the integrated candidate. Source and focused synthetic checks exist; complete runtime acceptance remains pending.
 - [ ] Verify configurable schedules and the signed-in per-user installed background task.
 - [ ] Complete isolated WSL registry acceptance before a separate production private-repository round trip.
@@ -871,3 +871,4 @@ Initial acquisition also writes its actual tuple directories and original PNGs u
 - [ ] Verify version-bound file-conflict review and main-owned localized confirmation in the packaged product; 25 focused bridge/security/session checks pass, built evidence remains pending.
 
 - [ ] Verify all 33 registry/conflict states across 48 declared tuples each; 1,584 new runtime rows remain unverified despite completed declaration and source checks.
+- [ ] Repair re-encrypted activity copies exposed by the real mounted snapshot round trip, rebuild and verify second sync plus restored bytes without weakening immutable-object checks.

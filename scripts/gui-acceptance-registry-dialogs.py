@@ -20,6 +20,13 @@ def load(name, file):
     return module
 
 
+def prepare_dialog_backend(lifecycle, transport, snapshot, reader_module, request, helper, cli):
+    context = reader_module.DiagnosticContext()
+    return reader_module.configure_receipt_reader(lifecycle, transport,
+        {'receipt': request['statePath'], 'helper': str(helper)}, context,
+        {'MFE_RENDERER_PROCESS_BACKEND': 'native-v1', 'MFE_RENDERER_SOURCE_COMMIT': request['verifierSourceCommit'], 'MFE_LOWLEVEL_CLI': str(cli)}, snapshot)
+
+
 def run(request):
     if os.name != 'nt':
         raise ValueError('Native dialog input requires Windows')
@@ -36,9 +43,10 @@ def run(request):
     lifecycle = load('dialog_lifecycle', helper)
     scripts = Path(__file__).resolve().parent
     transport = load('dialog_transport', scripts / 'direct-cli-receipt.py')
-    verify_transport = transport.install_receipt_transport(lifecycle, cli=cli)
     snapshot = load('dialog_snapshot', scripts / 'renderer-process-snapshot.py')
-    backend = snapshot.RendererNativeBackend(lifecycle, receipt, request['verifierSourceCommit'], helper).install()
+    reader_module = load('dialog_receipt_reader', scripts / 'native-window-observation.py')
+    reader = prepare_dialog_backend(lifecycle, transport, snapshot, reader_module, request, helper, cli)
+    backend, verify_transport = reader['backend'], reader['verifyTransport']
     _, state = backend.read(receipt)
     if state['runRoot'] != str(root) or state.get('cleaned') or not state.get('created'):
         raise ValueError('Inactive lifecycle')
@@ -121,7 +129,7 @@ def run(request):
         if after != observed:
             raise ValueError('Modal changed during inspection')
         digest = hashlib.sha256(image.read_bytes()).hexdigest()
-        return {'ok': True, 'closed': False, 'observation': observed, 'image': str(image), 'imageSha256': digest,
+        return {'ok': True, 'closed': False, 'receiptReaderRoute': reader['route'], 'observation': observed, 'image': str(image), 'imageSha256': digest,
                 'width': result['width'], 'height': result['height'], 'inspected': False}
 
     expected = request['review']['observation']
@@ -157,7 +165,7 @@ def run(request):
             raise ValueError('Unsupported reviewed dialog action')
         if backend.proof.api.observe(handle, observed['process']['pid'], observed['process']['parentPid']) != observed['process']:
             raise ValueError('Process identity changed during input')
-    return {'ok': True, 'applied': True, 'hwnd': hwnd, 'processId': observed['process']['pid'], 'desktop': state['desktop']}
+    return {'ok': True, 'applied': True, 'receiptReaderRoute': reader['route'], 'hwnd': hwnd, 'processId': observed['process']['pid'], 'desktop': state['desktop']}
 
 
 if __name__ == '__main__':

@@ -12,8 +12,8 @@ from pathlib import Path
 from datetime import datetime, timezone
 
 
-DIAGNOSTIC_STAGES = frozenset(('request', 'lifecycle-import', 'adapter-import', 'transport', 'state-read', 'state-validation', 'native-import', 'before-tree', 'before-owner', 'before-identity', 'before-hash', 'native-dpi-enter', 'native-geometry', 'native-dpi-query', 'native-geometry-validation', 'native-dpi-restore', 'after-tree', 'after-owner', 'after-identity', 'after-hash', 'bookend-validation', 'desktop-open', 'desktop-validation', 'desktop-attach', 'desktop-worker-wait', 'desktop-close', 'desktop-caller-check'))
-INTERNAL_CODES = frozenset(('WINDOW_OWNER_UNPROVEN', 'WINDOW_OWNER_CHANGED', 'WINDOW_OWNER_UNAVAILABLE', 'NATIVE_DPI_CONTEXT_UNAVAILABLE', 'NATIVE_GEOMETRY_UNAVAILABLE', 'NATIVE_DPI_CONTEXT_RESTORE_FAILED', 'NATIVE_STATE_UNAVAILABLE', 'MIXED_TRANSPORT', 'NATIVE_DESKTOP_OPEN_FAILED', 'NATIVE_DESKTOP_NAME_UNAVAILABLE', 'NATIVE_DESKTOP_MISMATCH', 'NATIVE_DESKTOP_ATTACH_FAILED', 'NATIVE_DESKTOP_WORKER_TIMEOUT', 'NATIVE_DESKTOP_WORKER_FAILED', 'NATIVE_DESKTOP_CLOSE_FAILED', 'NATIVE_CALLER_DESKTOP_CHANGED', 'NATIVE_DESKTOP_IDENTITY_UNAVAILABLE'))
+DIAGNOSTIC_STAGES = frozenset(('request', 'lifecycle-import', 'adapter-import', 'transport', 'native-backend', 'state-read', 'state-validation', 'native-import', 'before-tree', 'before-owner', 'before-identity', 'before-hash', 'native-dpi-enter', 'native-geometry', 'native-dpi-query', 'native-geometry-validation', 'native-dpi-restore', 'after-tree', 'after-owner', 'after-identity', 'after-hash', 'bookend-validation', 'desktop-open', 'desktop-validation', 'desktop-attach', 'desktop-worker-wait', 'desktop-close', 'desktop-caller-check'))
+INTERNAL_CODES = frozenset(('WINDOW_OWNER_UNPROVEN', 'WINDOW_OWNER_CHANGED', 'WINDOW_OWNER_UNAVAILABLE', 'NATIVE_DPI_CONTEXT_UNAVAILABLE', 'NATIVE_GEOMETRY_UNAVAILABLE', 'NATIVE_DPI_CONTEXT_RESTORE_FAILED', 'NATIVE_STATE_UNAVAILABLE', 'NATIVE_BACKEND_UNAVAILABLE', 'MIXED_TRANSPORT', 'NATIVE_DESKTOP_OPEN_FAILED', 'NATIVE_DESKTOP_NAME_UNAVAILABLE', 'NATIVE_DESKTOP_MISMATCH', 'NATIVE_DESKTOP_ATTACH_FAILED', 'NATIVE_DESKTOP_WORKER_TIMEOUT', 'NATIVE_DESKTOP_WORKER_FAILED', 'NATIVE_DESKTOP_CLOSE_FAILED', 'NATIVE_CALLER_DESKTOP_CHANGED', 'NATIVE_DESKTOP_IDENTITY_UNAVAILABLE'))
 LIFECYCLE_CODES = frozenset(('UNSAFE_PATH', 'STATE_TOO_LARGE', 'INVALID_STATE', 'UNSUPPORTED_PLATFORM', 'PROCESS_NOT_FOUND', 'PROCESS_PROOF_FAILED', 'PROCESS_IDENTITY_CHANGED', 'INVALID_PROCESS_IDENTITY', 'INVALID_PROCESS_TREE', 'TRANSPORT_ERROR', 'INVALID_RESPONSE', 'INVALID_ENDPOINT', 'NON_LOOPBACK_ENDPOINT', 'UNSAFE_ENDPOINT'))
 CLOSURE_CODES = frozenset(('DESKTOP_HANDLE_NOT_OPENED', 'DESKTOP_HANDLE_CLOSED', 'DESKTOP_HANDLE_CLOSE_FAILED', 'DESKTOP_HANDLE_CLOSE_DEFERRED'))
 DIAGNOSTIC_CODES = INTERNAL_CODES | LIFECYCLE_CODES | frozenset(('UNEXPECTED_EXCEPTION',))
@@ -249,6 +249,68 @@ def observe_on_desktop(lifecycle, state, context, desktop_api=None, native_facto
     return result
 
 
+def install_process_backend(lifecycle, request, context, environment=None, snapshot_module=None):
+    """Select explicit provenance before any receipt read, without converting it."""
+    environment = os.environ if environment is None else environment
+    selected = environment.get('MFE_RENDERER_PROCESS_BACKEND')
+    if selected in (None, '', 'cim'):
+        return None
+    context.at('native-backend')
+    if selected != 'native-v1':
+        raise ObservationFailure('NATIVE_BACKEND_UNAVAILABLE')
+    try:
+        if snapshot_module is None:
+            spec = importlib.util.spec_from_file_location('native_window_snapshot', Path(__file__).with_name('renderer-process-snapshot.py'))
+            snapshot_module = importlib.util.module_from_spec(spec)
+            sys.modules[spec.name] = snapshot_module
+            spec.loader.exec_module(snapshot_module)
+        return snapshot_module.RendererNativeBackend(
+            lifecycle, request['receipt'], environment.get('MFE_RENDERER_SOURCE_COMMIT'), request['helper']
+        ).install()
+    except Exception as error:
+        raise ObservationFailure('NATIVE_BACKEND_UNAVAILABLE') from error
+
+
+def configure_receipt_reader(lifecycle, adapter, request, context, environment=None, snapshot_module=None):
+    """Read each producer's existing shape; never rewrite a launch receipt.
+
+    test-renderer-browser-cli.py uses the installed launch schema and its default
+    endpoint field while dispatching through DirectClient. Its explicit native
+    sidecar supplies provenance; it never emitted direct-cli-receipt's alternate
+    transport fields. Native geometry needs no network endpoint substitution.
+    """
+    environment = os.environ if environment is None else environment
+    endpoint, cli = environment.get('MFE_LOWLEVEL_URL'), environment.get('MFE_LOWLEVEL_CLI')
+    if endpoint and cli:
+        raise ObservationFailure('MIXED_TRANSPORT')
+    native_endpoint_shape = False
+    if environment.get('MFE_RENDERER_PROCESS_BACKEND') == 'native-v1' and cli and not endpoint:
+        receipt_path = Path(request['receipt'])
+        lifecycle._reject_link_components(receipt_path)
+        raw = receipt_path.read_bytes()
+        if len(raw) > lifecycle.MAX_STATE_BYTES:
+            raise lifecycle.ClientFailure('STATE_TOO_LARGE', 'Lifecycle state exceeds its bound.')
+        value = json.loads(raw)
+        native_endpoint_shape = (isinstance(value, dict) and value.get('version') == lifecycle.STATE_VERSION
+            and value.get('endpoint') == lifecycle.DEFAULT_ENDPOINT
+            and 'transport' not in value and 'transportProvenance' not in value)
+    if native_endpoint_shape:
+        # This is current CLI provenance, not a claim that the old endpoint-shaped
+        # producer recorded CLI provenance in its receipt. The native sidecar and
+        # exact source/helper/root checks below remain mandatory on every read.
+        binding = adapter.direct_provenance(cli)
+        def verify_transport():
+            if adapter.direct_provenance(cli) != binding:
+                raise ValueError('Direct transport changed during native observation')
+            return binding
+        route = 'native-v1-endpoint-shaped'
+    else:
+        verify_transport = adapter.install_receipt_transport(lifecycle, endpoint=endpoint, cli=cli if not endpoint else None) if endpoint or cli else lambda: None
+        route = 'existing-receipt-transport'
+    backend = install_process_backend(lifecycle, request, context, environment, snapshot_module)
+    return {'backend': backend, 'verifyTransport': verify_transport, 'route': route}
+
+
 def main(context=None):
     context = context or DiagnosticContext()
     context.at('request')
@@ -261,19 +323,17 @@ def main(context=None):
     adapter_spec = importlib.util.spec_from_file_location('direct_receipt', Path(__file__).with_name('direct-cli-receipt.py'))
     adapter = importlib.util.module_from_spec(adapter_spec); adapter_spec.loader.exec_module(adapter)
     context.at('transport')
-    endpoint = os.environ.get('MFE_LOWLEVEL_URL')
-    cli = os.environ.get('MFE_LOWLEVEL_CLI')
-    if endpoint and cli:
-        raise ObservationFailure('MIXED_TRANSPORT')
-    if endpoint or cli:
-        adapter.install_receipt_transport(module, endpoint=endpoint, cli=cli if not endpoint else None)
+    reader = configure_receipt_reader(module, adapter, request, context)
     context.at('state-read')
     _, state = module._read_state(request['receipt'])
     context.at('state-validation')
     if state.get('cleaned') or not state.get('created') or not state.get('hwnd'):
         raise ObservationFailure('NATIVE_STATE_UNAVAILABLE')
     context.at('native-import')
-    return observe_on_desktop(module, state, context)
+    result = observe_on_desktop(module, state, context)
+    reader['verifyTransport']()
+    result['receiptReaderRoute'] = reader['route']
+    return result
 
 
 def run(operation=main):

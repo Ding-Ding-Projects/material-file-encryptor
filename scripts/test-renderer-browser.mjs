@@ -267,6 +267,29 @@ export async function openRendererBrowser(expectedUrl,{evidenceRoot,runtime={},p
   const page=browser.contexts()[0].pages()[0];
   if(!page||browser.contexts()[0].pages().length!==1)throw new Error('Renderer fixture page inventory changed.');
   if(packagedTarget)await packagedTarget.revalidate();
-  return {page,close,runRoot,statePath:state,windowObservation,connectionOwned,registryTestEndpoint,backend:env.MFE_RENDERER_PROCESS_BACKEND};
+  // Keep the original connected socket and its client ancestry binding. A plan
+  // producer may request fresh native proof, never a timestamp-converted receipt
+  // or a second target selected from an ambiguous browser inventory.
+  const nativeConnection=Object.freeze({
+   route:'native-v1-connected-cdp',targetId:targets[0].id,expectedUrl,
+   async prove(){
+    if(closed||!connectionOwned)throw new Error('Owned renderer connection is closed.');
+    return verifyConnectedRenderer(browser,{expectedUrl,targetId:targets[0].id},input=>proveStableRendererTree(()=>lifecycleCommand([adapter,'prove-cdp',state],{...input,clientBinding})));
+   },
+   async createPageSession({signal}={}){
+    signal?.throwIfAborted();
+    await this.prove();
+    signal?.throwIfAborted();
+    if(page.isClosed()||page.url()!==expectedUrl)throw new Error('Owned renderer page changed.');
+    return browser.contexts()[0].newCDPSession(page);
+   },
+   observeInterruptions(callback){
+    if(typeof callback!=='function')throw new TypeError('Interruption observer required.');
+    const disconnected=()=>callback('WEBSOCKET_CLOSED'),pageClosed=()=>callback('TARGET_CLOSED'),crashed=()=>callback('TARGET_CRASHED');
+    browser.on('disconnected',disconnected);page.on('close',pageClosed);page.on('crash',crashed);
+    return()=>{browser.off('disconnected',disconnected);page.off('close',pageClosed);page.off('crash',crashed);};
+   },
+  });
+  return {page,close,runRoot,statePath:state,windowObservation,connectionOwned,registryTestEndpoint,backend:env.MFE_RENDERER_PROCESS_BACKEND,nativeConnection};
  } catch(error){try {await close();}catch(closureError){throw new AggregateError([error,closureError],'Renderer fixture failed and closure also failed.');}throw error;}
 }

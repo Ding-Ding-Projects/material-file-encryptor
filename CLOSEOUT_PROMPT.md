@@ -1,23 +1,41 @@
 # Storage completion continuation
 
-The implementation-first pass continues from `3faa457f5c5ba6fcafaab3392c31ec863f4d385b`. That baseline passed 59 focused/local integration checks and the root build. These results do not verify the new source changes.
+## Objective and preserved source
 
-Implemented in this checkpoint: serialized registry state and scheduling; startup registration reconciliation; owned enabled-trigger validation; retry occurrence retention; safe selection of the active background vault; retained partial-restore destinations; explicit deferred replay for locked storage; bounded loopback proxy conditions; independent native review fixtures and observation; and an isolated packaged registry endpoint argument.
+Finish encrypted registry backup, synchronization, schedules, restore and multi-device conflict workflows. The implementation-first pass is complete. Keep verification and delivery separate from source completion.
 
-The interface lane is incorporated: visible progress, active-owner selection, real fixture composition and owned native dialog interaction are implemented. The implementation-first pass is complete and focused verification has started. The latest plan is preserved in the private planning archive; no private plan text is included here.
+The packaged candidate is `ea52b0efcaebc1ed3256d239e6174736adaae11d`. Its exact root `build.bat /s` succeeded with a clean, unchanged source tree. `out/evidence/storage-build-ea52b0ef.json` binds executable, archive, native host and test assembly hashes. Later verifier changes do not change that package's source identity.
 
-Next: incorporate the interface lane's reviewed file deltas, inspect the combined source, preserve it, and then build with the exact root entrypoint. Verify focused behavior, real encrypted WSL round trips, packaged controls, mounted snapshots, cancellation, installed scheduling and safe lifecycle separately. Keep all declared runtime acceptance rows pending until real evidence exists.
+Task history is preserved in the existing private recovery repository. Public `main` remains at the separate publication repair `06345cbe29f3df8a2740670dbf00023d54ec4cd5`. Do not push original task history publicly. Incorporate only reviewed current deltas into the clean delivery lineage after the publication boundary is resolved.
 
-The exact private production registry destination is still required before a synthetic production round trip. Do not guess a namespace or use real user content. The private Actions runner request remains canceled. Existing user installations and active work must be preserved.
+## Implemented behavior
 
-Public delivery has an earlier automatic approval rejection recorded as `blocked by policy`; do not evade that rejection. Complete the supported publication checks and any required external resolution before claiming public integration. Original task ancestry remains in its existing private recovery repository; incorporate only reviewed current deltas into the clean delivery lineage.
+Registry operations and schedule state are serialized. Startup reconciles the owned background task, verifies its enabled trigger and retains the original retry occurrence through a repeated daylight-saving hour. The interface shows progress and selects the vault owning background work. Partial restore destinations survive restart, and locked-storage replay is reported as deferred. Independent encrypted-device conflicts retain competing values and expose version-bound review choices.
 
-Focused verification on the new source passed 40 cases across two runs; one live-registry case was skipped in the first run. Python dialog source parsing also passed. The current combined native build, actual dialogs, mounted behavior and installed scheduling remain unverified. No release, production upload, complete GUI matrix, installed schedule execution or overall completion is claimed. Retain unfinished task branches, worktrees and ignored evidence.
+The verification provider uses real encrypted native fixtures, actual packaged controls, reviewed native dialogs and a bounded loopback registry proxy. Four transient states remain explicitly unavailable: `registry-unavailable`, `registry-cancelling`, `conflicts-loading` and `conflicts-error`. The inventory has 122 states and 5,856 declared rows, including 33 registry/conflict states and 1,584 new rows. Declaration is not runtime acceptance.
 
-Latest correction: registry progress now uses catalogue fileCount. All 22 live WSL/service cases passed after three reproducible pre-repair failures, with zero skips. Eleven native conflict cases and six native fixture scenarios passed separately. The source-bound 9895c0b5 build exited zero; the corrected source awaits a new package and actual GUI acceptance.
+## Verification and current work
 
-Packaged acquisition update: ea52b0ef root build passed. Exact lifecycle recovery closed the first two failed startup attempts; the third launched/closed successfully but found missing registry navigation routes before any storage action. The verifier-only mapping is corrected with a failing-then-passing regression and nine passing checks. Next acquisition may use the unchanged ea52b0ef package with the separately recorded current verifier source; never relabel the package source.
+The package source passed 22 live WSL/service checks with zero skips. Earlier source-bound native verification passed 11 conflict cases and six fixture scenarios. These overlap other focused runs and must not be added into one inflated count.
 
-Latest verifier repair: actual packaged fixture unlock/configuration succeeded, then poll-envelope validation and transient session-busy restoration needed correction. Ten focused checks pass. All prior run resources are absent. Keep the ea52b0ef package identity separate from the next verifier commit. No packaged sync, restore or screenshot acceptance is claimed yet.
+Packaged runtime opened and unlocked a real synthetic fixture and saved its registry destination. GUI sync, restore, conflict actions and screenshot acceptance remain pending. Earlier failed acquisitions and exact owned lifecycle recovery evidence remain retained.
 
-Verifier diagnostics now preserve bounded failing helper payloads and exit codes in private receipts. Seven producer checks pass. The next exact GUI attempt must establish the specific acquisition setup failure before repair; do not retry blindly or claim completed sync. All prior owned GUI resources are absent.
+The native verifier now uses the existing connected CDP socket and exact native process/client proof. Its observer and dialog reader support the actual endpoint-shaped native-v1 launch receipt without rewriting it. Native sidecar source/helper/root checks remain mandatory. Current CLI provenance is verified separately, never retroactively claimed as launch provenance. Independent review approved the implementation hashes. Eleven observer checks, four actual installed-reader checks and 37 focused Node checks pass. Three stale inventory assertions were corrected with independent explicit lists and unchanged negative omission checks.
+
+Two older native snapshot tests remain unverified: one assumes a descendant listener must have the launcher PID; the other lacks a child readiness handshake. Do not weaken ancestry checks to satisfy those assumptions.
+
+## Newly reproduced mounted-storage failure
+
+A real temporary mounted vault successfully published and verified its first backup while an ordinary external process made 287 mounted-file writes with zero write errors. The second synchronization rejected existing activity objects with different ciphertext. Comparison found 49 differing activity objects and no part, transaction or header differences. Source inspection found `SynchronizeActivity()` re-encrypting absent copies, while snapshot staging prefers cached activity bytes. Thus equal authenticated activity values can have incompatible ciphertext identities.
+
+The writer and native process exited, and the owned drive detached. No user vault or existing installation was used. Retain the original failed-run evidence. Next: preserve the reviewed verifier, repair activity ciphertext preservation and snapshot selection with negative regressions, independently review, build a new candidate through the exact root entrypoint, then rerun mounted synchronization and restored-byte verification before GUI acceptance.
+
+## Remaining acceptance and boundaries
+
+Continue packaged workflows, restored-byte comparisons, conflict choices, cancellation, localization/layout evidence and safe lifecycle verification. Keep package and verifier source identities separate. Retain incomplete rows, original receipts, profiles and task branches.
+
+The exact private production registry `namespace/repository` is still required before a synthetic production round trip. Do not guess a destination or upload real user content. The private self-hosted Actions runner request remains canceled. Preserve existing installations and active work. Read-only inspection found no matching installed registry scheduled task; installed schedule execution remains unverified.
+
+An earlier automatic approval review rejected public-delivery branch preparation with the stated reason `blocked by policy`. That action did not execute. Do not retry through another helper or weaken publication checks. Public integration, release, documentation deployment and full delivery remain incomplete.
+
+Status Hub enrollment and Projects authorization remain unavailable. Public issue 1 is the existing handoff route. No complete GUI matrix, production round trip, accepted release, installed update or overall completion is claimed.
