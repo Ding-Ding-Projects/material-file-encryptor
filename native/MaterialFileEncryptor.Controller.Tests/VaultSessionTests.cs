@@ -112,6 +112,26 @@ static partial class Regression
                 catch (TargetInvocationException error) when (error.InnerException is ArgumentException) { }
             }
             await Refused("beginSnapshot",new {sessionId=second,storageDir=scheduledSource},"Open session accepted another source");
+            var snapshotEngine=(MaterialFileEncryptor.Core.VaultEngine)ControllerType.GetField("vault",BindingFlags.Instance|BindingFlags.NonPublic)!.GetValue(Controller(second))!;
+            var snapshotPoint=typeof(MaterialFileEncryptor.Core.VaultEngine).GetProperty("EncryptedSnapshotTestPoint",BindingFlags.Instance|BindingFlags.NonPublic)!;
+            using(var snapshotStarted=new ManualResetEventSlim())
+            using(var snapshotContinue=new ManualResetEventSlim())
+            {
+                snapshotPoint.SetValue(snapshotEngine,(Action)(()=>{snapshotStarted.Set();if(!snapshotContinue.Wait(TimeSpan.FromSeconds(10)))throw new TimeoutException("Snapshot fixture did not resume");}));
+                Task<object?> preparing=Send("beginSnapshot",new {sessionId=second});
+                try
+                {
+                    Assert(await Task.Run(()=>snapshotStarted.Wait(TimeSpan.FromSeconds(10))),"Snapshot preparation never reached the freeze point");
+                    var cancelled=JsonSerializer.SerializeToElement(await Send("cancelSnapshot",new {sessionId=second}));
+                    Assert(cancelled.GetProperty("cancellationRequested").GetBoolean(),"Snapshot cancellation was not admitted while preparation was busy");
+                    Assert(!preparing.IsCompleted,"Cancellation returned before the held preparation boundary but completed its task");
+                    await Refused("releaseSnapshot",new {sessionId=second,leaseId="pending"},"Preparing snapshot allowed early release");
+                    await Refused("unlock",Open(third,"second","O:"),"Cancellation prematurely released source ownership");
+                }
+                finally{snapshotContinue.Set();snapshotPoint.SetValue(snapshotEngine,null);}
+                try{await preparing;throw new Exception("Cancelled snapshot preparation succeeded");}catch(OperationCanceledException){}
+            }
+            Assert(!JsonSerializer.SerializeToElement(await Send("cancelSnapshot",new {sessionId=second})).GetProperty("cancellationRequested").GetBoolean(),"Settled preparation retained its cancellation source");
             var openLease=JsonSerializer.SerializeToElement(await Send("beginSnapshot",new {sessionId=second,storageDir=Path.Combine(root,"second","source")}));
             Assert(!openLease.GetProperty("storageOnly").GetBoolean() && openLease.GetProperty("sourceMode").GetString()=="unlocked-staged","Unlocked snapshot did not stage ciphertext");
             string stagedRoot=openLease.GetProperty("storageDir").GetString()!;
