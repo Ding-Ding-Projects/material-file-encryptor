@@ -1681,3 +1681,8 @@ No tests or builds have run on this new implementation pass yet. Native dialog d
 ### Combined interface checkpoint
 
 The interface and real provider/dialog source are incorporated, preserving earlier first-vault restore admission. Forty focused cases passed across two runs; one live-registry case was skipped because that invocation did not enable its endpoint. Python dialog source parsed. The current native build and actual packaged/modal/mounted workflows are still pending. Four provider states explicitly stop as unavailable for the present reproducible route: registry-unavailable, registry-cancelling, conflicts-loading and conflicts-error. No absent row is accepted as runtime evidence.
+
+
+### Live registry correction
+
+The live WSL composition exposed a progress counter that read a full file array from catalogue summaries. It now uses the declared fileCount. The initial run had three incomplete synchronization cases; after repair all 22 cases passed with zero skips, including two real encrypted-core convergence cases and fresh-folder restore. Eleven native conflict cases and six native fixture preparation/readback scenarios passed separately. The 9895c0b5 root build exited zero with unchanged clean source; the JavaScript correction requires a new source-bound package before GUI acceptance.

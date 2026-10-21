@@ -179,7 +179,7 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
       return exclusive(id, async (current, row, signal) => {
         const client = storage(row); row.state = 'discovering'; let downloaded = 0;
         const revisions = await client.list(signal);
-        row.progress = { phase: 'downloading', completedFiles: 0, completedBytes: 0, totalFiles: revisions.reduce((n, revision) => n + revision.snapshot.files.length, 0) };
+        row.progress = { phase: 'downloading', completedFiles: 0, completedBytes: 0, totalFiles: revisions.reduce((n, revision) => n + revision.snapshot.fileCount, 0) };
         // Native admission proves this session owns the selected root before any source write.
         const admission = await acquire(id, current.storageDir);
         try {
