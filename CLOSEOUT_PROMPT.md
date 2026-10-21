@@ -33,3 +33,11 @@ Privacy release v1.840.1 has completed packaging/promotion. Its normal-release f
 The existing wiki publication test expects an older continuation title than its unchanged baseline snapshot; keep this explicitly unresolved until the required current wiki update is integrated. Three initial GUI inventory count failures were corrected for the newly added states and the focused inventory suite now passes.
 
 The selected GUI worker encountered model capacity after its preparation source was successfully committed; no different model was substituted. Resume that same selected route for actual built verification when available, preserving its committed adapters and truthful capability limits.
+
+## Explicit preservation closeout
+
+The user requested preservation and scoped cleanup before further implementation. Fresh account reading at that request was18% remaining, not an automatic usage-threshold claim. Combined source is committed at2bda0c58; no new root build, installer, native mount or GUI run was launched after the request. The selected GUI lane has only prepared adapters: concrete production registry fixture providers remain unwritten.
+
+The existing dedicated public historical gallery was verified at https://ding-ding-projects.github.io/material-file-encryptor-captures/:76 unique PNGs delivered, every reviewed hash matched, and no current-task runtime image was added. Preserve all private generated announcement variants separately; they are excluded from the public gallery. The source now links the historical gallery, but public README readback requires separate main integration.
+
+Retain every unfinished storage/native/interface branch and worktree. Cleanup may remove only individually owned, archived, remotely preserved and default-branch-ancestor-proven redundant items. The disposable WSL registry/data remain retained for resumption; no private Actions runner is registered.

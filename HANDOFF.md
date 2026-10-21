@@ -1664,3 +1664,5 @@ Complete registry articles are now admitted to the documentation catalogue with 
 Publication exception transport now supports a reviewed bounded external gzip/base64 envelope while retaining complete exact per-revision exceptions. The trusted scanner module copy was byte-verified and its actual bare-repository consumer passed compressed positive/negative checks. Protected input and trusted pin rollout still require the new candidate before its public transmission.
 
 Privacy-only release v1.840.1 is normal and bound to main06345cbe. Downloaded Setup, full package and RELEASES bytes/hash match provenance. The existing installation is running1.823.1; no update was applied or forced. Product runtime acceptance remains separate.
+
+User-requested preservation closeout began at a verified18% account allowance. Combined source2bda0c58 is not built or accepted. Existing historical gallery delivery verified76/76 exact image hashes; current storage/conflict captures remain absent. Source gallery backlink is added, public readback pending. Retain unfinished source and the WSL fixture.
