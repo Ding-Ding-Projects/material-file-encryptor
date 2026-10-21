@@ -5,4 +5,5 @@ if [ -z "${PRIVATE_INSTRUCTIONS_SOURCE+x}" ]; then
   configured=$(git config --local --get privateInstructions.source || :)
   if [ -n "$configured" ]; then export PRIVATE_INSTRUCTIONS_SOURCE="$configured"; fi
 fi
-exec node "$root/scripts/check-vocabulary.mjs"
+node "$root/scripts/check-vocabulary.mjs" || exit $?
+exec node "$root/scripts/check-publication-local.mjs" outgoing "$@"

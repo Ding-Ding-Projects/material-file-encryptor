@@ -14,6 +14,16 @@
 
 ## Hook 同建置整合
 
-已納入版本控制嘅 `.githooks/pre-push` 呼叫同一個檢查器，並傳回其結束狀態。啟用 hooks 目錄仍然係儲存庫擁有人嘅明確操作，唔好覆寫現有 hook 設定。Hook 需要 PATH 入面有 Node.js，唔會安裝工具。根建置入口喺工具啟動之後、輸出暫存之前呼叫檢查器。本機 hook 同私人來源設定唔屬於分發來源內容。
+已納入版本控制嘅 `.githooks/pre-commit` 同 `.githooks/pre-push` 先呼叫同一個時效檢查器，再透過 `scripts/check-publication-local.mjs` 呼叫已安裝嘅私人掃描器，檢查完整暫存索引或者即將推送嘅版本歷史。缺少輸入、掃描不可用、污染或者已審閱例外過期，都會阻止操作。啟用 hooks 目錄仍然係儲存庫擁有人嘅明確操作，唔好覆寫現有 hook 設定。Hooks 需要 PATH 入面有 Node.js，唔會安裝工具。根建置入口喺工具啟動之後、輸出暫存之前呼叫時效檢查器。本機 hook 同私人來源設定唔屬於分發來源內容。
 
 執行 `node --test test/check-vocabulary.test.js`，會用中性合成測試資料覆蓋缺席、有效鎖、過期同格式錯誤鎖、換行、範圍擷取、外部路徑限制，同唔披露內容嘅輸出。測試資料唔包含正式私人內容。
+
+## 發佈掃描同交付界線
+
+`.github/workflows/publication-language.yml` 提供 `publication-language` 工作，處理 pull-request target 事件，亦係 Windows 發行流程嘅可重用前置工作。掃描器只取自已審閱嘅固定 `PUBLICATION_SCAN_POLICY_SHA` 版本。候選版本同事件基準只會作為物件抓取到另一個 bare 儲存庫，唔會簽出或者執行候選 actions、套件指令同應用程式。
+
+擁有人喺受保護嘅儲存庫秘密儲存區提供 `PUBLICATION_LANGUAGE_DATA` 同 `PUBLICATION_LANGUAGE_EXCEPTIONS`。只有掃描步驟接收兩項輸入。規則透過標準輸入傳送，已審閱例外寫入候選儲存位置以外、權限為 0600 嘅暫存檔，步驟結束就刪除。掃描子程序唔繼承受保護輸入嘅環境值；公開輸出只包含結果同類別數量，唔包含配對文字、來源片段或者受保護內容。
+
+現有分支推送同 pull request 會掃描相對事件基準嘅版本歷史；新分支基準未知就阻止操作。明確手動執行只檢查目前樹，唔代表已證明待推送歷史安全。本機 hooks 喺傳送之前執行，遠端檢查唔能夠撤回已完成嘅推送。分支保護同 hook 啟用狀態要分開讀回驗證。
+
+Windows 流程只建置、封裝同發佈，唔執行測試或者 lint。私隱掃描唔等於產品執行時驗證。建置來源紀錄明確寫入 `testsRunInCI: false` 同空白 `ciTestGates`。來源接線本身唔代表秘密輸入、固定版本設定、必要保護或者遠端執行已成功；呢啲部署檢查仍待擁有人審閱同讀回驗證。

@@ -1,0 +1,105 @@
+name: Publication language scan
+on:
+  workflow_call:
+    inputs:
+      event_name:
+        required: true
+        type: string
+      candidate_sha:
+        required: true
+        type: string
+      base_sha:
+        required: false
+        type: string
+      manual_scope:
+        required: false
+        type: string
+        default: current-tree-only
+    secrets:
+      PUBLICATION_LANGUAGE_DATA:
+        required: true
+      PUBLICATION_LANGUAGE_EXCEPTIONS:
+        required: true
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+    inputs:
+      scope:
+        description: Current-tree scan only; does not establish outgoing history safety.
+        type: choice
+        required: true
+        default: current-tree-only
+        options: [current-tree-only]
+permissions:
+  contents: read
+jobs:
+  publication-language:
+    name: publication-language
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      NODE_OPTIONS: ''
+      NODE_PATH: ''
+      CANDIDATE_SHA: ${{ inputs.candidate_sha || github.event.pull_request.head.sha || github.sha }}
+      BASE_SHA: ${{ inputs.base_sha || github.event.pull_request.base.sha || github.event.before }}
+      EVENT_NAME: ${{ inputs.event_name || github.event_name }}
+      MANUAL_SCOPE: ${{ inputs.manual_scope || inputs.scope }}
+    steps:
+      - name: Validate trusted policy pin and target
+        shell: bash
+        env:
+          POLICY_SHA: ${{ vars.PUBLICATION_SCAN_POLICY_SHA }}
+        run: |
+          set -euo pipefail
+          [[ "$POLICY_SHA" =~ ^[a-f0-9]{40}$ ]] || { echo 'Trusted policy pin is unavailable.'; exit 2; }
+          [[ "$CANDIDATE_SHA" =~ ^[a-f0-9]{40}$ ]] || { echo 'Candidate identity is unavailable.'; exit 2; }
+          if [[ "$EVENT_NAME" == workflow_dispatch ]]; then
+            [[ "$MANUAL_SCOPE" == current-tree-only ]] || { echo 'Explicit manual scope is unavailable.'; exit 2; }
+          elif [[ "$EVENT_NAME" == push || "$EVENT_NAME" == pull_request_target ]]; then
+            [[ "$BASE_SHA" =~ ^[a-f0-9]{40}$ && "$BASE_SHA" != 0000000000000000000000000000000000000000 ]] || { echo 'Event base publication is unknown.'; exit 2; }
+          else
+            echo 'Unsupported event.'; exit 2
+          fi
+      - name: Read pinned trusted scanner
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ vars.PUBLICATION_SCAN_POLICY_SHA }}
+          path: trusted-policy
+          persist-credentials: false
+          submodules: false
+          lfs: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.19.0'
+      - name: Fetch candidate objects without checking out source
+        shell: bash
+        env:
+          SOURCE_REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          [[ "$SOURCE_REPOSITORY" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]] || exit 2
+          git init --bare "$GITHUB_WORKSPACE/candidate.git"
+          revisions=("$CANDIDATE_SHA")
+          if [[ "$EVENT_NAME" != workflow_dispatch ]]; then revisions+=("$BASE_SHA"); fi
+          git -c core.hooksPath=/dev/null -C "$GITHUB_WORKSPACE/candidate.git" fetch --no-tags --no-recurse-submodules "https://github.com/$SOURCE_REPOSITORY.git" "${revisions[@]}"
+      - name: Scan with pinned code and protected runtime policy
+        shell: bash
+        env:
+          PUBLICATION_DICTIONARY: ${{ secrets.PUBLICATION_LANGUAGE_DATA }}
+          PUBLICATION_EXCEPTIONS: ${{ secrets.PUBLICATION_LANGUAGE_EXCEPTIONS }}
+        run: |
+          set -euo pipefail
+          set +x
+          scratch=$(mktemp -d "$RUNNER_TEMP/publication-policy.XXXXXX")
+          trap 'rm -f "$scratch/exceptions.json"; rmdir "$scratch"' EXIT
+          node -e 'const fs=require("node:fs"); if(!process.env.PUBLICATION_EXCEPTIONS || !process.env.PUBLICATION_DICTIONARY) process.exit(2); fs.writeFileSync(process.argv[1], process.env.PUBLICATION_EXCEPTIONS, {mode:0o600});' "$scratch/exceptions.json"
+          args=(--root "$GITHUB_WORKSPACE/candidate.git" --tip "$CANDIDATE_SHA" --exceptions-file "$scratch/exceptions.json")
+          if [[ "$EVENT_NAME" == workflow_dispatch && "$MANUAL_SCOPE" == current-tree-only ]]; then
+            args+=(--mode current-tree-only)
+          else
+            args+=(--mode history --base "$BASE_SHA")
+          fi
+          node -e 'process.stdout.write(process.env.PUBLICATION_DICTIONARY || "")' |
+            env -u PUBLICATION_DICTIONARY -u PUBLICATION_EXCEPTIONS -u NODE_OPTIONS -u NODE_PATH -u GIT_DIR -u GIT_WORK_TREE -u GIT_COMMON_DIR -u GIT_INDEX_FILE -u GIT_OBJECT_DIRECTORY -u GIT_ALTERNATE_OBJECT_DIRECTORIES -u GIT_CONFIG -u GIT_CONFIG_COUNT -u GIT_CONFIG_PARAMETERS \
+              node "$GITHUB_WORKSPACE/trusted-policy/scripts/run-publication-language-ci.mjs" "${args[@]}" |
+            env -u PUBLICATION_DICTIONARY -u PUBLICATION_EXCEPTIONS node -e 'let s=""; process.stdin.on("data",c=>s+=c); process.stdin.on("end",()=>{const r=JSON.parse(s),categories={}; for(const f of r.findings??[]) categories[f.category]=(categories[f.category]??0)+1; console.log(JSON.stringify({status:r.status,scope:r.scope,historyProof:r.historyProof===true,scannedRevisions:r.scannedRevisions,findings:(r.findings??[]).length,categories}));});'

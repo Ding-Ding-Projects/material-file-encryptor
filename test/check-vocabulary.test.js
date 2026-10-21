@@ -63,11 +63,12 @@ test('CLI failures expose no source path, dictionary text, hash or exception det
   const output = result.stdout + result.stderr;
   for (const value of [source, path.dirname(source), 'Synthetic fixture entry', expected, 'b'.repeat(64), 'ENOENT', 'Error:']) assert.ok(!output.includes(value));
 });
-test('pre-push delegates to the same checker without lock generation', async () => {
+test('pre-push retains currency checking before complete outgoing publication checking', async () => {
   const hook = await fs.readFile('.githooks/pre-push', 'utf8');
-  assert.match(hook, /exec node "\$root\/scripts\/check-vocabulary\.mjs"/);
+  assert.match(hook, /node "\$root\/scripts\/check-vocabulary\.mjs" \|\| exit \$\?/);
+  assert.match(hook, /exec node "\$root\/scripts\/check-publication-local\.mjs" outgoing "\$@"/);
   assert.doesNotMatch(hook, /writeFile|lock\.json|sha256/);
-  assert.equal((await fs.readFile('.githooks/.gitattributes', 'utf8')).trim(), 'pre-push text eol=lf');
+  assert.equal((await fs.readFile('.githooks/.gitattributes', 'utf8')).replace(/\r\n/g, '\n').trim(), 'pre-push text eol=lf\npre-commit text eol=lf');
 });
 for (const kind of ['oversized-source', 'oversized-lock', 'invalid-utf8']) test(`${kind} fails with generic output`, async t => {
   const source = await fixture(t);
