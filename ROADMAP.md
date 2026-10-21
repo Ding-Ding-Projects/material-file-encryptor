@@ -865,10 +865,14 @@ Initial acquisition also writes its actual tuple directories and original PNGs u
 - [x] Implement live progress, scheduled-owner selection, owned-trigger repair, durable restore recovery and real native workflow fixtures; focused and live WSL checks passed. Packaged runtime acceptance remains separate below.
 - [ ] Verify immutable backup, first-vault restore, mounted snapshots and independent-device conflict preservation in the integrated candidate. Source and focused synthetic checks exist; complete runtime acceptance remains pending.
 - [ ] Verify configurable schedules and the signed-in per-user installed background task.
-- [ ] Complete isolated WSL registry acceptance before a separate production private-repository round trip.
+- [ ] Complete isolated WSL registry acceptance before a separate synthetic production round trip using the explicitly selected public destination.
 - [ ] Complete source-bound GUI evidence, release/download/installed verification, publication checks and archive-backed task cleanup.
 
 - [ ] Verify version-bound file-conflict review and main-owned localized confirmation in the packaged product; 25 focused bridge/security/session checks pass, built evidence remains pending.
 
 - [ ] Verify all 33 registry/conflict states across 48 declared tuples each; 1,584 new runtime rows remain unverified despite completed declaration and source checks.
 - [x] Repair re-encrypted activity copies, prove the same regression fails with the original Core and passes with the repaired Core, then verify two mounted publications and 274,432 restored bytes without weakening immutable-object checks. Evidence: `docs/evidence/registry-native-0bd72643.json`.
+
+- [ ] Verify the rebuilt guided device sign-in, physical packaged console resource and actual owned-process teardown. Source implementation and 26 focused integration checks are preserved; native execution remains unverified.
+- [ ] Verify a synthetic encrypted round trip against the newly created public destination. Public visibility and authenticated write permission were read back; no vault objects have been uploaded.
+- [x] Independently review the initial model-readiness observer and pass its eight focused ordering checks without weakening native ownership proof. Productive-source rebuild and runtime acceptance remain separate unfinished items.

@@ -19,6 +19,7 @@ import { VaultSessions } from './vault-sessions.js';
 import { createVaultSessionSettings } from './vault-session-settings.js';
 import { createVaultImageService } from './vault-image-service.js';
 import { createRegistrySyncService } from './registry-sync-service.js';
+import { createRegistryLogin } from './registry-login.js';
 import { createRegistryBackground } from './registry-background.js';
 import { createDockerImageTransport } from './vault-image-docker.js';
 import { registryVerificationDestination } from './registry-verification.js';
@@ -115,11 +116,12 @@ const vaultImages = createVaultImageService({ workRoot: path.join(app.getPath('u
 const imageRequest = createVaultImageRequests({ service: vaultImages, confirm: options => uiDialog.showMessageBox(window, options), available: () => Boolean(helper) && !verificationMode && !testMode, exiting: () => quitPending || shuttingDown || updateInstallLease });
 const registryRoot = path.join(app.getPath('userData'), 'RegistrySync');
 const registryDocker = createDockerImageTransport();
+const registryLogin = createRegistryLogin({ transport: registryDocker, openPage: url => shell.openExternal(url), packaged: app.isPackaged, resourcesPath: process.resourcesPath });
 const registrySync = createRegistrySyncService({ root: registryRoot,
   testDestination: registryTestDestination,
   contexts: id => id === undefined ? [...vaultSessions.rows] : (() => { const row = vaultSessions.rows.get(id); return row && { storageDir: row.state.storageDir || row.preferences.storageDir, transport: row.preferences.transport || 'folder' }; })(),
   nativeRequest: (method, params, id) => vaultSessions.request(method, params, id),
-  authorize: (repository, signal) => registryDocker.registryAuthorization(repository, signal),
+  authorize: (repository, signal, visibility) => registryDocker.registryAuthorization(repository, signal, visibility),
   chooseRestore: async () => { const result = await uiDialog.showOpenDialog(window, { title: 'Choose a parent folder for a new restored vault · 選擇還原磁碟嘅上層資料夾', properties: ['openDirectory', 'createDirectory'] }); if (result.canceled) return null; return safeDestination(result.filePaths[0], [...vaultSessions.rows.values()].flatMap(row => [row.state.storageDir, row.preferences.storageDir, row.state.cacheDir, row.preferences.cacheDir])); },
   backgroundRegistration: createRegistryBackground({ root: registryRoot, executable: process.execPath, packaged: app.isPackaged && !verificationMode && Boolean(fixedManifestDirectory(process.execPath)) }) });
 const REGISTRY_METHODS = new Set(['registryStorageStatus', 'configureRegistryStorage', 'syncRegistryStorage', 'listRegistrySnapshots', 'restoreRegistrySnapshot', 'cancelRegistryStorage']);
@@ -275,6 +277,13 @@ async function dispatchRequest(method, params, context) {
       return result;
     });
   }
+  if (['registryLoginStatus', 'startRegistryLogin', 'cancelRegistryLogin', 'openRegistryLoginPage'].includes(method)) {
+    if (method === 'registryLoginStatus') return registryLogin.status();
+    if (method === 'cancelRegistryLogin') return registryLogin.cancel();
+    if (quitPending || shuttingDown || updateInstallLease) throw Error('The application is preparing to close.');
+    if (method === 'startRegistryLogin') return registryLogin.start();
+    return registryLogin.openPage();
+  }
   if (REGISTRY_METHODS.has(method)) {
     if (!helper || (verificationMode || testMode) && !registryTestDestination) throw Error('Registry synchronization requires the native vault helper.');
     const id = vaultSessions.selectedId;
@@ -409,7 +418,7 @@ async function lockAllVaults() {
 async function hasActiveWork() {
   if (restartPreparation.started) return false;
   const active=await vaultSessions.operations();
-  return Boolean(operation || registrySync.pending || vaultImages.pending || browserHandoff?.pending || await features?.pending() || active.some(item=>['queued','running','cancelling'].includes(item.state)));
+  return Boolean(operation || registryLogin.pending || registrySync.pending || vaultImages.pending || browserHandoff?.pending || await features?.pending() || active.some(item=>['queued','running','cancelling'].includes(item.state)));
 }
 async function updateStatus() {
   const snapshot=updates?.status()||{state:'unavailable',reason:'NOT_INITIALIZED'};
@@ -453,7 +462,7 @@ async function acquireUpdateLease() {
 const restartPreparation=createRestartPreparation({
   verify:async()=>{if(!updateInstallLease||!vaultSessions.safelyLocked||await hasActiveWork())throw new Error('The application is not ready to restart safely.');},
   preflight:async()=>{verificationStartup?.restore();},
-  closeServices:async()=>{await closeBrowserHandoff();await localAdapter?.close();await features?.close();registrySync.close();await vaultImages.close();},
+  closeServices:async()=>{await closeBrowserHandoff();await localAdapter?.close();await features?.close();await registryLogin.close();registrySync.close();await vaultImages.close();},
   clearMarker:()=>fs.rm(sessionMarkerPath(),{force:true}),
   disposeHelper:async()=>{helper?.dispose();},
   prepared:()=>{shuttingDown=true;}
@@ -501,7 +510,7 @@ async function quit(ownRequest = false) {
     features.beginExit();
     if (helper) await perform('unmounting', lockAllVaults);
     if (!vaultSessions.safelyLocked) throw new Error('All vaults must confirm that they are locked.');
-    await closeBrowserHandoff();await updates?.dispose();await localAdapter?.close();await features?.close();registrySync.close();await vaultImages.close(); verificationStartup?.restore();await fs.rm(sessionMarkerPath(),{force:true});shuttingDown = true; helper?.dispose(); setImmediate(() => app.quit());
+    await closeBrowserHandoff();await updates?.dispose();await localAdapter?.close();await features?.close();await registryLogin.close();registrySync.close();await vaultImages.close(); verificationStartup?.restore();await fs.rm(sessionMarkerPath(),{force:true});shuttingDown = true; helper?.dispose(); setImmediate(() => app.quit());
   } catch (error) { showWindow(); await uiDialog.showMessageBox(window, { type: 'error', title: 'Application is still running', message: error.message }); }
   finally {quitPending=false;if(!shuttingDown)features.endExit();}
 }
@@ -557,7 +566,7 @@ else {
       if (helper) await perform('unmounting', lockAllVaults);
       const proof = verificationStartup.restore();
       if (!vaultSessions.safelyLocked) throw new Error('All vaults must confirm that they are locked.');
-      await closeBrowserHandoff();await updates?.dispose();await localAdapter?.close();await features.close();registrySync.close();await vaultImages.close();await fs.rm(sessionMarkerPath(),{force:true});shuttingDown = true; helper?.dispose();
+      await closeBrowserHandoff();await updates?.dispose();await localAdapter?.close();await features.close();await registryLogin.close();registrySync.close();await vaultImages.close();await fs.rm(sessionMarkerPath(),{force:true});shuttingDown = true; helper?.dispose();
       setTimeout(() => app.quit(), 250);
       return proof;
     });

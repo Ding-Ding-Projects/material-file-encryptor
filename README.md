@@ -646,3 +646,5 @@ The browser workspace includes full note reading and an external-editor workflow
 Selected-session registry conflict review now includes strict reviewed-version validation and a main-owned confirmation boundary in local source. Packaged and mounted acceptance remain pending; see [registry synchronization](docs/features/storage/registry-sync.md#version-bound-conflict-review) for the current behavior and evidence limits.
 
 [Reviewed historical screenshot gallery](https://ding-ding-projects.github.io/material-file-encryptor-captures/) contains the separate public evidence inventory and its limits. Current registry/conflict runtime screenshots remain pending.
+
+Registry storage source now includes guided official device sign-in and an explicit public/private destination choice. Existing private settings retain their visibility. Focused source checks pass; the rebuilt sign-in flow, console teardown and production round trip remain unverified. See the [guided sign-in documentation](docs/features/storage/registry-sync.md#guided-sign-in-and-explicit-visibility).

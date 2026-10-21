@@ -5,12 +5,13 @@ const REPOSITORY = /^(?:docker\.io\/)?[a-z0-9][a-z0-9_-]{1,38}\/[a-z0-9]+(?:(?:[
 export function registrySource(state) { return String(state?.storageDir || ''); }
 export function registryDraft(configuration) {
   const schedule = { ...DEFAULT_SCHEDULE, ...configuration?.schedule };
-  return { repository: configuration?.repository || '', ...schedule, days: [...schedule.days], times: schedule.times.join(', ') };
+  return { ...schedule, repository: configuration?.repository || '', visibility: configuration ? configuration.visibility ?? 'private' : 'public', days: [...schedule.days], times: schedule.times.join(', ') };
 }
 export function registryConfiguration(draft) {
   const invalid = field => { const error = new Error(`invalid_${field}`); error.field = field; throw error; };
   const repository = String(draft.repository || '').trim();
   if (repository.length > 220 || !REPOSITORY.test(repository)) invalid('repository');
+  if(!['public','private'].includes(draft.visibility))invalid('visibility');
   if (!['interval', 'calendar'].includes(draft.mode)) invalid('mode');
   const intervalMinutes = Number(draft.intervalMinutes), retryMinutes = Number(draft.retryMinutes);
   if (!Number.isInteger(intervalMinutes) || intervalMinutes < 5 || intervalMinutes > 10080) invalid('intervalMinutes');
@@ -22,7 +23,7 @@ export function registryConfiguration(draft) {
   const timeZone = String(draft.timeZone || '').trim();
   try { if (!timeZone || timeZone.length > 100) throw Error(); new Intl.DateTimeFormat('en', { timeZone }); } catch { invalid('timeZone'); }
   if (!['run-once', 'skip'].includes(draft.missed)) invalid('missed');
-  return { repository: repository.replace(/^docker\.io\//, ''), schedule: { enabled: Boolean(draft.enabled), mode: draft.mode, intervalMinutes, days, times, timeZone, missed: draft.missed, retryMinutes, background: Boolean(draft.background) } };
+  return { repository: repository.replace(/^docker\.io\//, ''), visibility:draft.visibility, schedule: { enabled: Boolean(draft.enabled), mode: draft.mode, intervalMinutes, days, times, timeZone, missed: draft.missed, retryMinutes, background: Boolean(draft.background) } };
 }
 export function registryBusy(status) {
   return Boolean(status && !['idle', 'ready', 'completed', 'verified', 'incomplete', 'cancelled', 'failed', 'error', 'unverified', 'disabled', 'unconfigured'].includes(status.state));

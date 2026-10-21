@@ -45,7 +45,7 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
       if (value.version !== 1 || !value.rows || typeof value.rows !== 'object' || Array.isArray(value.rows) || Object.keys(value.rows).length > 100) throw Error(ERROR);
       for (const [key, row] of Object.entries(value.rows)) {
         if (!row || typeof row !== 'object' || !/^[a-f0-9]{64}$/.test(key) || !/^[a-f0-9]{32}$/.test(row.deviceId)) throw Error(ERROR);
-        registryDestination({ repository: row.repository }); validateRegistrySchedule(row.schedule);
+        row.visibility = registryDestination({ repository: row.repository, visibility: row.visibility }).visibility; validateRegistrySchedule(row.schedule);
         if (row.nextDue !== null && !Number.isFinite(row.nextDue) || row.retryOccurrence !== undefined && !Number.isFinite(row.retryOccurrence)) throw Error(ERROR);
         row.state = row.interrupted ? 'incomplete' : 'idle'; row.lastError = row.interrupted ? ERROR : row.lastError;
         row.progress = null;
@@ -76,10 +76,10 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
     });
     return saving;
   }
-  function storage(row) { return storageFactory({ destination: testDestination ? { ...testDestination, repository: row.repository } : { repository: row.repository }, authorize }); }
+  function storage(row) { return storageFactory({ destination: testDestination ? { ...testDestination, repository: row.repository, visibility: row.visibility } : { repository: row.repository, visibility: row.visibility }, authorize }); }
   async function status(id) {
     await load(); const current = context(id, false), row = rows[current.key];
-    return structuredClone({ activeOperation: active ? { sessionId: active.id, state: rows[active.key]?.state || 'incomplete' } : null, sessionId: id, source: current.storageDir, configured: Boolean(row), configuration: row ? { repository: row.repository, schedule: row.schedule } : null,
+    return structuredClone({ activeOperation: active ? { sessionId: active.id, state: rows[active.key]?.state || 'incomplete' } : null, sessionId: id, source: current.storageDir, configured: Boolean(row), configuration: row ? { repository: row.repository, visibility: row.visibility, schedule: row.schedule } : null,
       state: row?.state || 'unconfigured', progress: row?.progress || null, nextDue: row?.nextDue || null, lastResult: row?.lastResult || null, restoreRecovery: row?.restoreRecovery || null, lastError: row?.lastError || null });
   }
   async function exclusive(id, action, requireSource = true) {
@@ -159,15 +159,15 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
     },
     async configure(id, configuration) {
       await load(); if (active || configuring || ticking) throw Error('Wait for registry synchronization.');
-      const current = context(id, false); registryDestination({ repository: configuration.repository });
+      const current = context(id, false); const destination = registryDestination({ repository: configuration.repository, visibility: configuration.visibility });
       const schedule = validateRegistrySchedule(configuration.schedule);
       if (schedule.enabled && (!current.storageDir || current.transport !== 'folder')) throw Error('Restore or select a folder-backed vault before enabling its schedule.');
       if (!rows[current.key] && Object.keys(rows).length >= 100) throw Error('The registry destination limit has been reached.');
       configuring = true;
       try {
         const previous = rows[current.key];
-        rows[current.key] = { deviceId: previous?.deviceId || randomUUID().replaceAll('-', ''), repository: configuration.repository, schedule,
-          state: 'idle', nextDue: nextRegistryRun(schedule, now()), lastResult: previous?.repository === configuration.repository ? previous.lastResult : null, restoreRecovery: previous?.restoreRecovery || null, lastError: null };
+        rows[current.key] = { deviceId: previous?.deviceId || randomUUID().replaceAll('-', ''), repository: configuration.repository, visibility: destination.visibility, schedule,
+          state: 'idle', nextDue: nextRegistryRun(schedule, now()), lastResult: previous?.repository === configuration.repository && previous?.visibility === destination.visibility ? previous.lastResult : null, restoreRecovery: previous?.restoreRecovery || null, lastError: null };
         await save();
         // Registration failure leaves configuration saved but explicitly incomplete.
         try { await backgroundRegistration(Object.values(rows).some(row => row.schedule.enabled && row.schedule.background)); }

@@ -16,7 +16,10 @@ export interface DriveState {
   sync: { running: boolean; lastSync: string | null; error: string | null; pendingCommits?: number };
 }
 export type VaultOptions = { storageDir: string; cacheDir: string; driveLetter: string; driveName?: string; transport?: 'folder' | 'privateGit'; remoteRepository?: string; autoUnlock?: boolean } & ({ password: string; keyFilePath?: never } | { password?: never; keyFilePath: string });
+export interface RegistryLoginStatus { state:'idle'|'checking'|'signed-in'|'authorizing'|'verifying'|'cancelled'|'expired'|'failed'|'unavailable'|'stale';deviceCode:string|null;canOpenPage:boolean;expiresAt:string|null;account:null;reason:string|null }
 export interface DriveBridge {
+  registryLoginStatus():Promise<RegistryLoginStatus>;startRegistryLogin():Promise<RegistryLoginStatus>;
+  cancelRegistryLogin():Promise<RegistryLoginStatus>;openRegistryLoginPage():Promise<RegistryLoginStatus>;
   addSession(): Promise<DriveState>;
   selectSession(sessionId: string): Promise<DriveState>;
   removeSession(sessionId: string): Promise<DriveState>;

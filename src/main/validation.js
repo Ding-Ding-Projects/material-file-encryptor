@@ -88,14 +88,15 @@ export function validateRequest(method, value = {}) {
   if (!object(value)) throw new Error('Invalid request.');
   if (REGISTRY_CONFLICT_METHODS.has(method)) return validateRegistryConflictRequest(method, value);
   if (method === 'configureRegistryStorage') {
-    if (Object.keys(value).length !== 2 || typeof value.repository !== 'string' || !/^[a-z0-9][a-z0-9_-]{1,38}\/[a-z0-9]+(?:(?:[._]|__|-+)[a-z0-9]+)*$/.test(value.repository) || value.repository.length > 220) throw Error('Invalid registry destination.');
-    return { repository: value.repository, schedule: validateRegistrySchedule(value.schedule) };
+    if (!Object.hasOwn(value, 'repository') || !Object.hasOwn(value, 'schedule') || Object.keys(value).some(key => !['repository', 'visibility', 'schedule'].includes(key)) || !['private', 'public'].includes(value.visibility === undefined ? 'private' : value.visibility) || typeof value.repository !== 'string' || !/^[a-z0-9][a-z0-9_-]{1,38}\/[a-z0-9]+(?:(?:[._]|__|-+)[a-z0-9]+)*$/.test(value.repository) || value.repository.length > 220) throw Error('Invalid registry destination.');
+    return { repository: value.repository, visibility: value.visibility === undefined ? 'private' : value.visibility, schedule: validateRegistrySchedule(value.schedule) };
   }
   if (method === 'featureRequest') {
     if (Object.keys(value).length !== 3) throw new Error('Unsupported feature request.');
     return validateFeatureRequest(value.feature, value.action, value.payload, { browser: true });
   }
   const schemas = {
+    registryLoginStatus: {}, startRegistryLogin: {}, cancelRegistryLogin: {}, openRegistryLoginPage: {},
     registryStorageStatus: {}, syncRegistryStorage: {}, listRegistrySnapshots: {}, restoreRegistrySnapshot: { digest: 'digest' }, cancelRegistryStorage: {},
     vaultImageStatus: {}, prepareVaultImage: { reference: 'short' }, buildVaultImage: { previewId: 'session' }, uploadVaultImage: { previewId: 'session' }, discardVaultImage: {}, cancelVaultImage: {},
     addSession: {}, selectSession: { sessionId: 'session' }, removeSession: { sessionId: 'session' }, getState: {}, buildMetadata: {}, browserPairing: {}, mount: { driveLetter: 'drive?', driveName: 'driveName?' }, unmount: {}, chooseFiles: {}, chooseExport: { name: 'path' }, chooseExportFolder: {}, importSelected: { paths: 'paths' }, startImport: { paths: 'paths' }, operations: {}, storageDiagnostics: {}, startPacking: { path: 'relative?', partSizeBytes: 'size?' }, cancelOperation: { operationId: 'path' }, forceLock: { language: 'language?' }, quit: {}, listFiles: { cursor: 'nonnegative?', limit: 'page?', revision: 'nonnegative?' }, listVersionLabels: { entryId: 'path' }, listActivity: { entryId: 'path?', cursor: 'path?', limit: 'page?', action: 'short?', from: 'short?', to: 'short?', fromUtc:'short?',toUtc:'short?',pattern:'short?' }, previewVersion: { versionId: 'path' }, labelVersion: { versionId: 'path', label: 'short' }, exportVersion: { versionId: 'path' }, exportText: { name: 'filename', mime: 'mime', content: 'text' }, fileAction: { id: 'path', action: 'fileAction', destination: 'path?' }, resplitAll: {}, createVault: { storageDir: 'path', cacheDir: 'path', driveLetter: 'drive', password: 'password?', keyFilePath: 'path?', partSizeBytes: 'size', transport: 'transport?', remoteRepository: 'repository?', autoUnlock: 'boolean?', driveName: 'driveName?' },

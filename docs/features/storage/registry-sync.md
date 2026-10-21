@@ -1,6 +1,6 @@
 # Encrypted registry backup, restore and synchronization
 
-Open **Storage maintenance**, then **Registry storage**. Enter an existing private Docker Hub repository as `namespace/repository`. Authentication stays in the main process and uses the supported existing Docker Desktop sign-in. The renderer never receives credentials. Saving configuration does not upload data.
+Open **Storage maintenance**, then **Registry storage**. Enter an existing Docker Hub repository as `namespace/repository` and select its expected public or private visibility. Authentication stays in the main process and uses the supported Docker Desktop credential store. The renderer never receives credentials. Saving configuration does not upload data.
 
 ## Back up and synchronize
 
@@ -41,6 +41,16 @@ Focused tests exercise the actual local OCI registry protocol, independent publi
 Packaged GUI interaction, mounted-drive behavior, installed task execution, production Docker Hub behavior, release downloads and installed updates each require their own source-bound evidence. Source checks or WSL protocol success do not imply those results. Current evidence and remaining work are recorded in the project handoff.
 
 This category exposes no product HTTP API. A Postman collection is not applicable.
+
+## Guided sign-in and explicit visibility
+
+The storage panel provides guided sign-in through the official Docker CLI device flow. It first verifies the existing protected sign-in. When no sign-in is stored, it displays a temporary device code and explicit Copy code and Open authorization page controls. The application opens only `https://login.docker.com/activate`; passwords and access tokens are never entered in the application. Checking, authorization, verification, cancellation, expiry and unavailable states remain distinct. A successful CLI exit is followed by verification of the stored sign-in before success is displayed. Existing stale or unavailable credentials are preserved rather than silently replaced.
+
+New empty destination forms explicitly default to public. Existing saved settings without a visibility field remain private. Public destinations require authenticated metadata with matching namespace and name, public visibility and write permission; private destinations require the corresponding private visibility. The expectation is rechecked before publication. Changing the form does not change provider visibility or begin synchronization.
+
+Public encrypted objects and snapshot metadata are downloadable by others. Encryption does not hide object sizes, identifiers or publication timing. The provider's free public-repository allowance remains subject to its current limits and fair-use rules. Do not enable paid upgrades or use real data for a synthetic verification run.
+
+The sign-in state machine, renderer controls and physical packaged-resource resolution have focused source-test coverage. The new embedded console relay, rebuilt package, actual device-flow completion and real process teardown remain unverified at this preservation checkpoint. The earlier mounted-storage evidence does not establish those new results.
 
 ## Version-bound conflict review
 

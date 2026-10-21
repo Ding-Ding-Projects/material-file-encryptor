@@ -5,7 +5,7 @@ module.exports = {
     icon: path.resolve(__dirname, 'assets/branding/app.ico'),
     executableName: 'MaterialFileEncryptor',
     appBundleId: 'uk.dewhui.material-file-encryptor',
-    extraResource: [path.resolve(__dirname, 'assets/branding'), path.resolve('out/native'), path.resolve('out/browser-host'), path.resolve('out/converter'), path.resolve('out/tools'), path.resolve('out/browser-extension'), path.resolve('.cache/driver'), path.resolve('dependencies.json')],
+    extraResource: [path.resolve(__dirname, 'assets/branding'), path.resolve('out/native'), path.resolve('out/browser-host'), path.resolve('out/converter'), path.resolve('out/tools'), path.resolve('out/browser-extension'), path.resolve('.cache/driver'), path.resolve('dependencies.json'), path.resolve(__dirname, 'src/main/registry-login-console.ps1')],
     // Keep PDF runtime code and notices; upstream debug maps stay in the source installation.
     ignore: [/^\/node_modules\/pdf-lib\/.*\.map$/,/(?:^|[\\/])MaterialFileEncryptor\.ServerLease\.Verifier(?:\.|[\\/]|$)/i,/^\/font-assets(?:\/|$)/,/(?:^|[\\/])(?:\.agent|\.claude|\.codex|\.test-output)(?:[\\/]|$)/i, /^\/src\/features\/converter\/native\/(?:bin|obj)(?:\/|$)/i, /^\/coverage(?:\/|$)/, /^\/docs/, /^\/test/, /^\/scripts/, /^\/native/, /^\/out/, /^\/\.git/, /^\/\.cache/, /^\/\.github/, /^\/CLOSEOUT_PROMPT\.md/],
   },

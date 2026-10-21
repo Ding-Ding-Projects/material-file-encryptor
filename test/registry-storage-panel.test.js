@@ -57,7 +57,7 @@ test('real component sends full saved schedule and never synchronizes on configu
   panel.days.forEach((node, day) => { node.checked = [0, 6].includes(day); }); panel.edit('days');
   panel.fields.enabled.checked = true; panel.edit('enabled'); panel.fields.background.checked = true; panel.edit('background');
   await panel.save();
-  assert.deepEqual(calls, [['save', 'main', { repository: 'owner/backup', schedule: { enabled: true, mode: 'calendar', intervalMinutes: 60, days: [0, 6], times: ['08:15', '19:45'], timeZone: 'America/Toronto', missed: 'skip', retryMinutes: 20, background: true } }]]);
+  assert.deepEqual(calls, [['save', 'main', { repository: 'owner/backup', visibility:'private',schedule: { enabled: true, mode: 'calendar', intervalMinutes: 60, days: [0, 6], times: ['08:15', '19:45'], timeZone: 'America/Toronto', missed: 'skip', retryMinutes: 20, background: true } }]]);
   assert.match(panel.statusText.textContent, /does not confirm an upload/); assert.equal(panel.calendar.hidden, false); assert.equal(panel.interval.hidden, true);
 });
 
@@ -66,6 +66,16 @@ test('drafts survive refresh and localization while invalid edits stay offline',
   assert.equal(panel.fields.repository.value, 'owner/draft'); assert.equal(panel.metrics.savedRepository.value.textContent, 'owner/vault');
   edit(panel, 'times', '27:00'); edit(panel, 'mode', 'calendar'); await panel.save();
   assert.equal(calls.length, 0); assert.equal(panel.fields.times.focused, true); assert.match(panel.error.textContent, /HH:mm/);
+});
+
+test('visibility defaults preserve legacy private destinations and require explicit public selection',async()=>{
+ assert.equal(registryDraft(configuration()).visibility,'private');assert.equal(registryDraft().visibility,'public');
+ assert.equal(registryDraft({...configuration(),visibility:'public'}).visibility,'public');
+ assert.throws(()=>registryConfiguration({...registryDraft(configuration()),visibility:'unknown'}),error=>error.field==='visibility');
+ const {panel,calls}=await fixture();assert.equal(panel.fields.visibility.value,'private');assert.equal(panel.metrics.savedVisibility.value.textContent,'Private');
+ edit(panel,'visibility','public');assert.match(panel.visibilityNote.textContent,/anyone can download encrypted/);await panel.save();
+ assert.equal(calls.length,1);assert.equal(calls[0][0],'save');assert.equal(calls[0][2].visibility,'public');
+ await panel.list();assert.equal(calls.at(-1)[0],'list');assert.match(panel.statusText.textContent,/access and saved visibility verified/);assert.equal(calls.some(row=>row[0]==='sync'),false);
 });
 
 test('disabled scheduling permits manual sync and its verified result is distinguished from unknown outcome', async () => {

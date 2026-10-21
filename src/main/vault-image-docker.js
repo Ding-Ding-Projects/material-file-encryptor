@@ -12,7 +12,7 @@ const REGISTRY_KEY = 'https://index.docker.io/v1/';
 const IMAGE_ID = /^sha256:[a-f0-9]{64}$/;
 const LOCAL_HOSTS = new Set(['npipe:////./pipe/docker_engine', 'npipe:////./pipe/dockerDesktopLinuxEngine']);
 const DOCKER_ERROR = 'Docker could not complete the requested action. Check Docker Desktop before retrying; an upload may already have started.';
-const HUB_ERROR = 'Docker Hub could not verify the existing private repository. Sign in with Docker Desktop and check repository permissions.';
+const HUB_ERROR = 'Docker Hub could not verify the repository or its expected visibility. Sign in with Docker Desktop and check repository permissions.';
 const BUILD_ERROR = 'The local image build outcome could not be verified. Docker may retain a local image. Prepare a fresh image before uploading.';
 const RECEIPT_ERROR = 'The upload outcome could not be verified. Do not retry blindly; inspect Docker Hub.';
 export function localDockerPath(filename, platform = process.platform) {
@@ -88,14 +88,15 @@ async function readJson(filename, limit = 65536) {
   } catch { throw Error('Docker configuration is unavailable.'); }
   finally { await handle?.close(); }
 }
-async function hubJson(fetcher, pathname, options, signal) {
+async function hubJson(fetcher, pathname, options, signal, message = HUB_ERROR) {
   checkCancellation(signal);
   const requestSignal = signal ? AbortSignal.any([signal, AbortSignal.timeout(20000)]) : AbortSignal.timeout(20000);
   let reader;
   try {
     const response = await fetcher(HUB + pathname, { ...options, redirect: 'error', cache: 'no-store', signal: requestSignal, headers: { Accept: 'application/json', ...options.headers } });
     checkCancellation(signal);
-    if (!response.ok || Number(response.headers.get('content-length') || 0) > 262144) throw Error();
+    if (!response.ok) { const error = Error(message); error.code = [401, 403].includes(response.status) ? 'AUTHENTICATION_REQUIRED' : 'PROVIDER_UNAVAILABLE'; throw error; }
+    if (Number(response.headers.get('content-length') || 0) > 262144) throw Error();
     reader = response.body.getReader(); const chunks = []; let length = 0;
     for (;;) {
       checkCancellation(signal);
@@ -107,7 +108,7 @@ async function hubJson(fetcher, pathname, options, signal) {
     const value = JSON.parse(Buffer.concat(chunks).toString('utf8'));
     if (!value || typeof value !== 'object' || Array.isArray(value)) throw Error();
     return value;
-  } catch { checkCancellation(signal); throw Error(HUB_ERROR); }
+  } catch (error) { checkCancellation(signal); if (error?.code === 'AUTHENTICATION_REQUIRED') throw error; const unavailable = Error(message); unavailable.code = 'PROVIDER_UNAVAILABLE'; throw unavailable; }
   finally { if (reader) await reader.cancel().catch(() => {}); }
 }
 export function createDockerImageTransport({ platform = process.platform, programFiles = process.env.ProgramFiles || 'C:\\Program Files', configDirectory = path.join(os.homedir(), '.docker'), run = runDockerCommand, fetcher = fetch, buildContext = createVaultImageBuildContext } = {}) {
@@ -177,25 +178,62 @@ export function createDockerImageTransport({ platform = process.platform, progra
       return { identifier: decoded.subarray(0, separator).toString(), secret: decoded.subarray(separator + 1).toString() };
     } finally { decoded.fill(0); }
   }
-  async function privateRepository(target, signal) {
+  async function repositoryAccess(target, signal, visibility = 'private') {
+    if (!['private', 'public'].includes(visibility)) throw Error('Invalid repository visibility.');
     const credentials = await credential(signal); let authentication;
     const request = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(credentials) };
     try { authentication = await hubJson(fetcher, '/v2/auth/token', request, signal); }
     finally { credentials.secret = ''; request.body = ''; }
     if (typeof authentication.access_token !== 'string' || !authentication.access_token || authentication.access_token.length > 16384 || /[\s\x00-\x1f\x7f]/.test(authentication.access_token)) throw Error('Docker Hub authentication could not be verified.');
     try {
-      const metadata = await hubJson(fetcher, `/v2/namespaces/${target.namespace}/repositories/${target.name}`, { method: 'GET', headers: { Authorization: `Bearer ${authentication.access_token}` } }, signal);
-      if (metadata.is_private !== true || metadata.namespace !== target.namespace || metadata.name !== target.name || metadata.permissions?.write !== true)
-        throw Error('Upload requires an existing private Docker Hub repository with write permission. Public or unverified repositories are refused.');
+      const metadata = await hubJson(fetcher, `/v2/namespaces/${target.namespace}/repositories/${target.name}`, { method: 'GET', headers: { Authorization: `Bearer ${authentication.access_token}` } }, signal,
+        visibility === 'private' ? 'Docker Hub could not verify the existing private repository. Sign in with Docker Desktop and check repository permissions.' : HUB_ERROR);
+      if (metadata.is_private !== (visibility === 'private') || metadata.namespace !== target.namespace || metadata.name !== target.name || metadata.permissions?.write !== true)
+        throw Error(visibility === 'private' ? 'Upload requires an existing private Docker Hub repository with write permission. Public or unverified repositories are refused.' : 'Upload requires an existing public Docker Hub repository with write permission. Private or unverified repositories are refused.');
     } finally { authentication.access_token = ''; }
   }
+  const privateRepository = (target, signal) => repositoryAccess(target, signal, 'private');
   async function tagId(target, context, signal) {
     return command(executable, [...context.args, 'image', 'inspect', '--format', '{{.Id}}', target.reference], {}, signal);
   }
+  async function loginContext(signal) {
+    if (platform !== 'win32') throw Error('Registry sign-in requires Docker Desktop on Windows.');
+    await installedFile(executable);
+    const config = await readJson(path.join(configDirectory, 'config.json'));
+    const helper = config.credHelpers?.[REGISTRY_KEY] || config.credsStore;
+    if (!['desktop', 'wincred'].includes(helper)) throw Error('Protected credential storage is required for guided sign-in.');
+    const binary = path.join(path.dirname(executable), `docker-credential-${helper}.exe`);
+    await installedFile(binary);
+    return { executable, configDirectory, env, helper: binary, config };
+  }
+  async function signInState(signal) {
+    let context;
+    try { context = await loginContext(signal); } catch { return { state: 'unavailable', reason: 'protected-store-unavailable' }; }
+    let listed;
+    try { listed = JSON.parse(await command(context.helper, ['list'], {}, signal)); }
+    catch { return { state: 'unavailable', reason: 'credential-store-unavailable' }; }
+    if (!listed || typeof listed !== 'object' || Array.isArray(listed)) return { state: 'unavailable', reason: 'credential-store-unavailable' };
+    const stored = Object.keys(listed).some(key => key.startsWith(REGISTRY_KEY)) || Boolean(context.config.auths?.[REGISTRY_KEY]?.auth || context.config.auths?.[REGISTRY_KEY]?.identitytoken);
+    if (!stored) return { state: 'missing', reason: null };
+    let credentials, authentication, request;
+    try {
+      credentials = await credential(signal);
+      request = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(credentials) };
+      authentication = await hubJson(fetcher, '/v2/auth/token', request, signal);
+      if (typeof authentication.access_token !== 'string' || !authentication.access_token || authentication.access_token.length > 16384 || /[\s\x00-\x1f\x7f]/.test(authentication.access_token)) throw Error();
+      return { state: 'signed-in', reason: null };
+    } catch (error) { return error?.code === 'AUTHENTICATION_REQUIRED' ? { state: 'stale', reason: 'stored-sign-in-unverified' } : { state: 'unavailable', reason: 'provider-unavailable' }; }
+    finally { if (credentials) credentials.secret = ''; if (request) request.body = ''; if (authentication) authentication.access_token = ''; }
+  }
   return {
-    async registryAuthorization(repository, signal) {
+    inspectRegistrySignIn: signInState,
+    async registryLoginCommand(signal) {
+      const context = await loginContext(signal);
+      return { executable: context.executable, configDirectory: context.configDirectory, env: { ...context.env } };
+    },
+    async registryAuthorization(repository, signal, visibility = 'private') {
       const target = imageTarget(`${repository}:authorization`);
-      await privateRepository(target, signal);
+      await repositoryAccess(target, signal, visibility);
       const credentials = await credential(signal);
       let response;
       try {

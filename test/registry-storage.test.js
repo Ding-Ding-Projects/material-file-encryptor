@@ -6,6 +6,33 @@ import { DEFAULT_REGISTRY_SCHEDULE, validateRegistrySchedule, nextRegistryRun, r
 
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 const destination = { endpoint: 'http://127.0.0.1:15221', repository: 'test/roundtrip', testOnly: true };
+
+test('expected visibility is explicit, defaults to private and reaches each authorization', async () => {
+  assert.equal(registryDestination({ repository: 'test/vault' }).visibility, 'private');
+  assert.equal(registryDestination({ repository: 'test/vault', visibility: 'public' }).visibility, 'public');
+  for (const visibility of [null, 'unknown', false]) assert.throws(() => registryDestination({ repository: 'test/vault', visibility }));
+  const calls = [];
+  const storage = createRegistryStorage({ destination: { repository: 'test/vault', visibility: 'public' }, authorize: async (...args) => { calls.push(args); throw Error('Denied synthetic authorization'); }, fetcher: async () => { throw Error('Must not fetch'); } });
+  await assert.rejects(storage.list()); assert.equal(calls.length, 1); assert.equal(calls[0][0], 'test/vault'); assert.equal(calls[0][2], 'public');
+});
+
+test('visibility and permission are rechecked after blob transfer before manifest publication', async () => {
+  let authorizations = 0, manifestWrites = 0, blobWrites = 0;
+  const blobs = new Map();
+  const storage = createRegistryStorage({ destination: { repository: 'test/vault', visibility: 'public' },
+    authorize: async (_repository, _signal, visibility) => { assert.equal(visibility, 'public'); if (++authorizations === 2) throw Error('Synthetic destination visibility changed'); return {}; },
+    fetcher: async (input, options) => {
+      const url = new URL(input);
+      if (options.method === 'POST') return new Response('', { status: 202, headers: { Location: '/v2/test/vault/blobs/uploads/owned' } });
+      if (options.method === 'PUT' && url.pathname.includes('/blobs/uploads/')) { blobWrites++; blobs.set(url.searchParams.get('digest'), Buffer.from(options.body)); return new Response('', { status: 201 }); }
+      if (options.method === 'GET' || !options.method) { const key = url.pathname.split('/blobs/')[1]; return new Response(blobs.get(key)); }
+      if (url.pathname.includes('/manifests/')) { manifestWrites++; return new Response('', { status: 201 }); }
+      throw Error('Unexpected synthetic registry request');
+    } });
+  const bytes = Buffer.from('synthetic-ciphertext');
+  await assert.rejects(storage.publish({ vaultId: 'a'.repeat(32), deviceId: 'b'.repeat(32), files: [{ path: 'vault.json', bytes: bytes.length, sha256: hash(bytes) }], readFile: async () => bytes }), /visibility changed/);
+  assert.equal(authorizations, 2); assert.ok(blobWrites > 0); assert.equal(manifestWrites, 0);
+});
 test('production destination defaults to the authenticated registry and test capability remains loopback-only', () => {
   assert.equal(registryDestination({ repository: 'owner/vault' }).endpoint, 'https://registry-1.docker.io');
   for (const endpoint of ['http://192.168.1.1:15221', 'https://evil.invalid', 'http://127.0.0.1:15221/path', 'http://user:pass@127.0.0.1:15221', 'http://127.0.0.1:15221/?x=1'])

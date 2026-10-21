@@ -1,6 +1,7 @@
 import { SurfaceElement, element, localized, register } from '../../../shared/surface/registry.js';
 import { REGISTRY_COPY } from './registry-copy.js';
 import { REGISTRY_METHODS, DIGEST, registryDraft, registryConfiguration, registrySource, registryBusy, registrySnapshots } from './registry-model.js';
+import {RegistryLoginPanel} from './registry-login-panel.js';
 
 const entry = () => ({ draft: registryDraft(), edited: false, status: null, snapshots: null, selected: '', restoredDestination: '', pending: null, cancelling: false, generation: 0, message: '', error: '' });
 const transfer = kind => ['syncing', 'restoring'].includes(kind);
@@ -9,8 +10,10 @@ export class RegistryStoragePanel extends SurfaceElement {
   constructor() {
     super();
     this.services = {}; this.sessions = new Map(); this.getVaultState = () => null; this.translateText = value => value; this.disposed = false; this.pollTimer = null; this.polling = false;
-    this.style('section{border-top:1px solid var(--md-sys-color-outline-variant);padding-top:16px;margin-top:24px}h2,h3,p,dt,dd{overflow-wrap:anywhere}.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:16px}.field{display:grid;gap:8px;min-width:0}md-outlined-select{width:100%;min-width:0;max-width:100%}.toggle{display:flex;align-items:center;gap:8px;min-height:44px}.toggle span{overflow-wrap:anywhere}.actions,.days{display:flex;flex-wrap:wrap;gap:12px;margin:16px 0}fieldset{min-width:0;border:1px solid var(--md-sys-color-outline-variant);border-radius:12px}.metrics{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:8px 16px}.metrics dt,.metrics dd{margin:0}.error{color:var(--md-sys-color-error)}');
+    this.style('section{border-top:1px solid var(--md-sys-color-outline-variant);padding-top:16px;margin-top:24px}h2,h3,p,dt,dd{overflow-wrap:anywhere}.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:16px}.field{display:grid;gap:8px;min-width:0}md-outlined-select{width:100%;min-width:0;max-width:100%}.toggle{display:flex;align-items:center;gap:8px;min-height:44px}.toggle span{overflow-wrap:anywhere}.actions,.days{display:flex;flex-wrap:wrap;gap:12px;margin:16px 0}fieldset{min-width:0;border:1px solid var(--md-sys-color-outline-variant);border-radius:12px}.metrics{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:8px 16px}.metrics dt,.metrics dd{margin:0}.registry-signin{min-width:0}.registry-login-code{display:grid;gap:8px;min-width:0}.registry-login-code a{overflow-wrap:anywhere;min-height:44px;display:flex;align-items:center}.registry-login-code output{font-size:1.25rem;letter-spacing:.08em;padding:12px;border:1px solid var(--md-sys-color-outline-variant);border-radius:8px}.error{color:var(--md-sys-color-error)}');
     this.copyNodes = {}; this.fields = {}; this.labels = {}; this.options = {}; this.buttons = {};
+    this.loginPanel=new RegistryLoginPanel({translate:key=>this.t(key),onSignedIn:()=>{if(!this.disposed)void this.refresh();}});
+    this.visibilityNote=element('p');
     const copy = (key, tag = 'p', props = {}) => this.copyNodes[key] = element(tag, props);
     const field = (key, type = 'text', values) => {
       const input = values ? element('select') : element('input', { type });
@@ -43,14 +46,14 @@ export class RegistryStoragePanel extends SurfaceElement {
     this.ownerButton = element('md-outlined-button');
     this.ownerButton.addEventListener('click', () => { if(!this.ownerButton.disabled) void this.selectOperationOwner(); });
     this.metrics = {}; const metrics = element('dl', { class: 'metrics' });
-    for (const key of ['savedRepository', 'nextDue', 'lastResult']) { const label = element('dt'), value = element('dd'); this.metrics[key] = { label, value }; metrics.append(label, value); }
+    for (const key of ['savedRepository', 'savedVisibility', 'nextDue', 'lastResult']) { const label = element('dt'), value = element('dd'); this.metrics[key] = { label, value }; metrics.append(label, value); }
     this.revision = element('select'); this.revision.addEventListener('change', () => { const current = this.current(); if (current && !current.pending) { current.selected = this.revision.value; this.render(); } });
     this.revisionMessage = element('p'); this.revisionDetails = element('dl', { class: 'metrics' }); this.rows = {};
     this.restoredLocation = element('p', { style: 'user-select:text;white-space:pre-wrap;overflow-wrap:anywhere' });
     this.restoreResult = element('div', {}, [copy('restoredDestination', 'h3'), this.restoredLocation, copy('unlockRestored')]);
     for (const key of ['digest', 'vaultId', 'deviceId', 'parents', 'fileCount']) { const label = element('dt'), value = element('dd'); this.rows[key] = { label, value }; this.revisionDetails.append(label, value); }
     this.shadowRoot.append(element('section', { 'aria-labelledby': 'registry-title' }, [
-      copy('title', 'h2', { id: 'registry-title' }), copy('destination', 'h3'), field('repository'), copy('destinationNote'), copy('snapshotNote'), copy('sourceRequired'),
+      copy('title', 'h2', { id: 'registry-title' }),this.loginPanel.root,copy('destination', 'h3'), field('repository'),field('visibility','text',['public','private']),this.visibilityNote,copy('destinationNote'),copy('destinationVerificationNote'),copy('snapshotNote'), copy('sourceRequired'),
       copy('schedule', 'h3'), field('enabled', 'checkbox'), field('mode', 'text', ['interval', 'calendar']), this.interval, this.calendar,
       element('div', { class: 'fields' }, [field('missed', 'text', ['run-once', 'skip']), field('retryMinutes', 'number')]), field('background', 'checkbox'), copy('backgroundNote'),
       element('div', { class: 'actions' }, [button('save')]), copy('operation', 'h3'), this.statusText, this.error, this.ownerText, this.ownerButton, this.progress, this.progressText, this.recoveryText, this.deferredText, metrics,
@@ -63,7 +66,7 @@ export class RegistryStoragePanel extends SurfaceElement {
   }
   t(key) { const [en, yue] = REGISTRY_COPY[key] || [key, key], translated = this.translateText(en); return translated !== en ? translated : localized({ en, yue }, this.language === 'zh-HK' ? 'yue' : this.language); }
   configure({ services = {}, getVaultState = () => null, translate = value => value, language = 'en' } = {}) {
-    this.services = services; this.getVaultState = getVaultState; this.translateText = translate; this.language = language; this.setVaultState(getVaultState()); return this;
+    this.services = services; this.getVaultState = getVaultState; this.translateText = translate; this.language = language; this.loginPanel.configure(services);this.setVaultState(getVaultState()); return this;
   }
   current() { return this.sessions.get(this.key); }
   available() { return REGISTRY_METHODS.every(name => typeof this.services[name] === 'function') && Boolean(this.vaultState?.sessionId); }
@@ -110,7 +113,7 @@ export class RegistryStoragePanel extends SurfaceElement {
     const current = this.current(); if (!current || current.pending || registryBusy(current.status)) return;
     current.draft[key] = key === 'days' ? this.days.flatMap((node, day) => node.checked ? [day] : []) : ['enabled', 'background'].includes(key) ? Boolean(this.fields[key].checked) : this.fields[key].value;
     current.edited = true;
-    if (['mode', 'enabled', 'background'].includes(key)) this.render();
+    if (['mode', 'enabled', 'background','visibility'].includes(key)) this.render();
   }
   async readStatus(current, sessionId, source) {
     const status = await this.services.registryStorageStatus();
@@ -164,6 +167,7 @@ export class RegistryStoragePanel extends SurfaceElement {
       const result = await this.services.listRegistrySnapshots();
       if (!this.isCurrent(row)) return;
       row.snapshots = registrySnapshots(result); if (!row.snapshots.some(item => item.digest === row.selected)) row.selected = '';
+      row.message='destinationVerified';
     });
   }
   async restore() {
@@ -202,6 +206,7 @@ export class RegistryStoragePanel extends SurfaceElement {
     const available = this.available(), pending = Boolean(current?.pending), busy = registryBusy(status), active = busy || transfer(current?.pending);
     const otherOwner=typeof status?.activeOperation?.sessionId==='string'&&status.activeOperation.sessionId!==this.vaultState?.sessionId;
     const editable = available && !pending && !busy && !otherOwner;
+    this.loginPanel.render();this.visibilityNote.textContent=this.t(draft.visibility==='public'?'publicDestinationNote':'privateDestinationNote');
     this.ownerText.hidden=this.ownerButton.hidden=!otherOwner;
     this.ownerText.textContent=otherOwner?`${this.t('otherOwner')} ${status.activeOperation.sessionId}`:'';
     this.ownerButton.textContent=this.t('selectOwner');this.ownerButton.disabled=!otherOwner||pending||typeof this.services.selectSession!=='function';
@@ -232,7 +237,7 @@ export class RegistryStoragePanel extends SurfaceElement {
     this.error.textContent = current?.error ? this.t(current.error) : status?.lastError ? this.t('error') : ''; this.error.hidden = !this.error.textContent;
     this.restoredLocation.textContent = current?.restoredDestination || ''; this.restoreResult.hidden = !current?.restoredDestination;
     const last = status?.lastResult;
-    const values = { savedRepository: status?.configuration?.repository, nextDue: status?.nextDue, lastResult: last?.verified === true && DIGEST.test(last.digest) ? last.digest : last ? this.t('unverified') : null };
+    const values = { savedRepository: status?.configuration?.repository, savedVisibility:status?.configured?this.t(status.configuration?.visibility??'private'):null,nextDue: status?.nextDue, lastResult: last?.verified === true && DIGEST.test(last.digest) ? last.digest : last ? this.t('unverified') : null };
     for (const [key, row] of Object.entries(this.metrics)) { row.label.textContent = this.t(key); row.value.textContent = values[key] == null ? this.t('unknown') : String(values[key]).slice(0,512); }
     this.revision.label = this.t('select'); this.revision.setAttribute('aria-label', this.t('select')); this.revision.disabled = !editable || !current?.snapshots?.length;
     const optionRows = [element('option', { value: '', text: this.t('choose') }), ...(current?.snapshots || []).map(row => element('option', { value: row.digest, text: `${row.tag} · ${row.digest}` }))];
@@ -242,6 +247,6 @@ export class RegistryStoragePanel extends SurfaceElement {
     for (const [key, row] of Object.entries(this.rows)) { row.label.textContent = this.t(key); const value = key === 'digest' ? selected?.digest : selected?.snapshot[key]; row.value.textContent = Array.isArray(value) ? value.join('\n') || this.t('none') : String(value ?? ''); }
   }
   setLanguage(language) { this.language = language; this.render(); }
-  destroy() { this.disposed = true; if(this.pollTimer!==null)clearTimeout(this.pollTimer);this.pollTimer=null;for (const current of this.sessions.values()) current.generation++; this.sessions.clear(); this.remove(); }
+  destroy() { this.disposed = true;this.loginPanel.destroy();if(this.pollTimer!==null)clearTimeout(this.pollTimer);this.pollTimer=null;for (const current of this.sessions.values()) current.generation++; this.sessions.clear(); this.remove(); }
 }
 register('mfe-registry-storage-panel', RegistryStoragePanel);

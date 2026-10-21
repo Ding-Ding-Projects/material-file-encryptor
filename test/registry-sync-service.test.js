@@ -20,7 +20,27 @@ async function fixture(t, extra = {}) {
     chooseRestore: async () => root, testDestination: { endpoint: 'http://127.0.0.1:15221', testOnly: true }, ...extra };
   return { root, source, work, options, requests, service: createRegistrySyncService(options) };
 }
-const configuration = (schedule = DEFAULT_REGISTRY_SCHEDULE) => ({ repository: 'test/vault', schedule });
+const configuration = (schedule = DEFAULT_REGISTRY_SCHEDULE) => ({ repository: 'test/vault', visibility: 'private', schedule });
+
+test('legacy saved visibility remains private and explicit public survives reload', async t => {
+  const f = await fixture(t); const legacy = configuration(); delete legacy.visibility;
+  assert.equal(validateRequest('configureRegistryStorage', legacy).visibility, 'private');
+  await f.service.configure('main', legacy);
+  const filename = path.join(f.work, 'registry-sync.json'); const stored = JSON.parse(await fs.readFile(filename, 'utf8'));
+  for (const row of Object.values(stored.rows)) { delete row.visibility; row.lastResult = { verified: true }; }
+  await fs.writeFile(filename, JSON.stringify(stored)); const reloaded = createRegistrySyncService(f.options);
+  assert.equal((await reloaded.status('main')).configuration.visibility, 'private');
+  await reloaded.configure('main', { ...configuration(), visibility: 'public' });
+  assert.equal((await reloaded.status('main')).lastResult, null);
+  const again = createRegistrySyncService(f.options); assert.equal((await again.status('main')).configuration.visibility, 'public');
+  for (const visibility of [null, 'unknown', false]) assert.throws(() => validateRequest('configureRegistryStorage', { ...configuration(), visibility }));
+});
+
+test('saved visibility reaches each storage client without changing the configured repository', async t => {
+  const destinations = []; const f = await fixture(t, { storageFactory: options => { destinations.push(options.destination); return { list: async () => [] }; } });
+  await f.service.configure('main', { ...configuration(), visibility: 'public' }); await f.service.list('main');
+  assert.equal(destinations[0].visibility, 'public'); assert.equal(destinations[0].repository, 'test/vault');
+});
 test('configuration persists disabled schedules without starting a native or registry action', async t => {
   const f = await fixture(t);
   const value = await f.service.configure('main', configuration());

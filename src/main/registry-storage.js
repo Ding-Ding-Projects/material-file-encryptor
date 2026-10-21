@@ -11,14 +11,15 @@ const exact = (value, fields) => value && typeof value === 'object' && !Array.is
 const fail = () => Error('Encrypted registry operation could not be verified. Local data is unchanged.');
 
 /** HTTP test endpoints are admitted only by an explicit main-process test capability. */
-export function registryDestination({ endpoint = 'https://registry-1.docker.io', repository, testOnly = false }) {
+export function registryDestination({ endpoint = 'https://registry-1.docker.io', repository, testOnly = false, visibility = 'private' }) {
+  if (!['private', 'public'].includes(visibility)) throw fail();
   const url = new URL(endpoint);
   const loopback = ['127.0.0.1', 'localhost', '[::1]'].includes(url.hostname);
   if (url.username || url.password || url.pathname !== '/' || url.search || url.hash ||
       (testOnly ? !loopback || url.protocol !== 'http:' : url.origin !== 'https://registry-1.docker.io')) throw fail();
   if (typeof repository !== 'string' || repository.length > 220 ||
       !/^[a-z0-9][a-z0-9_-]{1,38}\/[a-z0-9]+(?:(?:[._]|__|-+)[a-z0-9]+)*$/.test(repository)) throw fail();
-  return Object.freeze({ endpoint: url.origin, repository, testOnly });
+  return Object.freeze({ endpoint: url.origin, repository, testOnly, visibility });
 }
 
 async function bounded(response, limit, signal) {
@@ -56,7 +57,7 @@ export function validateRegistrySnapshot(value) {
 
 /** An OCI registry stores each ciphertext object as an independently verifiable layer.
  * Unique snapshot references preserve concurrent heads; no shared mutable tag is used.
- * authorize is main-owned, checks repository privacy, and returns only request headers.
+ * authorize is main-owned, checks expected repository visibility, and returns only request headers.
  */
 export function createRegistryStorage({ destination, authorize, fetcher = fetch, maxObjectBytes = 1024 ** 3 }) {
   const target = registryDestination(destination);
@@ -66,7 +67,7 @@ export function createRegistryStorage({ destination, authorize, fetcher = fetch,
   let credentials = null, credentialsAt = 0;
   async function authorization(signal, force = false) {
     if (target.testOnly) return {};
-    if (force || !credentials || Date.now() - credentialsAt > 30000) { credentials = await authorize(target.repository, signal); credentialsAt = Date.now(); }
+    if (force || !credentials || Date.now() - credentialsAt > 30000) { credentials = await authorize(target.repository, signal, target.visibility); credentialsAt = Date.now(); }
     return credentials;
   }
   async function request(url, options = {}, signal) {

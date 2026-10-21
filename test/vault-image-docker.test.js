@@ -53,8 +53,9 @@ async function fixture(t, options = {}) {
   };
   const fetcher = async (url, settings) => {
     // Snapshot options because production clears its own in-memory request objects.
+    url = String(url);
     const event = { kind: 'fetch', url, settings: { ...settings, headers: { ...settings.headers } } }; events.push(event);
-    const fallback = () => url.endsWith('/v2/auth/token') ? json({ access_token: TOKEN }) : json(state.metadata);
+    const fallback = () => url.startsWith('https://auth.docker.io/token?') ? json({ token: TOKEN }) : url.endsWith('/v2/auth/token') ? json({ access_token: TOKEN }) : json(state.metadata);
     return options.fetcher ? options.fetcher(event, state, fallback) : fallback();
   };
   const fixtureExecutable = path.join(bin, 'docker.exe');
@@ -69,6 +70,52 @@ async function fixture(t, options = {}) {
 const commands = fixture => fixture.events.filter(event => event.kind === 'command');
 const pushes = fixture => commands(fixture).filter(event => event.args.includes('push'));
 const fetches = fixture => fixture.events.filter(event => event.kind === 'fetch');
+
+test('registry authorization requires exact explicit visibility and authenticated write permission', async t => {
+  for (const visibility of ['private', 'public']) {
+    const f = await fixture(t); f.state.metadata.is_private = visibility === 'private';
+    const headers = await f.transport.registryAuthorization(TARGET.repository, undefined, visibility);
+    assert.deepEqual(headers, { Authorization: `Bearer ${TOKEN}` });
+    assert.equal(fetches(f).at(-1).url, `https://auth.docker.io/token?service=registry.docker.io&scope=repository%3Aexample-team%2Fencrypted-vault%3Apull%2Cpush`);
+    f.state.metadata.is_private = visibility !== 'private';
+    await assert.rejects(f.transport.registryAuthorization(TARGET.repository, undefined, visibility));
+    f.state.metadata.is_private = visibility === 'private'; f.state.metadata.permissions.write = false;
+    await assert.rejects(f.transport.registryAuthorization(TARGET.repository, undefined, visibility));
+  }
+  for (const visibility of [null, 'unknown', true]) {
+    const f = await fixture(t); await assert.rejects(f.transport.registryAuthorization(TARGET.repository, undefined, visibility));
+    assert.equal(f.events.length, 0);
+  }
+});
+
+test('registry authorization defaults to private and rejects absent or malformed metadata', async t => {
+  const privateFixture = await fixture(t); await privateFixture.transport.registryAuthorization(TARGET.repository);
+  privateFixture.state.metadata.is_private = false; await assert.rejects(privateFixture.transport.registryAuthorization(TARGET.repository));
+  for (const patch of [{ is_private: undefined }, { is_private: 'false' }, { namespace: 'other' }, { name: 'other' }, { permissions: {} }]) {
+    const f = await fixture(t); f.state.metadata = { ...f.state.metadata, is_private: false, ...patch };
+    await assert.rejects(f.transport.registryAuthorization(TARGET.repository, undefined, 'public'));
+  }
+});
+
+test('guided sign-in checks protected storage and existing authentication without logging in', async t => {
+  const f = await fixture(t, { run: (event, _state, fallback) => event.args[0] === 'list' ? JSON.stringify({ [CONFIG_KEY]: 'fixture-user' }) : fallback() });
+  assert.deepEqual(await f.transport.inspectRegistrySignIn(), { state: 'signed-in', reason: null });
+  assert.equal(commands(f).some(event => event.args.includes('login')), false);
+  const command = await f.transport.registryLoginCommand(); assert.ok(command.executable.endsWith('docker.exe'));
+  const missing = await fixture(t, { run: (event, _state, fallback) => event.args[0] === 'list' ? '{}' : fallback() });
+  assert.deepEqual(await missing.transport.inspectRegistrySignIn(), { state: 'missing', reason: null }); assert.equal(fetches(missing).length, 0);
+  const unprotected = await fixture(t, { config: {} });
+  assert.equal((await unprotected.transport.inspectRegistrySignIn()).state, 'unavailable');
+  await assert.rejects(unprotected.transport.registryLoginCommand());
+});
+
+test('guided sign-in distinguishes stale credentials from unavailable provider without replacing either', async t => {
+  for (const status of [401, 503]) {
+    const f = await fixture(t, { run: (event, _state, fallback) => event.args[0] === 'list' ? JSON.stringify({ [CONFIG_KEY]: 'fixture-user' }) : fallback(), fetcher: () => json({}, { status }) });
+    assert.equal((await f.transport.inspectRegistrySignIn()).state, status === 401 ? 'stale' : 'unavailable');
+    assert.equal(commands(f).some(event => event.args.includes('login') || event.args.includes('erase') || event.args.includes('store')), false);
+  }
+});
 
 test('target accepts only a bounded explicit Docker Hub namespace, repository and tag', () => {
   assert.deepEqual(TARGET, { reference: 'docker.io/example-team/encrypted-vault:archive', repository: 'example-team/encrypted-vault', namespace: 'example-team', name: 'encrypted-vault', tag: 'archive' });
