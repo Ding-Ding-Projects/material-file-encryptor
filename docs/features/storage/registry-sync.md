@@ -10,6 +10,8 @@ The outgoing snapshot is taken at a native transaction boundary. An unlocked or 
 
 Every publication has a unique reference and a verified content digest. The implementation does not overwrite a shared latest tag. Two computers retain their independent local sources and caches. Concurrent edits are reconciled through immutable transaction history, rather than one computer's clock deciding which copy survives. This does not provide live coauthoring in arbitrary editors.
 
+Docker Hub can redirect encrypted blob downloads to its documented HTTPS content-delivery host. Blob reads follow at most three redirects on the exact digest-bound path, with one shared timeout and no authorization or cookies sent across origins. Manifest and upload requests retain their stricter original-origin boundary, and downloaded bytes still require the exact declared length and SHA-256. An interrupted verification may leave a valid immutable publication at the destination; inspect and resume it rather than deleting history or blindly publishing another snapshot. See the [official Docker host list](https://docs.docker.com/desktop/enterprise/allow-list/) and [OCI redirect requirements](https://github.com/opencontainers/distribution-spec/blob/main/spec.md).
+
 ## Configure a schedule
 
 Scheduling is disabled until explicitly enabled. Choose an interval from 5 minutes to 7 days, or selected weekdays and local `HH:mm` times in an IANA time zone. Configure missed-run behavior and retry delay. The calendar skips nonexistent clock-change times; a consumed repeated local occurrence is not scheduled twice.

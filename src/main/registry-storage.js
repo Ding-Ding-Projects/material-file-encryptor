@@ -6,6 +6,9 @@ const LAYER = 'application/vnd.material-file-encryptor.encrypted-object.v1';
 const DIGEST = /^sha256:[a-f0-9]{64}$/;
 const TAG = /^mfe-[a-f0-9]{32}-[a-f0-9]{32}$/;
 const OBJECT = /^(?:vault\.json|(?:parts|commits|activity)\/(?:[a-f0-9]{32}|[a-f0-9]{64})\.mfe)$/;
+const BLOB_DELIVERY_ORIGIN = 'https://production.cloudfront.docker.com';
+const BLOB_REDIRECTS = new Set([301, 302, 303, 307, 308]);
+const MAX_BLOB_REDIRECTS = 3;
 const sha = value => 'sha256:' + createHash('sha256').update(value).digest('hex');
 const exact = (value, fields) => value && typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length === fields.length && fields.every(key => Object.hasOwn(value, key));
 const fail = () => Error('Encrypted registry operation could not be verified. Local data is unchanged.');
@@ -101,10 +104,41 @@ export function createRegistryStorage({ destination, authorize, fetcher = fetch,
   }
   async function getBlob(item, type, signal) {
     if (!validDescriptor(item, type, maxObjectBytes)) throw fail();
-    const response = await request(`${base}/blobs/${item.digest}`, {}, signal);
+    const response = await blobResponse(item.digest, signal);
     const bytes = await bounded(response, Math.min(item.size, maxObjectBytes), signal);
     if (bytes.length !== item.size || sha(bytes) !== item.digest) throw fail();
     return bytes;
+  }
+  async function blobResponse(digest, signal) {
+    // Docker documents this delivery host. Only blob GETs may leave the registry;
+    // manifest and upload requests retain their original redirect rejection.
+    const registryUrl = new URL(`${base}/blobs/${digest}`);
+    const hex = digest.slice(7);
+    const deliveryPath = `/registry-v2/docker/registry/v2/blobs/sha256/${hex.slice(0, 2)}/${hex}/data`;
+    const requestSignal = signal ? AbortSignal.any([signal, AbortSignal.timeout(120000)]) : AbortSignal.timeout(120000);
+    const headers = await authorization(requestSignal);
+    let url = registryUrl, crossedOrigin = false;
+    const seen = new Set();
+    for (let redirects = 0; ; redirects++) {
+      requestSignal.throwIfAborted();
+      if (seen.has(url.href)) throw fail();
+      seen.add(url.href);
+      const response = await fetcher(url, { method: 'GET', headers: crossedOrigin ? {} : headers,
+        credentials: 'omit', referrerPolicy: 'no-referrer', redirect: 'manual', signal: requestSignal });
+      if (!BLOB_REDIRECTS.has(response.status)) {
+        if (response.ok) return response;
+        await response.body?.cancel(); throw fail();
+      }
+      const location = response.headers.get('location');
+      await response.body?.cancel();
+      if (redirects >= MAX_BLOB_REDIRECTS || typeof location !== 'string' || location.length > 16384 || /[\x00-\x20\x7f]/.test(location)) throw fail();
+      let next; try { next = new URL(location, url); } catch { throw fail(); }
+      if (next.username || next.password || next.hash || next.port ||
+          (next.origin === target.endpoint ? next.pathname !== registryUrl.pathname :
+            target.testOnly || next.origin !== BLOB_DELIVERY_ORIGIN || next.pathname !== deliveryPath)) throw fail();
+      crossedOrigin ||= next.origin !== target.endpoint;
+      url = next;
+    }
   }
   async function readRevision(digest, signal) {
     if (!DIGEST.test(digest)) throw fail();
