@@ -1,6 +1,6 @@
 # Encrypted registry backup, restore and synchronization
 
-Open **Storage maintenance**, then **Registry storage**. Enter an existing Docker Hub repository as `namespace/repository` and select its expected public or private visibility. Authentication stays in the main process and uses the supported Docker Desktop credential store. The renderer never receives credentials. Saving configuration does not upload data.
+Open **Docker Hub storage** directly from the main navigation. Sign-in, destination setup, synchronization, schedules and restore are at the top of this view. Enter an existing Docker Hub repository as `namespace/repository` and select its expected public or private visibility. Authentication stays in the main process and uses the supported Docker Desktop credential store. The renderer never receives credentials. Saving configuration does not upload data. Packing and image export remain available below the backup controls.
 
 ## Back up and synchronize
 
@@ -50,7 +50,7 @@ New empty destination forms explicitly default to public. Existing saved setting
 
 Public encrypted objects and snapshot metadata are downloadable by others. Encryption does not hide object sizes, identifiers or publication timing. The provider's free public-repository allowance remains subject to its current limits and fair-use rules. Do not enable paid upgrades or use real data for a synthetic verification run.
 
-The sign-in state machine, renderer controls and physical packaged-resource resolution have focused source-test coverage. The new embedded console relay, rebuilt package, actual device-flow completion and real process teardown remain unverified at this preservation checkpoint. The earlier mounted-storage evidence does not establish those new results.
+The sign-in state machine, renderer controls and physical packaged-resource resolution have focused source-test coverage. The downloaded `v1.845.1` relay passed native compilation, actual ConPTY initialization, owned-child cancellation and natural-exit checks with a fixed synthetic child. See [the source-bound relay receipt](../../evidence/registry-login-native-81cb8ca5.json). Those results do not establish actual device authorization, installed behavior or the subsequently changed navigation. Built GUI acceptance is recorded separately in the handoff.
 
 ## Version-bound conflict review
 

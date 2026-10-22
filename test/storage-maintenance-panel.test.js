@@ -7,6 +7,17 @@ class Node {
 globalThis.HTMLElement=Node;globalThis.CSSStyleSheet=class{replaceSync(){}};globalThis.customElements={map:new Map(),get(key){return this.map.get(key);},define(key,value){this.map.set(key,value);}};globalThis.document={createElement:tag=>customElements.get(tag)?new (customElements.get(tag))():new Node(tag)};
 const {StorageMaintenance}=await import('../src/renderer/features/storage-maintenance/index.js');
 const diagnostics={targetPartSizeBytes:83886080,pendingPackingFiles:2,activeWriters:1,packingRunning:false,packingError:null,currentReferencedParts:5,currentReferencedBytes:400,historicalOnlyParts:3,historicalOnlyBytes:200,temporaryFiles:0,temporaryBytes:0};
+test('registry setup remains first and unique before packing even without an unlocked vault',()=>{
+ const panel=new StorageMaintenance();
+ const children=panel.shadowRoot.children;
+ assert.ok(children.indexOf(panel.registryPanel)<children.indexOf(panel.heading));
+ assert.ok(children.indexOf(panel.conflictsPanel)<children.indexOf(panel.heading));
+ for(const child of [panel.registryPanel,panel.conflictsPanel,panel.imagePanel])assert.equal(children.filter(node=>node===child).length,1);
+ assert.equal(panel.registryPanel.loginPanel.root.hidden,undefined);
+ assert.ok(panel.registryPanel.fields.repository);
+ assert.ok(panel.registryPanel.buttons.restore);
+ assert.equal(panel.pack.disabled,true);
+});
 test('completed packing retains pending writer diagnostics and uses exact numeric target',async()=>{
  const panel=new StorageMaintenance();let submitted;
  panel.services={storageDiagnostics:async()=>diagnostics,operations:async()=>[{kind:'packing',operationId:'op',state:'completed',phase:'completed',bytesCompleted:100,totalBytes:100}],startPacking:async value=>{submitted=value;}};

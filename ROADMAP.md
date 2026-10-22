@@ -876,3 +876,6 @@ Initial acquisition also writes its actual tuple directories and original PNGs u
 - [ ] Verify the rebuilt guided device sign-in, physical packaged console resource and actual owned-process teardown. Source implementation and 26 focused integration checks are preserved; native execution remains unverified.
 - [ ] Verify a synthetic encrypted round trip against the newly created public destination. Public visibility and authenticated write permission were read back; no vault objects have been uploaded.
 - [x] Independently review the initial model-readiness observer and pass its eight focused ordering checks without weakening native ownership proof. Productive-source rebuild and runtime acceptance remain separate unfinished items.
+
+- [x] Verify the downloaded 1.845.1 physical console relay with actual C# compilation, ConPTY initialization, owned synthetic child cancellation and natural-exit propagation; official authorization and installed behavior remain separate.
+- [ ] Verify the direct Docker Hub storage navigation and leading sign-in/destination controls in the new built GUI, then update the existing installation at its safe lifecycle boundary.

@@ -38,7 +38,7 @@ export const HOME_CATALOG = Object.freeze([
   ['workflow', text('Choose where documents and downloads are kept.', '揀選文件同下載內容存放嘅位置。')],
   ['ollama', text('Use language models that run on this computer.', '使用喺呢部電腦上面行嘅語言模型。')],
   ['server-manager', text('Prepare and manage game servers on this or another computer.', '喺本機或者其他電腦準備同管理遊戲伺服器。')],
-  ['storage', text('Check space and tidy up stored data.', '檢查空間同整理已儲存嘅資料。')],
+  ['storage', text('Sign in to Docker Hub, choose encrypted backup storage, synchronize and restore.', '登入 Docker Hub、選擇加密備份儲存、同步同還原。')],
   ['status', text('Version, build details and feature coverage.', '版本、建置資料同功能覆蓋。')],
   ['details', text('Properties and metadata of the selected file.', '所選檔案嘅屬性同中繼資料。')],
   ['settings', text('Language, theme, notifications and everyday options.', '語言、主題、通知同日常選項。')],

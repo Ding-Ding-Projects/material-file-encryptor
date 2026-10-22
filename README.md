@@ -648,3 +648,5 @@ Selected-session registry conflict review now includes strict reviewed-version v
 [Reviewed historical screenshot gallery](https://ding-ding-projects.github.io/material-file-encryptor-captures/) contains the separate public evidence inventory and its limits. Current registry/conflict runtime screenshots remain pending.
 
 Registry storage source now includes guided official device sign-in and an explicit public/private destination choice. Existing private settings retain their visibility. Focused source checks pass; the rebuilt sign-in flow, console teardown and production round trip remain unverified. See the [guided sign-in documentation](docs/features/storage/registry-sync.md#guided-sign-in-and-explicit-visibility).
+
+Open **Docker Hub storage** from the main navigation to reach sign-in and backup destination setup directly. The storage view leads with sync, schedule and restore controls, while retaining packing and image export below them. The downloaded console relay has separate [native lifecycle evidence](docs/evidence/registry-login-native-81cb8ca5.json); live interface and installed-update verification remain distinct.

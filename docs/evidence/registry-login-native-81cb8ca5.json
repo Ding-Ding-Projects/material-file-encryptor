@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "81cb8ca5b5e879f26f70771644e9e839fb12ae0e",
+  "release": "v1.845.1",
+  "scope": "native console relay with an owned synthetic child",
+  "route": "native-hidden-process-no-ui",
+  "packageSha256": "234aeede00a75e3b2b504a19f37048ff8ff4bcafbfb21d1c44c2742a02dbe434",
+  "packagedRelaySha256": "d2e7b74ae888f225f1fb75a4ca585b84c897cd684be678c1fe7492c1e11f5232",
+  "sourceRelaySha256": "ea20f8b500bcf0191af04aeccaaa98ca32cab3f1be3a92e612289b981a8903c9",
+  "fixtureSha256": "957f4226181035000582fd2eba5adb27b463dace576072527276d0e6089fb7c8",
+  "harnessSha256": "d64ccc1df66840bdebd65d76ebab1126e195b9842c0927c15501373e4d7fe4a0",
+  "compile": {
+    "exactSupportedPowerShellHost": true,
+    "embeddedCSharpCompiled": true
+  },
+  "package": {
+    "provenanceSourceMatched": true,
+    "downloadHashMatched": true,
+    "physicalResourceEntry": "lib/net45/resources/registry-login-console.ps1",
+    "physicalResourceResolved": true,
+    "sourceTextMatchedAfterLineEndingNormalization": true
+  },
+  "cancellation": {
+    "actualConPtyInitialized": true,
+    "syntheticChildObserved": true,
+    "serviceCloseCalled": true,
+    "relayClosed": true,
+    "exactChildAbsent": true,
+    "state": "cancelled",
+    "pending": false
+  },
+  "naturalExit": {
+    "exitCode": 23,
+    "syntheticOutputForwarded": true,
+    "stderrAbsent": true,
+    "exactChildAbsent": true
+  },
+  "officialDeviceAuthorization": "not-started",
+  "credentialStoreModified": false,
+  "browserOpened": false,
+  "guiAcceptance": "unverified",
+  "installedAcceptance": "unverified",
+  "limitations": [
+    "The synthetic child proves native relay lifecycle behavior, not Docker device authorization.",
+    "The package was extracted and inspected; installation and update behavior require separate evidence.",
+    "No credential value, device code, private path or raw provider output is included."
+  ]
+}

@@ -1,5 +1,13 @@
 # Storage and guided sign-in continuation
 
+## Resumed implementation, latest direction
+
+This section supersedes the historical closeout boundary below. The owner resumed work and reported that the storage controls were not visible. A fresh account reading showed 93% allowance remaining. The running installed version is 1.840.1, which lacks the new registry panel. Preserve that active installation while verifying its replacement.
+
+The source now gives Docker Hub storage a direct localized main-navigation entry, leads with sign-in/destination/sync/schedule/restore controls, and retains the original packing and image-export controls below them. Twenty-four focused navigation/storage checks passed. The downloaded 1.845.1 package and physical native relay have verified hashes; the relay compiled and passed actual ConPTY initialization, owned synthetic-child cancellation and natural-exit propagation. See docs/evidence/registry-login-native-81cb8ca5.json. Official authorization and installed behavior remain separate.
+
+The first hidden 1.845.1 GUI admission stopped before interaction because its descendant inventory changed. Its retained lifecycle was subsequently closed with fresh complete native and peer proof. No successful GUI interaction was claimed. Build the frozen current source through build.bat, then run the prepared strict GUI diagnostic against its new exact source and package hashes. Preserve the existing authenticated account, real user data, original ownership proof, bounded retries and safe normal installed-update lifecycle. Complete the synthetic public destination round trip and installed scheduling after the GUI seam is verified.
+
 ## Latest owner direction
 
 Finish encrypted registry synchronization, schedules, restore and multi-device conflict handling. Use a public Docker Hub destination. Push reviewed public source through the clean public lineage. Include guided device sign-in inside the storage GUI. The latest direction requests immediate preservation and scoped cleanup, so no further implementation or runtime build is being started in this closeout.
