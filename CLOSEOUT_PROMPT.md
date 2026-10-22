@@ -1,37 +1,25 @@
-# Storage GUI continuation after requested preservation
+# Storage delivery continuation
 
-## Latest direction
+## Preserved source and verified results
 
-The owner resumed storage GUI work, reported that the controls were not visible, then requested preservation and scoped cleanup again. Stop new implementation, installation and GUI testing for this closeout. The running installed version remains 1.840.1 and was not controlled or closed. It predates the new registry panel. Applying the accepted replacement is the next user-visible delivery step.
+The current task corrects packaged verification to use the direct storage destination and the real narrow navigation drawer. Twenty-four focused navigation/provider/panel checks passed, with independent source review. The old Tools route failed the same destination contract before replacement. Use the current commit history for this record's own source identity.
 
-## Integrated source
+Accepted normal release v1.851.1 is bound to 015bfac74d10fe49fbf785f2ba99616be19b460f. Downloaded payload SHA-256 values, RELEASES SHA-1/length and unsigned Setup state were verified. The exact root build at that source passed with clean unchanged input, current Core.Tests fixtures and a 6,276-entry package privacy scan with zero rejected entries. See docs/evidence/registry-build-015bfac7.json. Keep local build and downloaded release bytes separately bound.
 
-Public main and the feature branch were independently read back at a6ecb502ec5a392907c99f402b2ac797a77036ef. Pull request 18 is merged at that exact commit. The required publication check passed. This closeout-only commit updates the continuation record; use git log -1 -- CLOSEOUT_PROMPT.md for its own identity. The private recovery repository also retains a6ecb502. Keep ordinary protected-branch checks enabled, never force push, and preserve every unmerged historical branch.
+Two native hidden-desktop diagnostics reached real storage controls and verified native/CDP ownership. The second measured 1180x850, English/light and DPR 1.0000000298023224; strict floating-point equality in the diagnostic caused its timeout and has been corrected to the existing tolerance. No screenshot or layout row completed. Both six-process trees were independently confirmed absent, their desktops closed and synthetic credentials retired. Original unsuccessful receipts remain retained.
 
-## Completed verification
+## Incomplete work
 
-- Direct localized Docker Hub storage navigation opens the existing panel. Sign-in, destination, sync, schedule, restore and conflict controls precede packing and image export without duplicating state. Twenty-four focused navigation/storage checks passed and independent source review found no actionable concern.
-- Exact build.bat /s passed at a67d5ed5d91bd71fe16876ea941117679830ea42 with clean unchanged source. Real hidden-desktop interaction reached the direct entry, verified the existing account through Start then Check, saved public visibility and listed snapshots through the owned WSL verification transport. This is GUI wiring proof, not production transport proof.
-- Downloaded release v1.845.1 is bound to 81cb8ca5. Its physical console resource compiled and passed actual ConPTY initialization, owned synthetic-child cancellation/absence and natural-exit propagation. Official new-device authorization was not performed. See docs/evidence/registry-login-native-81cb8ca5.json.
-- The actual public provider test first exposed a blob-download redirect. Repair 6bf655f96314fa13d75d50e8d6fd53ff54006714 follows bounded blob-only HTTPS redirects through the exact documented host and digest path, strips credentials across origins, and retains exact length/digest checks. Sixteen focused checks passed with one existing endpoint skip; the positive regression failed against the original implementation. Independent security review approved the narrow change.
-- The repaired production client verified the retained initial publication, completed five syncs, added three immutable revisions and preserved both computers' edits. Unbound restore supplied neither original source folder; native decryption in a separate root matched four files and 26 plaintext bytes. Client and native-build source identities remain separate, with identical native subtrees proved. See docs/evidence/registry-public-6bf655f9.json.
-- The public destination is transitdc/material-file-encryptor-storage. It now contains four immutable synthetic revisions. No real-user data was uploaded, no paid upgrade was enabled, and no public history was deleted.
-- The acquisition adapter uses the direct storage entry; its causal regression and sixteen focused checks passed, including construction of 5856 declared plans. Construction is not execution.
+The existing installation remains 1.840.1 with its user processes active. A structured request asked the owner to save and quit normally before the verified update. No forced close or installation action occurred. Apply the current accepted release through the supported route only after safe normal exit, then verify the actual installed binary and controls.
 
-## Exact remaining gaps
+Storage GUI acceptance remains 0 of 1,584 declared rows. Four native producer states remain unavailable: registry-unavailable, registry-cancelling, conflicts-loading and conflicts-error. Physical display-scale evidence is separate from CDP scaling. The hosted provenance schema cannot be relabelled as the strict local-build receipt; genuine admission must preserve the distinction. Actual installed scheduled execution and full GUI synchronization, restore and conflict workflows remain pending.
 
-The active installation must be updated through its supported route at a safe normal lifecycle boundary. Do not force-close active work, replace credentials, switch accepted channels, or initiate host power/login actions. The main-source release workflow may still be running; read back its exact source, normal-release classification, expected assets and accepted-channel state before applying it.
+The public destination transitdc/material-file-encryptor-storage remains public. Prior synthetic production synchronization and fresh restore are verified by docs/evidence/registry-public-6bf655f9.json. Preserve its four immutable synthetic revisions and existing sign-in. Do not upload real user data, enable paid upgrades or recreate the canceled private runner.
 
-The full layout/localization matrix, GUI synchronization/restore/conflict acceptance, installed background-task execution and installed-update acceptance remain incomplete. No CSS repair was justified by the interrupted geometry measurement. The last diagnostic stopped on unavailable native process-image proof, then exited through the inspected Settings-menu Quit control. All eight recorded processes were independently confirmed absent, the desktop closed and the synthetic credential retired. No owned GUI process or temporary mount remains.
+## Recovery and next actions
 
-Three genuine private images from a67d5ed5 have source/package/native ownership proof but lack complete viewport/DPR/settings/runtime-observation/layout tuple evidence. They remain ineligible for public promotion. Keep their original bytes and summaries. The existing public historical gallery was reverified: 76 of 76 images match the reviewed inventory and the source README backlink is on main. No new gallery publication was made.
+Owned ignored evidence remains under out/registry-gui/final-015, out/installed-storage-1.851.1 and out/release-v1.851.1. The current native fixture receipt is out/evidence/storage-final-015-build.json; the genuine local packaged binding is out/evidence/storage-final-015-packaged-binding.json. The corrected diagnostic is ready for a fresh launch after the verifier source is preserved.
 
-The private self-hosted runner request remains canceled. Status Hub access and Projects authorization were unavailable. Keep the throwaway MFE-Storage-Test-20261021 WSL environment and synthetic fixtures. Preserve original provider history and existing sign-in.
+All seven original historical branch tips were freshly read back in the private recovery repository. Never merge their original histories into the public lineage. Preserve them and any active or ownership-uncertain working tree. No cleanup deletion was performed in this continuation. Before any eligible future deletion, verify a fresh archive and separate copies of ignored evidence and announcement originals.
 
-## Recovery locations and next actions
-
-The owning primary checkout retains out/evidence/storage-navigation-build.json, ignored out/login-native-81cb, out/registry-production-a67 and out/registry-gui evidence. Generated announcement images remain under ignored .agent/announcements. Owner-only archives preserve all checked-out trees and Git administration, with ignored visual evidence copied separately. Read the latest archive/cleanup receipt before considering deletion.
-
-Seven historical branch tips are not ancestors of the integrated main and must be retained. The current feature branch is integrated but remains useful for pending acceptance; do not infer completion from ancestry. No automatic cleanup may remove active, unfinished, uncommitted or unpushed work.
-
-On continuation: read this record and issue 1's latest handoff; recheck allowance and repository state; verify the current accepted main release; safely apply it to the existing installation; confirm the visible storage navigation; complete the remaining bounded runtime and scheduling acceptance. Retain the three-attempt limit for materially unchanged failures and one-hour limit for observing one external operation.
+Continue from live account allowance and actual source/ref state. Limit materially unchanged attempts to three and external observation to one hour. At 10% or less remaining allowance, preserve unfinished work and exact evidence without claiming delivery complete.

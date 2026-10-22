@@ -54,6 +54,14 @@ Public encrypted objects and snapshot metadata are downloadable by others. Encry
 
 The sign-in state machine, renderer controls and physical packaged-resource resolution have focused source-test coverage. The downloaded `v1.845.1` relay passed native compilation, actual ConPTY initialization, owned-child cancellation and natural-exit checks with a fixed synthetic child. See [the source-bound relay receipt](../../evidence/registry-login-native-81cb8ca5.json). Those results do not establish actual device authorization, installed behavior or the subsequently changed navigation. Built GUI acceptance is recorded separately in the handoff.
 
+## Delivery and verification state
+
+Normal release v1.851.1 is bound to source `015bfac74d10fe49fbf785f2ba99616be19b460f`. Its downloaded installer, full package and release index match published SHA-256, SHA-1 and length records. The existing installation still needs a safe normal exit before the supported update can be applied. Download verification is not installed-update proof.
+
+The exact root build at that source passed with unchanged source, current native fixtures and zero rejected entries in the package privacy scan. See [the build receipt](../../evidence/registry-build-015bfac7.json). The GUI verification driver now follows the direct storage entry and opens the real navigation drawer at narrow widths before activating storage. Focused checks cover visibility, disabled controls and bounded waits; they do not establish pointer or keyboard delivery.
+
+The [public synthetic provider receipt](../../evidence/registry-public-6bf655f9.json) separately records synchronization, independent-device convergence and fresh restore. The full 33-state, 48-configuration GUI matrix, physical display-scale evidence and installed scheduled execution remain incomplete. Existing package diagnostics have zero accepted matrix rows.
+
 ## Version-bound conflict review
 
 The desktop bridge exposes `listRegistryConflicts` and `resolveRegistryConflict` only through the selected vault session. Paging is bounded; conflict identifiers and version identifiers use fixed hexadecimal forms. Resolution freezes the reviewed identifiers, opens a main-owned localized confirmation with Cancel selected, and checks session, shutdown and registry admission again before the native request. Native replay must compare the exact versions atomically. A changed review requires refresh and reselection.

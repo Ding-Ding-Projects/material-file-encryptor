@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "015bfac74d10fe49fbf785f2ba99616be19b460f",
+  "entrypoint": "build.bat /s",
+  "startedAtUtc": "2026-10-22T01:48:10.0456897Z",
+  "finishedAtUtc": "2026-10-22T01:57:32.073141Z",
+  "exitCode": 0,
+  "sourceUnchanged": true,
+  "fixtureAssemblySha256": "cb8ded4a34f1d7ab69d06f5ba2880bda26992285d76e6b2bfaf6d86590e60044",
+  "executableSha256": "4850985bcb238b89069acce320c6ce45ccdf703736a03e6d863b34c189bac87e",
+  "archiveSha256": "8f80f9975b438bc0acff56943bcb1449fdcd0dbb1a80fa06be07cc29805f95fb",
+  "nativeHostSha256": "b140331244b43036b9e896d34255923872167e736cf94a704214ad1bfcbb88e7",
+  "privacyScan": {
+    "entries": 6276,
+    "rejected": 0
+  },
+  "runtimeAcceptance": false,
+  "installedAcceptance": false
+}
