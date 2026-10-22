@@ -874,7 +874,7 @@ Initial acquisition also writes its actual tuple directories and original PNGs u
 - [x] Repair re-encrypted activity copies, prove the same regression fails with the original Core and passes with the repaired Core, then verify two mounted publications and 274,432 restored bytes without weakening immutable-object checks. Evidence: `docs/evidence/registry-native-0bd72643.json`.
 
 - [ ] Verify the rebuilt guided device sign-in, physical packaged console resource and actual owned-process teardown. Source implementation and 26 focused integration checks are preserved; native execution remains unverified.
-- [ ] Verify a synthetic encrypted round trip against the newly created public destination. Public visibility and authenticated write permission were read back; no vault objects have been uploaded.
+- [x] Verify a synthetic encrypted round trip against the public destination. Four immutable synthetic revisions, five synchronizations and fresh native restore are recorded in `docs/evidence/registry-public-6bf655f9.json`.
 - [x] Independently review the initial model-readiness observer and pass its eight focused ordering checks without weakening native ownership proof. Productive-source rebuild and runtime acceptance remain separate unfinished items.
 
 - [x] Verify the downloaded 1.845.1 physical console relay with actual C# compilation, ConPTY initialization, owned synthetic child cancellation and natural-exit propagation; official authorization and installed behavior remain separate.
@@ -882,3 +882,6 @@ Initial acquisition also writes its actual tuple directories and original PNGs u
 
 - [x] Verify the direct navigation, existing-account sign-in and explicit public destination Save/List wiring in the real a67d5ed5 package through owned WSL transport. Installed update and full layout/localization acceptance remain separate pending items.
 - [x] Verify the real public synthetic round trip: retained publication readback, five synchronizations, independent-device convergence, fresh unbound restore and native decryption comparison. Evidence: `docs/evidence/registry-public-6bf655f9.json`.
+- [x] Build exact source 015bfac7 through the root entrypoint with unchanged source and verified native fixtures; package privacy reported 6,276 entries and zero rejected entries. Evidence: `docs/evidence/registry-build-015bfac7.json`.
+- [x] Correct the registry verification driver's direct navigation and narrow drawer path; 24 focused checks passed with independent source review and an old-route causal negative. Runtime matrix acceptance remains separate.
+- [ ] Apply the verified v1.851.1 download after normal application exit and prove actual installed version, storage controls and scheduled execution. No forced exit or installation replacement has occurred.

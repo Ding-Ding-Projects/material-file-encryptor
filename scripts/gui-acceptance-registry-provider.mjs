@@ -34,6 +34,38 @@ export function registryProductionControl({panel, key, value, choice, conflictId
   return true;
 }
 
+export async function navigateRegistryStorage(page) {
+  const visible = () => {
+    const node = document.querySelector('#view-storage');
+    return Boolean(node && !node.hidden && node.getClientRects().length);
+  };
+  if (await page.evaluate(visible)) return;
+  const sidebarVisible = () => {
+    const node = document.querySelector('.sidebar');
+    if (!node || node.hidden || !node.getClientRects().length) return false;
+    const style = getComputedStyle(node);
+    return style.visibility === 'visible' && style.display !== 'none';
+  };
+  if (!await page.evaluate(sidebarVisible)) {
+    await page.evaluate(() => {
+      const node = document.querySelector('mfe-top-bar')?.shadowRoot?.querySelector('.drawer');
+      if (!node || node.disabled || node.hidden || !node.getClientRects().length ||
+          getComputedStyle(node).visibility !== 'visible' || getComputedStyle(node).display === 'none')
+        throw Error('Navigation drawer unavailable');
+      node.click();
+    });
+    await page.waitForFunction(sidebarVisible, undefined, {timeout: 10000});
+  }
+  await page.evaluate(() => {
+    const node = document.querySelector('mfe-navigation-rail')?.shadowRoot?.querySelector('[data-destination="storage"]');
+    if (!node || node.disabled || node.hidden || !node.getClientRects().length ||
+        getComputedStyle(node).visibility !== 'visible' || getComputedStyle(node).display === 'none')
+      throw Error('Storage navigation unavailable');
+    node.click();
+  });
+  await page.waitForFunction(visible, undefined, {timeout: 10000});
+}
+
 /** Compose real encrypted native fixtures with an admitted packaged session.
  * A proxy is an owned real loopback server, never a replacement fetch function.
  * Native dialog drivers must operate the admitted hidden desktop and return
@@ -54,12 +86,7 @@ export function createRegistryFixtures({opened, nativeFixtureOptions, proxy, dia
   const control = (key, value, conflict = false) => page.evaluate(registryProductionControl, {panel:conflict ? 'mfe-registry-conflicts-panel' : 'mfe-registry-storage-panel', key, value});
   const choose = choice => page.evaluate(registryProductionControl, {panel:'mfe-registry-conflicts-panel', choice});
   const selectConflict = () => page.evaluate(registryProductionControl, {panel:'mfe-registry-conflicts-panel', conflictId:active.conflictId});
-  async function navigate() {
-    if(await page.evaluate(()=>{const node=document.querySelector('#view-storage');return Boolean(node&&!node.hidden&&node.getClientRects().length);})) return;
-    await page.evaluate(()=>{const rail=document.querySelector('mfe-navigation-rail');const node=rail?.shadowRoot?.querySelector('[data-destination="tools"]');if(!node||node.disabled)throw Error('Storage navigation unavailable');node.click();});
-    await page.waitForFunction(()=>[...document.querySelectorAll('mfe-context-menu')].some(menu=>!menu.hidden&&menu.getClientRects().length),undefined,{timeout:10000});
-    await page.evaluate(()=>{const menu=[...document.querySelectorAll('mfe-context-menu')].find(menu=>!menu.hidden&&menu.getClientRects().length);const index=menu?.items.findIndex(item=>item.id==='storage');const node=menu?.itemsHost.querySelectorAll('md-menu-item')[index];if(!(index>=0)||!node||node.disabled)throw Error('Storage destination unavailable');node.click();});
-  }
+  const navigate = () => navigateRegistryStorage(page);
   const waitIdle = () => page.waitForFunction(() => {
     const host=document.querySelector('mfe-storage-maintenance');
     return ['mfe-registry-storage-panel','mfe-registry-conflicts-panel'].every(tag => {const p=host?.shadowRoot?.querySelector(tag); return p && !p.current()?.pending;});
