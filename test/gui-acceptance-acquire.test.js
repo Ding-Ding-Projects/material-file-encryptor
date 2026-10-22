@@ -11,6 +11,14 @@ import {ownedFixturePreparation} from '../scripts/gui-acceptance-baseline.mjs';
 const inventory=JSON.parse(await fs.readFile(new URL('../contracts/gui-states.json',import.meta.url)));
 const launch={cdp:{port:19222,expectedUrl:'file:///synthetic/resources/index.html'}};
 const settledModel={schemaVersion:1,state:'settled',initialization:'settled',inspection:'settled',pendingRequests:0,pendingOperations:0};
+test('registry acquisition activates the direct storage rail destination without a tools menu',()=>{
+ const state=inventory.states.find(row=>row.id==='registry-ready');
+ const tuple=matrixFor(inventory).find(row=>row.state===state.id);
+ const plan=makeAcquisitionPlan({launch,receipt:path.resolve('receipt.json'),tuple,state,outputRoot:path.resolve('captures')});
+ const navigation=plan.steps.find(row=>row.id.endsWith('-state-navigation'));
+ assert.ok(navigation.expression.includes(JSON.stringify('[data-destination="storage"]')));
+ assert.equal(plan.steps.some(row=>row.id.endsWith('-state-menu')||row.id.endsWith('-state-destination')),false);
+});
 
 test('model setup readiness rejects early zero, active work and failed settlement',()=>{
  assert.equal(modelReadinessSettled(settledModel),true);

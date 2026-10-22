@@ -879,3 +879,6 @@ Initial acquisition also writes its actual tuple directories and original PNGs u
 
 - [x] Verify the downloaded 1.845.1 physical console relay with actual C# compilation, ConPTY initialization, owned synthetic child cancellation and natural-exit propagation; official authorization and installed behavior remain separate.
 - [ ] Verify the direct Docker Hub storage navigation and leading sign-in/destination controls in the new built GUI, then update the existing installation at its safe lifecycle boundary.
+
+- [x] Verify the direct navigation, existing-account sign-in and explicit public destination Save/List wiring in the real a67d5ed5 package through owned WSL transport. Installed update and full layout/localization acceptance remain separate pending items.
+- [x] Verify the real public synthetic round trip: retained publication readback, five synchronizations, independent-device convergence, fresh unbound restore and native decryption comparison. Evidence: `docs/evidence/registry-public-6bf655f9.json`.

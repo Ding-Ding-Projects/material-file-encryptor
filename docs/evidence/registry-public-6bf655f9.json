@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "kind": "synthetic-public-registry-verification",
+  "clientSourceCommit": "6bf655f96314fa13d75d50e8d6fd53ff54006714",
+  "assemblyBuildSourceCommit": "a67d5ed5d91bd71fe16876ea941117679830ea42",
+  "nativeSourceTree": "a9e8d5d70832bd277ae2a336d2a91988a24889aa",
+  "nativeSubtreeEqualityVerified": true,
+  "assemblySha256": "cb9ee0d3d80a639b3a45b82c59d3344982721f492645c74cd1c844ceac9d9b7c",
+  "coreSha256": "47ba7986fc566b0163600d92f50f8471121b709bdbf6c0599c8c5023292c2097",
+  "repository": "transitdc/material-file-encryptor-storage",
+  "visibility": "public",
+  "storedSignInVerified": true,
+  "deviceAuthorizationStarted": false,
+  "priorPublicationVerified": true,
+  "priorPublicationDigest": "sha256:5fc85b8a6c981121e860176ab26ab060c3a1b31221b89ae404a7872f287eaa49",
+  "successfulPublications": 3,
+  "verifiedSynchronizations": 5,
+  "revisionCount": 4,
+  "revisions": [
+    {
+      "digest": "sha256:1b0567bcf84d8d0b95e4509ad459802b3a60ee205344461537cfc417f7c0a1cd",
+      "tag": "mfe-14cf89b09d544246985ef157e650aaf4-29e07d2d1de446ae98a4f1ba756708de"
+    },
+    {
+      "digest": "sha256:01dd341f443fdc025f1e26f2a42e84fc3f3f3d1e4c571f70c773f716a7191bcf",
+      "tag": "mfe-14cf89b09d544246985ef157e650aaf4-3a5816863ca14c66976e59bd6e93e12a"
+    },
+    {
+      "digest": "sha256:5fc85b8a6c981121e860176ab26ab060c3a1b31221b89ae404a7872f287eaa49",
+      "tag": "mfe-14cf89b09d544246985ef157e650aaf4-fa4cb3c367e14a1bb5c459cf348a1166"
+    },
+    {
+      "digest": "sha256:5989af07c159d8639cfc73539eecf0b5d05f30a50aaf75326ddab74e2397ea64",
+      "tag": "mfe-bcf5c8d4116247ccb017d08430b559e6-c0151856096c4f969be00f29bfbcf429"
+    }
+  ],
+  "devicesConverged": true,
+  "convergedEntryCount": 4,
+  "restoredEntryCount": 4,
+  "restoredPlaintextBytes": 26,
+  "restoreDigest": "sha256:01dd341f443fdc025f1e26f2a42e84fc3f3f3d1e4c571f70c773f716a7191bcf",
+  "sourceIndependentRestore": true,
+  "nativeDecryptionVerified": true,
+  "mountsCreated": 0,
+  "activeServices": 0,
+  "activeSnapshotLeases": 0,
+  "authorizationChecks": 28,
+  "httpSummary": {
+    "provider-auth:POST:200": 29,
+    "provider-metadata:GET:200": 28,
+    "registry-auth:GET:200": 28,
+    "tag-list:GET:200": 7,
+    "manifest:GET:200": 60,
+    "blob-read:GET:307": 146,
+    "blob-read:GET:200": 146,
+    "blob-upload:POST:202": 27,
+    "blob-upload:PUT:201": 27,
+    "manifest:PUT:201": 3
+  },
+  "completedAt": "2026-10-22T00:49:20.184Z"
+}
