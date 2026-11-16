@@ -183,7 +183,7 @@ h2{margin:0 0 16px;font:500 22px/28px var(--mfe-font,system-ui)}
 .card{animation:mfe-home-card-in var(--md-sys-motion-duration-medium2,300ms) var(--md-sys-motion-easing-emphasized-decelerate,ease-out) both}
 @media(prefers-reduced-motion:reduce){.card{animation:none;transition:none}.card::before{transition:none}}
 .lead{margin:0 0 16px;color:var(--md-sys-color-on-surface-variant,#44474f)}
-.flagship{grid-template-columns:repeat(auto-fill,minmax(min(100%,17rem),1fr))}
+.flagship{grid-template-columns:repeat(auto-fill,minmax(min(100%,21rem),1fr))}
 .card.big{min-block-size:156px;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"icon name" "desc desc" "foot foot";gap:8px 12px;padding:18px;border-radius:20px;animation-delay:calc(var(--i,0)*55ms)}
 .card.big .icon{margin:0;inline-size:44px;block-size:44px;border-radius:14px}
 .card.big .name{align-self:center;font-size:17px}
@@ -194,7 +194,7 @@ h2{margin:0 0 16px;font:500 22px/28px var(--mfe-font,system-ui)}
 .action{margin-inline-start:auto;flex:none;color:var(--md-sys-color-primary,#5466a8);font-weight:600}
 .strip{position:relative;isolation:isolate;overflow:hidden;box-sizing:border-box;inline-size:100%;display:flex;align-items:center;gap:14px;margin-block-start:12px;padding:14px 18px;border:1px solid var(--md-sys-color-outline-variant,#c4c6d0);border-radius:16px;background:var(--md-sys-color-surface-container-low,var(--md-sys-color-surface,#fff));color:inherit;font:inherit;text-align:start;cursor:pointer;animation:mfe-home-card-in var(--md-sys-motion-duration-medium2,300ms) var(--md-sys-motion-easing-emphasized-decelerate,ease-out) both;animation-delay:calc(var(--i,6)*55ms)}
 .strip:hover{border-color:var(--md-sys-color-outline,#74777f)}.strip:focus-visible{outline:3px solid var(--md-sys-color-primary,#5466a8);outline-offset:2px}
-.strip .icon{flex:none;margin:0}.strip .text{flex:1;min-inline-size:0;display:grid;gap:2px}.strip .name{font-size:15px}
+.strip .icon{flex:none;margin:0}.strip .text{flex:1;min-inline-size:0;display:grid;gap:2px}.strip .name{grid-area:auto;font-size:15px}.strip .desc{grid-area:auto}
 .recent{margin-block-start:12px;border:1px solid var(--md-sys-color-outline-variant,#c4c6d0);border-radius:16px;overflow:hidden}
 .recent h3{margin:0;padding:10px 16px;font:700 11px/16px var(--mfe-font,system-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--md-sys-color-on-surface-variant,#44474f);background:var(--md-sys-color-surface-container-low,transparent);border-block-end:1px solid var(--md-sys-color-outline-variant,#c4c6d0)}
 .recent ul{list-style:none;margin:0;padding:0}

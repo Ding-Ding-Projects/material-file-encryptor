@@ -1,8 +1,17 @@
 import {localized, text} from '../../../shared/surface/registry.js';
 import {HOME_ICONS, moveHomeFocus} from '../../../shared/surface/home.js';
 import {LOCAL_TOOL_LABELS, LOCAL_TOOL_SUMMARIES, LOCAL_TOOL_KEYWORDS, localToolGroups, LOCAL_TOOLS_LABEL} from '../../../shared/surface/local-tools-catalog.js';
-import {control} from '../../../shared/surface/controls.js';
 import '../../../shared/surface/search.js';
+
+/** A keyboard-operable button made from a div, so its layout is not constrained by a Material button's label slot. */
+function pressable(node) {
+  node.setAttribute('role', 'button');
+  node.tabIndex = 0;
+  node.addEventListener('keydown', event => {
+    if (event.target !== node || event.altKey || event.ctrlKey || event.metaKey) return;
+    if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); node.click(); }
+  });
+}
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 function glyph(id) {
@@ -62,8 +71,8 @@ export function mountLocalTools(host, {isRegistered = () => true, open = () => {
     nav.replaceChildren();
     const choices = [{id: 'all', label: text('All', '全部'), count: total()}, ...groups.map(group => ({id: group.id, label: group.label, count: group.items.length}))];
     for (const choice of choices) {
-      const button = control('button', {}, [], doc);
-      button.type = 'button'; button.className = 'local-tools-category'; button.dataset.category = choice.id;
+      const button = doc.createElement('div');
+      pressable(button); button.className = 'local-tools-category'; button.dataset.category = choice.id;
       button.setAttribute('aria-pressed', String(choice.id === category));
       const name = doc.createElement('span'); name.textContent = localized(choice.label, language());
       const count = doc.createElement('span'); count.className = 'count'; count.textContent = String(choice.count);
@@ -80,8 +89,8 @@ export function mountLocalTools(host, {isRegistered = () => true, open = () => {
       const grid = doc.createElement('ul'); grid.className = 'local-tools-grid';
       for (const id of group.items) {
         const item = doc.createElement('li');
-        const tile = control('button', {}, [], doc);
-        tile.type = 'button'; tile.className = 'local-tools-tile'; tile.dataset.tool = id; tile.dataset.category = group.id;
+        const tile = doc.createElement('div');
+        pressable(tile); tile.className = 'local-tools-tile'; tile.dataset.tool = id; tile.dataset.category = group.id;
         tile.style.setProperty('--i', String(index++));
         const label = LOCAL_TOOL_LABELS[id] || text(id, id), summary = LOCAL_TOOL_SUMMARIES[id] || text('Open this tool.', '打開呢個工具。');
         tile.setAttribute('aria-label', localized(label, language()));
