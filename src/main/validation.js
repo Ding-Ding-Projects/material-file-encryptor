@@ -42,6 +42,7 @@ function validateDesktopWorkflow(action, payload) {
   const schema=schemas[action],prototype=Object.getPrototypeOf(payload);
   if ((prototype!==Object.prototype&&prototype!==null)||Reflect.ownKeys(payload).some(key=>typeof key!=='string'||!Object.hasOwn(schema,key))||Object.entries(schema).some(([key,valid])=>!valid(payload[key]))||(action==='preparePublication'&&payload.route==='fork'&&!payload.upstream)||Object.hasOwn(schema,'sourceKind')&&(payload.sourceKind==='gh-keyring'&&payload.credentialRevision!==null||payload.sourceKind==='protected-product'&&!uuid(payload.credentialRevision))) throw new Error('Unsupported account or publication payload.');
 }
+import { TOOLBOX_ACTIONS } from './toolbox-host.js';
 export function validateFeatureRequest(feature, action, payload, { browser = false } = {}) {
   const actions = {
     ...(!browser?{surprise:['resolvePublishedDish']}:{}),
@@ -50,6 +51,7 @@ export function validateFeatureRequest(feature, action, payload, { browser = fal
     updates: ['status','check','download',...(!browser?['install']:[])],
     ollama: [...(!browser?['configureRuntime','runtimeInstall','runtimeInstallCancel','runtimeStop']:[]),'status','catalog','refreshCatalog','models','show','deleteModel','copyModel','generate','hardware','cart','addToCart','removeFromCart','retryPull','startPulls','cancel','sessions','session','renameSession','deleteSession','exportSession','chat','profiles','preflight','launch','snapshots','restore','events','runtimeInstallStatus','runtimeStart','chooseRuntimeExecutable','registerProfile'],
     documentation: ['catalog','changelog'], status: ['status'],
+    ...(!browser?{toolbox:TOOLBOX_ACTIONS}:{}),
     ...(!browser?{'browser-pairing':['issue','clear']}:{}),
     personalization: [...(!browser?['accessibilityState']:[]),'sharedRead','sharedWrite','verifySharedCredential','setSharedCredential','fetchScheduleSource','listFonts',...(!browser?['setScheduleCredential','clearScheduleCredential','normalizeImage','fontMetadata','cancelFontMetadata']:[])],
     ...(!browser ? { 'server-manager': ['snapshot','refreshCatalogue','versions','resolveVersion','prepare','cancel','reviewLicense','capabilities','acceptLicense','start','status','stop','runtimeCandidate','prepareRuntime','runtimeStatus','cancelRuntime',...MANAGED_SERVER_ACTIONS] } : {}),

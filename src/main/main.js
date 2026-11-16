@@ -4,7 +4,7 @@ import {createBrowserConfirmPrompt} from './browser-confirm-prompt.js';
 import {readRuntimeAccessibility} from './startup-photo-service.js';
 import { selectVerificationRestartContext } from './verification-restart-context.js';
 import { readFileSync } from 'node:fs';
-import { app, autoUpdater, BrowserWindow, dialog, ipcMain, Menu, powerMonitor, safeStorage, shell, Tray } from 'electron'
+import { app, autoUpdater, BrowserWindow, desktopCapturer, dialog, ipcMain, Menu, powerMonitor, safeStorage, shell, Tray } from 'electron'
 import { createMaterialDialogs, materialDialogPaths } from './material-dialog.js'
 import { describePending, shutdownPrompt } from './shutdown-pending.js';
 import { createTrayNotice } from './tray-notice.js';
@@ -29,6 +29,7 @@ import { createVaultImageRequests, VAULT_IMAGE_METHODS } from './vault-image-req
 import { validateRequest, validateFeatureRequest, validateWorkflowAdmission, trustedFrame } from './validation.js';
 import { parseVocabulary, MAX_VOCABULARY_BYTES } from '../shared/personal-vocabulary.js';
 import { createFeatureServices } from './feature-services.js';
+import { createToolboxHost } from './toolbox-host.js';
 import {MODEL_STARTUP_NOT_STARTED} from './model-startup-readiness.js';
 import { createLocalAdapter } from './local-adapter.js';
 import { explorerCopyPath } from './explorer-command.js';
@@ -49,6 +50,7 @@ const rendererPath = path.resolve(directory, '../renderer/index.html');
 // Message boxes render as Material dialogs in main-owned windows; file pickers stay native.
 const materialDialogs = createMaterialDialogs({ BrowserWindow: DesktopBrowserWindow, ipcMain, nativeDialog: dialog, ...materialDialogPaths(directory), getTheme: async parent => { const source = parent ?? window; if (!source || source.isDestroyed()) return null; return source.webContents.executeJavaScript('document.documentElement.dataset.theme || ""', true); }, getLanguage: async parent => { const source = parent ?? window; if (!source || source.isDestroyed()) return null; return source.webContents.executeJavaScript('document.documentElement.getAttribute("data-control-language") || ""', true); }, onError: error => console.error('Material dialog fell back to the native dialog:', error?.message) });
 const uiDialog = Object.freeze({ showMessageBox: (...args) => materialDialogs.showMessageBox(...args), showOpenDialog: (...args) => dialog.showOpenDialog(...args), showSaveDialog: (...args) => dialog.showSaveDialog(...args), showErrorBox: (...args) => dialog.showErrorBox(...args) });
+const toolbox=createToolboxHost({dialog:Object.freeze({showOpenDialog:(...args)=>dialog.showOpenDialog(...args),showSaveDialog:(...args)=>dialog.showSaveDialog(...args)}),getWindow:()=>window,desktopCapturer,emit:(feature,data)=>{if(window&&!window.isDestroyed())window.webContents.send('feature:event',feature,data);}});
 const nativeProfileDialog=createProfileAuthenticationDialog({BrowserWindow:DesktopBrowserWindow,ipcMain,directory,getWindow:()=>window,getLanguage:async()=>window&&!window.isDestroyed()?window.webContents.executeJavaScript('document.documentElement.getAttribute("data-control-language")',true):'en',getTheme:async()=>window&&!window.isDestroyed()?window.webContents.executeJavaScript('document.documentElement.dataset.theme',true):'system'});
 const browserConfirm=createBrowserConfirmPrompt({showMessageBox:(...args)=>materialDialogs.showMessageBox(...args),getWindow:()=>window,getLanguage:async()=>window&&!window.isDestroyed()?window.webContents.executeJavaScript('document.documentElement.getAttribute("data-control-language")',true):'en'});
 const rendererURL = pathToFileURL(rendererPath).href;
@@ -562,7 +564,8 @@ else {
     window.webContents.on('will-attach-webview', event => event.preventDefault());
     let rendererRecoveries=0;
     window.webContents.on('render-process-gone',()=>{if(!shuttingDown&&rendererRecoveries++<3)void window.loadFile(rendererPath);});
-    window.webContents.session.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
+    window.webContents.session.setPermissionRequestHandler((contents, permission, callback, details) => { if (contents === window.webContents && trustedFrame({ sender: contents, senderFrame: details?.requestingFrame ?? contents.mainFrame }, window, rendererURL)) toolbox.permissionHandler(contents, permission, callback, details); else callback(false); });
+    window.webContents.session.setDisplayMediaRequestHandler((request, callback) => { if (trustedFrame({ sender: window.webContents, senderFrame: request.frame }, window, rendererURL)) toolbox.displayMediaHandler(request, callback); else callback({}); });
     browserHandoff=createBrowserHandoffLifecycle({pairingCodes,...features.browserProfileAdapters,...features.browserSchoolAdapters,...features.browserElementLockAdapters,...features.browserServerAdapters,...features.browserUnlockLadderAdapters,...features.browserPublishAdapters,...features.browserStatusAdapters,confirmAction:context=>browserConfirm.confirm(context),hasVisibleWindow:()=>Boolean(window&&!window.isDestroyed()&&window.isVisible()&&!window.isMinimized()),focusAuthenticator:()=>{showWindow();window.webContents.send('feature:event','access',{type:'focusAuthenticator'});},revokeProfileAuthority:()=>features.revokeBrowserProfileAuthority(),readUpdateState:()=>({desktopVersion:app.getVersion(),status:updates?.status()}),disposeBrowserConversion:pair=>features.disposeBrowserConversion(pair),browserConversion:(message,context)=>features.browserConversion(message,context),openEditor:context=>features.openBrowserEditor(context),readProtectionStatus:()=>features.readBrowserProtectionStatus(),hostDirectory:app.isPackaged?path.join(process.resourcesPath,'browser-host'):path.resolve('out/browser-host'),verificationMode:verificationMode||testMode,isUnlocked:()=>!state.locked&&state.lockVerified!==false,canAdmit:()=>!quitPending&&!shuttingDown&&!updateInstallLease,onProposal:item=>features.receiveBrowserProposal(item),authorizePair:async({origin,codeMatched})=>{
       if(!window||window.isDestroyed())return false;
       const answer=await uiDialog.showMessageBox(window,{type:'question',buttons:['Reject · 拒絕','Pair downloads · 配對下載'],defaultId:0,cancelId:0,title:'Pair browser downloads · 配對瀏覽器下載',message:'Allow download proposals from this origin? · 允許此來源提出下載建議？',detail:origin+(codeMatched===true?'\nThe extension entered the code shown on this desktop.\n擴充功能輸入咗呢部桌面顯示嘅代碼。':'')+'\nThis origin allowlist cannot authenticate a manually launched same-user process. Pairing lasts up to 15 minutes and ends when the drive locks. Each download still needs its own destination choice and Start confirmation.\n來源允許清單無法驗證手動啟動嘅同用戶程序。配對最多維持 15 分鐘，磁碟鎖定就撤銷。每次下載仍要獨立選擇目的地同確認開始。'});return answer.response===1;
@@ -572,7 +575,8 @@ else {
     if (process.platform === 'win32' && app.isPackaged && !verificationMode) { try { const manifestDirectory = fixedManifestDirectory(process.execPath); if (manifestDirectory) repairNativeHostRegistration({ hostDirectory: path.win32.join(process.resourcesPath, 'browser-host'), installRoot: path.win32.dirname(process.execPath), manifestDirectory, legacyUserData: app.getPath('userData') }); } catch { /* pairing reports its own unavailable state */ } }
     await browserHandoff.initialize();
     ipcMain.handle('vault:request', async (event, method, params, sessionId) => { if (!trustedFrame(event, window, rendererURL)) throw new Error('Untrusted request source.'); return request(method, params,{senderFrame:event.senderFrame},sessionId); });
-    ipcMain.handle('feature:request', async (event, feature, action, params) => { if (!trustedFrame(event, window, rendererURL)) throw new Error('Untrusted request source.'); const request = validateFeatureRequest(feature, action, params); return vaultSessions.run(() => featureRequest(request.feature, request.action, request.payload,{senderFrame:event.senderFrame})); });
+    ipcMain.handle('toolbox:write', async (event, id, data) => { if (!trustedFrame(event, window, rendererURL) || typeof id !== 'string' || !(data instanceof ArrayBuffer || ArrayBuffer.isView(data))) throw new Error('Untrusted request source.'); return toolbox.write(id, data); });
+    ipcMain.handle('feature:request', async (event, feature, action, params) => { if (!trustedFrame(event, window, rendererURL)) throw new Error('Untrusted request source.'); const request = validateFeatureRequest(feature, action, params); if (request.feature === 'toolbox') return toolbox.dispatch(request.action, request.payload); return vaultSessions.run(() => featureRequest(request.feature, request.action, request.payload,{senderFrame:event.senderFrame})); });
     ipcMain.handle('vault:verification-quit', async event => {
       if (!verificationMode || !verificationStartup || !trustedFrame(event, window, rendererURL)) throw new Error('Verification quit is unavailable.');
       const active=await vaultSessions.operations();

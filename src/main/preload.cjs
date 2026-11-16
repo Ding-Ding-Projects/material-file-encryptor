@@ -13,6 +13,7 @@ const api = {
   listRegistryConflicts: (options = {}) => invoke('listRegistryConflicts', options), resolveRegistryConflict: selection => invoke('resolveRegistryConflict', selection),
   verificationQuit: () => ipcRenderer.invoke('vault:verification-quit'),
   buildMetadata: () => invoke('buildMetadata'), browserPairing: () => invoke('browserPairing'),
+  toolboxWrite: (id, data) => ipcRenderer.invoke('toolbox:write', id, data),
   featureRequest: (feature, action, payload = {}) => ipcRenderer.invoke('feature:request', feature, action, payload),
   onFeatureEvent: (feature, callback) => { if(typeof callback!=='function') throw new TypeError('A callback is required.'); const listener=(_event, source, data)=>{if(source===feature)callback(data);};ipcRenderer.on('feature:event',listener);return()=>ipcRenderer.removeListener('feature:event',listener); },
   status: () => sessionRequest('getState'),
