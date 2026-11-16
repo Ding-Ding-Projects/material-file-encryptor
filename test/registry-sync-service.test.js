@@ -24,8 +24,12 @@ const configuration = (schedule = DEFAULT_REGISTRY_SCHEDULE) => ({ repository: '
 
 test('legacy saved visibility remains private and explicit public survives reload', async t => {
   const f = await fixture(t); const legacy = configuration(); delete legacy.visibility;
-  assert.equal(validateRequest('configureRegistryStorage', legacy).visibility, 'private');
-  await f.service.configure('main', legacy);
+  assert.equal(validateRequest('configureRegistryStorage', legacy).visibility, undefined);
+  await f.service.configure('main', validateRequest('configureRegistryStorage', legacy));
+  assert.equal((await f.service.status('main')).configuration.visibility, 'public', 'a brand new destination without a stated visibility defaults to public');
+  const kept = { ...configuration(), visibility: 'private' }; await f.service.configure('main', kept);
+  await f.service.configure('main', validateRequest('configureRegistryStorage', { repository: kept.repository, schedule: kept.schedule }));
+  assert.equal((await f.service.status('main')).configuration.visibility, 'private', 'an omitted visibility never flips a saved private destination to public');
   const filename = path.join(f.work, 'registry-sync.json'); const stored = JSON.parse(await fs.readFile(filename, 'utf8'));
   for (const row of Object.values(stored.rows)) { delete row.visibility; row.lastResult = { verified: true }; }
   await fs.writeFile(filename, JSON.stringify(stored)); const reloaded = createRegistrySyncService(f.options);

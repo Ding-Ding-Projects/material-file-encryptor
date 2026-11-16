@@ -20,6 +20,7 @@ import { createVaultSessionSettings } from './vault-session-settings.js';
 import { createVaultImageService } from './vault-image-service.js';
 import { createRegistrySyncService } from './registry-sync-service.js';
 import { createRegistryLogin } from './registry-login.js';
+import { createRegistryBackupAll } from './registry-backup-all.js';
 import { createRegistryBackground } from './registry-background.js';
 import { createDockerImageTransport } from './vault-image-docker.js';
 import { registryVerificationDestination } from './registry-verification.js';
@@ -124,6 +125,10 @@ const registrySync = createRegistrySyncService({ root: registryRoot,
   authorize: (repository, signal, visibility) => registryDocker.registryAuthorization(repository, signal, visibility),
   chooseRestore: async () => { const result = await uiDialog.showOpenDialog(window, { title: 'Choose a parent folder for a new restored vault · 選擇還原磁碟嘅上層資料夾', properties: ['openDirectory', 'createDirectory'] }); if (result.canceled) return null; return safeDestination(result.filePaths[0], [...vaultSessions.rows.values()].flatMap(row => [row.state.storageDir, row.preferences.storageDir, row.state.cacheDir, row.preferences.cacheDir])); },
   backgroundRegistration: createRegistryBackground({ root: registryRoot, executable: process.execPath, packaged: app.isPackaged && !verificationMode && Boolean(fixedManifestDirectory(process.execPath)) }) });
+const registryBackupAll = createRegistryBackupAll({ docker: registryDocker, sync: registrySync,
+  drives: () => [...vaultSessions.rows].map(([sessionId, { state: row, preferences: saved }]) => ({ sessionId, locked: row.locked !== false,
+    name: (row.locked !== false ? saved.driveName || row.driveName : row.driveName || saved.driveName) || '', letter: (row.locked !== false ? saved.driveLetter || row.driveLetter : row.driveLetter) || '',
+    storageDir: row.storageDir || saved.storageDir || '', transport: saved.transport || 'folder' })) });
 const REGISTRY_METHODS = new Set(['registryStorageStatus', 'configureRegistryStorage', 'syncRegistryStorage', 'listRegistrySnapshots', 'restoreRegistrySnapshot', 'cancelRegistryStorage']);
 const conflictRequest = createRegistryConflictRequests({
   nativeRequest: (method, params, id) => vaultSessions.request(method, params, id),
@@ -277,8 +282,17 @@ async function dispatchRequest(method, params, context) {
       return result;
     });
   }
-  if (['registryLoginStatus', 'startRegistryLogin', 'cancelRegistryLogin', 'openRegistryLoginPage'].includes(method)) {
+  if (['backupAllPlan', 'backupAllStart', 'backupAllStatus', 'backupAllCancel'].includes(method)) {
+    if (!helper || (verificationMode || testMode) && !registryTestDestination) throw Error('Registry synchronization requires the native vault helper.');
+    if (method === 'backupAllStatus') return registryBackupAll.status();
+    if (method === 'backupAllCancel') return registryBackupAll.cancel();
+    if (quitPending || shuttingDown || updateInstallLease) throw Error('The application is preparing to close.');
+    if (method === 'backupAllPlan') return registryBackupAll.plan();
+    return registryBackupAll.start(params);
+  }
+  if (['registryLoginStatus', 'recheckRegistryLogin', 'startRegistryLogin', 'cancelRegistryLogin', 'openRegistryLoginPage'].includes(method)) {
     if (method === 'registryLoginStatus') return registryLogin.status();
+    if (method === 'recheckRegistryLogin') return registryLogin.recheck();
     if (method === 'cancelRegistryLogin') return registryLogin.cancel();
     if (quitPending || shuttingDown || updateInstallLease) throw Error('The application is preparing to close.');
     if (method === 'startRegistryLogin') return registryLogin.start();
@@ -418,7 +432,7 @@ async function lockAllVaults() {
 async function hasActiveWork() {
   if (restartPreparation.started) return false;
   const active=await vaultSessions.operations();
-  return Boolean(operation || registryLogin.pending || registrySync.pending || vaultImages.pending || browserHandoff?.pending || await features?.pending() || active.some(item=>['queued','running','cancelling'].includes(item.state)));
+  return Boolean(operation || registryLogin.pending || registryBackupAll.pending || registrySync.pending || vaultImages.pending || browserHandoff?.pending || await features?.pending() || active.some(item=>['queued','running','cancelling'].includes(item.state)));
 }
 async function updateStatus() {
   const snapshot=updates?.status()||{state:'unavailable',reason:'NOT_INITIALIZED'};
@@ -504,7 +518,7 @@ async function quit(ownRequest = false) {
       if(answer.response===0)return;
       features.beginExit();
       if(answer.response===2)await Promise.all(active.filter(item=>['queued','running','cancelling'].includes(item.state)).map(item=>vaultSessions.request('cancelOperation',{operationId:item.operationId},item.sessionId)));
-      if(answer.response===2){await features.cancelAll();if(registrySync.pending)await registrySync.cancel(registrySync.activeSessionId);}
+      if(answer.response===2){await features.cancelAll();await registryBackupAll.cancel();if(registrySync.pending)await registrySync.cancel(registrySync.activeSessionId);}
       while(operation || registrySync.pending || await features.pending() || active.some(item=>['queued','running','cancelling'].includes(item.state))) { await new Promise(resolve=>setTimeout(resolve,200));active=await vaultSessions.operations(); }
     }
     features.beginExit();

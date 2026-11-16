@@ -16,9 +16,13 @@ export interface DriveState {
   sync: { running: boolean; lastSync: string | null; error: string | null; pendingCommits?: number };
 }
 export type VaultOptions = { storageDir: string; cacheDir: string; driveLetter: string; driveName?: string; transport?: 'folder' | 'privateGit'; remoteRepository?: string; autoUnlock?: boolean } & ({ password: string; keyFilePath?: never } | { password?: never; keyFilePath: string });
-export interface RegistryLoginStatus { state:'idle'|'checking'|'signed-in'|'authorizing'|'verifying'|'cancelled'|'expired'|'failed'|'unavailable'|'stale';deviceCode:string|null;canOpenPage:boolean;expiresAt:string|null;account:null;reason:string|null }
+export interface RegistryLoginStatus { state:'idle'|'checking'|'signed-in'|'authorizing'|'verifying'|'cancelled'|'expired'|'failed'|'unavailable'|'stale';deviceCode:string|null;canOpenPage:boolean;expiresAt:string|null;account:string|null;reason:string|null }
+export interface BackupAllDrivePlan { sessionId:string;name:string;letter:string;locked:boolean;ineligibleReason:'locked'|'no-storage'|'not-folder'|null;suffix:string;configured:{repository:string;visibility:'public'|'private';enabled:boolean}|null;lastSync:string|null;nextSync:string|null }
+export interface BackupAllDriveStatus { sessionId:string;name:string;repository:string;visibility:'public'|'private';state:'queued'|'repository'|'configuring'|'syncing'|'done'|'failed'|'cancelled';error:{code:string;message:string}|null;digest:string|null;published:boolean|null;lastSync:string|null;nextSync:string|null }
+export interface BackupAllStatus { phase:'idle'|'running'|'finished'|'cancelled';startedAt:string|null;finishedAt:string|null;namespace:string|null;drives:BackupAllDriveStatus[] }
 export interface DriveBridge {
-  registryLoginStatus():Promise<RegistryLoginStatus>;startRegistryLogin():Promise<RegistryLoginStatus>;
+  registryLoginStatus():Promise<RegistryLoginStatus>;recheckRegistryLogin():Promise<RegistryLoginStatus>;startRegistryLogin():Promise<RegistryLoginStatus>;
+  backupAllPlan():Promise<{drives:BackupAllDrivePlan[];running:boolean}>;backupAllStart(selection:{sessionIds:string[];names?:Record<string,string>}):Promise<BackupAllStatus>;backupAllStatus():Promise<BackupAllStatus>;backupAllCancel():Promise<BackupAllStatus>;
   cancelRegistryLogin():Promise<RegistryLoginStatus>;openRegistryLoginPage():Promise<RegistryLoginStatus>;
   addSession(): Promise<DriveState>;
   selectSession(sessionId: string): Promise<DriveState>;
