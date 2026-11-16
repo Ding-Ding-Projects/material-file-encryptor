@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Animation and transition editor</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+@keyframes demo{0%{opacity:0;transform:translateY(24px) scale(.94)}100%{opacity:1;transform:none}}
+@keyframes pulseDot{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.6);opacity:.4}}
+@keyframes shimmer{from{background-position:-200px 0}to{background-position:200px 0}}
+[data-motion=off] *{animation:none!important;transition:none!important}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</helmet>
+<div data-motion="{{motionAttr}}" style="--accent:{{accent}};width:1440px;height:900px;box-sizing:border-box;padding:40px;background:#F4F2FA;font-family:'Roboto Flex',system-ui,sans-serif;color:#1A1B24;display:flex;flex-direction:column;gap:20px">
+<header style="display:flex;flex-wrap:wrap;align-items:center;gap:16px">
+<div style="flex:1 1 400px"><p style="margin:0;font-size:12px;color:#4A4C5C">Settings › Motion and animation</p><h1 style="margin:2px 0 0;font-size:20px;font-weight:600">Animation and transitions</h1><p style="margin:2px 0 0;font-size:13px;color:#4A4C5C">Changes apply live across the app.</p></div>
+<label style="display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600"><input type="checkbox" checked="{{master}}" onChange="{{toggleMaster}}" style="width:22px;height:22px;accent-color:var(--accent)">All animations</label>
+<label style="display:flex;align-items:center;gap:10px;font-size:14px">Speed <input type="range" min="25" max="300" value="{{speed}}" onInput="{{setSpeed}}" style="width:180px;accent-color:var(--accent)"><output style="width:52px;font-weight:600">{{speedLabel}}</output></label>
+</header>
+<div role="radiogroup" aria-label="Motion profile" style="display:flex;gap:8px;flex-wrap:wrap">
+<sc-for list="{{profiles}}" as="p" hint-placeholder-count="5"><button type="button" role="radio" aria-checked="{{p.sel}}" onClick="{{p.pick}}" style="{{p.style}}">{{p.name}}</button></sc-for>
+<span style="flex:1"></span>
+<button type="button" style="height:34px;padding:0 12px;border:1px solid #C6C8D8;border-radius:8px;background:#FFFFFF;font:inherit;font-size:13px">Import JSON</button>
+<button type="button" style="height:34px;padding:0 12px;border:1px solid #C6C8D8;border-radius:8px;background:#FFFFFF;font:inherit;font-size:13px">Export JSON</button>
+<button type="button" style="height:34px;padding:0 12px;border:1px solid #C6C8D8;border-radius:8px;background:#FFFFFF;font:inherit;font-size:13px">Reset all</button>
+</div>
+<div style="padding:12px 16px;border-radius:16px;background:#CDEFE3;color:#063D31;font-size:13px">Windows asks for reduced motion? Then nothing moves, whatever is set here, and this page says so.</div>
+<div style="flex:1;display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:20px;min-height:0">
+<section aria-label="Element kinds" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-content:start">
+<sc-for list="{{kinds}}" as="k" hint-placeholder-count="15">
+<button type="button" onClick="{{k.pick}}" style="{{k.card}}">
+<span style="{{k.preview}}"><span style="{{k.dot}}"></span></span>
+<span style="display:flex;justify-content:space-between;width:100%;font-size:14px;font-weight:600"><span>{{k.name}}</span><span style="color:#4A4C5C;font-weight:400">{{k.ms}}</span></span>
+</button>
+</sc-for>
+</section>
+<aside aria-label="Selected kind" style="padding:22px;border-radius:28px;background:#FFFFFF;display:flex;flex-direction:column;gap:14px">
+<h2 style="margin:0;font-size:20px">{{sel.name}}</h2>
+<div style="height:140px;border-radius:20px;background:#F4F2FA;display:grid;place-items:center;overflow:hidden">
+<div style="{{sel.previewBox}}">Preview</div>
+</div>
+<sc-for list="{{fields}}" as="f" hint-placeholder-count="5">
+<label style="display:grid;grid-template-columns:96px minmax(0,1fr) 64px;align-items:center;gap:10px;font-size:13px">{{f.name}}<input type="range" min="0" max="100" value="{{f.v}}" style="accent-color:var(--accent)"><output style="font-weight:600">{{f.label}}</output></label>
+</sc-for>
+<p style="margin:4px 0 0;font-size:13px;font-weight:600">Easing</p>
+<svg viewBox="0 0 200 120" width="100%" height="120" role="img" aria-label="Easing curve, emphasized decelerate"><rect x="0" y="0" width="200" height="120" rx="12" fill="#F4F2FA"></rect><path d="M16 104 C 60 104, 52 16, 184 16" fill="none" stroke="var(--accent)" stroke-width="3"></path><circle cx="60" cy="104" r="6" fill="var(--accent)"></circle><circle cx="52" cy="16" r="6" fill="var(--accent)"></circle></svg>
+<div style="display:flex;gap:6px;flex-wrap:wrap"><span style="padding:6px 12px;border-radius:14px;background:#DFE0FF;font-size:12px;font-weight:600">Emphasized</span><span style="padding:6px 12px;border-radius:14px;background:#F4F2FA;font-size:12px">Standard</span><span style="padding:6px 12px;border-radius:14px;background:#F4F2FA;font-size:12px">Spring</span><span style="padding:6px 12px;border-radius:14px;background:#F4F2FA;font-size:12px">Linear</span></div>
+<button type="button" style="margin-top:auto;height:44px;border:0;border-radius:22px;background:#E3E1EE;font:inherit;font-size:14px">Reset this kind</button>
+</aside>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#4B57C9","options":["#4B57C9","#00696B","#8B4A00","#A23B72"],"section":"Look"},"motion":{"editor":"boolean","default":true,"section":"Look"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(p){super(p);this.state={profile:'Expressive',speed:100,master:true,sel:0};}
+  renderVals(){
+    const names=[['Page entry',520],['List stagger',60],['Cards',420],['Dialogs',360],['Menus',240],['Sheets',420],['Tooltips',160],['Toasts',320],['Switches',200],['Charts',1200],['Progress',1400],['Live pulses',2400],['Tab changes',300],['Hover lift',220],['Unlock burst',900]];
+    const sp=this.state.speed/100, on=this.state.master;
+    const k=names[this.state.sel];
+    return {
+      accent:this.props.accent??'#4B57C9',motionAttr:this.props.motion===false?'off':'on',
+      master:on,speed:this.state.speed,speedLabel:sp.toFixed(2)+'×',
+      toggleMaster:()=>this.setState({master:!on}),
+      setSpeed:e=>this.setState({speed:Number(e.target.value)}),
+      profiles:['Calm','Standard','Expressive','Playful','My profile'].map(n=>({name:n,sel:String(n===this.state.profile),pick:()=>this.setState({profile:n}),
+        style:'height:34px;padding:0 14px;border-radius:8px;font:inherit;font-size:13px;cursor:pointer;'+(n===this.state.profile?'border:0;background:var(--accent);color:#FFFFFF;font-weight:600':'border:1px solid #C6C5D3;background:#FFFFFF;color:#1A1B24')})),
+      kinds:names.map(([name,ms],i)=>({name,ms:on?Math.round(ms/sp)+' ms':'Off',pick:()=>this.setState({sel:i}),
+        card:'display:flex;flex-direction:column;gap:10px;align-items:stretch;padding:14px;border-radius:20px;font:inherit;text-align:left;cursor:pointer;color:#1A1B24;'+(i===this.state.sel?'border:2px solid var(--accent);background:#FFFFFF':'border:2px solid transparent;background:#FFFFFF'),
+        preview:'height:56px;border-radius:14px;background:#F4F2FA;display:grid;place-items:center',
+        dot:on?'width:22px;height:22px;border-radius:11px;background:var(--accent);animation:'+(i===11?'pulseDot':'demo')+' '+Math.round((i===11?ms:Math.max(ms,500))/sp)+'ms cubic-bezier(.05,.7,.1,1) infinite alternate':'width:22px;height:22px;border-radius:11px;background:var(--accent)'})),
+      sel:{name:k[0],previewBox:'padding:18px 28px;border-radius:18px;background:var(--accent);color:#FFFFFF;font-weight:600;'+(on?'animation:demo '+Math.round(Math.max(k[1],500)/sp)+'ms cubic-bezier(.05,.7,.1,1) infinite alternate':'')},
+      fields:[['Duration',60,Math.round(k[1]/sp)+' ms'],['Delay',10,'0 ms'],['Stagger',30,'60 ms'],['Distance',45,'24 px'],['Scale',70,'0.94']].map(([name,v,label])=>({name,v,label}))
+    };
+  }
+}
+</script>
+</body>
+</html>

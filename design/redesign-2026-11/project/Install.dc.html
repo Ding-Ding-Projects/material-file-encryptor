@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Installation takeover</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..800&amp;family=Roboto+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+@keyframes takeIn{from{opacity:0}to{opacity:1}}
+@keyframes cardIn{from{opacity:0;transform:scale(.86) translateY(24px)}to{opacity:1;transform:none}}
+@keyframes ring{from{transform:scale(.3);opacity:.9}to{transform:scale(4);opacity:0}}
+@keyframes check{from{stroke-dashoffset:40}to{stroke-dashoffset:0}}
+@keyframes confetti{0%{transform:translateY(-40px) rotate(0);opacity:0}10%{opacity:1}100%{transform:translateY(760px) rotate(540deg);opacity:0}}
+@keyframes siren{0%,100%{background:#3A0907}50%{background:#5C0F0B}}
+@keyframes alarm{0%,100%{transform:none}10%,30%{transform:rotate(-8deg)}20%,40%{transform:rotate(8deg)}50%{transform:none}}
+@keyframes countdown{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+[data-motion=off] *{animation:none!important;transition:none!important}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</helmet>
+<div data-motion="{{motion}}" style="--accent:{{accent}};width:1440px;height:900px;position:relative;overflow:hidden;font-family:'Roboto Flex',system-ui,sans-serif;font-size:14px;color:#1A1B24">
+<sc-if value="{{ok}}" hint-placeholder-val="{{true}}">
+<div style="position:absolute;inset:0;background:rgba(12,40,32,.88);display:grid;place-items:center;animation:takeIn 240ms ease-out both">
+<sc-for list="{{bits}}" as="b" hint-placeholder-count="24"><span aria-hidden="true" style="{{b.s}}"></span></sc-for>
+<span aria-hidden="true" style="position:absolute;width:160px;height:160px;border-radius:50%;border:3px solid #9FE8CF;animation:ring 1200ms cubic-bezier(.2,0,0,1) both"></span>
+<section role="dialog" aria-labelledby="ok-t" style="position:relative;width:560px;padding:28px;border-radius:24px;background:#FFFFFF;display:flex;flex-direction:column;gap:14px;animation:cardIn 520ms 120ms cubic-bezier(.05,.7,.1,1) both">
+<div style="display:flex;align-items:center;gap:14px"><span style="width:56px;height:56px;border-radius:18px;background:#0B6B57;display:grid;place-items:center"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" stroke-dasharray="40" style="animation:check 500ms 420ms cubic-bezier(.2,0,0,1) both"></path></svg></span>
+<div><h1 id="ok-t" style="margin:0;font-size:22px">WinFsp 2.1 installed</h1><p style="margin:2px 0 0;color:#3A3C4C">Drives can now mount in File Explorer.</p></div></div>
+<dl style="margin:0;display:grid;grid-template-columns:120px minmax(0,1fr);gap:6px 12px;font-size:13px">
+<dt style="color:#4A4C5C">Installed to</dt><dd style="margin:0;font-family:'Roboto Mono',monospace;font-size:12px">C:\Program Files (x86)\WinFsp</dd>
+<dt style="color:#4A4C5C">Exit code</dt><dd style="margin:0;font-family:'Roboto Mono',monospace;font-size:12px">0</dd>
+<dt style="color:#4A4C5C">Took</dt><dd style="margin:0">41 seconds</dd>
+<dt style="color:#4A4C5C">Started by</dt><dd style="margin:0">You, from the drive notice</dd>
+</dl>
+<div style="display:flex;gap:8px;justify-content:flex-end"><button type="button" style="height:40px;padding:0 16px;border:1px solid #C6C8D8;border-radius:10px;background:#FFFFFF;font:inherit">Show log</button><button type="button" style="height:40px;padding:0 18px;border:0;border-radius:10px;background:#0B6B57;color:#FFFFFF;font:inherit;font-weight:600">Mount my drives</button></div>
+<div style="height:3px;border-radius:2px;background:#E4E6F0;overflow:hidden"><div style="height:100%;background:#0B6B57;transform-origin:left;animation:countdown 6s linear both"></div></div>
+<p style="margin:0;font-size:12px;color:#4A4C5C">Closes in 6 seconds. Click or press Escape to close now.</p>
+</section>
+</div>
+</sc-if>
+<sc-if value="{{bad}}" hint-placeholder-val="{{false}}">
+<div style="position:absolute;inset:0;display:grid;place-items:center;animation:siren 1.6s ease-in-out infinite">
+<section role="alertdialog" aria-labelledby="bad-t" style="width:720px;padding:28px;border-radius:24px;background:#FFFFFF;display:flex;flex-direction:column;gap:14px;border:3px solid #B3261E;animation:cardIn 420ms cubic-bezier(.05,.7,.1,1) both">
+<div style="display:flex;align-items:center;gap:14px"><span style="width:56px;height:56px;border-radius:18px;background:#B3261E;display:grid;place-items:center;animation:alarm 1.2s ease-in-out infinite"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 4l9 16H3z"></path><path d="M12 10v4M12 17h.01"></path></svg></span>
+<div><h1 id="bad-t" style="margin:0;font-size:22px">Update to v0.3.1 failed</h1><p style="margin:2px 0 0;color:#3A3C4C">Your current version still works. Nothing was removed.</p></div></div>
+<p style="margin:0;font-size:12px;font-weight:700;letter-spacing:.06em;color:#4A4C5C">FAILED COMMAND</p>
+<pre style="margin:0;padding:12px;border-radius:10px;background:#1B1D2E;color:#F1F0FF;font-family:'Roboto Mono',monospace;font-size:12px;white-space:pre-wrap;overflow-wrap:anywhere">Update.exe --update https://github.com/…/releases/download/v0.3.1 --token ••••••••
+exit code 0x80070070 (disk full)
+
+[Update] Applying package 0.3.1-full.nupkg
+[Update] Extracting app-0.3.1\resources\app.asar
+[Update] Failed: There is not enough space on the disk.</pre>
+<p style="margin:0;font-size:12px;font-weight:700;letter-spacing:.06em;color:#4A4C5C">WHAT YOU CAN DO</p>
+<ol style="margin:0;padding-left:20px;line-height:1.7"><li>Free at least 600 MB on drive C:, then choose Retry update.</li><li>Or keep using v0.3.0 and update later from Settings › Updates.</li></ol>
+<div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap"><button type="button" style="height:40px;padding:0 16px;border:1px solid #C6C8D8;border-radius:10px;background:#FFFFFF;font:inherit">Copy details</button><button type="button" style="height:40px;padding:0 16px;border:1px solid #C6C8D8;border-radius:10px;background:#FFFFFF;font:inherit">Open full log</button><button type="button" style="height:40px;padding:0 16px;border:1px solid #C6C8D8;border-radius:10px;background:#FFFFFF;font:inherit">Dismiss</button><button type="button" style="height:40px;padding:0 18px;border:0;border-radius:10px;background:#B3261E;color:#FFFFFF;font:inherit;font-weight:600">Retry update</button></div>
+<p style="margin:0;font-size:12px;color:#4A4C5C">Stays open until you dismiss it. Secrets in the command are masked.</p>
+</section>
+</div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#4B57C9","options":["#4B57C9","#00696B","#8B4A00","#A23B72"],"section":"Look"},"motion":{"editor":"boolean","default":true,"section":"Look"},"stage":{"editor":"enum","options":["success","failure"],"default":"success","section":"Stage"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals(){
+    const ok=(this.props.stage??'success')==='success';
+    const colors=['#9FE8CF','#BEC2FF','#FFD8A8','#FFB4C6','#FFFFFF'];
+    return {
+      accent:this.props.accent??'#4B57C9',motion:this.props.motion===false?'off':'on',ok,bad:!ok,
+      bits:Array.from({length:24},(_,i)=>({s:'position:absolute;top:0;left:'+(4+i*4)+'%;width:'+(6+i%3*3)+'px;height:'+(10+i%4*3)+'px;border-radius:2px;background:'+colors[i%5]+';animation:confetti '+(2200+i%5*260)+'ms '+(i*70)+'ms cubic-bezier(.2,.6,.4,1) both'}))
+    };
+  }
+}
+</script>
+</body>
+</html>

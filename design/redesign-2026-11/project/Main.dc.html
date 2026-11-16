@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Drive workspace</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..800&amp;family=Roboto+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#E9EBF2}
+a{color:#3A46B5}a:hover{color:#26318F}
+@keyframes rowIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes paneIn{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:none}}
+@keyframes blip{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes bar{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes cellIn{from{transform:scale(.4);opacity:0}to{transform:none;opacity:1}}
+.row{transition:background 120ms}
+.row:hover{background:#F1F2F8}
+.tb{transition:background 120ms}
+.tb:hover{background:#E4E6F0}
+[data-motion=off] *{animation:none!important;transition:none!important}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</helmet>
+<div data-motion="{{motion}}" style="--accent:{{accent}};font-family:'Roboto Flex',system-ui,sans-serif;font-size:13px;color:#1A1B24;height:1000px;display:flex;flex-direction:column;background:#E9EBF2;min-width:0">
+<div role="tablist" aria-label="Drives" style="display:flex;align-items:flex-end;gap:2px;height:40px;padding:0 0 0 10px;background:#DADDE8">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3A46B5" stroke-width="2.2" stroke-linecap="round" aria-hidden="true" style="align-self:center;margin-right:8px"><rect x="4" y="10" width="16" height="11" rx="3"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path></svg>
+<sc-for list="{{drives}}" as="d" hint-placeholder-count="3">
+<button type="button" role="tab" aria-selected="{{d.sel}}" onClick="{{d.pick}}" style="{{d.tab}}"><span style="{{d.dot}}"></span><span style="font-weight:600">{{d.letter}}</span><span>{{d.name}}</span></button>
+</sc-for>
+<button type="button" aria-label="Open or create a drive" class="tb" style="align-self:center;width:28px;height:28px;border:0;border-radius:6px;background:transparent;font-size:18px;line-height:1;color:#3A3C4C;cursor:pointer">+</button>
+<div style="flex:1"></div>
+<span style="align-self:center;margin-right:10px;font-size:11px;color:#4A4C5C">v0.3.0 · 16 Nov 2026 14:20</span>
+<div style="display:flex;align-self:stretch"><button type="button" aria-label="Minimize" class="tb" style="width:46px;border:0;background:transparent">–</button><button type="button" aria-label="Maximize" class="tb" style="width:46px;border:0;background:transparent">□</button><button type="button" aria-label="Close" class="tb" style="width:46px;border:0;background:transparent">×</button></div>
+</div>
+<div role="toolbar" aria-label="Drive commands" style="display:flex;align-items:center;gap:2px;height:44px;padding:0 8px;background:#FFFFFF;border-bottom:1px solid #DCDEE8;flex-wrap:wrap">
+<sc-for list="{{commands}}" as="c" hint-placeholder-count="9">
+<button type="button" class="tb" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 10px;border:0;border-radius:8px;background:transparent;font:inherit;color:#1A1B24;cursor:pointer"><span style="font-family:'Roboto Mono',monospace;font-size:12px;color:#3A46B5">{{c.glyph}}</span>{{c.label}}</button>
+</sc-for>
+<span style="width:1px;height:22px;background:#DCDEE8;margin:0 6px"></span>
+<button type="button" class="tb" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 10px;border:0;border-radius:8px;background:#E6E8FF;color:#26318F;font:inherit;font-weight:600;cursor:pointer">↑ Back up now</button>
+<div style="flex:1"></div>
+<button type="button" aria-label="Command palette" class="tb" style="display:flex;align-items:center;gap:8px;height:32px;padding:0 10px;border:1px solid #DCDEE8;border-radius:8px;background:#F7F8FB;font:inherit;color:#4A4C5C;cursor:pointer">Run a command <span style="font-size:11px;padding:1px 5px;border-radius:4px;background:#E4E6F0">Ctrl K</span></button>
+</div>
+<div style="flex:1;min-height:0;display:flex;gap:1px;background:#DCDEE8">
+<nav aria-label="Folders" style="flex:0 0 232px;background:#F7F8FB;display:flex;flex-direction:column;overflow:auto;animation:paneIn 360ms cubic-bezier(.05,.7,.1,1) both">
+<p style="margin:12px 14px 6px;font-size:11px;font-weight:700;letter-spacing:.06em;color:#4A4C5C">{{current.letter}} {{current.name}}</p>
+<sc-for list="{{tree}}" as="n" hint-placeholder-count="9">
+<a href="#" style="{{n.style}}"><span style="width:12px;color:#4A4C5C">{{n.caret}}</span>{{n.name}}<span style="margin-left:auto;font-size:11px;color:#4A4C5C">{{n.count}}</span></a>
+</sc-for>
+<p style="margin:16px 14px 6px;font-size:11px;font-weight:700;letter-spacing:.06em;color:#4A4C5C">VIEWS</p>
+<a href="#" style="display:flex;align-items:center;gap:8px;height:30px;padding:0 14px;color:#1A1B24;text-decoration:none">Available offline<span style="margin-left:auto;font-size:11px;color:#4A4C5C">12</span></a>
+<a href="#" style="display:flex;align-items:center;gap:8px;height:30px;padding:0 14px;color:#1A1B24;text-decoration:none">Version history</a>
+<a href="#" style="display:flex;align-items:center;gap:8px;height:30px;padding:0 14px;color:#1A1B24;text-decoration:none">Conflicts<span style="margin-left:auto;padding:0 6px;border-radius:8px;background:#FFE0B8;color:#4A2C00;font-size:11px;font-weight:700">1</span></a>
+<a href="#" style="display:flex;align-items:center;gap:8px;height:30px;padding:0 14px;color:#1A1B24;text-decoration:none">Recycle Bin<span style="margin-left:auto;font-size:11px;color:#4A4C5C">4</span></a>
+<div style="flex:1"></div>
+<a href="Settings.dc.html" style="display:flex;align-items:center;gap:8px;height:34px;padding:0 14px;border-top:1px solid #DCDEE8;color:#1A1B24;text-decoration:none">Settings</a>
+</nav>
+<main style="flex:1 1 0;min-width:0;background:#FFFFFF;display:flex;flex-direction:column">
+<div style="display:flex;align-items:center;gap:8px;height:42px;padding:0 12px;border-bottom:1px solid #ECEDF3">
+<nav aria-label="Path" style="display:flex;align-items:center;gap:4px;font-size:13px;min-width:0;flex:1"><a href="#" style="text-decoration:none">{{current.letter}}</a><span style="color:#4A4C5C">›</span><a href="#" style="text-decoration:none">Finance</a><span style="color:#4A4C5C">›</span><strong>2026</strong></nav>
+<label for="q" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Search this folder</label>
+<input id="q" type="search" placeholder="Search 2026" style="width:220px;height:30px;padding:0 10px;border:1px solid #DCDEE8;border-radius:8px;font:inherit;background:#F7F8FB">
+<button type="button" aria-label="Regex builder" class="tb" style="height:30px;padding:0 8px;border:1px solid #DCDEE8;border-radius:8px;background:#F7F8FB;font-family:'Roboto Mono',monospace;font-size:12px">.*</button>
+<button type="button" aria-label="Filters" class="tb" style="height:30px;padding:0 10px;border:1px solid #DCDEE8;border-radius:8px;background:#F7F8FB;font:inherit">Filter</button>
+</div>
+<div role="table" aria-label="Files" style="flex:1;min-height:0;overflow:auto">
+<div role="row" style="position:sticky;top:0;display:grid;grid-template-columns:28px minmax(0,1fr) 120px 84px 96px 70px;gap:10px;align-items:center;height:30px;padding:0 12px;background:#F7F8FB;border-bottom:1px solid #ECEDF3;font-size:11px;font-weight:700;color:#4A4C5C"><span role="columnheader"></span><span role="columnheader">Name ▾</span><span role="columnheader">Modified</span><span role="columnheader">Size</span><span role="columnheader">Sync</span><span role="columnheader">Parts</span></div>
+<sc-for list="{{files}}" as="f" hint-placeholder-count="14">
+<div role="row" class="row" onClick="{{f.pick}}" style="{{f.row}}"><span role="cell"><input type="checkbox" aria-label="{{f.cb}}" checked="{{f.selb}}" style="accent-color:var(--accent)"></span><span role="cell" style="display:flex;align-items:center;gap:8px;min-width:0"><span style="{{f.icon}}">{{f.kind}}</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{f.name}}</span></span><span role="cell" style="color:#4A4C5C">{{f.mod}}</span><span role="cell" style="color:#4A4C5C;font-variant-numeric:tabular-nums">{{f.size}}</span><span role="cell" style="{{f.sync}}">{{f.status}}</span><span role="cell" style="font-family:'Roboto Mono',monospace;font-size:11px;color:#4A4C5C">{{f.parts}}</span></div>
+</sc-for>
+</div>
+<section aria-label="Transfers" style="border-top:1px solid #ECEDF3;padding:8px 12px;display:flex;flex-direction:column;gap:6px;background:#FBFBFD">
+<div style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:#4A4C5C">TRANSFERS <span style="font-weight:400">2 active · 31 MB left</span><span style="flex:1"></span><button type="button" class="tb" style="height:26px;padding:0 8px;border:0;border-radius:6px;background:transparent;font:inherit;font-size:12px">Pause all</button></div>
+<sc-for list="{{transfers}}" as="t" hint-placeholder-count="2">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 160px 70px;gap:12px;align-items:center;font-size:12px"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{t.name}}</span><span style="height:6px;border-radius:3px;background:#E4E6F0;overflow:hidden"><span style="{{t.bar}}"></span></span><span style="color:#4A4C5C;text-align:right">{{t.label}}</span></div>
+</sc-for>
+</section>
+</main>
+<aside aria-label="Details" style="flex:0 0 300px;background:#F7F8FB;display:flex;flex-direction:column;overflow:auto">
+<div style="{{inspectorAnim}}">
+<div style="padding:14px 16px;border-bottom:1px solid #E4E6F0">
+<p style="margin:0;font-size:11px;font-weight:700;letter-spacing:.06em;color:#4A4C5C">DETAILS</p>
+<p style="margin:4px 0 0;font-size:15px;font-weight:600;overflow-wrap:anywhere">{{selFile.name}}</p>
+<p style="margin:2px 0 0;color:#4A4C5C">{{selFile.size}} · modified {{selFile.mod}}</p>
+<div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap"><button type="button" class="tb" style="height:30px;padding:0 10px;border:1px solid #DCDEE8;border-radius:8px;background:#FFFFFF;font:inherit">Open</button><button type="button" class="tb" style="height:30px;padding:0 10px;border:1px solid #DCDEE8;border-radius:8px;background:#FFFFFF;font:inherit">Keep offline</button><button type="button" class="tb" style="height:30px;padding:0 10px;border:1px solid #DCDEE8;border-radius:8px;background:#FFFFFF;font:inherit">Versions</button></div>
+</div>
+<div style="padding:14px 16px;border-bottom:1px solid #E4E6F0">
+<p style="margin:0 0 8px;font-size:11px;font-weight:700;letter-spacing:.06em;color:#4A4C5C">ENCRYPTED PARTS · 4 MB EACH</p>
+<div role="img" aria-label="{{partLabel}}" style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:3px">
+<sc-for list="{{cells}}" as="c" hint-placeholder-count="24"><span style="{{c.s}}"></span></sc-for>
+</div>
+<p style="margin:8px 0 0;font-size:12px;color:#4A4C5C">{{partLabel}}</p>
+</div>
+<div style="padding:14px 16px;border-bottom:1px solid #E4E6F0">
+<p style="margin:0 0 8px;font-size:11px;font-weight:700;letter-spacing:.06em;color:#4A4C5C">VERSIONS</p>
+<sc-for list="{{versions}}" as="v" hint-placeholder-count="4">
+<div style="display:grid;grid-template-columns:12px minmax(0,1fr);gap:10px;align-items:start;padding:4px 0"><span style="{{v.dot}}"></span><span><strong style="font-weight:600">{{v.when}}</strong> <span style="color:#4A4C5C">{{v.who}}</span><br><span style="font-family:'Roboto Mono',monospace;font-size:11px;color:#4A4C5C">{{v.hash}}</span></span></div>
+</sc-for>
+</div>
+<div style="padding:14px 16px">
+<p style="margin:0 0 8px;font-size:11px;font-weight:700;letter-spacing:.06em;color:#4A4C5C">CLOUD BACKUP</p>
+<div style="display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:4px;background:#0B6B57;animation:blip 2s ease-in-out infinite"></span><span>docker.io/yourname/mfe-work-vault</span></div>
+<p style="margin:6px 0 0;color:#4A4C5C">Public · ciphertext only · last 14:08 · next 15:00</p>
+<a href="Backup.dc.html" style="display:inline-block;margin-top:8px;font-weight:600">Backup settings</a>
+</div>
+</div>
+</aside>
+</div>
+<footer role="status" style="display:flex;align-items:center;gap:16px;height:26px;padding:0 12px;background:#3A46B5;color:#FFFFFF;font-size:12px">
+<span>● {{current.letter}} mounted</span><span>{{current.used}} used</span><span>{{current.state}}</span><span style="flex:1"></span><span>Encrypted AES-256-GCM</span><span>EN · 中</span>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#4B57C9","options":["#4B57C9","#00696B","#8B4A00","#A23B72"],"section":"Look"},"motion":{"editor":"boolean","default":true,"section":"Look"},"density":{"editor":"enum","options":["compact","comfortable"],"default":"compact","section":"Look"},"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  constructor(p){super(p);this.state={d:0,f:1};}
+  renderVals(){
+    const drives=[{letter:'M:',name:'Work vault',used:'18.4 GB',state:'2 uploads · backup due 15:00',c:'#0B6B57'},{letter:'P:',name:'Family photos',used:'92.1 GB',state:'Not backed up',c:'#8A5300'},{letter:'T:',name:'Tax records',used:'Locked',state:'Locked',c:'#767680'}];
+    const rows=[['DIR','Receipts','Today 09:12','214 items','Synced','—'],['PDF','Quarterly report Q3.pdf','Today 13:42','4.2 MB','Synced','2'],['XLS','Budget forecast.xlsx','Today 11:05','880 KB','Uploading','1'],['PDF','Invoice 2026-118.pdf','Yesterday','312 KB','Synced','1'],['DOC','Supplier contract.docx','Yesterday','1.1 MB','Offline','1'],['IMG','Whiteboard.png','12 Nov','2.9 MB','Synced','1'],['TXT','Meeting notes.md','10 Nov','12 KB','Conflict','1'],['ZIP','Archive 2025.zip','2 Nov','86.4 MB','Synced','22'],['CSV','Bank export Oct.csv','1 Nov','640 KB','Synced','1'],['PDF','Tax summary.pdf','28 Oct','2.0 MB','Offline','1'],['MOV','Product demo.mov','24 Oct','214 MB','Synced','54'],['XLS','Payroll 2026.xlsx','20 Oct','1.8 MB','Synced','1'],['PDF','Lease agreement.pdf','2 Oct','5.6 MB','Synced','2'],['DOC','Board minutes.docx','1 Oct','96 KB','Synced','1'],['PDF','Insurance policy.pdf','28 Sep','3.3 MB','Offline','1'],['XLS','Expenses Q3.xlsx','25 Sep','420 KB','Synced','1'],['IMG','Signed form scan.jpg','21 Sep','5.1 MB','Synced','2'],['CSV','Bank export Sep.csv','1 Sep','598 KB','Synced','1'],['PDF','Vendor quote 77.pdf','29 Aug','780 KB','Synced','1'],['TXT','Todo.md','27 Aug','3 KB','Synced','1']];
+    const tone={Synced:'#063D31',Uploading:'#26318F',Offline:'#3A3C4C',Conflict:'#5A3500'};
+    const sf=rows[this.state.f];
+    const parts=sf[5]==='—'?0:Number(sf[5]);
+    const rowH=this.props.density==='comfortable'?44:34;
+    return {
+      accent:this.props.accent??'#4B57C9',motion:this.props.motion===false?'off':'on',
+      drives:drives.map((d,i)=>({...d,sel:String(i===this.state.d),pick:()=>this.setState({d:i}),
+        tab:'display:flex;align-items:center;gap:8px;height:34px;padding:0 14px;border:0;border-radius:10px 10px 0 0;font:inherit;font-size:13px;cursor:pointer;color:#1A1B24;transition:background 160ms;'+(i===this.state.d?'background:#FFFFFF':'background:transparent'),
+        dot:'width:7px;height:7px;border-radius:4px;background:'+d.c})),
+      current:drives[this.state.d],
+      commands:[['+','New'],['↥','Upload'],['✎','Rename'],['⧉','Copy path'],['⇩','Keep offline'],['⟲','Versions'],['⌫','Delete'],['⇄','Re-split parts'],['🔒︎','Lock']].map(([glyph,label])=>({glyph,label})),
+      tree:[['▾','Finance','',1],['▸','2025','118',2],['▾','2026','42',2,true],['','Receipts','214',3],['▸','Contracts','38',1],['▸','Projects','7',1],['▸','Clients','19',1],['▸','HR','6',1],['','Inbox','3',1]].map(([caret,name,count,depth,sel])=>({caret,name,count,style:'display:flex;align-items:center;gap:6px;height:30px;padding:0 10px 0 '+(depth*14)+'px;margin:0 6px;border-radius:8px;text-decoration:none;color:#1A1B24;'+(sel?'background:#E6E8FF;color:#26318F;font-weight:600':'')})),
+      files:rows.map((r,i)=>({kind:r[0],name:r[1],mod:r[2],size:r[3],status:r[4],parts:r[5],cb:'Select '+r[1],selb:i===this.state.f,pick:()=>this.setState({f:i}),
+        row:'display:grid;grid-template-columns:28px minmax(0,1fr) 120px 84px 96px 70px;gap:10px;align-items:center;height:'+rowH+'px;padding:0 12px;border-bottom:1px solid #F1F2F6;cursor:default;animation:rowIn 260ms '+(i*22)+'ms cubic-bezier(.05,.7,.1,1) both;'+(i===this.state.f?'background:#E6E8FF':''),
+        icon:'flex:none;width:30px;height:20px;border-radius:5px;display:grid;place-items:center;font-size:9px;font-weight:700;background:#ECEDF6;color:#3A46B5',
+        sync:'font-size:12px;font-weight:600;color:'+tone[r[4]]})),
+      selFile:{name:sf[1],size:sf[3],mod:sf[2]},
+      inspectorAnim:'animation:paneIn 300ms cubic-bezier(.05,.7,.1,1) both',
+      cells:Array.from({length:24},(_,i)=>({s:'height:14px;border-radius:3px;animation:cellIn 240ms '+(i*18)+'ms cubic-bezier(.05,.7,.1,1) both;background:'+(i<parts?(sf[4]==='Uploading'&&i===parts-1?'#B9BEF5':'var(--accent)'):'#E4E6F0')})),
+      partLabel:parts?parts+' encrypted part'+(parts>1?'s':'')+', authenticated before every read':'Folder: parts are listed per file',
+      versions:[['Today 13:42','this PC','3f9a1c2'],['Today 09:30','laptop','b81e07d'],['12 Nov','this PC','04c55aa'],['3 Nov','this PC','91de2f0']].map(([when,who,hash],i)=>({when,who,hash,dot:'width:10px;height:10px;margin-top:4px;border-radius:5px;background:'+(i===0?'var(--accent)':'#C6C8D8')})),
+      transfers:[{name:'Budget forecast.xlsx → part 1 of 1',p:64},{name:'Product demo.mov → backup layer 18 of 54',p:31}].map(t=>({...t,label:t.p+'%',bar:'display:block;height:100%;width:'+t.p+'%;background:var(--accent);transform-origin:left;animation:bar 800ms cubic-bezier(.2,0,0,1) both'}))
+    };
+  }
+}
+</script>
+</body>
+</html>

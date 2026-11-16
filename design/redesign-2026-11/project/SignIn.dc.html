@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Guided Docker Hub sign-in states</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes spin{to{transform:rotate(360deg)}}
+[data-motion=off] *{animation:none!important;transition:none!important}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</helmet>
+<div data-motion="{{motion}}" style="--accent:{{accent}};width:1440px;height:1080px;box-sizing:border-box;padding:40px;background:#F4F2FA;font-family:'Roboto Flex',system-ui,sans-serif;color:#1A1B24;display:flex;flex-direction:column;gap:20px">
+<header style="display:flex;align-items:flex-end;gap:24px">
+<div style="flex:1"><h1 style="margin:0;font-size:30px;letter-spacing:-.5px">Guided Docker Hub sign-in</h1><p style="margin:6px 0 0;font-size:15px;color:#4A4C5C">Every state names what happened and the one next step. Codes are never saved.</p></div>
+</header>
+<section aria-label="Active sign-in" style="display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:20px">
+<div style="padding:28px;border-radius:28px;background:#FFFFFF;display:flex;flex-direction:column;gap:16px;animation:rise 480ms cubic-bezier(.05,.7,.1,1) both">
+<ol style="margin:0;padding:0;list-style:none;display:flex;gap:8px">
+<li style="flex:1;padding:10px 12px;border-radius:14px;background:#CDEFE3;color:#063D31;font-size:13px;font-weight:600">1 Check Docker</li>
+<li style="flex:1;padding:10px 12px;border-radius:14px;background:#DFE0FF;color:#0E1A6E;font-size:13px;font-weight:600">2 Enter code</li>
+<li style="flex:1;padding:10px 12px;border-radius:14px;background:#F4F2FA;font-size:13px">3 Verified</li>
+</ol>
+<p style="margin:0;font-size:15px">Open the official page and enter this code. This screen updates by itself.</p>
+<p style="margin:0;font-family:ui-monospace,Consolas,monospace;font-size:44px;letter-spacing:.18em;font-weight:700;color:#0E1A6E">ABCD-1234</p>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<button type="button" style="height:48px;padding:0 22px;border:0;border-radius:24px;background:var(--accent);color:#FFFFFF;font:inherit;font-weight:600;font-size:14px">Copy code and open login.docker.com</button>
+<button type="button" style="height:48px;padding:0 18px;border:1px solid #767680;border-radius:24px;background:transparent;font:inherit;font-size:14px">Cancel</button>
+</div>
+<div style="display:flex;align-items:center;gap:10px;font-size:13px;color:#4A4C5C"><span aria-hidden="true" style="width:16px;height:16px;border-radius:8px;border:2px solid #C6C5D3;border-top-color:var(--accent);animation:spin 900ms linear infinite"></span>Waiting for you to finish in the browser · code expires at 14:32</div>
+</div>
+<div style="padding:24px;border-radius:28px;background:#1B1D3A;color:#F1F0FF;font-size:13px;line-height:1.6;animation:rise 480ms 80ms cubic-bezier(.05,.7,.1,1) both">
+<p style="margin:0 0 10px;font-size:12px;letter-spacing:.08em;color:#BEC2FF;font-weight:600">FIXES IN THIS REDESIGN</p>
+<sc-for list="{{fixes}}" as="f" hint-placeholder-count="7"><p style="margin:0 0 8px"><strong style="color:#BEC2FF">{{f.id}}</strong> {{f.text}}</p></sc-for>
+</div>
+</section>
+<section aria-label="Every state" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px">
+<sc-for list="{{states}}" as="s" hint-placeholder-count="12">
+<article style="{{s.card}}">
+<span style="{{s.chip}}">{{s.kind}}</span>
+<h2 style="margin:10px 0 6px;font-size:16px">{{s.title}}</h2>
+<p style="margin:0 0 12px;font-size:13px;line-height:1.5;color:#3A3C4C">{{s.body}}</p>
+<span style="display:inline-flex;align-items:center;height:36px;padding:0 14px;border-radius:18px;background:#E3E1EE;font-size:13px;font-weight:600">{{s.action}}</span>
+</article>
+</sc-for>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#4B57C9","options":["#4B57C9","#00696B","#8B4A00","#A23B72"],"section":"Look"},"motion":{"editor":"boolean","default":true,"section":"Look"},"$preview":{"width":1440,"height":1080}}'>
+class Component extends DCLogic {
+  renderVals(){
+    const tone={ok:['#CDEFE3','#063D31'],wait:['#DFE0FF','#0E1A6E'],warn:['#FFE0B8','#4A2C00'],err:['#FFDAD6','#410002'],stop:['#E4E6F0','#1A1B24']};
+    const rows=[
+      ['ok','Signed in','Signed in as yourname. Ready to back up.','Choose drives'],
+      ['wait','Checking','Looking for Docker Desktop and a saved sign-in…','Cancel'],
+      ['wait','Waiting for browser','Enter the code on login.docker.com.','Copy and open'],
+      ['wait','Verifying','Confirming the saved sign-in with Docker Hub…','Cancel'],
+      ['err','Docker Desktop not found','Install Docker Desktop, start it once, then retry.','Get Docker Desktop'],
+      ['warn','Docker Desktop not running','Start Docker Desktop, then retry.','Retry'],
+      ['warn','Saved sign-in expired','Your saved Docker sign-in is no longer accepted.','Sign in again'],
+      ['err','Credential store unavailable','Windows could not open the Docker credential store.','Retry'],
+      ['err','Docker Hub unreachable','Check your connection and try again.','Retry'],
+      ['warn','Code expired','The code timed out after 10 minutes.','Get a new code'],
+      ['warn','Older Docker version','This Docker version cannot use browser sign-in. Update Docker Desktop.','Update Docker'],
+      ['stop','Cancelled','The code was cleared. Nothing was saved.','Start again']
+    ];
+    return {
+      accent:this.props.accent??'#4B57C9',motion:this.props.motion===false?'off':'on',
+      states:rows.map(([k,title,body,action],i)=>({kind:{ok:'Done',wait:'In progress',warn:'Needs you',err:'Blocked',stop:'Stopped'}[k],title,body,action,
+        card:'padding:18px;border-radius:22px;background:#FFFFFF;animation:rise 420ms '+(200+i*45)+'ms cubic-bezier(.05,.7,.1,1) both',
+        chip:'display:inline-block;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;background:'+tone[k][0]+';color:'+tone[k][1]})),
+      fixes:[
+        {id:'P1',text:'The failure reason reaches the panel, so each state above shows its own fix.'},
+        {id:'P2',text:'Extra links Docker prints after success no longer turn a good sign-in into a failure.'},
+        {id:'P3',text:'A Username prompt from an older Docker is caught at once instead of waiting 10 minutes.'},
+        {id:'P4',text:'An expired saved sign-in offers Sign in again instead of a dead end.'},
+        {id:'P5',text:'Check status asks Docker Hub again instead of repeating the cached answer.'},
+        {id:'P6',text:'Retry right after cancel starts a new sign-in on the first click.'},
+        {id:'P7',text:'A missing repository is created as public, or named clearly when that is not allowed.'}
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

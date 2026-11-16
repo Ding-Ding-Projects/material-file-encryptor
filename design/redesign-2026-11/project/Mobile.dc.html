@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Narrow window layout</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:none}}
+@keyframes cardIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+[data-motion=off] *{animation:none!important;transition:none!important}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</helmet>
+<div data-motion="{{motion}}" style="--accent:{{accent}};width:390px;height:844px;position:relative;overflow:hidden;font-family:'Roboto Flex',system-ui,sans-serif;font-size:14px;color:#1A1B24;background:#FFFFFF;display:flex;flex-direction:column">
+<div style="display:flex;align-items:center;gap:4px;height:48px;padding:0 4px;background:#DADDE8">
+<button type="button" aria-label="Open folders and views" style="width:48px;height:48px;border:0;background:transparent;font-size:20px">☰</button>
+<button type="button" style="flex:1;min-width:0;height:40px;border:0;border-radius:10px;background:#FFFFFF;font:inherit;font-weight:600;text-align:left;padding:0 12px">M: Work vault ▾</button>
+<button type="button" aria-label="More commands" style="width:48px;height:48px;border:0;background:transparent;font-size:20px">⋮</button>
+</div>
+<div style="display:flex;gap:6px;padding:8px 12px;overflow-x:auto">
+<button type="button" style="flex:none;height:40px;padding:0 14px;border:0;border-radius:20px;background:var(--accent);color:#FFFFFF;font:inherit;font-weight:600">↑ Back up now</button>
+<button type="button" style="flex:none;height:40px;padding:0 14px;border:1px solid #C6C8D8;border-radius:20px;background:#FFFFFF;font:inherit">Upload</button>
+<button type="button" style="flex:none;height:40px;padding:0 14px;border:1px solid #C6C8D8;border-radius:20px;background:#FFFFFF;font:inherit">New</button>
+<button type="button" style="flex:none;height:40px;padding:0 14px;border:1px solid #C6C8D8;border-radius:20px;background:#FFFFFF;font:inherit">Lock</button>
+</div>
+<div style="display:flex;gap:6px;padding:0 12px 8px"><label for="mq" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Search</label><input id="mq" type="search" placeholder="Search 2026" style="flex:1;min-width:0;height:44px;padding:0 12px;border:1px solid #C6C8D8;border-radius:10px;font:inherit"><button type="button" aria-label="Regex builder" style="width:48px;height:44px;border:1px solid #C6C8D8;border-radius:10px;background:#FFFFFF;font-family:monospace">.*</button></div>
+<div style="flex:1;overflow:auto;padding:0 12px;display:flex;flex-direction:column;gap:6px">
+<sc-for list="{{files}}" as="f" hint-placeholder-count="7"><button type="button" style="{{f.s}}"><span style="width:36px;height:28px;border-radius:7px;background:#ECEDF6;color:var(--accent);display:grid;place-items:center;font-size:10px;font-weight:700">{{f.k}}</span><span style="flex:1;min-width:0;text-align:left"><b style="display:block;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{f.n}}</b><span style="font-size:12px;color:#4A4C5C">{{f.m}}</span></span><span style="font-size:12px;font-weight:600;color:#063D31">{{f.st}}</span></button></sc-for>
+</div>
+<sc-if value="{{sheet}}" hint-placeholder-val="{{true}}">
+<div aria-hidden="true" style="position:absolute;inset:0;background:rgba(20,22,40,.3)"></div>
+<section role="dialog" aria-label="Details" style="position:absolute;left:0;right:0;bottom:0;padding:8px 16px 20px;border-radius:20px 20px 0 0;background:#FFFFFF;display:flex;flex-direction:column;gap:10px;animation:sheetUp 360ms cubic-bezier(.05,.7,.1,1) both">
+<span aria-hidden="true" style="align-self:center;width:36px;height:4px;border-radius:2px;background:#C6C8D8"></span>
+<b style="font-size:16px">Quarterly report Q3.pdf</b><span style="color:#4A4C5C">4.2 MB · 2 encrypted parts · synced</span>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">
+<button type="button" style="height:48px;border:1px solid #C6C8D8;border-radius:12px;background:#FFFFFF;font:inherit">Open</button><button type="button" style="height:48px;border:1px solid #C6C8D8;border-radius:12px;background:#FFFFFF;font:inherit">Keep offline</button><button type="button" style="height:48px;border:1px solid #C6C8D8;border-radius:12px;background:#FFFFFF;font:inherit">Versions</button><button type="button" style="height:48px;border:1px solid #C6C8D8;border-radius:12px;background:#FFFFFF;font:inherit">More…</button>
+</div>
+</section>
+</sc-if>
+<footer role="status" style="height:28px;display:flex;align-items:center;padding:0 12px;background:var(--accent);color:#FFFFFF;font-size:12px">● M: mounted · backup 15:00</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#4B57C9","options":["#4B57C9","#00696B","#8B4A00","#A23B72"],"section":"Look"},"motion":{"editor":"boolean","default":true,"section":"Look"},"sheet":{"editor":"boolean","default":true,"section":"Stage"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals(){
+    const f=[['DIR','Receipts','214 items','Synced'],['PDF','Quarterly report Q3.pdf','Today 13:42','Synced'],['XLS','Budget forecast.xlsx','Today 11:05','Uploading'],['PDF','Invoice 2026-118.pdf','Yesterday','Synced'],['DOC','Supplier contract.docx','Yesterday','Offline'],['IMG','Whiteboard.png','12 Nov','Synced'],['TXT','Meeting notes.md','10 Nov','Conflict']];
+    return {accent:this.props.accent??'#4B57C9',motion:this.props.motion===false?'off':'on',sheet:this.props.sheet??true,
+      files:f.map(([k,n,m,st],i)=>({k,n,m,st,s:'display:flex;align-items:center;gap:10px;min-height:56px;padding:6px 10px;border:1px solid #ECEDF3;border-radius:12px;background:#FFFFFF;font:inherit;animation:cardIn 260ms '+(i*35)+'ms cubic-bezier(.05,.7,.1,1) both'}))};
+  }
+}
+</script>
+</body>
+</html>

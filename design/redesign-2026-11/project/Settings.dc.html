@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Settings</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..800&amp;family=Roboto+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#3A46B5;text-underline-offset:2px}a:hover{color:#26318F}
+@keyframes rowIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+[data-motion=off] *{animation:none!important;transition:none!important}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</helmet>
+<div data-motion="{{motion}}" style="--accent:{{accent}};width:1440px;height:1060px;font-family:'Roboto Flex',system-ui,sans-serif;font-size:13px;color:#1A1B24;background:#E9EBF2;display:flex;flex-direction:column">
+<div style="height:40px;background:#DADDE8;display:flex;align-items:flex-end;padding-left:10px"><span style="height:34px;padding:0 14px;display:flex;align-items:center;gap:8px;border-radius:10px 10px 0 0;background:#FFFFFF"><b>Settings</b></span></div>
+<div style="flex:1;display:flex;gap:1px;background:#DCDEE8;min-height:0">
+<nav aria-label="Settings groups" style="flex:0 0 232px;background:#F7F8FB;padding:10px 6px;display:flex;flex-direction:column;gap:2px">
+<sc-for list="{{groups}}" as="g" hint-placeholder-count="12"><button type="button" onClick="{{g.pick}}" style="{{g.s}}">{{g.name}}<span style="margin-left:auto;font-size:11px;color:#4A4C5C">{{g.count}}</span></button></sc-for>
+</nav>
+<main style="flex:1;min-width:0;background:#FFFFFF;display:flex;flex-direction:column">
+<div style="display:flex;gap:8px;align-items:center;padding:10px 16px;border-bottom:1px solid #ECEDF3">
+<label for="ss" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Search settings</label>
+<input id="ss" type="search" value="{{query}}" placeholder="Search 214 settings" style="flex:1;height:34px;padding:0 12px;border:1px solid #C6C8D8;border-radius:8px;font:inherit">
+<button type="button" onClick="{{toggleRegex}}" aria-pressed="{{regexOn}}" style="{{regexBtn}}">.* Regex</button>
+<button type="button" style="height:34px;padding:0 12px;border:1px solid #C6C8D8;border-radius:8px;background:#FFFFFF;font:inherit">Reset group</button>
+</div>
+<sc-if value="{{regexOpen}}" hint-placeholder-val="{{true}}">
+<div style="margin:10px 16px 0;padding:10px 12px;border:1px solid #DCDEE8;border-radius:10px;background:#F7F8FB;display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+<span style="font-family:'Roboto Mono',monospace;padding:4px 8px;border-radius:6px;background:#FFFFFF;border:1px solid #DCDEE8">^(sound|motion).*</span>
+<span style="padding:3px 8px;border-radius:6px;background:#E6E8FF;color:#26318F;font-weight:600">i</span>
+<span style="color:#0B6B57;font-weight:600">Valid · 9 settings match</span>
+<span style="color:#4A4C5C">^ start · ( ) group · | or · .* anything</span>
+<span style="flex:1"></span><a href="Tools.dc.html" style="font-weight:600">Open full builder</a>
+</div>
+</sc-if>
+<div style="flex:1;overflow:auto;padding:6px 16px 16px">
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="12">
+<div style="{{r.s}}">
+<div style="min-width:0"><p style="margin:0;font-weight:600">{{r.name}}</p><p style="margin:2px 0 0;color:#4A4C5C">{{r.help}}</p></div>
+<span style="{{r.ctl}}">{{r.value}}</span>
+</div>
+</sc-for>
+</div>
+</main>
+<aside aria-label="Feature coverage" style="flex:0 0 340px;background:#F7F8FB;padding:14px 16px;display:flex;flex-direction:column;gap:10px;overflow:auto">
+<p style="margin:0;font-size:11px;font-weight:700;letter-spacing:.06em;color:#4A4C5C">FEATURE COVERAGE</p>
+<div style="display:flex;height:10px;border-radius:5px;overflow:hidden"><span style="flex:{{c.done}};background:#0B6B57"></span><span style="flex:{{c.part}};background:#E0A040"></span><span style="flex:{{c.miss}};background:#4B57C9"></span><span style="flex:{{c.na}};background:#767680"></span></div>
+<p style="margin:0;color:#3A3C4C">{{c.label}}</p>
+<sc-for list="{{feats}}" as="f" hint-placeholder-count="14"><div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #E4E6F0"><span style="{{f.dot}}"></span><span style="flex:1">{{f.n}}</span><span style="font-size:11px;color:#4A4C5C">{{f.st}}</span></div></sc-for>
+</aside>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#4B57C9","options":["#4B57C9","#00696B","#8B4A00","#A23B72"],"section":"Look"},"motion":{"editor":"boolean","default":true,"section":"Look"},"regexOpen":{"editor":"boolean","default":true,"section":"Stage"},"$preview":{"width":1440,"height":1060}}'>
+class Component extends DCLogic {
+  constructor(p){super(p);this.state={g:0,regex:null};}
+  renderVals(){
+    const groups=[['Appearance',24],['Motion and animation',38],['Sound',9],['Comfort and focus',11],['Language and wording',16],['Drives and unlock',22],['Cloud backup',14],['Offline and cache',8],['Search and regex',12],['Notifications',10],['Updates and install',9],['Privacy and security',13],['Tools',18],['About',10]];
+    const rows={0:[['Theme','Light, dark or follow Windows.','Follow Windows','sel'],['Accent colour','Seed for every tonal colour.','Indigo','sel'],['High contrast','Stronger outlines and text; follows Windows contrast themes.','Off','sw'],['Text size','Scales all text from 90% to 200%.','100%','sl'],['Density','Compact rows fit more files.','Compact','sel'],['Funny level','How playful messages are, 1 to 5.','5','sl'],['Corner shape','From square to fully rounded controls.','Medium','sel'],['Typeface','Bundled Noto Sans or a font you choose.','Noto Sans','sel'],['Emoji in dialogs','Show playful emoji in confirmations.','On','sw'],['Inspector pane','Show file details on the right.','On','sw'],['Status bar','Show drive state at the bottom.','On','sw'],['Icon labels','Show text beside command bar icons.','On','sw']],
+      1:[['All animations','Master switch for every animation.','On','sw'],['Speed','Multiplies every duration.','1.00×','sl'],['Profile','Calm, Standard, Expressive or Playful.','Expressive','sel'],['Installation celebrations','Full-window success and failure screens.','On','sw']]}[this.state.g]||[['Sound effects','Short sounds for unlock, upload, errors and success.','On','sw'],['Volume','Sound effect volume.','60%','sl'],['Low stimulation','Calm colours, no animation, quieter sounds. Overrides other settings.','Off','sw'],['Quiet hours','No sounds between these times.','22:00 to 07:00','sel']];
+    const regexOn=this.state.regex??this.props.regexOpen??true;
+    const fe=[['Animation editor','Partial'],['Action sounds','Partial'],['Narrow window parity','Building'],['Regex builder parity','Building'],['New tab catalog','Building'],['Cloud backup one click','Building'],['Guided sign-in fixes','Building'],['High contrast','Building'],['Base64 toolkit','Building'],['Live charts','Building'],['Screen recording','Building'],['Drawing','Building'],['Quicktype studio','Building'],['World generator','Building'],['Virtual disks','Building'],['Hosted forms','Not applicable']];
+    const tone={Partial:'#E0A040',Building:'#4B57C9','Not applicable':'#767680',Done:'#0B6B57'};
+    return {
+      accent:this.props.accent??'#4B57C9',motion:this.props.motion===false?'off':'on',
+      groups:groups.map(([name,count],i)=>({name,count,pick:()=>this.setState({g:i}),s:'display:flex;align-items:center;height:32px;padding:0 10px;border:0;border-radius:8px;font:inherit;text-align:left;cursor:pointer;color:#1A1B24;'+(i===this.state.g?'background:#E6E8FF;color:#26318F;font-weight:600':'background:transparent')})),
+      query:regexOn?'':'sound',regexOn:String(regexOn),regexOpen:regexOn,toggleRegex:()=>this.setState({regex:!regexOn}),
+      regexBtn:'height:34px;padding:0 12px;border-radius:8px;font-family:Roboto Mono,monospace;cursor:pointer;'+(regexOn?'border:0;background:var(--accent);color:#FFFFFF':'border:1px solid #C6C8D8;background:#FFFFFF'),
+      rows:rows.map(([name,help,value,kind],i)=>({name,help,value,s:'display:grid;grid-template-columns:minmax(0,1fr) 180px;gap:16px;align-items:center;min-height:56px;padding:8px 0;border-bottom:1px solid #F1F2F6;animation:rowIn 240ms '+(i*30)+'ms cubic-bezier(.05,.7,.1,1) both',
+        ctl:'justify-self:end;padding:6px 12px;border-radius:'+(kind==='sw'?'14px':'8px')+';font-weight:600;'+(kind==='sw'?(value==='On'?'background:var(--accent);color:#FFFFFF':'background:#E4E6F0'):'background:#F1F2F8;border:1px solid #DCDEE8')})),
+      feats:fe.map(([n,st])=>({n,st,dot:'width:8px;height:8px;border-radius:4px;background:'+tone[st]})),
+      c:{done:0,part:2,miss:13,na:1,label:'Honest count while work is in progress: 0 finished, 2 partial, 13 being built, 1 not applicable.'}
+    };
+  }
+}
+</script>
+</body>
+</html>
