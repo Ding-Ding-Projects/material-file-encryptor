@@ -1,9 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
-import vm from 'node:vm';
-const worker=readFileSync(new URL('../src/shared/surface/regex-worker.js',import.meta.url),'utf8');
-function run(data){let result;const scope={performance,self:{postMessage:value=>{result=value;}}};vm.runInNewContext(worker,scope);scope.self.onmessage({data});return JSON.parse(JSON.stringify(result));}
+const posted=[];globalThis.self={postMessage:value=>posted.push(value)};
+await import('../src/shared/surface/regex-worker.js');
+function run(data){posted.length=0;globalThis.self.onmessage({data});return JSON.parse(JSON.stringify(posted.at(-1)));}
 test('isolated regex protocol preserves Unicode captures and replacement previews',()=>{
  const result=run({pattern:'(?<word>\\p{L}+)',flags:'gu',sample:'香港 test',replacement:'[$<word>]'});
  assert.deepEqual(result.matches.map(m=>m.groups.word),['香港','test']);assert.equal(result.replacement,'[香港] [test]');

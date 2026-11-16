@@ -1,0 +1,120 @@
+/* Motion tokens. Every animated element kind reads its own custom properties, so the animation editor can tune
+   duration, delay, stagger, easing, distance and scale live, and reduced motion can zero them all at once.
+   motion-controller.js rewrites these on the root element; the values below are the Expressive defaults used before
+   it runs. Layout is untouched: this file only adds animation and transition declarations. */
+:root{
+  --motion-enabled:1;--motion-speed:1;
+  --motion-page-enabled:1;--motion-list-enabled:1;--motion-card-enabled:1;--motion-dialog-enabled:1;--motion-menu-enabled:1;--motion-sheet-enabled:1;--motion-tooltip-enabled:1;--motion-toast-enabled:1;--motion-switch-enabled:1;--motion-chart-enabled:1;--motion-progress-enabled:1;--motion-pulse-enabled:1;--motion-tab-enabled:1;--motion-hover-enabled:1;--motion-unlock-enabled:1;--motion-takeover-enabled:1;
+  --motion-page-duration:520ms;--motion-page-delay:0ms;--motion-page-stagger:0ms;--motion-page-easing:cubic-bezier(.05,.7,.1,1);--motion-page-distance:24px;--motion-page-scale:.96;
+  --motion-list-duration:300ms;--motion-list-delay:0ms;--motion-list-stagger:40ms;--motion-list-easing:cubic-bezier(.34,1.56,.64,1);--motion-list-distance:12px;--motion-list-scale:1;
+  --motion-card-duration:420ms;--motion-card-delay:0ms;--motion-card-stagger:50ms;--motion-card-easing:cubic-bezier(.05,.7,.1,1);--motion-card-distance:16px;--motion-card-scale:.97;
+  --motion-dialog-duration:360ms;--motion-dialog-delay:0ms;--motion-dialog-stagger:0ms;--motion-dialog-easing:cubic-bezier(.34,1.56,.64,1);--motion-dialog-distance:16px;--motion-dialog-scale:.92;
+  --motion-menu-duration:240ms;--motion-menu-delay:0ms;--motion-menu-stagger:0ms;--motion-menu-easing:cubic-bezier(.05,.7,.1,1);--motion-menu-distance:8px;--motion-menu-scale:.95;
+  --motion-sheet-duration:420ms;--motion-sheet-delay:0ms;--motion-sheet-stagger:0ms;--motion-sheet-easing:cubic-bezier(.05,.7,.1,1);--motion-sheet-distance:48px;--motion-sheet-scale:1;
+  --motion-tooltip-duration:160ms;--motion-tooltip-delay:0ms;--motion-tooltip-stagger:0ms;--motion-tooltip-easing:cubic-bezier(.2,0,0,1);--motion-tooltip-distance:4px;--motion-tooltip-scale:.96;
+  --motion-toast-duration:320ms;--motion-toast-delay:0ms;--motion-toast-stagger:0ms;--motion-toast-easing:cubic-bezier(.34,1.56,.64,1);--motion-toast-distance:24px;--motion-toast-scale:.96;
+  --motion-switch-duration:200ms;--motion-switch-delay:0ms;--motion-switch-stagger:0ms;--motion-switch-easing:cubic-bezier(.34,1.56,.64,1);--motion-switch-distance:0px;--motion-switch-scale:1.08;
+  --motion-chart-duration:1200ms;--motion-chart-delay:0ms;--motion-chart-stagger:30ms;--motion-chart-easing:cubic-bezier(.05,.7,.1,1);--motion-chart-distance:0px;--motion-chart-scale:.4;
+  --motion-progress-duration:1400ms;--motion-progress-delay:0ms;--motion-progress-stagger:0ms;--motion-progress-easing:cubic-bezier(0,0,1,1);--motion-progress-distance:0px;--motion-progress-scale:1;
+  --motion-pulse-duration:2400ms;--motion-pulse-delay:0ms;--motion-pulse-stagger:0ms;--motion-pulse-easing:cubic-bezier(.2,0,0,1);--motion-pulse-distance:0px;--motion-pulse-scale:1.6;
+  --motion-tab-duration:300ms;--motion-tab-delay:0ms;--motion-tab-stagger:0ms;--motion-tab-easing:cubic-bezier(.05,.7,.1,1);--motion-tab-distance:16px;--motion-tab-scale:1;
+  --motion-hover-duration:220ms;--motion-hover-delay:0ms;--motion-hover-stagger:0ms;--motion-hover-easing:cubic-bezier(.2,0,0,1);--motion-hover-distance:2px;--motion-hover-scale:1.01;
+  --motion-unlock-duration:900ms;--motion-unlock-delay:0ms;--motion-unlock-stagger:40ms;--motion-unlock-easing:cubic-bezier(.05,.7,.1,1);--motion-unlock-distance:8px;--motion-unlock-scale:3;
+  --motion-takeover-duration:640ms;--motion-takeover-delay:0ms;--motion-takeover-stagger:60ms;--motion-takeover-easing:cubic-bezier(.05,.7,.1,1);--motion-takeover-distance:32px;--motion-takeover-scale:.9;
+}
+
+/* Keyframes read their endpoints from the same tokens, so distance and scale are editable too. */
+@keyframes motion-page-in{from{opacity:0;transform:translateY(var(--motion-page-distance)) scale(var(--motion-page-scale))}to{opacity:1;transform:none}}
+@keyframes motion-list-in{from{opacity:0;transform:translateY(var(--motion-list-distance)) scale(var(--motion-list-scale))}to{opacity:1;transform:none}}
+@keyframes motion-card-in{from{opacity:0;transform:translateY(var(--motion-card-distance)) scale(var(--motion-card-scale))}to{opacity:1;transform:none}}
+@keyframes motion-pop-in{from{opacity:0;transform:translateY(var(--motion-pop-distance,8px)) scale(var(--motion-pop-scale,.95))}to{opacity:1;transform:none}}
+@keyframes motion-sheet-in{from{opacity:0;transform:translateY(var(--motion-sheet-distance))}to{opacity:1;transform:none}}
+@keyframes motion-toast-in{from{opacity:0;transform:translateY(var(--motion-toast-distance)) scale(var(--motion-toast-scale))}to{opacity:1;transform:none}}
+@keyframes motion-tab-in{from{opacity:0;transform:translateX(var(--motion-tab-distance))}to{opacity:1;transform:none}}
+@keyframes motion-chart-in{from{opacity:.2;transform:scale(var(--motion-chart-scale))}to{opacity:1;transform:none}}
+@keyframes motion-bar-in{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes motion-shimmer{from{background-position:-200px 0}to{background-position:200px 0}}
+@keyframes motion-pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(var(--motion-pulse-scale));opacity:.4}}
+@keyframes motion-burst{from{transform:scale(.5);opacity:.8}to{transform:scale(var(--motion-unlock-scale));opacity:0}}
+@keyframes motion-shackle{to{transform:translateY(calc(var(--motion-unlock-distance) * -.6)) rotate(-16deg)}}
+@keyframes motion-shake{0%,100%{transform:none}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+
+/* Page entry replaces the view fade; tab panels slide instead of fading in place. */
+.view:not([hidden]){animation:motion-page-in var(--motion-page-duration) var(--motion-page-easing) var(--motion-page-delay) both}
+[role="tabpanel"]:not([hidden]){animation:motion-tab-in var(--motion-tab-duration) var(--motion-tab-easing) var(--motion-tab-delay) both}
+
+/* Cards enter in a stagger controlled by the card tokens. */
+:where(main,[role="tabpanel"],.view) :is(article,.card,.server-operation,.entry):not([hidden]){
+  animation:motion-card-in var(--motion-card-duration) var(--motion-card-easing) calc(var(--motion-card-delay) + var(--motion-i,0) * var(--motion-card-stagger)) both;
+}
+:where(main,[role="tabpanel"],.view) :is(article,.card,.server-operation,.entry):nth-child(1){--motion-i:0}
+:where(main,[role="tabpanel"],.view) :is(article,.card,.server-operation,.entry):nth-child(2){--motion-i:1}
+:where(main,[role="tabpanel"],.view) :is(article,.card,.server-operation,.entry):nth-child(3){--motion-i:2}
+:where(main,[role="tabpanel"],.view) :is(article,.card,.server-operation,.entry):nth-child(n+4){--motion-i:3}
+
+/* Table rows (file list, history, recycle bin) rise one after another. Rows past the twelfth share the last delay. */
+tbody tr{animation:motion-list-in var(--motion-list-duration) var(--motion-list-easing) calc(var(--motion-list-delay) + var(--motion-i,0) * var(--motion-list-stagger)) both}
+tbody tr:nth-child(1){--motion-i:0}tbody tr:nth-child(2){--motion-i:1}tbody tr:nth-child(3){--motion-i:2}tbody tr:nth-child(4){--motion-i:3}
+tbody tr:nth-child(5){--motion-i:4}tbody tr:nth-child(6){--motion-i:5}tbody tr:nth-child(7){--motion-i:6}tbody tr:nth-child(8){--motion-i:7}
+tbody tr:nth-child(9){--motion-i:8}tbody tr:nth-child(10){--motion-i:9}tbody tr:nth-child(11){--motion-i:10}tbody tr:nth-child(n+12){--motion-i:11}
+
+/* Dialogs, menus, sheets, tooltips and toasts pop or slide from where they open. */
+dialog[open],[data-super-confirmation]:not([hidden]),.wording-drop-overlay__card{
+  --motion-pop-distance:var(--motion-dialog-distance);--motion-pop-scale:var(--motion-dialog-scale);
+  animation:motion-pop-in var(--motion-dialog-duration) var(--motion-dialog-easing) var(--motion-dialog-delay) both;transform-origin:center 40%;
+}
+[role="menu"]:not([hidden]),mfe-context-menu[open]{
+  --motion-pop-distance:var(--motion-menu-distance);--motion-pop-scale:var(--motion-menu-scale);
+  animation:motion-pop-in var(--motion-menu-duration) var(--motion-menu-easing) var(--motion-menu-delay) both;transform-origin:top left;
+}
+[data-motion-kind="sheet"]:not([hidden]),.sheet:not([hidden]){animation:motion-sheet-in var(--motion-sheet-duration) var(--motion-sheet-easing) var(--motion-sheet-delay) both}
+[role="tooltip"]:not([hidden]),.tooltip:not([hidden]){
+  --motion-pop-distance:var(--motion-tooltip-distance);--motion-pop-scale:var(--motion-tooltip-scale);
+  animation:motion-pop-in var(--motion-tooltip-duration) var(--motion-tooltip-easing) var(--motion-tooltip-delay) both;
+}
+[data-motion-kind="toast"],.toast,.notification-toast{animation:motion-toast-in var(--motion-toast-duration) var(--motion-toast-easing) var(--motion-toast-delay) both}
+
+/* Progress shimmer and live pulses. */
+.progress-indicator,[data-motion-kind="progress"]{
+  background-image:linear-gradient(90deg,transparent,color-mix(in srgb,currentColor 24%,transparent),transparent);background-size:200px 100%;background-repeat:no-repeat;
+  animation:motion-shimmer var(--motion-progress-duration) var(--motion-progress-easing) var(--motion-progress-delay) infinite;
+}
+.progress-indicator[hidden],[data-motion-kind="progress"][hidden]{animation:none}
+[data-motion-kind="pulse"]{animation:motion-pulse var(--motion-pulse-duration) var(--motion-pulse-easing) var(--motion-pulse-delay) infinite}
+[data-motion-kind="chart"]{animation:motion-chart-in var(--motion-chart-duration) var(--motion-chart-easing) calc(var(--motion-chart-delay) + var(--motion-i,0) * var(--motion-chart-stagger)) both;transform-origin:center}
+[data-motion-kind="chart-bar"]{transform-origin:left center;animation:motion-bar-in var(--motion-chart-duration) var(--motion-chart-easing) calc(var(--motion-chart-delay) + var(--motion-i,0) * var(--motion-chart-stagger)) both}
+
+/* Switches, buttons and rows glide between states; hover lifts a little. */
+md-switch{transition:transform var(--motion-switch-duration) var(--motion-switch-easing)}
+md-switch:active{transform:scale(var(--motion-switch-scale))}
+.card,.entry,.nav-item,.button{transition:transform var(--motion-hover-duration) var(--motion-hover-easing),box-shadow var(--motion-hover-duration) var(--motion-hover-easing)}
+.card:hover,.entry:hover,.button:hover{transform:translateY(calc(var(--motion-hover-distance) * -1)) scale(var(--motion-hover-scale))}
+
+/* Unlock choreography: a ring bursts from the badge, the shackle lifts, a wrong password shakes the card. */
+[data-motion-kind="unlock-burst"]{animation:motion-burst var(--motion-unlock-duration) var(--motion-unlock-easing) var(--motion-unlock-delay) both}
+[data-motion-kind="unlock-shackle"]{transform-origin:16px 10px;animation:motion-shackle calc(var(--motion-unlock-duration) * .47) var(--motion-unlock-easing) var(--motion-unlock-delay) both}
+[data-motion-kind="unlock-shake"]{animation:motion-shake calc(var(--motion-unlock-duration) * .47) var(--md-sys-motion-easing-standard) both}
+
+/* Installation takeover. */
+.install-takeover{
+  position:fixed;inset:0;z-index:2147483100;display:grid;place-items:center;padding:24px;box-sizing:border-box;
+  background:color-mix(in srgb,var(--md-sys-color-scrim,#000) 62%,transparent);
+  animation:motion-takeover-fade var(--motion-takeover-duration) var(--motion-takeover-easing) both;
+}
+@keyframes motion-takeover-fade{from{opacity:0}to{opacity:1}}
+@keyframes motion-takeover-rise{from{opacity:0;transform:translateY(var(--motion-takeover-distance)) scale(var(--motion-takeover-scale))}to{opacity:1;transform:none}}
+@keyframes motion-takeover-ring{from{transform:scale(.4);opacity:.9}to{transform:scale(3.2);opacity:0}}
+@keyframes motion-takeover-alarm{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--md-sys-color-error,#b3261e) 55%,transparent)}50%{box-shadow:0 0 0 14px transparent}}
+
+/* Reduced motion is applied at the token level (every duration becomes 0ms) and again here for anything that
+   still declares an animation. The OS preference, the in-app Motion setting and low stimulation all win. */
+@media (prefers-reduced-motion:reduce){
+  :root{--motion-enabled:0}
+  .view:not([hidden]),[role="tabpanel"]:not([hidden]),tbody tr,[data-motion-kind],.progress-indicator,.install-takeover,.install-takeover *{animation:none!important}
+  .card:hover,.entry:hover,.button:hover{transform:none}
+}
+:root[data-motion="reduced"] .view:not([hidden]),:root[data-motion="reduced"] [role="tabpanel"]:not([hidden]),:root[data-motion="reduced"] tbody tr,
+:root[data-motion="reduced"] [data-motion-kind],:root[data-motion="reduced"] .progress-indicator,:root[data-motion="reduced"] .install-takeover,:root[data-motion="reduced"] .install-takeover *,
+:root[data-low-stimulation="true"] .view:not([hidden]),:root[data-low-stimulation="true"] [role="tabpanel"]:not([hidden]),:root[data-low-stimulation="true"] tbody tr,
+:root[data-low-stimulation="true"] [data-motion-kind],:root[data-low-stimulation="true"] .progress-indicator,:root[data-low-stimulation="true"] .install-takeover,:root[data-low-stimulation="true"] .install-takeover *{animation:none!important}
+:root[data-motion-layer="off"] .card:hover,:root[data-motion-layer="off"] .entry:hover,:root[data-motion-layer="off"] .button:hover{transform:none}

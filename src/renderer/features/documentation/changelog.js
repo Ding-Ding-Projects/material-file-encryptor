@@ -1,6 +1,7 @@
 import {control, connectSelectSearch, setControlLanguage} from '../../../shared/surface/controls.js';
 import {renderMarkdown} from './markdown.js';
 import { createScopedSearch } from '../../scoped-search.js';
+import {createCollapsibleSection, renderStatistics, activeFilterText} from '../../../shared/surface/collapsible-section.js';
 
 export function filterChanges(entries, { from = '', to = '', category = '' } = {}) {
   return entries.filter(entry => (!from || (entry.date && entry.date >= from)) && (!to || (entry.date && entry.date <= to)) && (!category || entry.category === category));
@@ -16,7 +17,12 @@ export function mountChangelog(host, { entries = [], translate = value => value,
   const exportButton = control('button', {type:'button'}); exportButton.type = 'button'; exportButton.textContent = translate('Export filtered changes');
   const stopSelectSearch = connectSelectSearch(category, {language});
   controls.style.cssText='display:flex;flex-wrap:wrap;gap:12px;align-items:center'; content.style.cssText='max-height:60dvh;overflow:auto;overflow-wrap:anywhere';
-  controls.append(category, exportButton); host.append(searchHost, controls, content);
+  controls.append(category, exportButton);
+  // Search and filters fold away and still say when they exclude entries; the statistics describe the log and start closed.
+  const storage = (() => { try { return globalThis.localStorage; } catch { return undefined; } })();
+  const filterSection = createCollapsibleSection({doc: document, id: 'desktop-changelog-filters', title: translate('Search and filters'), storage, open: true, children: [searchHost, controls]});
+  const statsSection = createCollapsibleSection({doc: document, id: 'desktop-changelog-statistics', title: translate('Statistics'), storage, open: false});
+  host.append(filterSection.root, statsSection.root, content);
   const search = createScopedSearch(searchHost, translate, render);
   async function render() {
     const request = ++generation;try{
@@ -24,6 +30,9 @@ export function mountChangelog(host, { entries = [], translate = value => value,
     const result = await search.filterWithOutcome(filtered.map((row, index) => ({ ...row, id: String(index), path: `${row.title}\n${row.markdown}` })));
     if (disposed || request !== generation) return;
     if(result.outcome==='superseded')return;const rows=result.rows;selected = rows; content.replaceChildren();
+    const dated = entries.filter(row => row.date).length, categoryCount = new Set(entries.map(row => row.category).filter(Boolean)).size;
+    renderStatistics(document, statsSection.body, [[translate('Entries'), entries.length], [translate('Shown'), rows.length], [translate('Dated entries'), dated], [translate('Categories'), categoryCount]]);
+    filterSection.setActive(activeFilterText(translate('Filter active'), rows.length, entries.length));
     if (!rows.length) { const empty = document.createElement('p'); empty.textContent = translate('No matching changes.'); content.append(empty); }
     for (const row of rows) { const section = document.createElement('section'), heading = document.createElement('h3'), body = document.createElement('article'); heading.textContent = row.title; renderMarkdown(body,row.markdown,{translate,catalog:{documents:[],assets:[]},source:'CHANGELOG.md',headings:[],open:()=>false}); section.append(heading, body); content.append(section); }
     exportButton.disabled = !rows.length;finishReady(result.outcome);
@@ -35,5 +44,5 @@ export function mountChangelog(host, { entries = [], translate = value => value,
     if (onExport) return onExport(data);
     const url = URL.createObjectURL(new Blob([data.text], { type: data.mime })); const link = document.createElement('a'); link.href = url; link.download = data.name; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
   });
-  render(); return { ready,setLanguage(value){language=value;for(const [field,label]of [[from,'From date'],[to,'To date']]){field.label=translate(label);field.setAttribute('aria-label',translate(label));if(field.parentNode?.firstChild?.nodeType===3)field.parentNode.firstChild.nodeValue=translate(label);}category.label=translate('Category');category.setAttribute('aria-label',translate('Category'));exportButton.textContent=translate('Export filtered changes');setControlLanguage(host,language);}, refresh: render, destroy() { disposed = true; generation++;finishReady('disposed'); stopSelectSearch(); search.destroy(); host.replaceChildren(); } };
+  render(); return { ready,setLanguage(value){language=value;for(const [field,label]of [[from,'From date'],[to,'To date']]){field.label=translate(label);field.setAttribute('aria-label',translate(label));if(field.parentNode?.firstChild?.nodeType===3)field.parentNode.firstChild.nodeValue=translate(label);}category.label=translate('Category');category.setAttribute('aria-label',translate('Category'));exportButton.textContent=translate('Export filtered changes');filterSection.setTitle(translate('Search and filters'));statsSection.setTitle(translate('Statistics'));setControlLanguage(host,language);}, refresh: render, destroy() { disposed = true; generation++;finishReady('disposed'); stopSelectSearch(); search.destroy(); filterSection.destroy(); statsSection.destroy(); host.replaceChildren(); } };
 }

@@ -23,7 +23,7 @@ export function mountOllama(root,{services,translate=(s)=>s,confirm:confirmActio
   const summary=el('p','No verified catalog is stored.',panels['Model Store']);
   const controls=row(panels['Model Store']);
   let runtimeState=null;
-  const runtimePanel=createRuntimeInstallationPanel(panels['Model Store'],{request,configureRuntime:bridge.configureRuntime,confirm:confirmAction,getLanguage:()=>{const value=t('Local models');return value==='本機模型'?'yue':value.includes('本機模型')?'bilingual':'en';},onRuntime:value=>{runtimeState=value;registerProfileButton.disabled=!value.actions?.registerProfile;}});
+  const runtimePanel=createRuntimeInstallationPanel(panels['Model Store'],{onInstallResult:bridge.onInstallResult,request,configureRuntime:bridge.configureRuntime,confirm:confirmAction,getLanguage:()=>{const value=t('Local models');return value==='本機模型'?'yue':value.includes('本機模型')?'bilingual':'en';},onRuntime:value=>{runtimeState=value;registerProfileButton.disabled=!value.actions?.registerProfile;}});
   async function checkRuntime(){await runtimePanel.refresh();}
 
   button('Refresh official catalog',controls,async()=>{const r=await request('refreshCatalog');operation=r.operationId;setStatus('Refreshing all official model families and tags. Installed models remain available.');});
@@ -101,7 +101,7 @@ const INSTALL_PHASES=['idle','checking','awaiting-consent','downloading','verify
 const INSTALL_COPY={idle:'Ready to inspect installation.',checking:'Checking installation requirements.','awaiting-consent':'Waiting for installation confirmation.',downloading:'Downloading the official runtime.',verifying:'Verifying the complete runtime archive.',extracting:'Preparing the complete runtime files.',registering:'Registering the verified runtime. Cancellation is no longer available.','checking-installation':'Checking the installed runtime.',complete:'Installation finished.'};
 const INSTALL_OUTCOMES={'installed-stopped':'Managed runtime installation completed.',cancelled:'Installation cancelled. Any previously verified runtime is retained.',failed:'Installation did not complete.',unavailable:'Managed installation is unavailable.'};
 /** Actual runtime region, also exercised by the synthetic DOM tests. */
-export function createRuntimeInstallationPanel(parent,{request,configureRuntime,confirm=async()=>false,getLanguage=()=> 'en',onRuntime=()=>{}}={}){
+export function createRuntimeInstallationPanel(parent,{request,configureRuntime,confirm=async()=>false,getLanguage=()=> 'en',onRuntime=()=>{},onInstallResult=()=>{}}={}){let installStartedAt=0;
  const doc=parent.ownerDocument||document,region=doc.createElement('section');region.className='ollama-runtime';region.setAttribute('aria-label','Local runtime');parent.append(region);
  let disposed=false,runtime=null,snapshot=null,pending=false,cancelling=false,revision=0,notice='',poll=null,restoring=false,startupResult=null,stopNotice='',runtimeRequestRevision=0;const retired=new Set(),labels=[];
  const language=()=>{const value=getLanguage();return ['en','yue','bilingual'].includes(value)?value:'en';};
@@ -176,7 +176,7 @@ export function createRuntimeInstallationPanel(parent,{request,configureRuntime,
   if(snapshot?.operationId===id){if(snapshot.phase==='complete'&&value.phase!=='complete')return false;if(INSTALL_PHASES.indexOf(value.phase)<INSTALL_PHASES.indexOf(snapshot.phase))return false;if(value.phase==='downloading'&&snapshot.phase==='downloading'&&value.receivedBytes<snapshot.receivedBytes)return false;}
   else if(snapshot?.operationId){if(!admission&&active())return false;if(!id)return false;retired.add(snapshot.operationId);}
   if(snapshot&&JSON.stringify(snapshot)===JSON.stringify(value))return false;
-  const terminal=value.phase==='complete'&&(snapshot?.operationId!==id||snapshot?.phase!=='complete');snapshot={...value};revision++;notice='';paint();if(terminal)void refresh();return true;
+  const terminal=value.phase==='complete'&&(snapshot?.operationId!==id||snapshot?.phase!=='complete');if(!terminal&&value.phase!=='complete'&&value.phase!=='idle'&&!installStartedAt)installStartedAt=Date.now();if(terminal&&installStartedAt&&(value.outcome==='installed-stopped'||value.outcome==='failed')){onInstallResult({...value,durationMs:Date.now()-installStartedAt});}if(terminal)installStartedAt=0;snapshot={...value};revision++;notice='';paint();if(terminal)void refresh();return true;
  }
  async function restore(){if(disposed||restoring)return;restoring=true;clearTimeout(poll);poll=null;const at=revision;try{const value=await request('runtimeInstallStatus');if(!disposed&&revision===at)consume(value);}catch{if(!disposed)notice='Installation status is unavailable. Check runtime to reconnect.';}finally{restoring=false;if(!disposed)paint();}}
  async function refresh(){const at=revision,requestRevision=++runtimeRequestRevision;try{const value=await request('status');if(disposed||requestRevision!==runtimeRequestRevision)return;runtime=value;onRuntime(value);if(value.endpoint)port.value=new URL(value.endpoint).port;if(value.installation&&revision===at)consume(value.installation);paint();}catch{if(!disposed&&requestRevision===runtimeRequestRevision){runtime=null;notice='The runtime request could not be completed. Check runtime before retrying.';paint();}}}

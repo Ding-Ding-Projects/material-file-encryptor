@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Cloud backup sheet</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..800&amp;family=Roboto+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#3A46B5;text-underline-offset:2px}a:hover{color:#26318F}
+@keyframes sheetIn{from{transform:translateX(48px);opacity:0}to{transform:none;opacity:1}}
+@keyframes flow{from{transform:translateX(-30px);opacity:0}25%{opacity:1}to{transform:translateX(150px);opacity:0}}
+@keyframes pop{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.1);opacity:1}100%{transform:none}}
+[data-motion=off] *{animation:none!important;transition:none!important}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</helmet>
+<div data-motion="{{motion}}" style="--accent:{{accent}};width:1440px;height:980px;position:relative;font-family:'Roboto Flex',system-ui,sans-serif;font-size:13px;color:#1A1B24;background:#E9EBF2;overflow:hidden">
+<div aria-hidden="true" style="position:absolute;inset:0;display:flex;flex-direction:column">
+<div style="height:40px;background:#DADDE8"></div><div style="height:44px;background:#FFFFFF;border-bottom:1px solid #DCDEE8"></div>
+<div style="flex:1;display:flex;gap:1px;background:#DCDEE8"><div style="flex:0 0 232px;background:#F7F8FB"></div><div style="flex:1;background:#FFFFFF;padding:16px;display:flex;flex-direction:column;gap:10px"><span style="height:14px;width:60%;border-radius:4px;background:#ECEDF3"></span><span style="height:14px;width:72%;border-radius:4px;background:#ECEDF3"></span><span style="height:14px;width:48%;border-radius:4px;background:#ECEDF3"></span><span style="height:14px;width:66%;border-radius:4px;background:#ECEDF3"></span></div></div>
+</div>
+<div aria-hidden="true" style="position:absolute;inset:0;background:rgba(20,22,40,.32)"></div>
+<section role="dialog" aria-modal="true" aria-labelledby="bk-title" style="position:absolute;top:0;right:0;bottom:0;width:520px;background:#FFFFFF;box-shadow:-12px 0 40px rgba(20,22,40,.22);display:flex;flex-direction:column;animation:sheetIn 380ms cubic-bezier(.05,.7,.1,1) both">
+<header style="display:flex;align-items:center;gap:10px;height:56px;padding:0 16px 0 20px;border-bottom:1px solid #ECEDF3">
+<h1 id="bk-title" style="margin:0;font-size:17px;font-weight:600;flex:1">Cloud backup to Docker Hub</h1>
+<button type="button" aria-label="Close" style="width:36px;height:36px;border:0;border-radius:8px;background:transparent;font-size:18px">×</button>
+</header>
+<div style="flex:1;overflow:auto;padding:16px 20px;display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:{{acctBg}}"><span style="{{acctDot}}"></span><span style="flex:1">{{acct}}</span><a href="SignIn.dc.html" style="font-weight:600">{{acctAction}}</a></div>
+<p style="margin:0;font-size:11px;font-weight:700;letter-spacing:.06em;color:#4A4C5C">DRIVES ON THIS PC</p>
+<div role="table" aria-label="Drives to back up" style="border:1px solid #ECEDF3;border-radius:10px;overflow:hidden">
+<sc-for list="{{drives}}" as="d" hint-placeholder-count="3">
+<label style="display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:10px;align-items:center;min-height:52px;padding:6px 12px;border-bottom:1px solid #F1F2F6">
+<input type="checkbox" checked="{{d.on}}" onChange="{{d.toggle}}" style="width:18px;height:18px;accent-color:var(--accent)">
+<span style="min-width:0"><b>{{d.letter}}</b> {{d.name}}<br><span style="font-family:'Roboto Mono',monospace;font-size:11px;color:#4A4C5C">docker.io/yourname/{{d.repo}}</span></span>
+<span style="{{d.badge}}">{{d.state}}</span>
+</label>
+</sc-for>
+</div>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">
+<label style="display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:600;color:#4A4C5C">Visibility<select style="height:34px;border:1px solid #C6C8D8;border-radius:8px;font:inherit;color:#1A1B24"><option>Public (recommended)</option><option>Private</option></select></label>
+<label style="display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:600;color:#4A4C5C">Sync<select style="height:34px;border:1px solid #C6C8D8;border-radius:8px;font:inherit;color:#1A1B24"><option>Every hour</option><option>Every 15 minutes</option><option>Daily at 02:00</option><option>Manual only</option></select></label>
+</div>
+<div style="padding:12px;border-radius:10px;background:#FFF1DE;color:#4A2C00;line-height:1.5"><b>Public means anyone can download the encrypted copy.</b> Contents and names stay unreadable without your password or key file. vault.json lets someone try passwords offline, so use a key file or a long passphrase. <a href="#">Check my unlock method</a></div>
+<div style="padding:14px;border-radius:10px;background:#F4F5FA;display:flex;flex-direction:column;gap:10px">
+<p style="margin:0;font-size:11px;font-weight:700;letter-spacing:.06em;color:#4A4C5C">UPLOADED AS-IS, NEVER DECRYPTED</p>
+<div style="display:flex;align-items:center;gap:10px">
+<span style="font-family:'Roboto Mono',monospace;font-size:11px;line-height:1.6">vault.json<br>parts/*.mfe<br>commits/*.mfe<br>activity/*.mfe</span>
+<span aria-hidden="true" style="position:relative;flex:1;height:24px;overflow:hidden"><span style="position:absolute;top:9px;width:22px;height:6px;border-radius:3px;background:var(--accent);animation:flow 1.4s linear infinite"></span><span style="position:absolute;top:9px;width:22px;height:6px;border-radius:3px;background:var(--accent);animation:flow 1.4s .47s linear infinite"></span><span style="position:absolute;top:9px;width:22px;height:6px;border-radius:3px;background:var(--accent);animation:flow 1.4s .94s linear infinite"></span></span>
+<span style="font-size:12px;line-height:1.5">One OCI layer each<br>digest verified</span>
+</div>
+</div>
+<ol style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px">
+<sc-for list="{{steps}}" as="s" hint-placeholder-count="4"><li style="display:flex;align-items:center;gap:10px"><span style="{{s.dot}}">{{s.mark}}</span><span style="flex:1">{{s.t}}</span><span style="color:#4A4C5C">{{s.note}}</span></li></sc-for>
+</ol>
+<div style="display:flex;flex-direction:column;gap:4px"><div style="display:flex;justify-content:space-between"><span>{{progressLabel}}</span><span style="font-variant-numeric:tabular-nums">{{pct}}%</span></div><div style="height:6px;border-radius:3px;background:#E4E6F0;overflow:hidden"><div style="{{bar}}"></div></div></div>
+</div>
+<footer style="display:flex;gap:8px;justify-content:flex-end;padding:12px 20px;border-top:1px solid #ECEDF3">
+<button type="button" style="height:36px;padding:0 14px;border:1px solid #C6C8D8;border-radius:8px;background:#FFFFFF;font:inherit">Restore a snapshot</button>
+<button type="button" onClick="{{run}}" style="height:36px;padding:0 16px;border:0;border-radius:8px;background:var(--accent);color:#FFFFFF;font:inherit;font-weight:600;cursor:pointer">{{cta}}</button>
+</footer>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#4B57C9","options":["#4B57C9","#00696B","#8B4A00","#A23B72"],"section":"Look"},"motion":{"editor":"boolean","default":true,"section":"Look"},"stage":{"editor":"enum","options":["ready","signing in","uploading","done","failure"],"default":"ready","section":"Stage"},"$preview":{"width":1440,"height":980}}'>
+class Component extends DCLogic {
+  constructor(p){super(p);this.state={on:[true,true,false],stage:null};}
+  componentWillUnmount(){clearInterval(this.t);}
+  renderVals(){
+    const map={ready:0,'signing in':1,uploading:3,done:5,failure:-1};
+    const st=this.state.stage??map[this.props.stage??'ready'];
+    const err=st===-1;
+    const drives=[['M:','Work vault','mfe-work-vault'],['P:','Family photos','mfe-family-photos'],['T:','Tax records (locked)','mfe-tax-records']];
+    const steps=['Signed in to Docker Hub','Public repositories ready','Encrypted objects uploaded','Hourly sync turned on'];
+    const pct=err?62:[0,10,30,62,90,100][st];
+    return {
+      accent:this.props.accent??'#4B57C9',motion:this.props.motion===false?'off':'on',
+      acct:st>=2||st===0?'Signed in as yourname':'Waiting for browser sign-in…',acctAction:st>=2||st===0?'Switch account':'Show code',
+      acctBg:'#EAF6F1',acctDot:'width:8px;height:8px;border-radius:4px;background:#0B6B57',
+      drives:drives.map(([letter,name,repo],i)=>({letter,name,repo,on:this.state.on[i],
+        state:!this.state.on[i]?(i===2?'Unlock to include':'Skipped'):err&&i===1?'Failed':st===5?'Backed up':st>0?'In progress':'Ready',
+        badge:'padding:3px 8px;border-radius:8px;font-size:11px;font-weight:700;'+(!this.state.on[i]?'background:#F1F2F8;color:#3A3C4C':err&&i===1?'background:#FFDAD6;color:#410002':st===5?'background:#CDEFE3;color:#063D31;animation:pop 420ms cubic-bezier(.05,.7,.1,1) both':'background:#E6E8FF;color:#26318F'),
+        toggle:()=>{const on=[...this.state.on];on[i]=!on[i];this.setState({on});}})),
+      steps:steps.map((t,i)=>{const done=st>i+1||st===5,cur=!err&&st===i+1,bad=err&&i===2;return {t,note:bad?'P: layer 31 rejected (HTTP 507)':done?'Done':cur?'Working…':'',mark:bad?'!':done?'✓':String(i+1),
+        dot:'display:inline-grid;place-items:center;width:22px;height:22px;border-radius:11px;font-size:11px;font-weight:700;'+(bad?'background:#B3261E;color:#FFFFFF':done?'background:#0B6B57;color:#FFFFFF':cur?'background:var(--accent);color:#FFFFFF':'background:#E4E6F0')};}),
+      pct,progressLabel:err?'Stopped. Local data unchanged. Retrying in 15 min':st===0?'Ready to back up 2 drives':st===5?'Backed up · next sync 15:00':steps[Math.max(0,st-1)]+'…',
+      bar:'height:100%;width:'+pct+'%;border-radius:3px;transition:width 600ms cubic-bezier(.2,0,0,1);background:'+(err?'#B3261E':'var(--accent)'),
+      cta:err?'Retry now':st===0?'Back up 2 drives':st===5?'Back up again':'Backing up…',
+      run:()=>{clearInterval(this.t);this.setState({stage:1});this.t=setInterval(()=>{const s=(this.state.stage??0)+1;this.setState({stage:Math.min(s,5)});if(s>=5)clearInterval(this.t);},800);}
+    };
+  }
+}
+</script>
+</body>
+</html>

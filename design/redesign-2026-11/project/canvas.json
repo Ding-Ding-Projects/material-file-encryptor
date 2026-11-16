@@ -1,0 +1,310 @@
+{
+ "v": 3,
+ "createdOnFiles": {
+  "v": 1,
+  "at": "2026-11-16T12:00:00Z"
+ },
+ "title": "Material File Encryptor Redesign",
+ "launch": {
+  "view": "canvas",
+  "page": "home"
+ },
+ "pages": [
+  {
+   "id": "home",
+   "name": "Home and required features"
+  },
+  {
+   "id": "workspace",
+   "name": "app workspace"
+  },
+  {
+   "id": "storage",
+   "name": "Docker Hub and sign-in"
+  },
+  {
+   "id": "motion",
+   "name": "Motion and installation"
+  },
+  {
+   "id": "settings",
+   "name": "Settings, tools and required features"
+  },
+  {
+   "id": "narrow",
+   "name": "Narrow window"
+  },
+  {
+   "id": "site",
+   "name": "Documentation site"
+  }
+ ],
+ "boards": {
+  "Home.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 900,
+   "page": "home",
+   "title": "app Home: flagship features only"
+  },
+  "LocalTools.dc.html": {
+   "x": 1880,
+   "y": 0,
+   "w": 1440,
+   "h": 900,
+   "page": "home",
+   "title": "required features page (ships as Local tools)",
+   "is_interactive": true
+  },
+  "Main.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 1000,
+   "page": "workspace",
+   "title": "app: dense drive workspace",
+   "is_interactive": true
+  },
+  "Unlock.dc.html": {
+   "x": 1880,
+   "y": 0,
+   "w": 1440,
+   "h": 900,
+   "page": "workspace",
+   "title": "app: unlock inside the locked drive tab",
+   "is_interactive": true
+  },
+  "Backup.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 980,
+   "page": "storage",
+   "title": "One-click public Docker Hub backup sheet",
+   "is_interactive": true
+  },
+  "SignIn.dc.html": {
+   "x": 1880,
+   "y": 0,
+   "w": 1440,
+   "h": 1080,
+   "page": "storage",
+   "title": "Guided sign-in: every state and failure fix"
+  },
+  "Motion.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 900,
+   "page": "motion",
+   "title": "Animation and transition editor",
+   "is_interactive": true
+  },
+  "Install.dc.html": {
+   "x": 1880,
+   "y": 0,
+   "w": 1440,
+   "h": 900,
+   "page": "motion",
+   "title": "Installation takeover: success and failure"
+  },
+  "Settings.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 1060,
+   "page": "settings",
+   "title": "Settings: search, regex builder, required features coverage",
+   "is_interactive": true
+  },
+  "Tools.dc.html": {
+   "x": 1880,
+   "y": 0,
+   "w": 1440,
+   "h": 760,
+   "page": "settings",
+   "title": "New tab catalog and regex builder modes",
+   "is_interactive": true
+  },
+  "Mobile.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 390,
+   "h": 844,
+   "page": "narrow",
+   "title": "Narrow window: 360 to 390 px, no feature removed"
+  },
+  "Site.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 1500,
+   "page": "site",
+   "title": "Documentation site: task-led home",
+   "expand": "fill",
+   "is_interactive": true
+  }
+ },
+ "order": [
+  "Home.dc.html",
+  "LocalTools.dc.html",
+  "Main.dc.html",
+  "Unlock.dc.html",
+  "Backup.dc.html",
+  "SignIn.dc.html",
+  "Motion.dc.html",
+  "Install.dc.html",
+  "Settings.dc.html",
+  "Tools.dc.html",
+  "Mobile.dc.html",
+  "Site.dc.html"
+ ],
+ "notes": {
+  "th": {
+   "x": 0,
+   "y": -300,
+   "text": "Home and required features",
+   "kind": "title1",
+   "maxW": 3640,
+   "page": "home"
+  },
+  "nHome": {
+   "x": 1480,
+   "y": 0,
+   "w": 320,
+   "page": "home",
+   "fill": "blue",
+   "text": "Home shows only the app's flagship features: My drive, Available offline, History, Recycle Bin, Docker Hub backup and Local access, each with a live status and one action. One card opens the required features page. Tweaks: accent, motion, stage (unlocked / locked). Being built by the Home and Local Tools implementation lane."
+  },
+  "nTools": {
+   "x": 3360,
+   "y": 0,
+   "w": 320,
+   "page": "settings",
+   "fill": "teal",
+   "text": "New tab catalog: every drive, view, tool and settings page with its open/closed state, own search with regex, Open every tab. Beside it the full regex builder with Create, Analyze, Test, Replace, Split, Grep, Debug, Library, Use. Try: mode tabs. Unbuilt modes say so. Tweaks: accent, motion."
+  },
+  "tw": {
+   "x": 0,
+   "y": -300,
+   "text": "app workspace",
+   "kind": "title1",
+   "maxW": 3640,
+   "page": "workspace"
+  },
+  "ts": {
+   "x": 0,
+   "y": -300,
+   "text": "Docker Hub: one click, public, ciphertext only",
+   "kind": "title1",
+   "maxW": 3640,
+   "page": "storage"
+  },
+  "tm": {
+   "x": 0,
+   "y": -300,
+   "text": "Motion and installation takeovers",
+   "kind": "title1",
+   "maxW": 3640,
+   "page": "motion"
+  },
+  "tt": {
+   "x": 0,
+   "y": -300,
+   "text": "Settings, tools and required features",
+   "kind": "title1",
+   "maxW": 3640,
+   "page": "settings"
+  },
+  "td": {
+   "x": 0,
+   "y": -300,
+   "text": "Narrow window parity",
+   "kind": "title1",
+   "maxW": 1200,
+   "page": "narrow"
+  },
+  "tsite": {
+   "x": 0,
+   "y": -300,
+   "text": "Documentation site modernization",
+   "kind": "title1",
+   "maxW": 1840,
+   "page": "site"
+  },
+  "nMain": {
+   "x": 1480,
+   "y": 0,
+   "w": 320,
+   "page": "workspace",
+   "fill": "blue",
+   "text": "Dense tool, not a Documentation site: drive tabs in the title bar, command bar, folder tree, sortable file table, inspector with the encrypted part map, versions and backup status, transfers strip, status bar. Try: click drive tabs and file rows. Tweaks: accent, motion, density. Built by the shell implementation lane; part map needs real part counts."
+  },
+  "nUnlock": {
+   "x": 3360,
+   "y": 0,
+   "w": 320,
+   "page": "workspace",
+   "fill": "blue",
+   "text": "Unlock lives inside the locked drive's own tab. Try: Unlock (ring, green burst, shackle lift, card hand-off, files stagger in) and Wrong password (shake, error announced). Tweaks: accent, motion, stage. Windows Hello only if the app supports it."
+  },
+  "nBackup": {
+   "x": 1480,
+   "y": 0,
+   "w": 320,
+   "page": "storage",
+   "fill": "green",
+   "text": "Side sheet over the workspace. One click backs up every selected current drive to public Docker Hub: sign-in, create repo as public, upload the on-disk ciphertext objects as layers, turn on hourly sync with 15 min retry. Honest warning: vault.json allows offline password guessing. Tweaks: accent, motion, stage incl. failure."
+  },
+  "nSignIn": {
+   "x": 3360,
+   "y": 0,
+   "w": 320,
+   "page": "storage",
+   "fill": "orange",
+   "text": "Every guided sign-in state with its one next step, plus the failure fixes P1 to P7 from the audit (reason reaches the panel, extra links no longer fail a good sign-in, old CLI prompt caught, stale sign-in can sign in again, status re-checks, retry after cancel, missing repo created public). Tweaks: accent, motion."
+  },
+  "nMotion": {
+   "x": 1480,
+   "y": 0,
+   "w": 320,
+   "page": "motion",
+   "fill": "purple",
+   "text": "The animation and transition editor: master switch, speed multiplier, profiles Calm/Standard/Expressive/Playful/own, 15 element kinds with live previews, per-kind duration, delay, stagger, distance, scale and easing curve, import/export JSON, reset. Reduced motion always wins. Try: profiles, speed, kinds. Tweaks: accent, motion."
+  },
+  "nInstall": {
+   "x": 3360,
+   "y": 0,
+   "w": 320,
+   "page": "motion",
+   "fill": "purple",
+   "text": "Dramatic installation takeovers. Success: confetti, ring, drawn check, real facts (what, where, exit code, time), auto-close countdown. Failure: red siren, exact command with secrets masked, exit code, last output, recovery steps; stays until dismissed. Tweaks: accent, motion, stage (success / failure)."
+  },
+  "nSettings": {
+   "x": 1480,
+   "y": 0,
+   "w": 320,
+   "page": "settings",
+   "fill": "teal",
+   "text": "Settings with real groups, search and the adjacent regex builder strip, sound and comfort controls, high contrast and text size, and an honest required features coverage readout. Try: group list and the Regex button. Tweaks: accent, motion, regexOpen. Coverage numbers are a design placeholder until the inventory implementation lane lands real counts."
+  },
+  "nMobile": {
+   "x": 430,
+   "y": 0,
+   "w": 320,
+   "page": "narrow",
+   "fill": "blue",
+   "text": "360 to 390 px: drawer for folders and views, drive picker, overflow chips for commands, search with regex, file cards, details as a bottom sheet. Nothing reachable on the wide screen is removed. Tweaks: accent, motion, sheet."
+  },
+  "nSite": {
+   "x": 1480,
+   "y": 0,
+   "w": 320,
+   "page": "site",
+   "fill": "pink",
+   "text": "Documentation site gets its own editorial look: serif display, unmasking headline, drawn file-to-backup diagram, task-led What do you want to do grid, interactive part size explorer labelled Example only, cross-article search with regex. Tweaks: accent, motion."
+  }
+ },
+ "designSystems": []
+}

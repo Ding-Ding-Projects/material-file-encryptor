@@ -4,7 +4,8 @@ const acceptState = state => { if (typeof state?.sessionId === 'string') selecte
 const invoke = (method, params = {}) => ipcRenderer.invoke('vault:request', method, params, selectedSessionId);
 const sessionRequest = (method, params) => invoke(method, params).then(acceptState);
 const api = {
-  registryLoginStatus: () => invoke('registryLoginStatus'), startRegistryLogin: () => invoke('startRegistryLogin'),
+  registryLoginStatus: () => invoke('registryLoginStatus'), recheckRegistryLogin: () => invoke('recheckRegistryLogin'), startRegistryLogin: () => invoke('startRegistryLogin'),
+  backupAllPlan: () => invoke('backupAllPlan'), backupAllStart: selection => invoke('backupAllStart', selection), backupAllStatus: () => invoke('backupAllStatus'), backupAllCancel: () => invoke('backupAllCancel'),
   cancelRegistryLogin: () => invoke('cancelRegistryLogin'), openRegistryLoginPage: () => invoke('openRegistryLoginPage'),
   registryStorageStatus: () => invoke('registryStorageStatus'), configureRegistryStorage: configuration => invoke('configureRegistryStorage', configuration),
   syncRegistryStorage: () => invoke('syncRegistryStorage'), listRegistrySnapshots: () => invoke('listRegistrySnapshots'),
@@ -12,6 +13,7 @@ const api = {
   listRegistryConflicts: (options = {}) => invoke('listRegistryConflicts', options), resolveRegistryConflict: selection => invoke('resolveRegistryConflict', selection),
   verificationQuit: () => ipcRenderer.invoke('vault:verification-quit'),
   buildMetadata: () => invoke('buildMetadata'), browserPairing: () => invoke('browserPairing'),
+  toolboxWrite: (id, data) => ipcRenderer.invoke('toolbox:write', id, data),
   featureRequest: (feature, action, payload = {}) => ipcRenderer.invoke('feature:request', feature, action, payload),
   onFeatureEvent: (feature, callback) => { if(typeof callback!=='function') throw new TypeError('A callback is required.'); const listener=(_event, source, data)=>{if(source===feature)callback(data);};ipcRenderer.on('feature:event',listener);return()=>ipcRenderer.removeListener('feature:event',listener); },
   status: () => sessionRequest('getState'),

@@ -8,6 +8,7 @@ import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { buildDocumentationCatalog, documentHeadings, resolveDocumentLink, parseChangelog } from '../src/features/documentation/catalog.mjs';
 import { validateFeatureDelivery, verifyFeatureDeliveryReferences, expectedFeatureApplicability, implementedClaimProblems, unsupportedCompletionClaims } from '../src/features/documentation/feature-delivery.mjs';
+import { REQUIRED_FEATURE_IDS } from '../src/features/documentation/required-features.mjs';
 import { createApplicationStatus } from '../src/features/documentation/status-service.mjs';
 import { filterChanges } from '../src/renderer/features/documentation/changelog.js';
 import { resolveCatalogUrl } from '../src/renderer/features/documentation/markdown.js';
@@ -173,8 +174,8 @@ test('status without client is explicit and configured snapshots cannot expose s
 });
 
 test('extension inventory rejects whole-family omission, borrowed ownership and missing completion evidence', async () => {
- const manifest = await inventory(); assert.equal(manifest.features.length,327);
- assert.equal(manifest.features.filter(row=>row.surface==='extension').length,109);
+ const manifest = await inventory(); assert.equal(manifest.features.length,REQUIRED_FEATURE_IDS.length*3);
+ assert.equal(manifest.features.filter(row=>row.surface==='extension').length,REQUIRED_FEATURE_IDS.length);
  for(const mutate of [m=>m.features=m.features.filter(row=>row.surface!=='extension'),m=>m.features.push(structuredClone(m.features.find(row=>row.surface==='extension'))),m=>delete m.features.find(row=>row.surface==='extension').completion.owner,m=>delete m.features.find(row=>row.surface==='extension').completion.targets[0].nextProof,m=>m.features.find(row=>row.surface==='extension').completion.targets[0].surface='desktop:view-settings',m=>m.extensionTargets[0].route='src/renderer/index.html',m=>m.features.find(row=>row.surface==='extension').status='implemented']) {const broken=structuredClone(manifest);mutate(broken);assert.ok(validateFeatureDelivery(broken).length);}
 });
 

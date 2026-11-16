@@ -1,16 +1,4 @@
-export const guidedTokens = Object.freeze([
- ['start','Start anchor','開頭錨點','^'],['end','End anchor','結尾錨點','$'],['any','Any character','任何字元','.'],
- ['word','Word boundary','文字邊界','\\b'],['digit','Digit','數字','\\d'],['space','Whitespace','空白','\\s'],
- ['unicode','Unicode letters','Unicode 字母','\\p{L}'],['codepoint','Unicode code point','Unicode 字碼','\\u{1F600}'],
- ['class','Character class','字元類別','[a-z]'],['negated','Negated class','排除字元類別','[^a-z]'],
- ['capture','Capture group','擷取群組','(text)'],['named','Named group','命名群組','(?<name>text)'],
- ['noncapture','Non-capturing group','非擷取群組','(?:text)'],['alternative','Alternative','選項','(?:one|two)'],
- ['optional','Optional','可選','?'],['many','Zero or more','零次或以上','*'],['one','One or more','一次或以上','+'],
- ['lazy','Lazy repetition','最少重複','+?'],['bounded','Bounded repetition','指定次數','{1,3}'],
- ['lookahead','Positive lookahead','正向前瞻','(?=text)'],['negativeAhead','Negative lookahead','負向前瞻','(?!text)'],
- ['lookbehind','Positive lookbehind','正向後顧','(?<=text)'],['negativeBehind','Negative lookbehind','負向後顧','(?<!text)'],
- ['reference','Numbered backreference','編號反向參照','\\1'],['namedReference','Named backreference','命名反向參照','\\k<name>']
-]);
+export { guidedTokens } from './regex/tokens.js';
 
 export const capabilities = Object.freeze([
  ['Named groups','命名群組','(?<name>a)','u'],['Lookbehind','後顧','(?<=a)b','u'],
@@ -47,7 +35,8 @@ export function describePattern(pattern) {
 export function createWorkbenchStore(storage,key) {
  let state={version:1,snippets:[],history:[],rememberHistory:false};
  try{const raw=storage?.getItem(key);if(raw&&raw.length<=131072){const parsed=JSON.parse(raw);if(parsed.version===1){state.rememberHistory=parsed.rememberHistory===true;state.snippets=sanitize(parsed.snippets,30);state.history=state.rememberHistory?sanitize(parsed.history,20):[];}}}catch{}
- function sanitize(entries,limit){return(Array.isArray(entries)?entries:[]).filter(e=>{if(!e||typeof e.pattern!=='string'||e.pattern.length>512||typeof e.flags!=='string'||!/^[dgimsuv]*$/.test(e.flags))return false;try{new RegExp(e.pattern,e.flags);return true;}catch{return false;}}).slice(-limit).map(e=>({name:String(e.name||'Expression').slice(0,80),pattern:e.pattern,flags:e.flags}));}
+ function sanitize(entries,limit){return(Array.isArray(entries)?entries:[]).filter(e=>{if(!e||typeof e.pattern!=='string'||e.pattern.length>512||typeof e.flags!=='string'||!/^[dgimsuv]*$/.test(e.flags))return false;try{new RegExp(e.pattern,e.flags);return true;}catch{return false;}}).slice(-limit).map(e=>({name:String(e.name||'Expression').slice(0,80),pattern:e.pattern,flags:e.flags,...extras(e)}));}
+ function extras(e){const out={};if(typeof e.description==='string'&&e.description.length<=500)out.description=e.description;if(typeof e.replacement==='string'&&e.replacement.length<=512)out.replacement=e.replacement;if(typeof e.flavor==='string'&&/^[a-z]{2,12}$/.test(e.flavor))out.flavor=e.flavor;return out;}
  function save(){try{storage?.setItem(key,JSON.stringify(state));}catch{}}
- return{get:()=>JSON.parse(JSON.stringify(state)),setHistory(enabled){state.rememberHistory=!!enabled;if(!enabled)state.history=[];save();},remember(pattern,flags){if(state.rememberHistory){state.history=state.history.filter(e=>e.pattern!==pattern||e.flags!==flags);state.history.push({name:'Recent expression',pattern,flags});state.history=state.history.slice(-20);save();}},add(name,pattern,flags){const entry=sanitize([{name,pattern,flags}],1)[0];if(!entry)return false;state.snippets.push(entry);state.snippets=state.snippets.slice(-30);save();return true;},remove(index){state.snippets.splice(index,1);save();},clear(){state.snippets=[];state.history=[];save();},import(value){if(value?.version!==1||!Array.isArray(value.snippets)||value.snippets.length>30)throw Error('Invalid snippet document');const entries=sanitize(value.snippets,30);if(entries.length!==value.snippets.length)throw Error('Invalid snippet entry');state.snippets=entries;save();},export:()=>JSON.stringify({version:1,snippets:state.snippets},null,2)};
+ return{get:()=>JSON.parse(JSON.stringify(state)),setHistory(enabled){state.rememberHistory=!!enabled;if(!enabled)state.history=[];save();},remember(pattern,flags){if(state.rememberHistory){state.history=state.history.filter(e=>e.pattern!==pattern||e.flags!==flags);state.history.push({name:'Recent expression',pattern,flags});state.history=state.history.slice(-20);save();}},add(name,pattern,flags,more){const entry=sanitize([{name,pattern,flags,...more}],1)[0];if(!entry)return false;state.snippets.push(entry);state.snippets=state.snippets.slice(-30);save();return true;},search(term){const q=String(term||'').toLowerCase();return state.snippets.filter(e=>!q||(e.name+' '+(e.description||'')+' '+e.pattern).toLowerCase().includes(q));},update(index,patch){const current=state.snippets[index];if(!current)return false;const entry=sanitize([{...current,...patch}],1)[0];if(!entry)return false;state.snippets[index]=entry;save();return true;},remove(index){state.snippets.splice(index,1);save();},clear(){state.snippets=[];state.history=[];save();},import(value){if(value?.version!==1||!Array.isArray(value.snippets)||value.snippets.length>30)throw Error('Invalid snippet document');const entries=sanitize(value.snippets,30);if(entries.length!==value.snippets.length)throw Error('Invalid snippet entry');state.snippets=entries;save();},export:()=>JSON.stringify({version:1,snippets:state.snippets},null,2)};
 }

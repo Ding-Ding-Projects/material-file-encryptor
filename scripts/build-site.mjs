@@ -6,11 +6,22 @@ import {pathToFileURL} from 'node:url';
 import {buildDocumentation,buildGallery} from '../docs/site/publication.mjs';
 import { buildDocumentationCatalog } from '../src/features/documentation/catalog.mjs';
 import { stageWorkspace } from './build-site-workspace.mjs';
-import { addSocialMetadata } from '../docs/site/social-metadata.mjs';
+import { addSocialMetadata, SITE_URL } from '../docs/site/social-metadata.mjs';
+import { buildExtraPages, injectTaskHero, sitemapXml } from '../docs/site/extra-pages.mjs';
 import { currentRelease, publishedDownload } from '../docs/site/release.js';
 
 // Publish only reviewed browser assets. Source snapshots and raw receipts stay outside output.
-const staticAssets=['index.html','site.css','site.js','preferences.js','personal-vocabulary.js','local-adapter.js','locales.js','release.js','explainer.js','favicon.svg'];
+const staticAssets=['index.html','site.css','site.js','preferences.js','personal-vocabulary.js','local-adapter.js','locales.js','release.js','explainer.js','favicon.svg','motion-boot.js'];
+// Split stylesheets and the modern runtime modules are copied as directories.
+const staticDirectories=['css','modern'];
+async function copyDirectory(from,to){
+ await fs.mkdir(to,{recursive:true});
+ for(const entry of await fs.readdir(from,{withFileTypes:true})){
+  if(entry.isDirectory())await copyDirectory(path.join(from,entry.name),path.join(to,entry.name));
+  else if(/\.(?:css|js)$/.test(entry.name))await fs.copyFile(path.join(from,entry.name),path.join(to,entry.name));
+ }
+}
+const CANONICAL_SKIP=/http-equiv="refresh"/;
 const illustrationAssets=['images/drive-workflow.png','images/offline-workflow.png'];
 async function htmlPages(directory,prefix=''){
  const found=[];
@@ -39,9 +50,11 @@ export async function stageSite(root=process.cwd(),destination=path.join(root,'o
  await fs.mkdir(temporary);
  try {
  for(const file of staticAssets)await fs.copyFile(path.join(root,'docs/site',file),path.join(temporary,file));
+ for(const directory of staticDirectories)await copyDirectory(path.join(root,'docs/site',directory),path.join(temporary,directory));
  const home=await fs.readFile(path.join(root,'docs/site/index.html'),'utf8');
  const articles=await buildDocumentation(root,temporary,home);
  const images=await buildGallery(root,temporary,home);
+ const extra=await buildExtraPages(root,temporary,home,articles);
  for(const file of [...illustrationAssets,...images.map(image=>image.path)]){
  const output=path.join(temporary,file);await fs.mkdir(path.dirname(output),{recursive:true});await fs.copyFile(path.join(root,'docs',file),output);
  }
@@ -49,11 +62,20 @@ export async function stageSite(root=process.cwd(),destination=path.join(root,'o
  await stageWorkspace(root,temporary);
  const record=await readReleaseRecord(process.env.RELEASE_RECORD_PATH);
  const homePath=path.join(temporary,'index.html');
- await fs.writeFile(homePath,applyReleaseRecord(await fs.readFile(homePath,'utf8'),record));
- for(const page of await htmlPages(temporary)){
+ await fs.writeFile(homePath,injectTaskHero(applyReleaseRecord(await fs.readFile(homePath,'utf8'),record),extra.tasks));
+ const pages=await htmlPages(temporary),indexable=[];
+ for(const page of pages){
   const file=path.join(temporary,page);
-  await fs.writeFile(file,addSocialMetadata(await fs.readFile(file,'utf8'),page));
+  let html=addSocialMetadata(await fs.readFile(file,'utf8'),page);
+  // Redirect stubs already carry the canonical link of their destination and stay out of the sitemap.
+  if(!CANONICAL_SKIP.test(html)&&!/rel="canonical"/.test(html)){
+   const url=page==='index.html'?SITE_URL:SITE_URL+page.split('/').map(encodeURIComponent).join('/');
+   html=html.replace('</head>',`<link rel="canonical" href="${url}"></head>`);
+   indexable.push(page);
+  }
+  await fs.writeFile(file,html);
  }
+ await fs.writeFile(path.join(temporary,'sitemap.xml'),sitemapXml(SITE_URL,indexable.filter(page=>page!=='workspace.html'||true).sort()));
  const {version}=JSON.parse(await fs.readFile(path.join(root,'package.json'),'utf8'));
  const sourceCommit=execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim();
  const builtAt=new Date().toISOString();

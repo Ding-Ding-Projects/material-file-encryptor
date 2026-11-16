@@ -104,3 +104,5 @@ mfe-control-guidance[data-info-icon]:has(+[hidden]){display:none}
 .vault-session-picker md-outlined-select { width:100%; min-width:0; }
 .vault-session-bar > .field-help { flex-basis:100%; margin:0; }
 @media (max-width:600px) { .vault-session-picker { flex-basis:100%; } }
+.wording-celebration--calm{inset:auto 16px 16px auto;display:block;padding:0}
+.wording-celebration--calm .wording-celebration__headline{padding:10px 16px;border-radius:16px;font-size:1rem;font-weight:500;box-shadow:none;background:var(--md-sys-color-surface-container-high,#ece6f0);color:var(--md-sys-color-on-surface,#1d1b20)}

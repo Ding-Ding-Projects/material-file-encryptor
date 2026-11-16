@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Local tools</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..800&amp;family=Roboto+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+@keyframes tileIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.tile{transition:background-color 160ms cubic-bezier(.2,0,0,1),border-color 160ms cubic-bezier(.2,0,0,1)}
+.tile:hover{background:#F4F5FB;border-color:#C6C8D8}
+[data-motion=off] *{animation:none!important;transition:none!important}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</helmet>
+<div data-motion="{{motion}}" style="--accent:{{accent}};width:1440px;height:900px;font-family:'Roboto Flex',system-ui,sans-serif;font-size:13px;color:#1A1B24;background:#E9EBF2;display:flex;flex-direction:column">
+<div style="display:flex;align-items:flex-end;gap:2px;height:40px;padding-left:10px;background:#DADDE8">
+<span style="display:flex;align-items:center;height:34px;padding:0 14px">Home</span>
+<span style="display:flex;align-items:center;height:34px;padding:0 14px;border-radius:10px 10px 0 0;background:#FFFFFF"><b>Local tools</b></span>
+</div>
+<div style="flex:1;display:flex;gap:1px;background:#DCDEE8;min-height:0">
+<nav aria-label="Categories" style="flex:0 0 232px;box-sizing:border-box;background:#F7F8FB;padding:10px 6px;display:flex;flex-direction:column;gap:2px">
+<sc-for list="{{sections}}" as="c" hint-placeholder-count="6"><button type="button" onClick="{{c.pick}}" style="{{c.s}}">{{c.n}}<span style="margin-left:auto;font-size:11px;color:#4A4C5C">{{c.count}}</span></button></sc-for>
+</nav>
+<main style="flex:1;min-width:0;background:#FFFFFF;padding:16px 20px;display:flex;flex-direction:column;gap:12px;overflow:auto">
+<header style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+<h1 style="margin:0;font-size:20px;font-weight:600;flex:1">Local tools</h1>
+<label for="tq" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Search tools</label>
+<input id="tq" type="search" placeholder="Search 14 tools" style="width:320px;height:34px;padding:0 12px;border:1px solid #C6C8D8;border-radius:8px;font:inherit">
+<button type="button" aria-label="Regex builder" style="height:34px;padding:0 10px;border:1px solid #C6C8D8;border-radius:8px;background:#FFFFFF;font-family:'Roboto Mono',monospace">.*</button>
+</header>
+<sc-for list="{{groups}}" as="g" hint-placeholder-count="5">
+<section style="display:flex;flex-direction:column;gap:6px">
+<p style="margin:0;font-size:11px;font-weight:700;letter-spacing:.06em;color:#4A4C5C">{{g.n}}</p>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
+<sc-for list="{{g.items}}" as="t" hint-placeholder-count="3"><a href="#" class="tile" style="{{t.s}}"><span style="width:34px;height:34px;flex:none;border-radius:10px;background:#ECEDF6;color:var(--accent);display:grid;place-items:center;font-family:'Roboto Mono',monospace;font-size:12px;font-weight:700">{{t.g}}</span><span style="min-width:0"><b>{{t.n}}</b><br><span style="color:#4A4C5C">{{t.d}}</span></span></a></sc-for>
+</div>
+</section>
+</sc-for>
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#4B57C9","options":["#4B57C9","#00696B","#8B4A00","#A23B72"],"section":"Look"},"motion":{"editor":"boolean","default":true,"section":"Look"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(p){super(p);this.state={section:0};}
+  renderVals(){
+    const groups=[
+      ['FILES AND DOCUMENTS',[['↻','Converter','Convert documents and images between formats'],['⇣','Documents and downloads','Choose where documents and downloads are kept']]],
+      ['DEVELOPMENT',[['{}','Type generator','JSON samples or a schema into typed code'],['64','Base64','Encode and decode text and files'],['.*','Regex builder','Create, test and explain patterns']]],
+      ['MEDIA',[['●','Screen recording','Record a screen or window to a local file'],['✎','Sketch board','Draw and annotate, export PNG or SVG']]],
+      ['SYSTEM',[['▤','Virtual disks','Create, attach and mount VHD, VHDX and ISO'],['⛏','Server preparation','Game servers and the world generator'],['AI','Local models','Language models that run on this computer'],['∿','Live charts','Used space and transfer progress, live'],['ⓘ','Status','Version, build and feature coverage'],['⇄','Pair a browser','Link the browser extension']]],
+      ['FUN',[['點','Dim sum','Browse the dim sum catalogue']]]
+    ];
+    let n=0;
+    const all=groups.reduce((s,g)=>s+g[1].length,0);
+    const sectionRows=[['All',all],...groups.map(([name,items])=>[name.charAt(0)+name.slice(1).toLowerCase(),items.length])];
+    const shown=this.state.section===0?groups:[groups[this.state.section-1]];
+    return {accent:this.props.accent??'#4B57C9',motion:this.props.motion===false?'off':'on',
+      sections:sectionRows.map(([nm,count],i)=>({n:nm,count,pick:()=>this.setState({section:i}),s:'display:flex;align-items:center;height:34px;padding:0 12px;border:0;border-radius:8px;font:inherit;text-align:left;cursor:pointer;color:#1A1B24;'+(i===this.state.section?'background:#E6E8FF;color:#26318F;font-weight:600':'background:transparent')})),
+      groups:shown.map(([name,items])=>({n:name,items:items.map(([g,nm,d])=>({g,n:nm,d,s:'display:flex;align-items:center;gap:10px;min-height:56px;padding:8px 12px;border:1px solid #ECEDF3;border-radius:12px;text-decoration:none;color:#1A1B24;background:#FFFFFF;animation:tileIn 280ms '+((n++)*30)+'ms cubic-bezier(.05,.7,.1,1) both'}))}))};
+  }
+}
+</script>
+</body>
+</html>

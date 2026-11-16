@@ -7,6 +7,7 @@ import {targetCapabilities} from '../features/server-manager/targets.js';
 import {createServerProcessAdmission} from './server-process-admission.js';
 import {runtimeCandidate,downloadPinnedJava} from './server-java-runtime.js';
 import {createServerTargetsService,MANAGED_ACTIONS} from './server-targets-service.js';
+import {createWorldGenerator,WORLD_ACTIONS} from '../features/server-manager/world-generation/generator.js';
 
 const EULA='https://www.minecraft.net/en-us/eula';
 const SHUTDOWN_REASON='Native process supervision, compatible runtime admission, version-bound loopback configuration, resource limits and native lease IPC are not integrated. Preparation never starts a server.';
@@ -15,7 +16,7 @@ function identifier(value,max=128){if(typeof value!=='string'||!value.length||va
 async function directory(value){let current=path.resolve(value);for(;;){const stat=await fs.lstat(current);if(!stat.isDirectory()||stat.isSymbolicLink())throw Error('An unlinked owned directory is required.');const parent=path.dirname(current);if(parent===current)break;current=parent;}return fs.realpath(value);}
 /** The protected main process alone supplies the root, network and capacity providers.
  * Renderer actions cannot provide paths, URLs, digests, consent or launch providers. */
-export function createServerManagerHost({dataDirectory,nativeRequest,supervisor=createServerProcessAdmission({nativeRequest}),confirmLicense=async()=>false,confirmServerLicense,chooseSshKey,chooseExtensionFile,managedDeps,managedPortProbe,confirmRuntime=async()=>false,runtimeDownloader=downloadPinnedJava,architecture=process.arch,fetchImpl=fetch,emit=()=>{},capacity=async root=>{const stat=await fs.statfs(root,{bigint:true});return stat.bavail*stat.bsize;},now=()=>new Date().toISOString()}={}){
+export function createServerManagerHost({dataDirectory,nativeRequest,confirmWorldLicense=async()=>false,pickWorldDestination=async()=>null,supervisor=createServerProcessAdmission({nativeRequest}),confirmLicense=async()=>false,confirmServerLicense,chooseSshKey,chooseExtensionFile,managedDeps,managedPortProbe,confirmRuntime=async()=>false,runtimeDownloader=downloadPinnedJava,architecture=process.arch,fetchImpl=fetch,emit=()=>{},capacity=async root=>{const stat=await fs.statfs(root,{bigint:true});return stat.bavail*stat.bsize;},now=()=>new Date().toISOString()}={}){
  const session=randomUUID(),base=path.join(path.resolve(dataDirectory),'server-manager',session),selections=new Map(),operations=new Map(),controllers=new Set(),flights=new Set();let initialized,adapter,snapshot=null,closed=false,refreshing=false,active=null,offline=false,resolving=0;
  let nativeInitialized=false,nativeInitialization,nativeCapabilities=null;const lifecycleFlights=new Map();
  let runtimeActive=null;
@@ -24,6 +25,8 @@ export function createServerManagerHost({dataDirectory,nativeRequest,supervisor=
  /** Flavors, containers, SSH, plugins and settings live in the managed-server service. Its ids are `managed-<uuid>`, distinct from the
   * `server-<uuid>` ids of the verified-download preparation flow above, which is left exactly as it was. */
  const managed=createServerTargetsService({dataDirectory,deps:managedDeps,fetchImpl,confirmLicense:confirmServerLicense??confirmLicense,chooseSshKey,chooseExtensionFile,emit,now,...(managedPortProbe?{portProbe:managedPortProbe}:{})});
+ /** World generation shares this host's official catalogue snapshot, fetch and event channel but runs its own bounded job. */
+ const worldGenerator=createWorldGenerator({dataDirectory,fetchImpl,getRow:id=>snapshot?.versions.find(row=>row.id===id),confirmLicense:confirmWorldLicense,pickDestination:pickWorldDestination,emit,now});
  async function initialize(){if(!initialized)initialized=(async()=>{await directory(dataDirectory);await fs.mkdir(path.dirname(base),{recursive:true});await directory(path.dirname(base));await fs.mkdir(base);await directory(base);adapter=new LocalProcessServerAdapter({baseRoot:base,fetchImpl:download,now});})();await initialized;ensure();}
  async function nativeInitialize(){await initialize();if(!nativeInitialized){nativeInitialization??=supervisor.initialize(base).then(()=>{nativeInitialized=true;}).catch(error=>{nativeInitialization=null;throw error;});await nativeInitialization;}ensure();nativeCapabilities=await supervisor.capabilities();return nativeCapabilities;}
  function prepared(id){identifier(id,64);const operation=[...operations.values()].find(item=>item.view.serverId===id&&item.view.bytesVerified===true);if(!operation)throw Error('An owned verified server is required.');return operation;}
@@ -35,6 +38,7 @@ export function createServerManagerHost({dataDirectory,nativeRequest,supervisor=
  async function dispatch(action,payload={}){
   ensure();
   if(MANAGED_ACTIONS.includes(action))return managed.dispatch(action,payload);
+  if(WORLD_ACTIONS.includes(action))return worldGenerator.dispatch(action,payload);
   if(action==='snapshot'){record(payload);return summary();}
   if(action==='refreshCatalogue'){
    record(payload);if(refreshing)throw Error('A catalogue refresh is already active.');refreshing=true;const controller=new AbortController();controllers.add(controller);
@@ -85,5 +89,5 @@ export function createServerManagerHost({dataDirectory,nativeRequest,supervisor=
   throw Error('Unsupported preparation action.');
  }
  async function lifecycleRegistration(operation){await nativeInitialize();if(!operation.nativeRegistered){operation.nativeRegistration??=supervisor.register({id:operation.view.serverId,distribution:operation.distribution,distributionSha256:operation.view.distributionSha256}).then(()=>{operation.nativeRegistered=true;}).catch(error=>{operation.nativeRegistration=null;throw error;});await operation.nativeRegistration;}}
- return{dispatch,liveServers:()=>managed.liveServers(),get pending(){return flights.size+(supervisor.pending||0)+managed.pending;},cancelAll(){for(const controller of controllers)controller.abort();managed.cancelAll();},async close(){closed=true;for(const controller of controllers)controller.abort();await Promise.allSettled([...flights]);await managed.close();const receipt=await supervisor.close();if(receipt?.verified!==true)throw Error('Native server shutdown remains unverified.');return receipt;}};
+ return{dispatch,liveServers:()=>managed.liveServers(),get pending(){return flights.size+(supervisor.pending||0)+managed.pending+worldGenerator.pending;},cancelAll(){for(const controller of controllers)controller.abort();managed.cancelAll();worldGenerator.cancelAll();},async close(){closed=true;worldGenerator.cancelAll();for(const controller of controllers)controller.abort();await Promise.allSettled([...flights]);await managed.close();const receipt=await supervisor.close();if(receipt?.verified!==true)throw Error('Native server shutdown remains unverified.');return receipt;}};
 }

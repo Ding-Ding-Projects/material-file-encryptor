@@ -1,11 +1,19 @@
 import {createStartupSurprise,observeStartupInteraction} from '../shared/local-ux/surprise.js';
 import {plainErrorMessage} from '../shared/ipc-error.js';
+import {createMotionController} from './motion/motion-controller.js';
+import {createUnlockChoreography} from './motion/unlock-choreography.js';
+import {createInstallationTakeover,createTakeoverPreference} from './features/installation/takeover.js';
+import {TAKEOVER_COPY} from './features/installation/takeover-copy.js';
 import {DEFAULT_DRIVE_NAME,DRIVE_NAME_MAX_LENGTH,normalizeDriveName} from '../shared/drive-name.js';
 import {createStartupPresentation} from './features/shell/startup-surprise.js';
 import {createNotificationNarration} from './features/shell/notification-narration.js';
 import {control,prepareControl,controlKind,CONTROL_SELECTOR,setControlLanguage} from '../shared/surface/controls.js';
 import {resolveGuidanceArticle,GUIDANCE_COPY} from '../shared/surface/control-guidance.js';
 import {createShellInfoIcons,INFO_ICON_COPY} from './features/shell/info-icons.js';
+import {createCollapsibleSection,renderStatistics,activeFilterText,COLLAPSE_COPY} from '../shared/surface/collapsible-section.js';
+import {createBulkSelection,runBulk,summarizeBulk,mountBulkBar,bulkLabels,BULK_COPY} from '../shared/surface/bulk-actions.js';
+import {personalizationSettingCommands} from './features/personalization/settings-index.js';
+import {DIMSUM_COPY} from './features/dimsum/copy.js';
 import {createOnboardingSession} from './features/onboarding/model.js';
 import {ONBOARDING_COPY} from './features/onboarding/copy.js';
 import { installClearFields } from './clear-fields.js';
@@ -29,9 +37,15 @@ import {requestSuperConfirmation,confirmDestructiveAction} from '../shared/surfa
 import { createPrivateWordingView } from '../shared/surface/private-wording-view.js';
 import { operationNotification } from './operation-notifications.js';
 import { installWordingDrop, createCelebration } from './wording-drop.js';
+import { createActionSounds, ACTION_CUE_EVENT } from '../shared/surface/action-sounds.js';
 import {vaultSessionChoices,vaultSessionAvailability} from './vault-sessions.js';
 import { onPageDiscard } from './page-lifecycle.js';
+import { TOOLBOX_DESTINATIONS, TOOLBOX_VIEW_LABELS } from '../shared/surface/toolbox-destinations.js';
 import {createRendererTiming,observeTaskPresentation} from './performance-timing.js';
+import {mountWorkspaceChrome} from './features/shell/workspace-chrome.js';
+import {mountUnlockCard} from './features/shell/unlock-card.js';
+import {SHELL_COPY} from './features/shell/copy.js';
+import {loadShellPreferences,saveShellPreferences,applyShellPreferences,normalizeShellPreferences} from './features/shell/shell-preferences.js';
 const rendererTiming=createRendererTiming(),timingLifetime=new AbortController();
 rendererTiming.finish(rendererTiming.begin('renderer-entry'),'settled');
 Object.defineProperty(window,'mfePerformance',{value:Object.freeze({snapshot:()=>rendererTiming.snapshot()}),writable:false,configurable:false});
@@ -41,18 +55,72 @@ const $ = id => document.getElementById(id);
 const api = window.drive;
 let preferences = loadSettings(localStorage);
 let vocabularyPersisted = true;
+// Short action cues. A cue that cannot play never changes what an action did, so every call is fire and forget.
+const reducedMotionQuery = typeof matchMedia === 'function' ? matchMedia('(prefers-reduced-motion: reduce)') : null;
+const sounds = createActionSounds({ settings: { enabled: preferences.soundEffects, volume: preferences.soundVolume }, prefersReducedSound: () => reducedMotionQuery?.matches === true });
+function playCue(name) { try { return sounds.play(name); } catch { return { played: false, reason: 'failed' }; } }
+const OPERATION_CUES = Object.freeze({ 'Locking drive…': 'lock', 'Mounting drive…': 'unlock', 'Importing files…': 'upload', 'Syncing encrypted files…': 'sync', 'Deleting files…': 'delete', 'Saving preference…': 'toggle' });
+document.addEventListener(ACTION_CUE_EVENT, event => playCue(String(event.detail?.cue ?? '')));
+// Cues ride on the existing result surfaces by wrapping them once, so none of those functions changes behaviour.
+let pendingOperationCue = null;
+const withCue = (fn, cue) => function (...args) { playCue(typeof cue === 'function' ? cue(...args) : cue); return fn.apply(this, args); };
+showError = withCue(showError, 'error');
+showTransientError = withCue(showTransientError, 'error');
+toast = withCue(toast, () => { const cue = pendingOperationCue || 'success'; pendingOperationCue = null; return cue; });
+run = (baseRun => async function (label, ...rest) { pendingOperationCue = OPERATION_CUES[label] || null; try { return await baseRun.call(this, label, ...rest); } finally { pendingOperationCue = null; } })(run);
+// A sync that finishes on its own (not one the person started and is waiting on) sounds once when it stops.
+acceptVaultState = (baseAccept => function (next) { const wasRunning = state?.sync?.running === true, sessionBefore = state?.sessionId; const result = baseAccept.call(this, next); if (wasRunning && !next?.sync?.running && !next?.sync?.error && !busy && sessionBefore === next?.sessionId) playCue('sync'); return result; })(acceptVaultState);
+// An operation that reaches a finished state sounds once, so reopening the page never replays an old result.
+const operationCueStates = new Map();
+renderOperations = (baseRender => function () {
+ const operations = state?.operations || [], rows = Array.isArray(operations) ? operations : Object.values(operations);
+ for (const operation of rows) {
+  const id = operation.operationId || operation.id, status = operation.state || operation.status, previous = operationCueStates.get(id);
+  operationCueStates.set(id, status);
+  if (previous === undefined || previous === status) continue;
+  if (status === 'completed') playCue(/import|upload/i.test(String(operation.type || operation.label || '')) ? 'upload' : 'success');
+  else if (status === 'failed') playCue('error');
+ }
+ for (const id of operationCueStates.keys()) if (!rows.some(row => (row.operationId || row.id) === id)) operationCueStates.delete(id);
+ return baseRender.call(this);
+})(renderOperations);
+// Settings controls for the cues follow every preference refresh, including a language change.
+applyPreferences = (baseApply => function (...args) { const result = baseApply.apply(this, args); applySoundSettings(); return result; })(applyPreferences);
+// Native validation messages are not page text, so they take the personal wording here, under the same rule as the page.
+updateDialog = (baseUpdate => function (...args) {
+ const result = baseUpdate.apply(this, args);
+ for (const id of ['drive-letter', 'drive-name']) { const field = $(id); if (field?.validity?.customError && field.validationMessage) field.setCustomValidity(displayWording(field.validationMessage)); }
+ return result;
+})(updateDialog);
 let vocabularyUploadVersion = 0;
 const fileSelection = createFileSelection();
 let state = null, selected = null, view = 'drive', busy = false, dialogMode = 'create', snackbarTimer;
 let vaultConfirmationLifetime=new AbortController();
 let archiveRows = {history:[],recycle:[]}, archiveRequests={history:0,recycle:0};
+const archiveFilters={},archiveStats={};
 const archiveRenders={history:0,recycle:0};
-const recycledSelection=new Set(); let historySearch, recycleSearch, historySelection;let historyRetentionDraft=false,historyRetentionRevision=0;
+const historyBulk=createBulkSelection(),recycleBulk=createBulkSelection(),vaultBulk=createBulkSelection(),archiveBulk={};
+// The Recycle Bin selection keeps the Set interface its restore code uses while sharing the bulk selection model.
+const recycledSelection={add:id=>recycleBulk.toggle(id,true),delete:id=>recycleBulk.toggle(id,false),has:id=>recycleBulk.has(id),clear:()=>recycleBulk.clear(),get size(){return recycleBulk.size;},[Symbol.iterator]:()=>recycleBulk.ids()[Symbol.iterator]()};
+let historySearch, recycleSearch, historySelection;let historyRetentionDraft=false,historyRetentionRevision=0;
 let driveLetterEdited = false, activeDriveLetter = '';
+// Motion tokens apply from the first paint; the Settings editor edits this same controller.
+const motionController=createMotionController({doc:document,storage:localStorage,onError:error=>console.error(error)});
+const takeoverPreference=createTakeoverPreference({storage:localStorage});
+const unlockMotion=createUnlockChoreography({controller:motionController,getBadge:()=>document.getElementById('vault-badge'),getForm:()=>document.getElementById('vault-form')});
+let installTakeover=null;
+let driverInstall=null;
+// A WinFsp install started here is reported as finished once the driver is actually available.
+function reportDriverInstalled(){if(!driverInstall||state?.driver?.available!==true)return;const done=driverInstall;driverInstall=null;getInstallTakeover().success({what:'WinFsp driver',where:t('Windows driver service'),durationMs:sinceMs(done.startedAt)});}
+// Every render first checks whether a driver install started in this session has finished.
+render = (baseRender => function (...args) { if (state) reportDriverInstalled(); return baseRender.apply(this, args); })(render);
+const getInstallTakeover=()=>installTakeover??=createInstallationTakeover({doc:document,translate:(source,options)=>t(source,options),preference:takeoverPreference,notify:input=>foundation?.notify(input),playCue:kind=>foundation?.playCue?.(kind)});
+const sinceMs=started=>started>0?Math.max(0,Date.now()-started):undefined;
+let chrome=null,unlockCard=null,shellPreferences=loadShellPreferences(localStorage),shellPersisted=true;
 let foundation=null,fileDetails=null,fileSearch=null,renderedFilesKey='',pagedFiles=null,fileNextCursor=null,filePageRevision=null,filePageRequest=0;
 const featureMounts=new Map(),featureRoots=new Map(),workspaceDisposers=[];
 const operationNotifications=new Map();
-const canonicalViewLabels={drive:'My drive',offline:'Available offline',history:'History',recycle:'Recycle Bin',settings:'Settings',help:'How it works',details:'File details',converter:'Converter',ollama:'Local models',access:'Local access',personalization:'Personalization',documentation:'Documentation',changelog:'Changelog',status:'Status',workflow:'Documents and downloads',updates:'Updates',storage:'Docker Hub storage',onboarding:'Setup guide'};
+const canonicalViewLabels={drive:'My drive',offline:'Available offline',history:'History',recycle:'Recycle Bin',settings:'Settings',help:'How it works',details:'File details',converter:'Converter',ollama:'Local models',access:'Local access',personalization:'Personalization',documentation:'Documentation',changelog:'Changelog',status:'Status',dimsum:'Dim sum',workflow:'Documents and downloads',updates:'Updates',storage:'Docker Hub storage',tools:'Local tools',onboarding:'Setup guide',quicktype:'Type generator','virtual-disks':'Virtual disks',...TOOLBOX_VIEW_LABELS};
 const settingsIntegrity=createDesktopSettingsIntegrity({storage:localStorage,isAuthenticated:()=>featureMounts.get('access')?.authenticated===true,onError:message=>foundation?.notify({title:t('Private history unavailable'),message:String(message),level:'warning'}),verifyCredential:password=>featureRequest('personalization','verifySharedCredential',{password}),setCredential:password=>featureRequest('personalization','setSharedCredential',{password}),writeSharedMode:value=>featureRequest('personalization','sharedWrite',{value})});
 const localSettings=settingsIntegrity.store;
 if(localSettings.provenance==='default')try{localSettings.update({...LOCAL_DEFAULTS,...preferences,vocabulary:undefined},'existing preferences migrated');}catch{}
@@ -66,12 +134,22 @@ const startupSurprise=createStartupSurprise({getState:startupState,show:details=
 const stopStartupInteraction=observeStartupInteraction(document,()=>{startupInteracted=true;startupPresentation.dismiss();});
 onPageDiscard(window,()=>{stopStartupInteraction();startupPresentation.destroy();});
 function attemptStartup(){if(startupStarted||!startupReady||!statusReady||!updateSnapshot)return;try{localStorage.setItem('mfe.startup.completed.v1','1');}catch{}void startupSurprise.attempt().then(result=>{if(!result.deferred)startupStarted=true;}).catch(()=>{startupStarted=true;});}
+let updateTransition={state:null,startedAt:0};
+function reportUpdateTransition(snapshot){
+ const next=snapshot?.state;if(!next||next===updateTransition.state)return;const previous=updateTransition.state;updateTransition.state=next;
+ if(next==='downloading'||next==='installing'||next==='checking')updateTransition.startedAt=Date.now();
+ const version=snapshot?.update?.version||'';const reopen=[{label:t('Open Updates'),run:()=>{foundation?.model.openTab({id:'updates',label:'Updates'});foundation?.shell.activate('updates');}}];
+ if(next==='ready'&&previous==='downloading')getInstallTakeover().success({title:'Update ready',what:version?'Application update '+version:'Application update',where:t('Application update'),durationMs:sinceMs(updateTransition.startedAt)});
+ else if(next==='manual-restart-required'&&previous==='installing')getInstallTakeover().success({title:'Update installed',what:version?'Application update '+version:'Application update',where:t('Application update'),durationMs:sinceMs(updateTransition.startedAt)});
+ else if(next==='failed')getInstallTakeover().failure({title:'Update failed',what:version?'Application update '+version:'Application update',command:previous==='installing'?'update install':previous==='downloading'?'update download':'update check',reason:String(snapshot.reason||''),output:snapshot.reason?[String(snapshot.reason)]:[],durationMs:sinceMs(updateTransition.startedAt),recovery:reopen});
+}
 function acceptUpdateSnapshot(value){updateSnapshot=value?.snapshot||value;const s=startupState();if(s.updating||s.error||s.busy||s.quiet||s.school?.enabled)startupPresentation.dismiss();attemptStartup();return value;}
 
 const narrationEvents=createNotificationNarration({getNarrator:()=>featureMounts.get('personalization')?.narrator,getSettings:()=>effectiveLocalSettings,translate:(source,options)=>t(source,options),isScreenReaderActive:()=>screenReaderActive!==false,onUnavailable:()=>foundation?.notify({title:'Narration unavailable',message:'Open Settings, Personalization, then Language to select an installed voice. Visual notifications remain available.',level:'warning',narration:false})});
 function forceLockOptions(){return {language:effectiveLocalSettings.school.enabled?'en':preferences.language};}
 const enhancedLabels={'Docker Hub storage':'Docker Hub 儲存','Notification history reset':'通知記錄已重設','Previous notification text was cleared because its original wording could not be verified.':'舊有通知文字已清除，因為無法確認原有用詞。','Export queued. Cancel unfinished work from Operations.':'匯出已加入佇列。可以在操作面板取消未完成工作。','File details':'檔案詳情','Converter':'轉換工具','Local models':'本機模型','Personalization':'個人化','Local access':'本機存取','Documentation':'說明文件','Changelog':'更新記錄','Status':'狀態','Load more files':'載入更多檔案','Retry loading files':'重試載入檔案','Cancel operation':'取消操作','Operations':'操作','Force lock':'強制鎖定','Quit application':'結束程式','Feature unavailable':'功能無法使用','Refresh':'重新整理','Search settings':'搜尋設定'};
 Object.assign(enhancedLabels,{'Delete':'刪除','Delete selected files':'刪除所選檔案','Deleting files…':'正在刪除檔案…','Files moved to the Recycle Bin.':'檔案已移至資源回收筒。','file':'個檔案','files':'個檔案','{count} files selected':'已選取 {count} 個檔案','Select all visible files':'選取所有可見檔案','Export decrypted copies?':'要匯出已解密副本嗎？','The destination folder will contain ordinary readable files. Choose a location you trust.':'目的地資料夾會包含一般可讀取嘅檔案，請揀選你信任嘅位置。','Remove these offline copies?':'要移除呢啲離線副本嗎？','Release unneeded encrypted cache for the selected files. The encrypted storage copies remain. You may need your storage connection to open them again.':'會釋放所選檔案不需要嘅加密快取，加密儲存副本會保留。再開啟時可能需要儲存連線。','Remove copies':'移除副本','Offline pins removed. Protected data is retained.':'已移除離線釘選，受保護資料會保留。'});
+Object.assign(enhancedLabels,TAKEOVER_COPY);
 Object.assign(enhancedLabels,{'The search could not finish':'搜尋未能完成','The file list is not filtered. Simplify the expression or switch off regular expressions, then search again.':'檔案清單未有篩選。請簡化表達式或關閉正則表達式，然後再搜尋。'});
 Object.assign(enhancedLabels,{'Transfer responsiveness':'傳輸回應速度','Background work priority':'背景工作優先順序','Responsive mode lowers background encryption and synchronization priority. Throughput mode uses normal priority. Both keep bounded transfer buffers.':'快速回應模式會降低背景加密及同步的優先順序。高吞吐量模式使用正常優先順序。兩種模式都保留傳輸緩衝上限。','Responsive (recommended)':'快速回應（建議）','Throughput':'高吞吐量'});
 Object.assign(enhancedLabels,{'The protected display name is unavailable. The existing local name is unchanged. Update the desktop host and retry.':'受保護顯示名稱暫時無法取得，原有本機名稱保持不變。請更新桌面主程式再試。','Selected version':'已選版本','Version ID':'版本識別碼','Entry ID':'項目識別碼','Selecting a version does not restore it.':'選取版本唔會還原檔案。','The selected version is outside the current filter.':'已選版本唔喺目前篩選結果內。','Private history unavailable':'私人歷史無法使用','Unlock the local profile before accessing private history.':'存取私人歷史前，請先解鎖本機設定檔。','Reset website or application preferences':'重設網站或程式偏好設定','All local appearance, language, attention and schedule preferences':'所有本機外觀、語言、注意力及排程偏好設定'});
@@ -88,11 +166,14 @@ document.addEventListener('scroll', event => {
  scrollTimers.set(surface, setTimeout(() => { surface.classList.remove('is-scrolling'); scrollTimers.delete(surface); }, 900));
 }, {capture:true,passive:true});
 $('view-drive').prepend($('operation'));
-const translateWorkspace=createTranslator(()=>({...effectiveLocalSettings,...preferences,school:effectiveLocalSettings.school}),{dictionary:{...GUIDANCE_COPY,...INFO_ICON_COPY,...ONBOARDING_COPY,...cantonese,...enhancedLabels}});
+const translateWorkspace=createTranslator(()=>({...effectiveLocalSettings,...preferences,school:effectiveLocalSettings.school}),{dictionary:{...SHELL_COPY,...GUIDANCE_COPY,...INFO_ICON_COPY,...COLLAPSE_COPY,...BULK_COPY,...DIMSUM_COPY,...ONBOARDING_COPY,...cantonese,...enhancedLabels}});
 function t(source,options) { return translateWorkspace(source,options); }
 /** Quits the whole application (not just the window). Ctrl+Q, the Help and Settings menus, the New tab menu and the command palette all use this. */
 function quitApplication() { return api.quit ? api.quit() : api.windowControl('close'); }
-const privateWordingView=createPrivateWordingView({root:document.body,replace:value=>replaceVocabulary(value,preferences.vocabulary),isActive:()=>featureMounts.get('access')?.authenticated===true&&!effectiveLocalSettings.school.enabled});
+const wordingActive=()=>featureMounts.get('access')?.authenticated===true&&!effectiveLocalSettings.school.enabled;
+const privateWordingView=createPrivateWordingView({root:document.body,replace:value=>replaceVocabulary(value,preferences.vocabulary),isActive:wordingActive});
+/** Personal wording for text that is not DOM text, such as native form validation messages. Same rule as the page projection. */
+function displayWording(value) { return wordingActive() ? replaceVocabulary(value, preferences.vocabulary) : value; }
 function setText(id, source) { $(id).textContent = t(source); }
 function savePreferences() { try { localStorage.setItem('material-drive.preferences.v1', JSON.stringify({...preferences, vocabulary: JSON.parse(serializeVocabulary(preferences.vocabulary))})); return true; } catch { showError('Your device could not save these preferences.'); return false; } }
 const clearFields = installClearFields(document.body, t);
@@ -105,6 +186,26 @@ function notifyLanguageListeners() { for (const listener of [...languageListener
 function applyThemeOnly() {
  document.documentElement.dataset.theme = preferences.theme === 'system' ? colorQuery.matches ? 'dark' : 'light' : preferences.theme;
  if ($('theme-setting').value !== preferences.theme) $('theme-setting').value = preferences.theme;
+}
+/** Shell presentation controls: row density, text size and high contrast. They are device-local and never part of vault data. */
+function syncShellControls() {
+ const density=$('density-setting'),scale=$('text-scale-setting'),contrast=$('high-contrast-setting');
+ if(density&&density.value!==shellPreferences.density)density.value=shellPreferences.density;
+ if(scale){if(Number(scale.value)!==shellPreferences.textScale)scale.value=shellPreferences.textScale;$('text-scale-output').textContent=shellPreferences.textScale+'%';scale.style.setProperty('--range-progress',((shellPreferences.textScale-90)/110*100)+'%');}
+ if(contrast&&contrast.checked!==shellPreferences.highContrast)contrast.checked=shellPreferences.highContrast;
+}
+function setShellPreference(key,value) {
+ shellPreferences=normalizeShellPreferences({...shellPreferences,[key]:value});
+ shellPersisted=saveShellPreferences(localStorage,shellPreferences);
+ applyShellPreferences(document.documentElement,shellPreferences);syncShellControls();chrome?.refreshViewport();
+ if(!shellPersisted)toast('Active for this session only. Saving failed.');
+ renderedFilesKey='';if(state)renderFiles();
+}
+function updateChrome() {
+ if(!chrome||!state)return;
+ const files=currentFiles();
+ chrome.update({state,files,selected:files.find(file=>file.id===selected)||null,busy,hasMore:Boolean(fileNextCursor)});
+ unlockCard?.update(state);
 }
 let shellInfoIcons=null;
 function applyPreferences() {
@@ -167,7 +268,7 @@ function resetVaultPresentation() {
  vaultConfirmationLifetime.abort();vaultConfirmationLifetime=new AbortController();
  // Invalidate requests before clearing their presentation, including same-revision vaults.
  filePageRequest++; filePageRevision=null; fileNextCursor=null; pagedFiles=null; renderedFilesKey='';
- selected=null; fileSelection.clear(); fileDetails?.selectEntry(null,{resetFilters:true}); historySelection?.clear(); recycledSelection.clear();
+ selected=null; fileSelection.clear(); fileDetails?.selectEntry(null,{resetFilters:true}); historySelection?.clear();historyBulk.clear(); recycledSelection.clear();
  $('file-list').replaceChildren(); $('file-search').value='';
  for(const search of [fileSearch,historySearch?.input,recycleSearch?.input])if(search){search.query='';search.regex=false;search.flags='iu';search.render();}
  for(const kind of ['history','recycle']) { archiveRequests[kind]++;archiveRenders[kind]++;archiveRows[kind]=[];$(kind+'-list').replaceChildren();$('view-'+kind).setAttribute('aria-busy','false');setArchiveMessage(kind,''); }
@@ -196,6 +297,7 @@ function renderVaultSessions() {
  picker.disabled=!can.switch||!api?.selectSession;
  $('add-vault-session').disabled=!can.add||!api?.addSession;
  $('remove-vault-session').disabled=!can.remove||!api?.removeSession;
+ renderVaultBulkList();
 }
 async function changeVaultSession(action,id) {
  if(busy||fileDetails?.busy)return;
@@ -237,6 +339,7 @@ function renderAvailability() {
  $('offline-button').disabled = !can.keepOffline;
  $('release-button').disabled = !can.releaseOffline;
  $('delete-button').disabled = !can.delete;
+ $('copy-path-button').disabled = !file;$('backup-now-button').disabled = busy || !unlocked;$('new-button').disabled = busy || !api || !state;
  $('startup-setting').disabled = busy || !state;
  $('auto-unlock-setting').disabled = busy || !unlocked || Boolean(state?.sessionId && state.sessionId!=='main');
  $('forget-credential').disabled = busy || !state || Boolean(state?.sessionId && state.sessionId!=='main');
@@ -259,7 +362,7 @@ function renderAvailability() {
 function currentFiles(){return pagedFiles??state?.files??[];}
 function render() {
  if (!state) return;
- if(state.locked) {historySelection?.clear();filePageRequest++;pagedFiles=null;filePageRevision=null;selected=null;fileSelection.clear();fileDetails?.selectEntry(null);for(const kind of ['history','recycle']) {archiveRequests[kind]++;archiveRenders[kind]++;archiveRows[kind]=[];$(kind+'-list').replaceChildren();setArchiveMessage(kind,'Unlock a drive to view its history and recycle bin.');}recycledSelection.clear();}
+ if(state.locked) {historySelection?.clear();historyBulk.clear();filePageRequest++;pagedFiles=null;filePageRevision=null;selected=null;fileSelection.clear();fileDetails?.selectEntry(null);for(const kind of ['history','recycle']) {archiveRequests[kind]++;archiveRenders[kind]++;archiveRows[kind]=[];$(kind+'-list').replaceChildren();setArchiveMessage(kind,'Unlock a drive to view its history and recycle bin.');}recycledSelection.clear();}
  const status = mountState(); setText('vault-badge',status); $('vault-badge').dataset.state = state.mounted ? 'mounted' : 'locked';
  $('locked-state').hidden = !state.locked; $('drive-content').hidden = state.locked; $('lock-button').hidden = state.locked;
  $('driver-notice').hidden = state.driver?.checking || state.driver?.available !== false;
@@ -274,7 +377,7 @@ function render() {
  $('cache-path').textContent = state.cacheDir || ''; $('cache-path').title = state.cacheDir || '';
  const letter = state.driveLetter?.replace(/[:\\]+$/,'');
  $('mounted-path').textContent = state.mounted && letter ? `${letter}:\\` : t('Not mounted');
- foundation?.setOfflineCount(state.offlineCount??currentFiles().filter(file => file.offline).length);
+ foundation?.setOfflineCount(state.offlineCount??currentFiles().filter(file => file.offline).length);foundation?.refreshHome?.();
  $('startup-setting').checked = state.startup ?? state.preferences?.startup ?? true;
  $('auto-unlock-setting').checked = state.sessionId && state.sessionId!=='main' ? false : state.autoUnlock ?? state.preferences?.autoUnlock ?? false;
  $('performance-mode-setting').value = state.preferences?.performanceMode || state.performanceMode || 'responsive';
@@ -289,16 +392,17 @@ function render() {
  if ($('vault-dialog').open) updateDriveLetters();
  if(!state.locked&&api.listFiles&&filePageRevision!==(state.filesRevision??state.revision??'initial'))void loadFilePage();
  foundation?.setProvenance(state.build||state.provenance||{});
- renderOperations();renderFiles(); renderAvailability();
+ renderOperations();renderFiles(); renderAvailability();foundation?.updateChrome?.();
 }
 function formatDate(date) { const d = new Date(date); return Number.isNaN(d.getTime()) ? '' : new Intl.DateTimeFormat(preferences.language === 'yue' ? 'zh-HK' : 'en', { month:'short',day:'numeric',hour:'2-digit',minute:'2-digit' }).format(d); }
 function formatBytes(bytes) { if (!Number.isFinite(bytes)) return ''; if (bytes < 1024) return `${bytes} B`; for (const [unit, size] of [['GB',1024**3],['MB',1024**2],['KB',1024]]) if (bytes >= size) return `${new Intl.NumberFormat('en',{maximumFractionDigits:1}).format(bytes/size)} ${unit}`; }
 async function renderFiles() {
  const files = currentFiles(), query = $('file-search').value.toLocaleLowerCase();
- const key=JSON.stringify([state?.sessionId,filePageRevision,view,query,fileSearch?.regex,fileSearch?.flags,preferences.language,files.map(f=>[f.id,f.path,f.size,f.offline,f.modified])]);
+ const shellScope=foundation?.chrome||null;
+ const key=JSON.stringify([state?.sessionId,filePageRevision,view,query,shellScope?.scopeKey(),fileSearch?.regex,fileSearch?.flags,preferences.language,files.map(f=>[f.id,f.path,f.size,f.offline,f.modified])]);
  if(key===renderedFilesKey){updateSelectedFileRows();return;}
  renderedFilesKey=key;
- const candidates=files.filter(file=>view!=='offline'||file.offline);const searched=fileSearch?await fileSearch.filter(candidates.map(file=>({id:file.id,text:String(file.path)})),{reportOutcome:true}):null;
+ const candidates=(shellScope?shellScope.sortFiles(shellScope.scopeFiles(files)):files).filter(file=>view!=='offline'||file.offline);const searched=fileSearch?await fileSearch.filter(candidates.map(file=>({id:file.id,text:String(file.path)})),{reportOutcome:true}):null;
  const searchFailed=searched!==null&&(searched.outcome==='failed'||searched.outcome==='unavailable');
  const rows=fileSearch?(searched.outcome==='superseded'?null:searched.rows):candidates.filter(file=>String(file.path).toLocaleLowerCase().includes(query)).map(file=>({id:file.id}));
  if(rows===null||key!==renderedFilesKey)return;
@@ -311,10 +415,12 @@ async function renderFiles() {
   const select = control('input',{type:'checkbox'}); select.type = 'checkbox'; select.className = 'file-selection'; select.checked = fileSelection.has(file.id); select.setAttribute('aria-label',`${t('Select')} ${file.path}`);
   select.addEventListener('click',event => { if (event.shiftKey) { event.preventDefault(); fileSelection.range(visibleFileIds(),file.id,{additive:event.ctrlKey||event.metaKey}); syncSelection(); } });
   select.addEventListener('change',() => { fileSelection.toggle(file.id,select.checked); syncSelection(); }); cell().append(select);
-  const name = document.createElement('div'); name.className = 'file-name'; const filename = document.createElement('span'); filename.textContent = file.path; name.append(icon('file'),filename); const nameCell = cell(); nameCell.append(name); nameCell.title = file.path;
+  const name = document.createElement('div'); name.className = 'file-name'; const filename = document.createElement('span'); filename.textContent = shellScope?shellScope.nameFor(file):file.path; name.append(icon('file'),filename); const nameCell = cell(); nameCell.append(name); nameCell.title = file.path;
   const availability = cell(); availability.className = 'availability'; const av = document.createElement('span'); av.className = 'availability-content'; const label = document.createElement('span'); label.textContent = t(file.offline ? 'Available offline' : 'Encrypted storage only'); av.append(icon(file.offline ? 'offline' : 'shield'),label); availability.append(av);
   const sizeCell = cell(); sizeCell.className = 'numeric'; sizeCell.textContent = formatBytes(file.size); sizeCell.title = `${file.partCount ?? '?'} encrypted parts · ${formatBytes(file.partSizeBytes || state.partSizeBytes)} maximum`;
   const dateCell = cell(); dateCell.className = 'modified'; dateCell.textContent = formatDate(file.modified);
+  const partsCell = cell(); partsCell.className = 'parts'; partsCell.textContent = Number.isFinite(file.partCount) ? String(file.partCount) : '';
+  [...row.cells].forEach((td,index) => { td.dataset.label = ['','Name','Availability','Size','Modified','Parts'][index] ? t(['','Name','Availability','Size','Modified','Parts'][index]) : ''; });
   row.addEventListener('click',event => { if (event.target === select || event.composedPath().includes(select)) return; if (event.shiftKey) fileSelection.range(visibleFileIds(),file.id,{additive:event.ctrlKey||event.metaKey}); else if (event.ctrlKey||event.metaKey) fileSelection.toggle(file.id); else fileSelection.only(file.id); syncSelection(); });
   row.addEventListener('dblclick',() => { if (!busy && state.mounted) openSelected(); });
   select.addEventListener('keydown',event => { if (event.key === 'Enter') { event.preventDefault(); openSelected(); } });
@@ -336,16 +442,16 @@ function updateSelectedFileRows(){
  $('selection-label').textContent=chosen.length>1?t('{count} files selected',{message:true,values:{count:chosen.length}}):chosen.length===1?chosen[0].path:t('Select a file');
 }
 /** Applies the selection model to the rows, the action buttons and the details panel. */
-function syncSelection(){selected=fileSelection.primary;updateSelectedFileRows();renderAvailability();fileDetails?.selectEntry(currentFiles().find(file=>file.id===selected)||null);}
+function syncSelection(){selected=fileSelection.primary;updateSelectedFileRows();renderAvailability();foundation?.updateChrome?.();fileDetails?.selectEntry(currentFiles().find(file=>file.id===selected)||null);}
 function selectFile(file){fileSelection.only(file.id);syncSelection();}
-async function loadFilePage(append=false){if(!api?.listFiles||state?.locked)return;const revision=state.filesRevision??state.revision??'initial';if(!append&&filePageRevision===revision)return;const request=++filePageRequest;filePageRevision=revision;if(!append){pagedFiles=[];selected=null;fileSelection.clear();fileDetails?.selectEntry(null);renderedFilesKey='';renderFiles();}try{const page=await api.listFiles({cursor:append?fileNextCursor:null,limit:100,revision:revision==='initial'?undefined:revision});if(request!==filePageRequest||state?.locked)return;const items=Array.isArray(page)?page:page.items||page.files||[];pagedFiles=append?[...(pagedFiles||[]),...items]:items;fileNextCursor=page.nextCursor??null;const more=$('load-more-files');if(more)more.hidden=!fileNextCursor;renderedFilesKey='';renderFiles();}catch(error){if(request===filePageRequest)showError(error);}}
+async function loadFilePage(append=false){if(!api?.listFiles||state?.locked)return;const revision=state.filesRevision??state.revision??'initial';if(!append&&filePageRevision===revision)return;const request=++filePageRequest;filePageRevision=revision;if(!append){pagedFiles=[];selected=null;fileSelection.clear();fileDetails?.selectEntry(null);renderedFilesKey='';renderFiles();}try{const page=await api.listFiles({cursor:append?fileNextCursor:null,limit:100,revision:revision==='initial'?undefined:revision});if(request!==filePageRequest||state?.locked)return;const items=Array.isArray(page)?page:page.items||page.files||[];pagedFiles=append?[...(pagedFiles||[]),...items]:items;fileNextCursor=page.nextCursor??null;const more=$('load-more-files');if(more)more.hidden=!fileNextCursor;renderedFilesKey='';renderFiles();foundation?.updateChrome?.();}catch(error){if(request===filePageRequest)showError(error);}}
 function changeView(next) {
  try{navigationTiming=rendererTiming.begin('navigation',next);}catch{navigationTiming=null;}
  foundation?.closeContextMenu('navigation',{restoreFocus:false});
  view = next; clearMainError();
  document.querySelectorAll('.view').forEach(el => { el.hidden = el.id !== `view-${next === 'offline' ? 'drive' : next}`; });
  document.querySelectorAll('[data-view]').forEach(el => { const active = el.dataset.view === next; el.classList.toggle('active',active); active ? el.setAttribute('aria-current','page') : el.removeAttribute('aria-current'); });
- setText('drive-heading',next === 'offline' ? 'Available offline' : 'My drive'); setText('files-heading',next === 'offline' ? 'Available offline' : 'All files');
+ setText('files-heading',next === 'offline' ? 'Available offline' : 'All files');
  if (state) { renderFiles(); renderAvailability(); }
  if (['history','recycle'].includes(next)) loadArchive(next);
  else if(next==='drive'&&state?.locked)void observeViewReady(next);
@@ -429,14 +535,30 @@ function updateDriveLetters(preserveSelection = true) {
  list.setAttribute('aria-busy',String(checking)); markDriveOption();
 }
 
-function openVaultDialog(mode) {
+function prepareVaultForm(mode) {
  dialogMode = mode; driveLetterEdited = false; closeDrivePicker(); $('vault-form').reset(); $('dialog-error').hidden = true;
  $('storage-input').value = mode === 'upgrade' ? '' : state?.storageDir || ''; $('cache-input').value = mode === 'upgrade' ? '' : state?.cacheDir || state?.defaults?.cacheDir || '';
  $('transport-mode').value=state?.transport?.mode || 'folder'; $('remote-repository').value=state?.transport?.remoteRepository || ''; $('private-git-fields').hidden=$('transport-mode').value!=='privateGit';
  $('password-input').type = 'password'; $('show-password').setAttribute('aria-pressed','false'); setText('show-password','Show');
  updateDriveLetters(false);
  $('drive-name').value = normalizeDriveName(state?.driveName) || normalizeDriveName(state?.defaults?.driveName) || DEFAULT_DRIVE_NAME;
- updateDialog(); renderAvailability(); $('vault-dialog').showModal(); $('storage-input').focus();
+ updateDialog(); renderAvailability();
+}
+function openVaultDialog(mode) { prepareVaultForm(mode); $('vault-dialog').showModal(); $('storage-input').focus(); }
+/** Unlocks from the in-tab card: the saved folders and letter fill the same form the dialog uses, so both paths send identical requests. */
+async function unlockInline({mode,password,keyFilePath,autoUnlock}) {
+ if (busy || !state || !api) return {ok:false,error:''};
+ prepareVaultForm('unlock');
+ const letter = normalizedDriveLetter($('drive-letter').value), driveName = normalizeDriveName($('drive-name').value);
+ const options = {transport:$('transport-mode').value,storageDir:$('storage-input').value,cacheDir:$('cache-input').value,driveLetter:`${letter}:`};
+ if (!options.storageDir || !options.cacheDir || !letter || driveName === null) return {ok:false,error:'Choose the encrypted storage and a drive letter first.'};
+ options.driveName = driveName;
+ if (options.transport === 'privateGit') { options.remoteRepository = $('remote-repository').value.trim(); if (!/^[A-Za-z0-9][A-Za-z0-9-]{0,38}\/[A-Za-z0-9_.-]{1,100}$/.test(options.remoteRepository)) return {ok:false,error:'Enter owner/repository.'}; }
+ if (mode === 'keyFile') options.keyFilePath = keyFilePath; else options.password = password;
+ const result = await run('Mounting drive…',() => api.unlock(options),'Drive unlocked.',true);
+ const failure = $('dialog-error'), error = failure.hidden ? '' : failure.textContent; failure.hidden = true; failure.textContent = '';
+ if (result?.ok && autoUnlock) { const auto = $('auto-unlock-setting'); if (!auto.disabled) { auto.checked = true; auto.dispatchEvent(new Event('change')); } }
+ return {ok:Boolean(result?.ok),error};
 }
 function closeVaultDialog() { if (busy) return; closeDrivePicker(); $('vault-dialog').close(); $('password-input').value = ''; $('confirm-password').value = ''; $('key-path').value = ''; }
 let confirmationGeneration=0;
@@ -507,13 +629,20 @@ listen('vault-form','submit',async event => {
  if (dialogMode !== 'unlock') { try { options.partSizeBytes = parsePartSize($('create-split-value').value,$('create-split-unit').value); } catch(error) { return showError(error,true); } }
  if(dialogMode === 'upgrade') {const normalize=value=>value.replace(/[\\/]+$/,'').toLowerCase();const destinations=[options.storageDir,options.cacheDir].map(normalize);const originals=[state?.storageDir,state?.cacheDir].filter(Boolean).map(normalize);if(destinations[0]===destinations[1]||destinations.some(path=>originals.some(original=>path===original||path.startsWith(original+'\\')||path.startsWith(original+'/')||original.startsWith(path+'\\')||original.startsWith(path+'/'))))return showError(t('Choose separate destination folders outside the original vault.'),true);}
  const result = await run('Mounting drive…',() => api[dialogMode](options),dialogMode === 'upgrade' ? 'Upgraded copy created. Original vault preserved.' : dialogMode === 'create' ? 'Drive created.' : 'Drive unlocked.',true);
- if (result?.ok) closeVaultDialog();
+ const unlocking=dialogMode === 'unlock';
+ if (result?.ok) { closeVaultDialog(); if(unlocking)unlockMotion.play('success'); }
+ else if (result && unlocking) unlockMotion.play('failure');
 });
 listen('lock-button','click',() => run('Locking drive…',() => api.lock(),'Drive locked.'));
+window.addEventListener('mfe:open-cloud-backup',() => { if(!foundation)return; const title=canonicalViewLabels.storage||'Docker Hub storage'; foundation.model.openTab({id:'storage',label:title}); foundation.shell.activate('storage'); requestAnimationFrame(()=>featureMounts.get('storage')?.focusBackup?.(false)); });
 listen('mount-button','click',() => run('Mounting drive…',() => api.mount({driveLetter:state.driveLetter || state.defaults?.driveLetter,...(normalizeDriveName(state.driveName) ? {driveName:normalizeDriveName(state.driveName)} : {})}),'Drive unlocked.'));
 listen('project-website-link','click',() => api.openExternal('https://ding-ding-projects.github.io/material-file-encryptor/'));
 listen('winfsp-link','click',() => api.openExternal('https://winfsp.dev/'));
-listen('install-driver','click',() => run('Working…',() => api.installDriver()));
+listen('install-driver','click',() => run('Working…',async () => {
+ const startedAt=Date.now();
+ try{const result=await api.installDriver();driverInstall={startedAt};return result;}
+ catch(error){driverInstall=null;getInstallTakeover().failure({title:'Installation failed',what:'WinFsp driver',command:'installDriver',reason:error?.message,output:[plainErrorMessage(error)],durationMs:sinceMs(startedAt),recovery:[{label:t('Retry'),run:()=>$('install-driver').click(),dismiss:true}]});throw error;}
+}));
 listen('explorer-button','click',() => run('Working…',() => api.openExplorer()));
 listen('import-button','click',importFiles); listen('empty-import-button','click',importFiles); listen('open-button','click',openSelected);
 listen('file-search','input',() => { renderFiles(); renderAvailability(); });
@@ -585,11 +714,15 @@ for (const key of ['theme','language','emoji','funnyEnglish','funnyCantonese']) 
  localSettings.update({[key]:preferences[key]},'preference changed');
  savePreferences(); applyPreferences();
 });
+listen('density-setting','change',event => setShellPreference('density',event.target.value));
+listen('text-scale-setting','input',event => setShellPreference('textScale',Number(event.target.value)));
+listen('high-contrast-setting','change',event => setShellPreference('highContrast',Boolean(event.target.checked)));
 // Dropping a wording file anywhere on the window takes the same path as the Settings upload, then celebrates.
 const wordingDrop = installWordingDrop({
  doc: document, maxBytes: 256 * 1024,
- celebration: createCelebration({ doc: document, neutral: () => t('Personal wording applied', { message: true }), reducedMotion: () => matchMedia('(prefers-reduced-motion: reduce)').matches }),
+ celebration: createCelebration({ doc: document, neutral: () => t('Personal wording applied', { message: true }), reducedMotion: () => matchMedia('(prefers-reduced-motion: reduce)').matches, calm: () => effectiveLocalSettings.attention?.lowStimulation === true }),
  overlayText: () => t('Drop your wording file to apply it', { message: true }),
+ cues: { applied: () => playCue('celebration'), refused: () => playCue('error') },
  apply: source => {
   const version = ++vocabularyUploadVersion, next = parseVocabulary(source);
   preferences.vocabulary = next; vocabularyPersisted = savePreferences();
@@ -601,7 +734,21 @@ const wordingDrop = installWordingDrop({
  },
  refuse: (code, error) => showTransientError(code === 'invalid' ? error : ({ count: 'Drop one wording file at a time. Nothing was changed.', type: 'Only a .json wording file can be dropped. Nothing was changed.', size: 'Vocabulary JSON must be no larger than 256 KiB.', unreadable: 'The wording file could not be read. Nothing was changed.' })[code]),
 });
-function celebrateWording(name) { wordingDrop.celebration.show(name); }
+function celebrateWording(name) { wordingDrop.celebration.show(name); playCue('celebration'); }
+// Sound effects: a switch, a volume and a reset, saved with the other preferences.
+function applySoundSettings() {
+ sounds.configure({ enabled: preferences.soundEffects, volume: preferences.soundVolume });
+ const toggle = $('soundEffects-setting'), slider = $('soundVolume-setting');
+ if (toggle && toggle.selected !== preferences.soundEffects) toggle.selected = preferences.soundEffects;
+ if (slider) { slider.value = preferences.soundVolume; slider.disabled = !preferences.soundEffects; slider.style.setProperty('--range-progress', `${preferences.soundVolume}%`); }
+ if ($('soundVolume-output')) $('soundVolume-output').textContent = String(preferences.soundVolume);
+ $('sound-test')?.toggleAttribute('disabled', !preferences.soundEffects);
+}
+listen('soundEffects-setting', 'change', event => { preferences.soundEffects = event.target.selected === true || event.target.checked === true; localSettings.update({ soundEffects: preferences.soundEffects }, 'preference changed'); savePreferences(); applySoundSettings(); if (preferences.soundEffects) playCue('toggle'); });
+listen('soundVolume-setting', 'input', event => { preferences.soundVolume = Math.max(0, Math.min(100, Math.round(Number(event.target.value) || 0))); applySoundSettings(); });
+listen('soundVolume-setting', 'change', () => { savePreferences(); playCue('toggle'); });
+listen('sound-test', 'click', () => playCue('celebration'));
+listen('sound-reset', 'click', () => { preferences.soundEffects = true; preferences.soundVolume = 60; savePreferences(); applySoundSettings(); toast('Sound effects reset.', {}, 'toggle'); });
 // The setup guide applies a preference through the same path as the Settings controls above.
 function setPreference(key,value){preferences[key]=value;localSettings.update({[key]:value},'preference changed');savePreferences();applyPreferences();}
 let openSetupGuide=()=>{};
@@ -640,8 +787,9 @@ function initializeArchive() {
  const days=control('input');days.id='history-days';days.type='number';days.min='1';days.max='36500';days.value='365';days.hidden=true;days.label=t('Custom days');days.setAttribute('aria-label',t('Custom days'));
  retention.onchange=()=>{historyRetentionDraft=true;historyRetentionRevision++;days.hidden=retention.value!=='custom';};days.oninput=days.onchange=()=>{historyRetentionDraft=true;historyRetentionRevision++;};
  $('history-actions').append(retention,days,button('history-retention-apply','Apply',()=>{const value=retention.value==='forever'?null:retention.value==='custom'?Number(days.value):Number(retention.value);if(value!==null&&(!Number.isInteger(value)||value<1||value>36500))return showError(t('Enter 1 to 36500 days.'));const editRevision=historyRetentionRevision;archiveMutation('history',async()=>{const result=await api.setHistoryRetention(value);if(historyRetentionRevision===editRevision)historyRetentionDraft=false;return result;});}));
- $('recycle-actions').append(button('select-recycled','Select all visible',()=>{for(const el of $('recycle-list').querySelectorAll('md-checkbox:not([disabled])')) {el.checked=true;recycledSelection.add(el.value);}renderAvailability();}),button('restore-recycled','Restore selected',()=>restoreRecycledSelection()),button('empty-recycle','Empty Recycle Bin',async()=>{if(await superConfirm('desktop.empty-recycle-bin'))archiveMutation('recycle',()=>api.emptyRecycleBin());}));
+ $('recycle-actions').append(button('select-recycled','Select all visible',()=>{for(const el of $('recycle-list').querySelectorAll('md-checkbox:not([disabled])')) {el.checked=true;recycledSelection.add(el.value);}renderAvailability();archiveBulk.recycle?.refresh();}),button('restore-recycled','Restore selected',()=>restoreRecycledSelection()),button('empty-recycle','Empty Recycle Bin',async()=>{if(await superConfirm('desktop.empty-recycle-bin'))archiveMutation('recycle',()=>api.emptyRecycleBin());}));
  historySearch=createScopedSearch($('history-search-host'),t,()=>renderArchive('history'));recycleSearch=createScopedSearch($('recycle-search-host'),t,()=>renderArchive('recycle'));
+ mountArchiveChrome();
  $('transport-mode').onchange=()=>{$('private-git-fields').hidden=$('transport-mode').value!=='privateGit';};
 }
 async function archiveMutation(kind,task) {const result=await run('Working…',task,'Saved.');if(result?.ok){recycledSelection.clear();await loadArchive(kind);}}
@@ -661,10 +809,84 @@ async function renderArchive(kind) {
  const generation=++archiveRenders[kind];$('view-'+kind).dataset.archiveRender=String(generation);const result=await (kind==='history'?historySearch:recycleSearch).filterWithOutcome(archiveRows[kind]);if(generation!==archiveRenders[kind]||result.outcome==='superseded')return 'superseded';const rows=result.rows;const fragment=document.createDocumentFragment();
  if(kind==='history')historySelection.beginRows(rows);
  for(const version of rows) {const row=document.createElement('tr');const cell=text=>{const el=document.createElement('td');el.textContent=text;row.append(el);return el;};
- const selection=cell('');if(kind==='history')historySelection.bindRow(row,version,selection);if(kind==='recycle'){const check=control('input',{type:'checkbox'});check.type='checkbox';check.value=version.id;check.checked=recycledSelection.has(version.id);check.disabled=!version.isAvailable;check.setAttribute('aria-label',t('Select')+' '+version.path);check.onchange=()=>{check.checked?recycledSelection.add(version.id):recycledSelection.delete(version.id);renderAvailability();};selection.append(check);}
+ const selection=cell('');if(kind==='history')historySelection.bindRow(row,version,selection);if(kind==='history'){const check=control('input',{type:'checkbox'});check.type='checkbox';check.value=version.id;check.checked=historyBulk.has(version.id);check.setAttribute('aria-label',t('Select')+' '+version.path);bindBulkCheckbox(check,'history');selection.append(check);}if(kind==='recycle'){const check=control('input',{type:'checkbox'});check.type='checkbox';check.value=version.id;check.checked=recycledSelection.has(version.id);check.disabled=!version.isAvailable;check.setAttribute('aria-label',t('Select')+' '+version.path);bindBulkCheckbox(check,'recycle');selection.append(check);}
  cell(version.path);cell(formatDate(version.timestampUtc));cell(version.isDirectory?t('Folder'):formatBytes(version.length));cell(t(version.isAvailable?'Available':'Encrypted data unavailable'));const actions=cell('');
  if(kind==='history'){const restore=control('button');restore.className='button small';restore.textContent=t('Restore as new version');restore.disabled=busy||!version.isAvailable;restore.dataset.archiveRestore='true';restore.dataset.versionId=version.id;restore.dataset.available=String(version.isAvailable);restore.onclick=()=>restoreHistoryVersion(version.id);actions.append(restore);}fragment.append(row);}
- $(kind+'-list').replaceChildren(fragment);if(kind==='history')historySelection.refresh();setArchiveMessage(kind,rows.length?'':'No matching entries.');renderAvailability();$('view-'+kind).dataset.archiveRendered=String(generation);return result.outcome;
+ $(kind+'-list').replaceChildren(fragment);if(kind==='history')historySelection.refresh();setArchiveMessage(kind,rows.length?'':'No matching entries.');renderAvailability();$('view-'+kind).dataset.archiveRendered=String(generation);updateArchiveStatistics(kind,rows);(kind==='history'?historyBulk:recycleBulk).prune(bulkOrderedIds(kind));archiveBulk[kind]?.refresh();return result.outcome;
+}
+
+/** Search rows, statistics and bulk toolbars for history and the Recycle Bin, and the Manage vaults section. */
+function mountArchiveChrome(){
+ // The search row and the collection statistics fold away. Statistics describe the list, so they start closed; the search stays open and, when it is folded, still says that a filter is excluding rows.
+ for(const kind of ['history','recycle']){
+  const searchHost=$(kind+'-search-host'),filters=createCollapsibleSection({doc:document,id:'desktop-'+kind+'-filters',title:t('Search and filters'),storage:localStorage,open:true});
+  searchHost.before(filters.root);filters.body.append(searchHost);dictionary.set(filters.toggle,'Search and filters');
+  const stats=createCollapsibleSection({doc:document,id:'desktop-'+kind+'-statistics',title:t('Statistics'),storage:localStorage,open:false});
+  filters.root.after(stats.root);dictionary.set(stats.toggle,'Statistics');archiveFilters[kind]=filters;archiveStats[kind]=stats;
+  // Select shown, invert, clear and an exact count, with Export selected for what is ticked.
+  const bulkHost=document.createElement('div');bulkHost.className='bulk-host';$(kind+'-actions').after(bulkHost);
+  archiveBulk[kind]=mountBulkBar({doc:document,host:bulkHost,labels:bulkLabels(en=>t(en)),noun:t(kind==='history'?'versions':'deleted entries'),selection:bulkSelectionFor(kind),getShown:()=>bulkOrderedIds(kind),onChange:()=>syncBulkChecks(kind),actions:[{label:t('Export selected'),run:()=>exportSelectedArchive(kind)}]});
+ }
+ mountVaultBulk();
+}
+
+/** Ids of the checkboxes a list shows right now, in display order. */
+function bulkOrderedIds(kind){return [...(kind==='vault'?document.querySelector('.vault-bulk-list'):$(kind+'-list'))?.querySelectorAll('input[data-bulk]')||[]].map(input=>input.value);}
+// A hoisted declaration: initializeArchive() runs before this point in the file.
+function bulkSelectionFor(kind){return kind==='history'?historyBulk:kind==='recycle'?recycleBulk:vaultBulk;}
+function syncBulkChecks(kind){const selection=bulkSelectionFor(kind);for(const input of (kind==='vault'?document.querySelector('.vault-bulk-list'):$(kind+'-list'))?.querySelectorAll('input[data-bulk]')||[])input.checked=selection.has(input.value);}
+/** One checkbox for a bulk list: click toggles it, Shift+click selects the range from the last one, and the toolbar count follows. */
+function bindBulkCheckbox(input,kind){
+ input.dataset.bulk='true';const selection=bulkSelectionFor(kind);
+ const settle=()=>{if(kind==='recycle')renderAvailability();archiveBulk[kind]?.refresh();};
+ input.addEventListener('click',event=>{if(!event.shiftKey)return;event.preventDefault();selection.range(bulkOrderedIds(kind),input.value);syncBulkChecks(kind);settle();});
+ input.addEventListener('change',()=>{selection.toggle(input.value,input.checked);settle();});
+}
+async function exportSelectedArchive(kind){
+ const ids=new Set(bulkSelectionFor(kind).list(bulkOrderedIds(kind)));
+ const rows=(archiveRows[kind]||[]).filter(row=>ids.has(row.id)).map(row=>({id:row.id,path:row.path,savedUtc:row.timestampUtc,bytes:row.isDirectory?null:row.length,isDirectory:Boolean(row.isDirectory),isAvailable:Boolean(row.isAvailable)}));
+ if(!rows.length)return;
+ await exportText({name:kind+'-selected.json',mime:'application/json',content:JSON.stringify(rows,null,2)});
+ archiveBulk[kind]?.showReport(t('Exported selected')+': '+rows.length+' '+t(kind==='history'?'versions':'deleted entries'));
+}
+/** Why a vault cannot be removed, or null when it can. Reasons are reported, never hidden. */
+function vaultRemovalReason(session){
+ if(!session)return t('Only a locked vault that is not mounted can be removed');
+ if(session.sessionId==='main')return t('The main vault cannot be removed');
+ if(session.recoveryRequired)return t('Finish the recovery first');
+ if(!session.locked||session.mounted||session.operation)return t('Only a locked vault that is not mounted can be removed');
+ return null;
+}
+async function removeSelectedVaults(){
+ if(busy||fileDetails?.busy||!api?.removeSession)return;
+ const ids=vaultBulk.list(bulkOrderedIds('vault'));if(!ids.length)return;
+ const sessions=new Map((state?.sessions||[]).map(session=>[session.sessionId,session]));
+ const nameOf=id=>vaultSessionChoices(state,t).find(choice=>choice.id===id)?.label||id;
+ let summary='';
+ const outcome=await run('Working…',async()=>{const result=await runBulk(ids,id=>api.removeSession(id),{skip:id=>vaultRemovalReason(sessions.get(id))});summary=summarizeBulk(result,{noun:t('vaults'),describe:nameOf,labels:bulkLabels(en=>t(en))});vaultBulk.clear();});
+ archiveBulk.vault?.showReport(summary);
+ if(outcome?.ok&&summary)toast(summary);
+}
+/** Builds the Manage vaults section: a list with a checkbox per vault and the shared bulk toolbar. */
+function mountVaultBulk(){
+ const bar=document.querySelector('.vault-session-bar');if(!bar||bar.querySelector('.vault-bulk-list'))return;
+ const section=createCollapsibleSection({doc:document,id:'desktop-vault-manage',title:t('Manage vaults'),storage:localStorage,open:false});dictionary.set(section.toggle,'Manage vaults');
+ const list=document.createElement('div');list.className='vault-bulk-list';list.setAttribute('role','group');list.setAttribute('aria-label',t('Vault sessions'));section.body.append(list);bar.append(section.root);
+ archiveBulk.vault=mountBulkBar({doc:document,host:section.body,labels:bulkLabels(en=>t(en)),noun:t('vaults'),selection:vaultBulk,getShown:()=>bulkOrderedIds('vault'),onChange:()=>syncBulkChecks('vault'),actions:[{label:t('Remove selected locked vaults'),run:removeSelectedVaults}]});
+ renderVaultBulkList();
+}
+function renderVaultBulkList(){
+ const list=document.querySelector('.vault-bulk-list');if(!list)return;
+ const choices=vaultSessionChoices(state,t),signature=JSON.stringify(choices);
+ if(list.dataset.choices!==signature){list.replaceChildren(...choices.map(choice=>{const label=document.createElement('label'),input=control('input',{type:'checkbox'}),name=document.createElement('span');input.type='checkbox';input.value=choice.id;input.checked=vaultBulk.has(choice.id);input.setAttribute('aria-label',t('Select')+' '+choice.label);name.textContent=choice.label;label.append(input,name);bindBulkCheckbox(input,'vault');return label;}));list.dataset.choices=signature;}
+ vaultBulk.prune(bulkOrderedIds('vault'));archiveBulk.vault?.refresh();
+}
+
+/** Refreshes the statistics panel and the folded-filter disclosure after every history or Recycle Bin render. */
+function updateArchiveStatistics(kind,rows){
+ const all=archiveRows[kind]||[],size=list=>list.reduce((sum,row)=>sum+(row.isDirectory?0:Number(row.length)||0),0),available=all.filter(row=>row.isAvailable).length;
+ if(archiveStats[kind])renderStatistics(document,archiveStats[kind].body,[[t('Entries'),all.length],[t('Shown'),rows.length],[t('Total size'),formatBytes(size(all))],[t('Available'),available],[t('Unavailable'),all.length-available]]);
+ archiveFilters[kind]?.setActive(activeFilterText(t('Filter active'),rows.length,all.length));
 }
 
 async function restoreHistoryVersion(id) {
@@ -727,11 +949,12 @@ function addFeatureRoot(id,label,labelYue) {
 async function mountFeature(id,label,labelYue,loader,mount) {
  const root=addFeatureRoot(id,label,labelYue);
  const content=document.createElement('div');content.className='feature-content';root.append(content);
- const load=async()=>{const mountTiming=rendererTiming.begin('feature-mount',id);content.replaceChildren();try{const module=await loader();for(const href of ({converter:['./features/converter/converter.css'],'server-manager':['./features/server-manager/server-manager.css'],personalization:['./features/personalization/personalization.css','./features/personalization/appearance.css'],access:['./features/access/access.css'],ollama:['./features/ollama/ollama.css'],onboarding:['./features/onboarding/onboarding.css']}[id]||[])){if(!document.querySelector('link[data-feature-style=\"'+href+'\"]')){const link=document.createElement('link');link.rel='stylesheet';link.href=href;link.dataset.featureStyle=href;document.head.append(link);}}const instance=await mount(module,content);featureMounts.set(id,instance);rendererTiming.finish(mountTiming,'settled');if(id==='documentation'&&instance?.ready&&view===id)void instance.ready.then(outcome=>observeViewReady(id,outcome));}catch(error){rendererTiming.finish(mountTiming,'failed');if(view===id)void observeViewReady(id,'failed');const message=document.createElement('p');message.setAttribute('role','status');message.textContent=`${t('Feature unavailable')}: ${error.message}`;const retry=document.createElement('md-outlined-button');retry.textContent=t('Refresh');retry.onclick=load;content.append(message,retry);}};
+ const load=async()=>{const mountTiming=rendererTiming.begin('feature-mount',id);content.replaceChildren();try{const module=await loader();for(const href of ({converter:['./features/converter/converter.css'],'server-manager':['./features/server-manager/server-manager.css','./features/studio-kit.css'],personalization:['./features/personalization/personalization.css','./features/personalization/appearance.css'],access:['./features/access/access.css'],ollama:['./features/ollama/ollama.css'],onboarding:['./features/onboarding/onboarding.css'],quicktype:['./features/studio-kit.css'],'virtual-disks':['./features/studio-kit.css'],'base64-tools':['./features/toolbox/toolbox.css'],'live-charts':['./features/toolbox/toolbox.css'],'screen-recording':['./features/toolbox/toolbox.css'],drawing:['./features/toolbox/toolbox.css'],tools:['./features/local-tools/local-tools.css']}[id]||[])){if(!document.querySelector('link[data-feature-style=\"'+href+'\"]')){const link=document.createElement('link');link.rel='stylesheet';link.href=href;link.dataset.featureStyle=href;document.head.append(link);}}const instance=await mount(module,content);featureMounts.set(id,instance);rendererTiming.finish(mountTiming,'settled');if(id==='documentation'&&instance?.ready&&view===id)void instance.ready.then(outcome=>observeViewReady(id,outcome));}catch(error){rendererTiming.finish(mountTiming,'failed');if(view===id)void observeViewReady(id,'failed');const message=document.createElement('p');message.setAttribute('role','status');message.textContent=`${t('Feature unavailable')}: ${error.message}`;const retry=document.createElement('md-outlined-button');retry.textContent=t('Refresh');retry.onclick=load;content.append(message,retry);}};
  await load();
 }
+function feedToolboxCharts(){const charts=featureMounts.get('live-charts');if(!charts)return;if(!state||state.locked)return;const files=currentFiles();if(Array.isArray(files)&&files.every(file=>Number.isFinite(file.size)))charts.reportUsedBytes(files.reduce((sum,file)=>sum+file.size,0));}
 function renderOperations() {
- const host=$('active-operations');if(!host)return;const operations=state?.operations||[];const rows=Array.isArray(operations)?operations:Object.values(operations);const signature=JSON.stringify(rows);
+ const host=$('active-operations');if(!host)return;const operations=state?.operations||[];const rows=Array.isArray(operations)?operations:Object.values(operations);featureMounts.get('live-charts')?.reportOperations(rows);feedToolboxCharts();const signature=JSON.stringify(rows);
  if(host.dataset.signature===signature)return;host.dataset.signature=signature;host.replaceChildren();
  for(const operation of rows){const id=operation.operationId||operation.id,known=operationNotifications.has(id);const notification=operationNotification(operation,{known});if(notification&&foundation){if(known)foundation.updateNotification(operationNotifications.get(id),notification);else operationNotifications.set(id,foundation.notify(notification));}const row=document.createElement('div');row.className='active-operation';const label=document.createElement('span');label.textContent=`${operation.label||operation.type||operation.operationId||operation.id}: ${operation.state||operation.status||''}${Number.isFinite(operation.progress)?` · ${operation.progress}%`:''}${operation.error?` · ${operation.error}`:''}`;row.append(label);
  if(!['completed','cancelled','failed'].includes(operation.state||operation.status)&&api?.cancelOperation){const cancel=document.createElement('md-text-button');cancel.textContent=t('Cancel operation');cancel.onclick=()=>api.cancelOperation(operation.operationId||operation.id).catch(showError);row.append(cancel);}host.append(row);}for(const id of operationNotifications.keys())if(!rows.some(row=>(row.operationId||row.id)===id))operationNotifications.delete(id);
@@ -740,6 +963,8 @@ function workspaceCommands() {
  const command=(id,label,run)=>({id,label:{en:label,yue:cantonese[label]||enhancedLabels[label]||label},run});
  const commands=[command('vault:create','Create a drive',()=>openVaultDialog('create')),command('vault:unlock','Unlock existing drive',()=>openVaultDialog('unlock')),command('vault:lock','Lock drive',()=>$('lock-button').click()),command('vault:import','Import files',importFiles),command('vault:sync','Sync now',()=>$('sync-button').click()),command('file:open','Open',openSelected),command('file:export','Export copy',()=>$('export-button').click()),command('file:offline','Keep offline',()=>$('offline-button').click()),command('file:release','Remove offline copy',()=>$('release-button').click()),command('history:save','Save version now',()=>$('save-version').click()),command('settings:vocabulary','Your vocabulary',()=>{foundation.shell.activate('settings');$('vocabulary-label').focus();})];
  for(const key of ['theme','language','emoji','funnyEnglish','funnyCantonese']){const field=$(`${key}-setting`);const label=field.getAttribute('aria-label')||key;commands.push({id:`settings:${key}`,label:{en:label,yue:cantonese[label]||label},description:{en:'Application preferences',yue:'程式偏好設定'},group:{en:'Settings',yue:'設定'},control:{type:controlKind(field)==='select'?'select':['switch','checkbox'].includes(controlKind(field))?'switch':'range',min:Number(field.min)||0,max:Number(field.max)||100,options:controlKind(field)==='select'?[...field.options].map(option=>({value:option.value,label:{en:option.textContent,yue:cantonese[option.textContent]||option.textContent}})):undefined,get:()=>preferences[key],set:value=>{preferences[key]=value;savePreferences();applyPreferences();}},reveal:()=>{foundation.shell.activate('settings');field.scrollIntoView({block:'center'});field.focus();}});}
+ // Every personalization setting is reachable from the palette, whichever Personalization tab is showing.
+ commands.push(...personalizationSettingCommands({translate:text=>translateWorkspace(text,{language:'yue'}),open:(tab,label)=>{foundation.model.openTab({id:'personalization',label:canonicalViewLabels.personalization});foundation.shell.activate('personalization');const mounted=featureMounts.get('personalization');mounted?.open?.(tab);queueMicrotask(()=>{const root=document.getElementById('view-personalization');const wanted=t(label);const target=[...root?.querySelectorAll(CONTROL_SELECTOR+',input,select')||[]].find(node=>[node.getAttribute('aria-label'),node.label].includes(wanted)||[node.getAttribute('aria-label'),node.label].includes(label));target?.scrollIntoView?.({block:'center'});target?.focus?.();});}}));
  commands.push({id:'vault:force-lock',label:{en:'Force lock',yue:'強制鎖定'},disabled:!api?.forceLock,run:async()=>{if(await superConfirm('desktop.force-lock'))return run('Locking drive…',()=>api.forceLock(forceLockOptions()));}},{id:'application:quit',label:{en:'Quit application',yue:'結束程式'},shortcut:'Control+q',run:()=>quitApplication()});
  return commands;
 }
@@ -762,8 +987,34 @@ function refreshPaletteInventory() {
 }
 function guardControl(control,action){const access=featureMounts.get('access');return access?access.guardControl(ensureLockId(control),control,action):action();}
 function ensureLockId(element){if(element.dataset.lockId)return element.dataset.lockId;const parts=[];for(let node=element;node&&node!==document.body;node=node.parentElement){parts.unshift(node.id?`id:${node.id}`:`${node.tagName.toLowerCase()}:${[...node.parentElement.children].indexOf(node)}`);if(node.id)break;}const id=parts.join('/').slice(0,180);element.dataset.lockId=id;return id;}
+// Live status lines for the Home cards, built from state the app already holds. A card without data shows no status.
+function homeStatusRows() {
+ const pair=value=>({en:value,yue:cantonese[value]||value});
+ const rows={};
+ if(!state)return rows;
+ rows.drive={text:pair(mountState()),tone:state.locked?'off':state.mounted?'ok':'warn'};
+ if(!state.locked){
+  const offline=Number(state.offlineCount??currentFiles().filter(file=>file.offline).length)||0;
+  rows.offline={text:{en:`${offline} ${offline===1?'file':'files'} kept offline`,yue:`${offline} 個離線檔案`},tone:offline?'ok':'off'};
+  const versions=Number(state.history?.versionCount);
+  if(Number.isFinite(versions))rows.history={text:{en:`${versions} ${versions===1?'version':'versions'}`,yue:`${versions} 個版本`},tone:'ok'};
+ }
+ const last=state.sync?.lastSync?formatDate(state.sync.lastSync):'';
+ rows.storage=state.sync?.error?{text:pair('Synchronization failed'),tone:'warn'}:last?{text:{en:`Last synchronized ${last}`,yue:`上次同步 ${last}`},tone:'ok'}:{text:pair('Not synced yet'),tone:'off'};
+ return rows;
+}
+// Latest real events: saved versions from history, the last synchronization and completed notifications.
+async function homeActivityRows() {
+ const rows=[];
+ if(state&&!state.locked&&api?.history){
+  try{const versions=await api.history();if(Array.isArray(versions))for(const version of versions.slice(0,40))if(version?.timestampUtc&&version.path)rows.push({time:version.timestampUtc,what:String(version.path),kind:{en:version.isDirectory?'Folder version saved':'Version saved',yue:version.isDirectory?'已儲存資料夾版本':'已儲存版本'}});}catch{}
+ }
+ if(state?.sync?.lastSync)rows.push({time:state.sync.lastSync,what:{en:'Encrypted storage synchronized',yue:'加密儲存已同步'},kind:{en:'Synchronization',yue:'同步'}});
+ for(const note of foundation?.model.getState().notifications||[])if(note.level==='success'&&note.createdAt&&note.title)rows.push({time:note.createdAt,what:String(note.title).slice(0,200),kind:{en:'Completed',yue:'已完成'}});
+ return rows.filter(row=>!Number.isNaN(new Date(row.time).getTime())).sort((a,b)=>new Date(b.time)-new Date(a.time)).slice(0,6);
+}
 function setupEnhancedWorkspace() {
- const main=document.querySelector('mfe-main-workspace');foundation=mountSurfaceFoundation({host:main,before:main.firstChild,storage:localStorage,language:preferences.language,tabs:[{id:'drive',label:'My drive',labelYue:'我嘅磁碟'},{id:'offline',label:'Available offline',labelYue:'可離線使用'},{id:'history',label:'History',labelYue:'歷史記錄'},{id:'recycle',label:'Recycle Bin',labelYue:'資源回收筒'},{id:'settings',label:'Settings',labelYue:'設定'},{id:'help',label:'How it works',labelYue:'使用方法'}],onActivate:changeView,commands:workspaceCommands(),onExport:exportText,renderText:t,onNotification:(record,options)=>narrationEvents.notify(record,options),onQuit:()=>quitApplication(),onNotificationAction:async action=>{if(action==='retry-files'){filePageRevision=null;return loadFilePage();}if(action.startsWith('cancel-operation:'))return api.cancelOperation(action.slice('cancel-operation:'.length));if(action==='open-operations'){foundation.shell.activate('drive');$('active-operations').scrollIntoView({block:'center'});return;}throw Error('This recovery action is no longer available.');}});
+ const main=document.querySelector('mfe-main-workspace');foundation=mountSurfaceFoundation({host:main,before:main.firstChild,storage:localStorage,sounds,language:preferences.language,tabs:[{id:'drive',label:'My drive',labelYue:'我嘅磁碟'},{id:'offline',label:'Available offline',labelYue:'可離線使用'},{id:'history',label:'History',labelYue:'歷史記錄'},{id:'recycle',label:'Recycle Bin',labelYue:'資源回收筒'},{id:'settings',label:'Settings',labelYue:'設定'},{id:'help',label:'How it works',labelYue:'使用方法'}],onActivate:changeView,homeStatus:homeStatusRows,homeActivity:homeActivityRows,commands:workspaceCommands(),onExport:exportText,renderText:t,onNotification:(record,options)=>narrationEvents.notify(record,options),onQuit:()=>quitApplication(),onNotificationAction:async action=>{if(action==='retry-files'){filePageRevision=null;return loadFilePage();}if(action.startsWith('cancel-operation:'))return api.cancelOperation(action.slice('cancel-operation:'.length));if(action==='open-operations'){foundation.shell.activate('drive');$('active-operations').scrollIntoView({block:'center'});return;}throw Error('This recovery action is no longer available.');}});
  // Offline filtering reuses the drive panel and its persisted layout.
  for(const id of ['drive','history','recycle','settings','help'])foundation.registerPanel(id,$(`view-${id}`));
  for(const [id,label]of Object.entries(canonicalViewLabels))foundation.model.registerCanonicalTab(id,label);
@@ -776,10 +1027,25 @@ function setupEnhancedWorkspace() {
  const stopAuthenticatorFocus=api?.onFeatureEvent?.('access',event=>{if(event?.type!=='focusAuthenticator')return;foundation.model.openTab({id:'access',label:canonicalViewLabels.access});foundation.shell.activate('access');featureMounts.get('access')?.showAuthenticator?.();});if(stopAuthenticatorFocus)workspaceDisposers.push(stopAuthenticatorFocus);
  const stopAccessibility=api?.onFeatureEvent?.('personalization',event=>{if(event.type==='accessibilityState')acceptAccessibility(event.state);});if(stopAccessibility)workspaceDisposers.push(stopAccessibility);
  const openPalette=foundation.palette.open.bind(foundation.palette);foundation.palette.open=()=>{refreshPaletteInventory();openPalette();};const originalChangeButtons=[...document.querySelectorAll('[data-view]')];for(const button of originalChangeButtons)button.addEventListener('click',()=>{foundation.model.openTab({id:button.dataset.view,label:canonicalViewLabels[button.dataset.view]||button.dataset.view});foundation.shell.activate(button.dataset.view);});
+ chrome=mountWorkspaceChrome({doc:document,translate:t,getLanguage:()=>preferences.language,hooks:{
+  selectSession:id=>{const picker=$('vault-session');picker.value=id;picker.dispatchEvent(new Event('change'));},
+  addSession:()=>changeVaultSession('add'),removeSession:()=>changeVaultSession('remove',state?.sessionId),
+  onScopeChange:()=>{renderedFilesKey='';renderFiles();renderAvailability();},
+  copyText:value=>navigator.clipboard.writeText(value),toast:message=>toast(message),
+  openView:id=>{foundation.model.openTab({id,label:canonicalViewLabels[id]||id});foundation.shell.activate(id);},
+  listVersions:id=>api?.listVersions?api.listVersions(id):Promise.resolve([]),
+  backupStatus:()=>api?.registryStorageStatus?api.registryStorageStatus():Promise.resolve(null),
+  formatBytes,getTextScale:()=>shellPreferences.textScale/100
+ }});
+ unlockCard=mountUnlockCard({doc:document,translate:t,hooks:{isBusy:()=>busy,chooseKeyFile:()=>api.chooseKeyFile(),unlock:unlockInline}});
+ foundation.chrome=chrome;foundation.updateChrome=updateChrome;foundation.refreshChrome=()=>{unlockCard?.update(state);chrome?.refreshOverflow();};
+ workspaceDisposers.push(subscribeLanguage(()=>{updateChrome();syncShellControls();}));
+ applyShellPreferences(document.documentElement,shellPreferences);syncShellControls();chrome.refreshViewport();
+ workspaceDisposers.push(()=>{chrome?.destroy();unlockCard?.destroy();});
  const forceLockButton=document.createElement('md-outlined-button');forceLockButton.id='force-lock-button';forceLockButton.textContent=t('Force lock');forceLockButton.onclick=async()=>{if(await superConfirm('desktop.force-lock'))return run('Locking drive…',()=>api.forceLock(forceLockOptions()));};$('lock-button').after(forceLockButton);
- const fileHost=document.createElement('mfe-search');fileHost.setAttribute('label',t('Search files'));fileHost.setAttribute('scope','drive-files');fileHost.language=preferences.language;const old=$('file-search');old.closest('.search-box').hidden=true;old.closest('.search-box').after(fileHost);fileSearch=fileHost;fileHost.addEventListener('search-change',()=>{old.value=fileHost.query;renderFiles();});
+ const fileHost=document.createElement('mfe-search');fileHost.setAttribute('data-compact','');fileHost.setAttribute('label',t('Search files'));fileHost.setAttribute('scope','drive-files');fileHost.language=preferences.language;const old=$('file-search');old.closest('.search-box').hidden=true;old.closest('.search-box').after(fileHost);fileSearch=fileHost;fileHost.addEventListener('search-change',()=>{old.value=fileHost.query;renderFiles();});
  const pager=document.createElement('div');pager.className='file-page-actions';const more=document.createElement('md-outlined-button');more.id='load-more-files';more.textContent=t('Load more files');more.hidden=true;more.onclick=()=>loadFilePage(true);const retry=document.createElement('md-text-button');retry.id='retry-files';retry.textContent=t('Retry loading files');retry.onclick=()=>{filePageRevision=null;loadFilePage();};pager.append(more,retry);$('file-list').closest('.table-scroll').after(pager);
- const operations=document.createElement('section');operations.id='active-operations';operations.setAttribute('aria-label',t('Operations'));operations.setAttribute('aria-live','polite');$('view-drive').prepend(operations);
+ const operations=$('active-operations')||document.createElement('section');operations.id='active-operations';operations.setAttribute('aria-label',t('Operations'));operations.setAttribute('aria-live','polite');if(!operations.isConnected)$('view-drive').prepend(operations);
  const details=addFeatureRoot('details','File details','檔案詳情');const detailContent=document.createElement('div');details.append(detailContent);fileDetails=mountFileDetails(detailContent,{translate:t,language:preferences.language,services:{listVersions:id=>api.listVersions?api.listVersions(id):api.history({entryId:id}),listActivity:query=>api.listActivity?api.listActivity(query):Promise.reject(new Error('File activity bridge is unavailable.')),previewVersion:id=>api.previewVersion(id),labelVersion:(id,label)=>api.labelVersion(id,label),exportVersion:id=>api.exportVersion(id),restoreVersion:async id=>{if(await superConfirm('desktop.restore-version'))return api.restoreVersion(id);}}});
  const detailsButton=document.createElement('md-text-button');detailsButton.id='file-details-button';detailsButton.textContent=t('File details');detailsButton.onclick=()=>{const file=currentFiles().find(f=>f.id===selected);if(file)fileDetails.selectEntry(file);foundation.model.openTab({id:'details',label:'File details'});foundation.shell.activate('details');};document.querySelector('.file-actions').append(detailsButton);
  const settingsSearch=control('input');settingsSearch.type='search';settingsSearch.id='settings-local-search';settingsSearch.setAttribute('aria-label',t('Search settings'));$('view-settings').children[0].after(settingsSearch);workspaceDisposers.push(attachEnhancedSearch(settingsSearch,$('view-settings')));
@@ -821,21 +1087,29 @@ function setupEnhancedWorkspace() {
  openSetupGuide=()=>{onboardingSession.open();openOnboarding();};
  const mounts=[
   mountFeature('onboarding','Setup guide','設定指南',()=>import('./features/onboarding/index.js'),(module,root)=>{const view=module.mountOnboarding(root,{session:onboardingSession,translate:source=>t(source),chooseFolder:kind=>api.chooseFolder(kind),getDefaults:()=>({cacheDir:state?.cacheDir||state?.defaults?.cacheDir||'',driveName:normalizeDriveName(state?.driveName)||normalizeDriveName(state?.defaults?.driveName)||''}),mountPairing:slot=>{let shown=null,gone=false;pairingModule.then(pairing=>{if(gone)return;shown=pairing.mountBrowserPairing(slot,{translate:source=>t(source),subscribeLanguage,request:async action=>{const value=await featureRequest('browser-pairing',action,{});if(action==='issue'&&value?.code)onboardingSession.notePairingCodeShown();return value;}});}).catch(()=>{});return {destroy(){gone=true;shown?.destroy();shown=null;}};}});return {render:view.render,setLanguage:()=>view.render(),destroy:()=>view.destroy()};}),
-  mountFeature('updates','Updates','更新',()=>import('./features/updates/index.js'),(module,root)=>module.mountUpdates(root,{translate:t,language:preferences.language,services:{request:async(action,payload)=>{if(action==='install'&&!await superConfirm('desktop.install-update'))return undefined;return featureRequest('updates',action,{...payload,language:preferences.language}).then(acceptUpdateSnapshot);},subscribe:callback=>api.onFeatureEvent?.('updates',event=>{acceptUpdateSnapshot(event);callback(event);})}})),
+  mountFeature('updates','Updates','更新',()=>import('./features/updates/index.js'),(module,root)=>module.mountUpdates(root,{translate:t,language:preferences.language,services:{request:async(action,payload)=>{if(action==='install'&&!await superConfirm('desktop.install-update'))return undefined;return featureRequest('updates',action,{...payload,language:preferences.language}).then(value=>{acceptUpdateSnapshot(value);reportUpdateTransition(value?.snapshot||value);return value;});},subscribe:callback=>api.onFeatureEvent?.('updates',event=>{acceptUpdateSnapshot(event);reportUpdateTransition(event?.snapshot||event);callback(event);})}})),
   mountFeature('workflow','Documents and downloads','文件與下載',()=>import('../shared/surface/workflow-tools.js'),(module,root)=>module.mount(root,{translate:t,services:{storage:localStorage,getLanguage:()=>preferences.language,request:(action,payload)=>featureRequest('workflow',action,payload),subscribe:callback=>api.onFeatureEvent?.('workflow',callback)}})),
   mountFeature('converter','Converter','轉換工具',()=>import('./features/converter/index.js'),(module,root)=>module.mountConverter(root,{translate:t,getLanguage:()=>preferences.language,services:{getLanguage:()=>preferences.language,converter:Object.fromEntries(['catalog','inspect','enqueue','list','control'].map(action=>[action,payload=>featureRequest('converter',action,payload)])),pickSources:()=>featureRequest('converter','pickSources'),pickDestination:payload=>featureRequest('converter','pickDestination',payload),pickDestinationDirectory:()=>featureRequest('converter','pickDestinationDirectory'),confirmOverwrite:()=>superConfirm('desktop.replace-converter-output')}})),
-  mountFeature('ollama','Local models','本機模型',()=>import('./features/ollama/index.js'),(module,root)=>module.mountOllama(root,{translate:t,getLanguage:()=>preferences.language,confirm:confirmFeature,services:{getLanguage:()=>preferences.language,ollama:{configureRuntime:payload=>featureRequest('ollama','configureRuntime',payload),request:(action,payload)=>featureRequest('ollama',action,payload),subscribe:callback=>api.onFeatureEvent?.('ollama',callback)}}})),
+  mountFeature('ollama','Local models','本機模型',()=>import('./features/ollama/index.js'),(module,root)=>module.mountOllama(root,{translate:t,getLanguage:()=>preferences.language,confirm:confirmFeature,services:{getLanguage:()=>preferences.language,ollama:{onInstallResult:result=>{const taker=getInstallTakeover();if(result.outcome==='installed-stopped')taker.success({what:'Ollama runtime'+(result.version?' '+result.version:''),where:t('Local Ollama runtime'),durationMs:result.durationMs});else if(result.outcome==='failed')taker.failure({what:'Ollama runtime'+(result.version?' '+result.version:''),command:'Install managed Ollama runtime',reason:String(result.reason||''),output:result.reason?[String(result.reason)]:[],durationMs:result.durationMs});},configureRuntime:payload=>featureRequest('ollama','configureRuntime',payload),request:(action,payload)=>featureRequest('ollama',action,payload),subscribe:callback=>api.onFeatureEvent?.('ollama',callback)}}})),
+  mountFeature('quicktype','Type generator','型別產生器',()=>import('./features/quicktype/index.js'),(module,root)=>module.mountQuicktype(root,{request:(action,payload)=>featureRequest('quicktype',action,payload),onExport:exportText,getLanguage:()=>preferences.language,subscribeLanguage})),
+  mountFeature('virtual-disks','Virtual disks','虛擬磁碟',()=>import('./features/virtual-disks/index.js'),(module,root)=>module.mountVirtualDisks(root,{request:(action,payload)=>featureRequest('virtual-disks',action,payload),confirmDestructive:(id,affected)=>superConfirm(id,affected),getLanguage:()=>preferences.language,subscribeLanguage})),
   mountFeature('access','Local access','本機存取',()=>import('./features/access/index.js'),async(module,root)=>{const access=module.mountAccess(root,{credentialStore,accessHost:accessBridge.accessHost,onDisplayNameRestore:accessBridge.restoreDisplayName,getLanguage:()=>preferences.language,translate:(source,options)=>t(source,options),schoolMode:()=>effectiveLocalSettings.school.enabled,onAuthenticatedChange:()=>{if(!featureMounts.get('access')?.authenticated){confirmationLifetime.cancel();settingsPrivateHistory.lock();}queueMicrotask(applyPreferences);},notify:featureNotify,dataPath:await featureRequest('access','dataFolder'),openDataFolder:()=>featureRequest('access','openDataFolder')});const keys=await featureRequest('access','credentialList',{prefix:'element-lock:'});await access.load((Array.isArray(keys)?keys:keys.keys||[]).map(key=>key.replace(/^element-lock:/,'')));access.bind(document.body);return access;}),
-  mountFeature('personalization','Personalization','個人化',()=>import('./features/personalization/index.js'),async(module,root)=>{await displayNameReady;return module.mountPersonalization(root,{recordDisplayName:accessBridge.recordDisplayName,store:localSettings,storage:localStorage,surfaceRoot:document.documentElement,isScreenReaderActive:()=>screenReaderActive!==false,onNarrationError:()=>narrationEvents.unavailable(),onLogoChange:value=>foundation.setLogo(value),isAllowed:target=>featureMounts.get('access')?.isAllowed?.(target)===true,onError:error=>featureNotify({title:t('Feature unavailable'),message:error?.message||String(error),level:'warning'}),attachSearch:attachEnhancedSearch,notify:featureNotify,onLock:target=>{const access=featureMounts.get('access');if(!access){featureNotify({title:t('Feature unavailable'),message:t('Local access is still loading. Open Settings, then Local access, and retry the lock action.'),level:'warning'});return;}foundation.model.openTab({id:'access',label:'Local access'});foundation.shell.activate('access');access.openLockWizard(ensureLockId(target),target);},historyCredentialStore,historyManager:settingsPrivateHistory,guidanceHelpBase:'../../docs/features/interface/settings-guidance.md',openGuidanceHelp:async descriptor=>{const catalog=await featureRequest('documentation','catalog');const row=resolveGuidanceArticle(catalog,descriptor,{language:preferences.language,restricted:effectiveLocalSettings.school.enabled});const reader=featureMounts.get('documentation');if(!row||!reader)throw Error('Guidance documentation is unavailable.');foundation.model.openTab({id:'documentation',label:'Documentation'});foundation.shell.activate('documentation');if(!reader.open(row.id,descriptor.concept))throw Error('Guidance documentation is unavailable.');},registerCommands:value=>foundation.registerCommands(value),confirmDestructive:confirmSettingsDestructive,resetSettings:async()=>{const signal=confirmationLifetime.signal,validate=()=>confirmationLifetime.validate(signal);validate();const result=await requestSuperConfirmation(document.body,{destructiveId:'desktop.reset-settings',getLanguage:()=>preferences.language,action:t('Reset website or application preferences'),affected:t('All local appearance, language, attention and schedule preferences'),translate:t,signal,confirmationOnly:true,validateConfirmation:validate});if(result.confirmed){accessBridge.resetPreferences({defaults:LOCAL_DEFAULTS,validate});}},normalizeImage:payload=>featureRequest('personalization','normalizeImage',payload),bundledFontBaseURL:new URL('./fonts/',import.meta.url).href,listFonts:()=>featureRequest('personalization','listFonts'),fontMetadata:payload=>featureRequest('personalization','fontMetadata',payload),cancelFontMetadata:payload=>featureRequest('personalization','cancelFontMetadata',payload),subscribeFontMetadata:callback=>api.onFeatureEvent?.('personalization',callback),verifySharedCredential:settingsIntegrity.verifySharedCredential,setSharedCredential:settingsIntegrity.setSharedCredential,fetchScheduleSource:(source,options)=>featureRequest('personalization','fetchScheduleSource',{source,id:options.id}),setScheduleCredential:(rule,token)=>featureRequest('personalization','setScheduleCredential',{id:rule.id,source:rule.source,token}),clearScheduleCredential:rule=>featureRequest('personalization','clearScheduleCredential',{id:rule.id,source:rule.source}),vocabulary:{isAuthenticated:()=>false,replace:value=>value},sharedSettings:{read:async()=>settingsIntegrity.fromHost(await featureRequest('personalization','sharedRead')),write:settingsIntegrity.writeSchool,subscribe:callback=>api.onFeatureEvent?.('personalization',event=>{if(event.type==='sharedSettings')callback(settingsIntegrity.fromHost(event.value));})},onChange:value=>{const scope=preferenceChangeScope(effectiveLocalSettings,value);effectiveLocalSettings=value;const startup=startupState();if(startup.quiet||startup.school?.enabled)startupPresentation.dismiss();let changed=false;for(const key of ['language','theme','emoji','funnyEnglish','funnyCantonese'])if(value[key]!==undefined&&preferences[key]!==value[key]){preferences[key]=value[key];changed=true;}if(changed)savePreferences();if(scope==='full')applyPreferences();else if(scope==='appearance')applyThemeOnly();}});}),
+  mountFeature('personalization','Personalization','個人化',()=>import('./features/personalization/index.js'),async(module,root)=>{await displayNameReady;return module.mountPersonalization(root,{recordDisplayName:accessBridge.recordDisplayName,motionController,takeoverPreference,openMotionEditor:()=>{foundation.model.openTab({id:'personalization',label:'Personalization'});foundation.shell.activate('personalization');featureMounts.get('personalization')?.open?.('appearance');},store:localSettings,storage:localStorage,surfaceRoot:document.documentElement,isScreenReaderActive:()=>screenReaderActive!==false,onNarrationError:()=>narrationEvents.unavailable(),onLogoChange:value=>foundation.setLogo(value),isAllowed:target=>featureMounts.get('access')?.isAllowed?.(target)===true,onError:error=>featureNotify({title:t('Feature unavailable'),message:error?.message||String(error),level:'warning'}),attachSearch:attachEnhancedSearch,notify:featureNotify,onLock:target=>{const access=featureMounts.get('access');if(!access){featureNotify({title:t('Feature unavailable'),message:t('Local access is still loading. Open Settings, then Local access, and retry the lock action.'),level:'warning'});return;}foundation.model.openTab({id:'access',label:'Local access'});foundation.shell.activate('access');access.openLockWizard(ensureLockId(target),target);},historyCredentialStore,historyManager:settingsPrivateHistory,guidanceHelpBase:'../../docs/features/interface/settings-guidance.md',openGuidanceHelp:async descriptor=>{const catalog=await featureRequest('documentation','catalog');const row=resolveGuidanceArticle(catalog,descriptor,{language:preferences.language,restricted:effectiveLocalSettings.school.enabled});const reader=featureMounts.get('documentation');if(!row||!reader)throw Error('Guidance documentation is unavailable.');foundation.model.openTab({id:'documentation',label:'Documentation'});foundation.shell.activate('documentation');if(!reader.open(row.id,descriptor.concept))throw Error('Guidance documentation is unavailable.');},registerCommands:value=>foundation.registerCommands(value),confirmDestructive:confirmSettingsDestructive,resetSettings:async()=>{const signal=confirmationLifetime.signal,validate=()=>confirmationLifetime.validate(signal);validate();const result=await requestSuperConfirmation(document.body,{destructiveId:'desktop.reset-settings',getLanguage:()=>preferences.language,action:t('Reset website or application preferences'),affected:t('All local appearance, language, attention and schedule preferences'),translate:t,signal,confirmationOnly:true,validateConfirmation:validate});if(result.confirmed){accessBridge.resetPreferences({defaults:LOCAL_DEFAULTS,validate});}},normalizeImage:payload=>featureRequest('personalization','normalizeImage',payload),bundledFontBaseURL:new URL('./fonts/',import.meta.url).href,listFonts:()=>featureRequest('personalization','listFonts'),fontMetadata:payload=>featureRequest('personalization','fontMetadata',payload),cancelFontMetadata:payload=>featureRequest('personalization','cancelFontMetadata',payload),subscribeFontMetadata:callback=>api.onFeatureEvent?.('personalization',callback),verifySharedCredential:settingsIntegrity.verifySharedCredential,setSharedCredential:settingsIntegrity.setSharedCredential,fetchScheduleSource:(source,options)=>featureRequest('personalization','fetchScheduleSource',{source,id:options.id}),setScheduleCredential:(rule,token)=>featureRequest('personalization','setScheduleCredential',{id:rule.id,source:rule.source,token}),clearScheduleCredential:rule=>featureRequest('personalization','clearScheduleCredential',{id:rule.id,source:rule.source}),vocabulary:{isAuthenticated:()=>false,replace:value=>value},sharedSettings:{read:async()=>settingsIntegrity.fromHost(await featureRequest('personalization','sharedRead')),write:settingsIntegrity.writeSchool,subscribe:callback=>api.onFeatureEvent?.('personalization',event=>{if(event.type==='sharedSettings')callback(settingsIntegrity.fromHost(event.value));})},onChange:value=>{const scope=preferenceChangeScope(effectiveLocalSettings,value);effectiveLocalSettings=value;const startup=startupState();if(startup.quiet||startup.school?.enabled)startupPresentation.dismiss();let changed=false;for(const key of ['language','theme','emoji','funnyEnglish','funnyCantonese'])if(value[key]!==undefined&&preferences[key]!==value[key]){preferences[key]=value[key];changed=true;}if(changed)savePreferences();if(scope==='full')applyPreferences();else if(scope==='appearance')applyThemeOnly();}});}),
   mountFeature('documentation','Documentation','說明文件',()=>import('./features/documentation/index.js'),async(module,root)=>module.mountDocumentation(root,{translate:t,catalog:await featureRequest('documentation','catalog'),onExport:exportText})),
   mountFeature('changelog','Changelog','更新記錄',()=>import('./features/documentation/changelog.js'),async(module,root)=>module.mountChangelog(root,{translate:t,language:preferences.language,entries:await featureRequest('documentation','changelog'),onExport:exportText})),
  mountFeature('server-manager','Server preparation','伺服器準備',()=>import('./features/server-manager/index.js'),(module,root)=>module.mountServerPreparation(root,{request:(action,payload)=>featureRequest('server-manager',action,payload),subscribe:callback=>api.onFeatureEvent('server-manager',callback),subscribeLanguage,getLanguage:()=>preferences.language,confirmDestructive:(id,affected)=>superConfirm(id,affected),registerCommands:value=>foundation.registerCommands(value),guidanceHelpBase:'../../docs/features/server-manager/preparation.md',openGuidanceHelp:async descriptor=>{const catalog=await featureRequest('documentation','catalog');const row=resolveGuidanceArticle(catalog,descriptor,{language:preferences.language,restricted:effectiveLocalSettings.school.enabled});const reader=featureMounts.get('documentation');if(!row||!reader)throw Error('Guidance documentation is unavailable.');foundation.model.openTab({id:'documentation',label:'Documentation'});foundation.shell.activate('documentation');if(!reader.open(row.id,descriptor.concept))throw Error('Guidance documentation is unavailable.');}})),
-  mountFeature('storage','Docker Hub storage','Docker Hub 儲存',()=>import('./features/storage-maintenance/index.js'),(module,root)=>module.mountStorageMaintenance(root,{translate:t,language:preferences.language,getVaultState:()=>state,services:{selectSession:async id=>{await changeVaultSession('switch',id);if(state.sessionId!==id)throw new Error('The operation owner could not be selected.');return state;},storageDiagnostics:()=>api.storageDiagnostics(),startPacking:async payload=>{if(!await superConfirm('desktop.pack-storage'))return;return api.startPacking(payload);},operations:()=>api.operations(),cancelOperation:id=>api.cancelOperation(id),...Object.fromEntries(['prepareVaultImage','buildVaultImage','uploadVaultImage','discardVaultImage','cancelVaultImage','vaultImageStatus','registryStorageStatus','configureRegistryStorage','syncRegistryStorage','listRegistrySnapshots','restoreRegistrySnapshot','cancelRegistryStorage','listRegistryConflicts','resolveRegistryConflict','registryLoginStatus','startRegistryLogin','cancelRegistryLogin','openRegistryLoginPage'].filter(name=>typeof api[name]==='function').map(name=>[name,(...args)=>api[name](...args)]))}})),
+  mountFeature('storage','Docker Hub storage','Docker Hub 儲存',()=>import('./features/storage-maintenance/index.js'),(module,root)=>module.mountStorageMaintenance(root,{translate:t,language:preferences.language,getVaultState:()=>state,services:{selectSession:async id=>{await changeVaultSession('switch',id);if(state.sessionId!==id)throw new Error('The operation owner could not be selected.');return state;},storageDiagnostics:()=>api.storageDiagnostics(),startPacking:async payload=>{if(!await superConfirm('desktop.pack-storage'))return;return api.startPacking(payload);},operations:()=>api.operations(),cancelOperation:id=>api.cancelOperation(id),...Object.fromEntries(['prepareVaultImage','buildVaultImage','uploadVaultImage','discardVaultImage','cancelVaultImage','vaultImageStatus','registryStorageStatus','configureRegistryStorage','syncRegistryStorage','listRegistrySnapshots','restoreRegistrySnapshot','cancelRegistryStorage','listRegistryConflicts','resolveRegistryConflict','registryLoginStatus','recheckRegistryLogin','startRegistryLogin','cancelRegistryLogin','openRegistryLoginPage','backupAllPlan','backupAllStart','backupAllStatus','backupAllCancel'].filter(name=>typeof api[name]==='function').map(name=>[name,(...args)=>api[name](...args)]))}})),
   mountFeature('browser-pairing','Pair a browser','配對瀏覽器',()=>import('./features/browser-pairing/index.js'),(module,root)=>module.mountBrowserPairing(root,{translate:t,subscribeLanguage,request:action=>featureRequest('browser-pairing',action,{})})),
-  mountFeature('status','Status','狀態',()=>import('./features/status/index.js'),(module,root)=>module.mountStatus(root,{translate:t,getStatus:()=>featureRequest('status','status')}))
+  mountFeature('base64-tools','Base64 toolkit','Base64 工具',()=>import('./features/base64-tools/index.js'),(module,root)=>{const view=module.mountBase64Tools(root,{api,getLanguage:()=>preferences.language,notify:featureNotify});const stop=subscribeLanguage(()=>view.refreshLanguage());workspaceDisposers.push(stop);return view;}),
+  mountFeature('live-charts','Live charts','即時圖表',()=>import('./features/live-charts/index.js'),(module,root)=>{const view=module.mountLiveCharts(root,{getLanguage:()=>preferences.language});workspaceDisposers.push(subscribeLanguage(()=>view.refreshLanguage()));return view;}),
+  mountFeature('screen-recording','Screen recording','螢幕錄影',()=>import('./features/screen-recording/index.js'),(module,root)=>{const view=module.mountScreenRecording(root,{api,getLanguage:()=>preferences.language,notify:featureNotify});workspaceDisposers.push(subscribeLanguage(()=>view.refreshLanguage()));return view;}),
+  mountFeature('drawing','Sketch board','繪圖板',()=>import('./features/drawing/index.js'),(module,root)=>{const view=module.mountDrawing(root,{api,getLanguage:()=>preferences.language,getDriveLetter:()=>state&&!state.locked&&state.mounted?state.driveLetter||null:null,notify:featureNotify});workspaceDisposers.push(subscribeLanguage(()=>view.refreshLanguage()));return view;}),
+  mountFeature('status','Status','狀態',()=>import('./features/status/index.js'),(module,root)=>module.mountStatus(root,{translate:t,getStatus:()=>featureRequest('status','status')})),
+  mountFeature('dimsum','Dim sum','點心',()=>import('./features/dimsum/index.js'),(module,root)=>module.mountDimsum(root,{translate:t,getLanguage:()=>preferences.language,storage:localStorage,request:(action,payload)=>featureRequest('dimsum',action,payload)})),
+  mountFeature('tools','Local tools','本機工具',()=>import('./features/local-tools/index.js'),(module,root)=>{const view=module.mountLocalTools(root,{isRegistered:id=>featureRoots.has(id),open:id=>{foundation.model.openTab({id,label:canonicalViewLabels[id]||id});foundation.shell.activate(id);},getLanguage:()=>preferences.language,subscribeLanguage});return view;})
  ];
  Promise.allSettled(mounts).then(()=>{foundation.shell.activate(view);refreshPaletteInventory();rendererTiming.finish(rendererTiming.begin('startup-settled'),'settled');startupReady=true;attemptStartup();});
- foundation.registerCommands([{id:'onboarding:open',label:{en:'Open the setup guide',yue:'開啟設定指南'},run:()=>openSetupGuide()},{id:'vault:force-lock',label:{en:'Force lock',yue:'強制鎖定'},run:async()=>{if(await superConfirm('desktop.force-lock'))return run('Locking drive…',()=>api.forceLock(forceLockOptions()));}},{id:'application:quit',label:{en:'Quit application',yue:'結束程式'},shortcut:'Control+q',run:()=>quitApplication()}]);
+ foundation.registerCommands([...TOOLBOX_DESTINATIONS.map(d=>({id:`tool:${d.id}`,label:d.label,description:d.description,group:d.group,keywords:[...d.keywords],run:()=>{foundation.model.openTab({id:d.id,label:d.label.en});foundation.shell.activate(d.id);}})),{id:'onboarding:open',label:{en:'Open the setup guide',yue:'開啟設定指南'},run:()=>openSetupGuide()},{id:'vault:force-lock',label:{en:'Force lock',yue:'強制鎖定'},run:async()=>{if(await superConfirm('desktop.force-lock'))return run('Locking drive…',()=>api.forceLock(forceLockOptions()));}},{id:'application:quit',label:{en:'Quit application',yue:'結束程式'},shortcut:'Control+q',run:()=>quitApplication()}]);
  // First launch opens the setup guide once every feature has mounted. Skipping or finishing it keeps it from opening again.
  Promise.allSettled(mounts).then(()=>{if(onboardingSession.shouldAutoOpen&&!effectiveLocalSettings.school.enabled&&!startupInteracted){onboardingSession.open();openOnboarding();}});
  const paletteShortcut=event=>{if((event.ctrlKey||event.metaKey)&&event.shiftKey&&event.key.toLowerCase()==='f')refreshPaletteInventory();};document.addEventListener('keydown',paletteShortcut,true);workspaceDisposers.push(()=>document.removeEventListener('keydown',paletteShortcut,true));

@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>New tab catalog and regex builder</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..800&amp;family=Roboto+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+@keyframes pop{from{opacity:0;transform:scale(.94) translateY(-8px)}to{opacity:1;transform:none}}
+@keyframes tileIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+[data-motion=off] *{animation:none!important;transition:none!important}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</helmet>
+<div data-motion="{{motion}}" style="--accent:{{accent}};width:1440px;height:760px;position:relative;font-family:'Roboto Flex',system-ui,sans-serif;font-size:13px;color:#1A1B24;background:#E9EBF2;display:flex;gap:20px;padding:24px;box-sizing:border-box">
+<section role="dialog" aria-labelledby="nt" style="flex:0 0 640px;background:#FFFFFF;border-radius:16px;box-shadow:0 12px 40px rgba(20,22,40,.18);display:flex;flex-direction:column;animation:pop 320ms cubic-bezier(.05,.7,.1,1) both;transform-origin:top left">
+<header style="display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid #ECEDF3"><h1 id="nt" style="margin:0;font-size:16px;flex:1">New tab</h1><button type="button" style="height:32px;padding:0 12px;border:1px solid #C6C8D8;border-radius:8px;background:#FFFFFF;font:inherit">Open every tab</button></header>
+<div style="display:flex;gap:8px;padding:12px 16px"><label for="nq" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Search tabs</label><input id="nq" type="search" placeholder="Search 46 places" style="flex:1;height:34px;padding:0 12px;border:1px solid #C6C8D8;border-radius:8px;font:inherit"><button type="button" style="height:34px;padding:0 10px;border:1px solid #C6C8D8;border-radius:8px;background:#FFFFFF;font-family:'Roboto Mono',monospace">.*</button></div>
+<div style="flex:1;overflow:auto;padding:0 16px 16px;display:flex;flex-direction:column;gap:12px">
+<sc-for list="{{sections}}" as="sec" hint-placeholder-count="4">
+<div><p style="margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:.06em;color:#4A4C5C">{{sec.name}}</p>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px">
+<sc-for list="{{sec.items}}" as="it" hint-placeholder-count="6"><button type="button" style="{{it.s}}"><span style="width:26px;height:26px;border-radius:8px;background:#ECEDF6;color:var(--accent);display:grid;place-items:center;font-family:'Roboto Mono',monospace;font-size:11px;font-weight:700">{{it.g}}</span><span style="flex:1;text-align:left">{{it.n}}</span><span style="font-size:11px;color:#4A4C5C">{{it.st}}</span></button></sc-for>
+</div></div>
+</sc-for>
+</div>
+</section>
+<section aria-label="Regex builder" style="flex:1;min-width:0;background:#FFFFFF;border-radius:16px;display:flex;flex-direction:column">
+<div role="tablist" aria-label="Builder modes" style="display:flex;gap:2px;padding:8px 10px;border-bottom:1px solid #ECEDF3;flex-wrap:wrap">
+<sc-for list="{{modes}}" as="m" hint-placeholder-count="9"><button type="button" role="tab" aria-selected="{{m.sel}}" onClick="{{m.pick}}" style="{{m.s}}">{{m.n}}</button></sc-for>
+</div>
+<div style="padding:12px 14px;display:flex;flex-direction:column;gap:10px;flex:1;min-height:0">
+<div style="display:flex;gap:8px;align-items:center"><span style="font-family:'Roboto Mono',monospace;font-size:15px;flex:1;padding:8px 10px;border:1px solid #C6C8D8;border-radius:8px"><span style="color:#8B4A00">(?&lt;year&gt;</span><span style="color:#26318F">\d{4}</span><span style="color:#8B4A00">)</span>-<span style="color:#8B4A00">(?&lt;month&gt;</span><span style="color:#26318F">\d{2}</span><span style="color:#8B4A00">)</span></span><span style="padding:6px 10px;border-radius:8px;background:#E6E8FF;color:#26318F;font-weight:600">g</span><span style="padding:6px 10px;border-radius:8px;background:#F1F2F8">i</span><span style="padding:6px 10px;border-radius:8px;background:#F1F2F8">JavaScript ▾</span></div>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:12px;flex:1;min-height:0">
+<div style="border:1px solid #ECEDF3;border-radius:10px;padding:10px;font-family:'Roboto Mono',monospace;font-size:12px;line-height:1.9">Invoice <mark style="background:#DDE0FF;border-radius:3px">2026-11</mark> paid<br>Receipt <mark style="background:#DDE0FF;border-radius:3px">2025-03</mark> archived<br>Draft 26-1 ignored<br>Report <mark style="background:#DDE0FF;border-radius:3px">2026-09</mark> final<br>Memo 2026/10 wrong separator<br>Statement <mark style="background:#DDE0FF;border-radius:3px">2026-10</mark> sent<br>Quote 202-61 malformed<br>Budget <mark style="background:#DDE0FF;border-radius:3px">2027-01</mark> draft</div>
+<div style="display:flex;flex-direction:column;gap:6px"><p style="margin:0;font-size:11px;font-weight:700;letter-spacing:.06em;color:#4A4C5C">{{panelTitle}}</p><sc-for list="{{panel}}" as="p" hint-placeholder-count="5"><div style="padding:6px 8px;border-radius:8px;background:#F7F8FB;font-family:'Roboto Mono',monospace;font-size:12px">{{p}}</div></sc-for></div>
+</div>
+<p style="margin:0;color:#4A4C5C">5 matches · ran in 0.2 ms in a worker with a 250 ms limit · JavaScript engine executes; other flavours show conversion notes.</p>
+</div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#4B57C9","options":["#4B57C9","#00696B","#8B4A00","#A23B72"],"section":"Look"},"motion":{"editor":"boolean","default":true,"section":"Look"},"$preview":{"width":1440,"height":760}}'>
+class Component extends DCLogic {
+  constructor(p){super(p);this.state={mode:2};}
+  renderVals(){
+    const sec=[['DRIVES',[['M','Work vault','Open'],['P','Family photos','Open'],['T','Tax records','Locked'],['+','Create a drive','']]],['VIEWS',[['⇩','Available offline','Open'],['⟲','Version history','Closed'],['!','Conflicts','Open'],['⌫','Recycle Bin','Closed']]],['TOOLS',[['64','Base64','New'],['{}','Quicktype','New'],['.*','Regex builder','Open'],['✎','Drawing','New'],['●','Screen recording','New'],['▤','Virtual disks','New'],['⛏','World generator','New'],['↻','Converter','Closed'],['AI','Ollama','Closed']]],['SETTINGS',[['A','Appearance','Closed'],['~','Motion','Closed'],['♪','Sound','Closed'],['☁','Cloud backup','Closed']]]];
+    const modes=['Create','Analyze','Test','Replace','Split','Grep','Debug','Library','Use'];
+    const panels={0:['\\d digit','{4} exactly four','(?<name>) named group','| alternative','^ start of line'],1:['Group year: \\d{4}','Literal -','Group month: \\d{2}'],2:['#1 2026-11 year=2026 month=11','#2 2025-03 year=2025 month=03','#3 2026-09 year=2026 month=09','#4 2026-10 year=2026 month=10','#5 2027-01 year=2027 month=01']};
+    let n=0;
+    return {
+      accent:this.props.accent??'#4B57C9',motion:this.props.motion===false?'off':'on',
+      sections:sec.map(([name,items])=>({name,items:items.map(([g,nm,st])=>({g,n:nm,st,s:'display:flex;align-items:center;gap:8px;height:44px;padding:0 8px;border:1px solid #ECEDF3;border-radius:10px;background:#FFFFFF;font:inherit;cursor:pointer;animation:tileIn 260ms '+((n++)*18)+'ms cubic-bezier(.05,.7,.1,1) both'}))})),
+      modes:modes.map((m,i)=>({n:m,sel:String(i===this.state.mode),pick:()=>this.setState({mode:i}),s:'height:32px;padding:0 12px;border:0;border-radius:8px;font:inherit;cursor:pointer;'+(i===this.state.mode?'background:var(--accent);color:#FFFFFF;font-weight:600':'background:transparent;color:#1A1B24')})),
+      panelTitle:modes[this.state.mode].toUpperCase(),
+      panel:panels[this.state.mode]||['Example only: this mode is designed, not yet running']
+    };
+  }
+}
+</script>
+</body>
+</html>

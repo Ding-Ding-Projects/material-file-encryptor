@@ -1,4 +1,4 @@
-import { REQUIRED_FEATURE_IDS } from './required-features.mjs';
+import { REQUIRED_FEATURE_IDS } from './required-features.mjs'; import { additionalFeatureScope } from './feature-scope.mjs';
 
 // Handwritten expectations are independent of source extraction.
 export const REQUIRED_CONCRETE_SURFACE_IDS = Object.freeze([
@@ -146,8 +146,8 @@ export function expectedFeatureApplicability(id, surface) {
   // The encrypted-public-builder heading is expressly limited to private repositories.
   // This product is a public desktop application and a Status Hub client, not the server.
   if (id === 'encrypted-public-builder') return { kind: 'not-applicable', applies: false, directSurface: false, declaredScope: 'Private repositories only' };
-  // The setup wizard belongs to the desktop application. A website or an extension page cannot substitute for it,
-  // and adding it never removes the separate public website requirement.
+  // Entries the catalogue scopes to some surfaces or product kinds only are decided in feature-scope.mjs.
+  const added = additionalFeatureScope(id, surface); if (added) return added;
   if (DESKTOP_ONLY.has(id) && surface !== 'desktop') return { kind: 'not-applicable', applies: false, directSurface: false, declaredScope: 'Desktop application only' };
   // Dropping a wording file applies to applications (desktop and extension), never to a documentation site.
   if (APPLICATIONS_ONLY.has(id) && surface === 'site') return { kind: 'not-applicable', applies: false, directSurface: false, declaredScope: 'Applications only' };

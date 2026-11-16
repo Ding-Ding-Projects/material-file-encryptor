@@ -18,7 +18,7 @@ An icon never reads the live value of its control, never copies private text suc
 
 The inventories below cover the static markup of each page and the controls that the page code creates at start-up. A coverage check reads each page as text and fails when a capable control has neither an explanation nor a stated reason.
 
-- Desktop app (`src/renderer/index.html`): 65 explanations (1 for groups of related controls), 6 stated exemptions.
+- Desktop app (`src/renderer/index.html`): 87 explanations (1 for groups of related controls), 9 stated exemptions.
 - Website (`docs/site/index.html`): 22 explanations (0 for groups of related controls), 7 stated exemptions.
 - Browser extension popup (`browser-extension/popup.html`): 15 explanations (1 for groups of related controls), 0 stated exemptions.
 - Browser extension workspace (`browser-extension/options.html`): 140 explanations (3 for groups of related controls), 3 stated exemptions.
@@ -391,6 +391,186 @@ Source checks mount every icon on a document fixture and open it from the keyboa
 - Default: Not invoked
 - Example: Example for "Re-split existing files": a long background job rewrites encrypted parts. Files stay readable while it runs.
 
+### desktop-drive-tab-add
+
+**Open or create a drive** — `#drive-tab-add`
+
+- Kind: button
+- Purpose: Add another drive tab, so you can unlock or create a second drive without closing the first.
+- Effects: Other drives stay mounted. The new tab starts locked until you unlock or create a drive in it.
+- Default: Not invoked
+- Example: Example for "Open or create a drive": other drives stay mounted. The new tab starts locked until you unlock or create a drive in it.
+
+### desktop-unlock-mode
+
+**Unlock with** — `md-radio[name="unlock-mode"]`
+
+- Kind: choice
+- Purpose: Choose whether this drive unlocks with its password or with a key file.
+- Effects: The matching field appears below. The drive itself is not changed.
+- Default: Password
+- Example: Example for "Unlock with": the matching field appears below. The drive itself is not changed.
+
+### desktop-unlock-password
+
+**Password** — `#unlock-password`
+
+- Kind: credential
+- Purpose: Type the password that protects this drive.
+- Effects: The password is used once to derive the drive key and is cleared after you unlock. It is never saved in preferences or logs.
+- Default: Empty
+- Example: Example for "Password": the password is used once to derive the drive key and is cleared after you unlock. It is never saved in preferences or logs.
+
+### desktop-unlock-key-path
+
+**Key file** — `#unlock-key-path`
+
+- Kind: text
+- Purpose: The path of the key file that unlocks this drive.
+- Effects: Only the path is read from this field. The key file is opened when you unlock.
+- Default: C:\Keys\drive.key
+- Example: Example for "Key file": only the path is read from this field. The key file is opened when you unlock.
+
+### desktop-unlock-choose-key
+
+**Choose key file** — `#unlock-choose-key`
+
+- Kind: button
+- Purpose: Pick the key file for this drive in a file chooser.
+- Effects: Only the chosen path is filled in. Nothing is unlocked until you press Unlock and mount.
+- Default: Not invoked
+- Example: Example for "Choose key file": only the chosen path is filled in. Nothing is unlocked until you press Unlock and mount.
+
+### desktop-unlock-auto
+
+**Unlock automatically on this PC** — `#unlock-auto`
+
+- Kind: toggle
+- Purpose: After this unlock succeeds, ask to save a protected drive key for your current Windows user.
+- Effects: You are asked to confirm first. It uses the same setting as Settings, and can be turned off there.
+- Default: Off
+- Example: Example for "Unlock automatically on this PC": you are asked to confirm first. It uses the same setting as Settings, and can be turned off there.
+
+### desktop-unlock-submit
+
+**Unlock and mount** — `#unlock-submit`
+
+- Kind: button
+- Purpose: Unlock this drive with the credential above and mount it in File Explorer.
+- Effects: A wrong password changes nothing and the drive stays locked.
+- Default: Not invoked
+- Example: Example for "Unlock and mount": a wrong password changes nothing and the drive stays locked.
+
+### desktop-new-button
+
+**New** — `#new-button`
+
+- Kind: button
+- Purpose: Open a short menu to create a drive, unlock an existing drive or upload files.
+- Effects: The menu only starts the chosen action. Nothing changes until you finish it.
+- Default: Not invoked
+- Example: Example for "New": the menu only starts the chosen action. Nothing changes until you finish it.
+
+### desktop-copy-path-button
+
+**Copy path** — `#copy-path-button`
+
+- Kind: button
+- Purpose: Copy the path of the selected file inside the drive to the clipboard.
+- Effects: Only the path text is copied. The file and its contents stay encrypted.
+- Default: Not invoked
+- Example: Example for "Copy path": only the path text is copied. The file and its contents stay encrypted.
+
+### desktop-backup-now-button
+
+**Back up now** — `#backup-now-button`
+
+- Kind: button
+- Purpose: Start a cloud backup of this drive now.
+- Effects: Only encrypted data is sent. The backup tools open in the storage tab.
+- Default: Not invoked
+- Example: Example for "Back up now": only encrypted data is sent. The backup tools open in the storage tab.
+
+### desktop-more-button
+
+**More commands** — `#more-button`
+
+- Kind: button
+- Purpose: Show the commands that do not fit in the command bar at this window size.
+- Effects: Choosing an entry runs that command exactly as its own button would.
+- Default: Not invoked
+- Example: Example for "More commands": choosing an entry runs that command exactly as its own button would.
+
+### desktop-filter-button
+
+**Filter** — `#filter-button`
+
+- Kind: button
+- Purpose: Show all files, only files kept offline, or only files held in encrypted storage.
+- Effects: Only the list changes. No file is moved, kept offline or deleted.
+- Default: Not invoked
+- Example: Example for "Filter": only the list changes. No file is moved, kept offline or deleted.
+
+### desktop-sort-button
+
+**Sort** — `#sort-button`
+
+- Kind: button
+- Purpose: Choose which column orders the file list. Shown when the column headers are hidden.
+- Effects: Only the order changes. Choosing the same column again reverses it.
+- Default: Not invoked
+- Example: Example for "Sort": only the order changes. Choosing the same column again reverses it.
+
+### desktop-inspector-toggle
+
+**Details** — `#inspector-toggle`
+
+- Kind: button
+- Purpose: Open or close the details sheet for the selected file.
+- Effects: The sheet shows the encrypted part map, recent versions and backup status. It changes nothing.
+- Default: Not invoked
+- Example: Example for "Details": the sheet shows the encrypted part map, recent versions and backup status. It changes nothing.
+
+### desktop-inspector-backup-settings
+
+**Backup settings** — `#inspector-backup-settings`
+
+- Kind: button
+- Purpose: Open the storage tab, where the cloud backup is configured.
+- Effects: Opening the tab changes no setting.
+- Default: Not invoked
+- Example: Example for "Backup settings": opening the tab changes no setting.
+
+### desktop-density-setting
+
+**Row density** — `#density-setting`
+
+- Kind: choice
+- Purpose: Choose compact rows to see more files, or comfortable rows with more room.
+- Effects: Only spacing changes, at once, and the choice is remembered on this device.
+- Default: The first entry in the list
+- Example: Example for "Row density": only spacing changes, at once, and the choice is remembered on this device.
+
+### desktop-text-scale
+
+**Text size** — `#text-scale-setting`
+
+- Kind: number
+- Purpose: Set the size of the file list, panels and toolbars, from 90% to 200%.
+- Effects: The layout adapts at once. At large sizes it switches to the narrow layout. The choice is remembered on this device.
+- Default: The control’s starting value
+- Example: Example for "Text size": the layout adapts at once. At large sizes it switches to the narrow layout. The choice is remembered on this device.
+
+### desktop-high-contrast-setting
+
+**High contrast** — `#high-contrast-setting`
+
+- Kind: toggle
+- Purpose: Use stronger borders, text and focus rings.
+- Effects: It is always on when Windows high contrast is active. Turning this off does not override Windows.
+- Default: Off
+- Example: Example for "High contrast": it is always on when Windows high contrast is active. Turning this off does not override Windows.
+
 ### desktop-startup-setting
 
 **Start with Windows** — `#startup-setting`
@@ -480,6 +660,46 @@ Source checks mount every icon on a document fixture and open it from the keyboa
 - Effects: Only the tone of Cantonese messages changes. Facts and numbers do not.
 - Default: The control’s starting value
 - Example: Example for "Cantonese playfulness": only the tone of Cantonese messages changes. Facts and numbers do not.
+
+### desktop-soundeffects-setting
+
+**Sound effects** — `#soundEffects-setting`
+
+- Kind: toggle
+- Purpose: Play short, quiet cues for actions such as unlocking, locking, copying, finished transfers and errors.
+- Effects: Sounds never replace the on-screen message, and a sound that cannot play never changes what an action does.
+- Default: Off
+- Example: Example for "Sound effects": sounds never replace the on-screen message, and a sound that cannot play never changes what an action does.
+
+### desktop-sound-volume
+
+**Sound volume** — `#soundVolume-setting`
+
+- Kind: number
+- Purpose: Set how loud the cues are, from 0 (silent) to 100.
+- Effects: Only the cues change. Your computer volume is never touched.
+- Default: The control’s starting value
+- Example: Example for "Sound volume": only the cues change. Your computer volume is never touched.
+
+### desktop-sound-test
+
+**Play sample** — `#sound-test`
+
+- Kind: button
+- Purpose: Play one sample cue at the current volume.
+- Effects: It stays silent when sound effects are switched off or the volume is 0.
+- Default: Not invoked
+- Example: Example for "Play sample": it stays silent when sound effects are switched off or the volume is 0.
+
+### desktop-sound-reset
+
+**Reset sounds** — `#sound-reset`
+
+- Kind: button
+- Purpose: Turn sound effects back on and return the volume to its default.
+- Effects: Nothing else in your settings changes.
+- Default: Not invoked
+- Example: Example for "Reset sounds": nothing else in your settings changes.
 
 ### desktop-vocabulary-label
 
@@ -766,6 +986,9 @@ Source checks mount every icon on a document fixture and open it from the keyboa
 - `[data-window="minimize"]`: Operating system window chrome. Its label names the action and it changes no data.
 - `[data-window="maximize"]`: Operating system window chrome. Its label names the action and it changes no data.
 - `[data-window="close"]`: Operating system window chrome. Its label names the action and it changes no data.
+- `#vault-session`: Hidden source of the drive tabs. The tabs carry the explanation and switch the selected drive.
+- `#add-vault-session`: Hidden source for the add drive tab button, which carries the explanation.
+- `#remove-vault-session`: Hidden source for the remove tab button, which is labelled and only removes a locked drive from the list.
 - `#export-vocabulary`: Removed at start-up: the app does not offer to export the personal vocabulary.
 - `#file-search`: Hidden at start-up and replaced by the search component, which carries the explanation.
 - `mfe-file-picker#vocabulary-file`: A hidden file input. The visible Import vocabulary JSON button opens it and carries the explanation.

@@ -58,7 +58,9 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
   windows:
-    needs: [select-runner, publication-language]
+    # The publication-language job still runs and reports, but no longer blocks a release (paused 2026-11-16).
+    # Restore it by putting it back into this list once the protected publication data is refreshed.
+    needs: [select-runner]
     runs-on: ${{ fromJSON(needs.select-runner.outputs.runner) }}
     timeout-minutes: 45
     steps:

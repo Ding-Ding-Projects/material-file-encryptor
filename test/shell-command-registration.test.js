@@ -4,6 +4,7 @@ import {readFile} from 'node:fs/promises';
 import vm from 'node:vm';
 import {registerOwnedCommands} from '../src/shared/surface/control-guidance.js';
 import {createSurfaceModel} from '../src/shared/surface/model.js';
+import {offerRegisteredViews} from '../src/shared/surface/view-registration.js';
 
 // Exercise the production foundation with lightweight external component hosts.
 // The real Material DOM and rendering cost are covered by renderer acceptance.
@@ -25,8 +26,8 @@ function fixture(){
  const menu=element('mfe-context-menu'),overlay={menu,destroy(){}};
  const localized=value=>typeof value==='object'?value.en:value;
  const context={HTMLElement:Host,document:doc,customElements:{get:()=>true,define(){},upgrade:node=>{node.shadowRoot=new Host('shadow');}},CSSStyleSheet:class{replaceSync(){}},
-  element,localized,text:(en,yue)=>({en,yue}),createSurfaceModel,registerOwnedCommands,getContextOverlay:()=>overlay,
-  createNotificationAudio:()=>({destroy(){}}),mountNavigationFrame:()=>({setActive(){},destroy(){}}),homeEntries:()=>[],HOME_ID:'home',HOME_LABEL:{en:'Home'},
+  element,localized,text:(en,yue)=>({en,yue}),createSurfaceModel,offerRegisteredViews,registerOwnedCommands,getContextOverlay:()=>overlay,
+  createNotificationAudio:()=>({destroy(){}}),mountNavigationFrame:()=>({setActive(){},destroy(){}}),homeEntries:()=>[],flagshipEntries:()=>[],toolsSummary:()=>({count:0,names:[],more:0,available:false}),HOME_ID:'home',HOME_LABEL:{en:'Home'},
   openContextMenu(){},closeContextMenu(){},isNewTabShortcut:()=>false,clearTimeout,setTimeout};
  const mount=vm.runInNewContext(source.slice(source.indexOf('export function mountSurfaceFoundation')).replace('export function','function')+';mountSurfaceFoundation;',context);
  const host=element('main');doc.body.append(host);const foundation=mount({host,storage:{getItem(){return null;},setItem(){}},tabs:[{id:'drive',label:'Drive'}]});

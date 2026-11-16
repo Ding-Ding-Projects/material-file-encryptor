@@ -65,8 +65,9 @@ test('the context menu applies the placement, scrolls the list and pins the sear
   assert.match(source, /menu\.style\.maxHeight/);
   assert.match(source, /mfe-search\{[^}]*position:sticky/);
   assert.doesNotMatch(source, /hasOverflow:true/, 'overflow must stay scrollable so the list scrolls inside the menu');
+  // The New tab control opens a catalog dialog now; the tab strip menus keep using this placement.
   const shell = await fs.readFile(new URL('../src/shared/surface/workspace-shell.js', import.meta.url), 'utf8');
-  assert.match(shell, /align:'end',items:\[\s*\{label:HOME_LABEL/);
+  assert.match(shell, /onContext\?\.\(\{anchor,event,target:this,language:this\.language,items:\[/);
 });
 
 test('every destination has its own English and Cantonese description, never the generic fallback', async () => {

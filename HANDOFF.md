@@ -1,3 +1,13 @@
+## November 2026 redesign, 2026-11-16
+
+Work lives on `ai/feature/20261116-redesign-integration` (pull request #20, draft), merged from nine lanes: workspace shell, motion system, Docker Hub backup and sign-in, sounds and new tab catalog, regex builder, toolbox, studio tools, inventory and comfort, documentation site. The design canvas is in `design/redesign-2026-11/` with its handoff and review notes.
+
+Verification: the full suite on this branch runs 3,511 tests with 46 failures, all of which also fail on `main` on the same machine (symlink privilege, the renderer harness Python path, packaging and similar host limits); compared by test name there are no new failures and five fixed. A focused cross-lane set of 184 tests passes, including the rendered 1440 / 360 px parity check.
+
+Integration fixes made while merging: a start-up crash where `initializeArchive()` reached the bulk selection helper before its declaration; the driver-installed check moved out of `render()`; toolbox and shell transitions moved onto motion tokens; the storage header button now answers the command bar's Back up now event; the Settings and info icon inventories list every new control.
+
+Open: packaged and installed proof, live Docker Hub, background sync decision, real virtual disk and world generation runs, deployed site, release.
+
 ## Ordinary installed icon verification, 2026-10-17 UTC
 
 Version 1.823.1 is verified in the ordinary user installation from release source `14d6e07636a1f1d62e6dd345273a0c6866664562`. All 910 payload files matched; four opened-file handles resolved to ordinary installation paths. Independent queries through the existing Explorer desktop confirmed the installation folder and Desktop/Start menu shortcut targets. The installer operation returned 0. Its original continuous observer failed, so operation exit and recorded-process absence were recovered separately and remain separate verdicts.

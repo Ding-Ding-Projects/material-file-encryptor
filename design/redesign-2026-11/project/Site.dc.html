@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Documentation home</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&amp;family=Roboto+Flex:opsz,wght@8..144,300..800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FBFAF7}
+a{color:#2F3AA8}a:hover{color:#1E2780}
+@keyframes unmask{from{clip-path:inset(0 0 100% 0);transform:translateY(24px)}to{clip-path:inset(0);transform:none}}
+@keyframes draw{from{stroke-dashoffset:900}to{stroke-dashoffset:0}}
+@keyframes close{0%,40%{transform:translateY(-10px)}100%{transform:none}}
+@keyframes rise{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}
+@keyframes bar{from{transform:scaleX(0)}to{transform:scaleX(.36)}}
+.task{transition:transform 220ms cubic-bezier(.2,0,0,1),box-shadow 220ms}
+.task:hover{transform:translateY(-4px);box-shadow:0 14px 30px rgba(30,32,60,.12)}
+[data-motion=off] *{animation:none!important;transition:none!important}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</helmet>
+<div data-motion="{{motion}}" style="--accent:{{accent}};font-family:'Roboto Flex',system-ui,sans-serif;color:#1C1B1F;background:#FBFAF7">
+<div aria-hidden="true" style="height:3px;background:#E6E3EE"><div style="height:100%;background:var(--accent);transform-origin:left;animation:bar 1s 600ms cubic-bezier(.2,0,0,1) both"></div></div>
+<header style="max-width:1200px;margin:0 auto;padding:18px 24px;display:flex;flex-wrap:wrap;align-items:center;gap:16px">
+<a href="#" style="font-weight:700;text-decoration:none;color:#1C1B1F;font-size:16px">Material File Encryptor</a>
+<nav aria-label="Site" style="display:flex;gap:18px;flex-wrap:wrap;font-size:15px"><a href="#">Guides</a><a href="#">Library</a><a href="#">Wiki</a><a href="#">Features</a><a href="#">Changelog</a></nav>
+<span style="flex:1"></span>
+<label for="site-q" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Search all 243 articles</label>
+<input id="site-q" type="search" placeholder="Search all 243 articles" style="width:260px;max-width:100%;height:44px;padding:0 16px;border:1px solid #C9C5D0;border-radius:22px;font:inherit;background:#FFFFFF">
+<button type="button" style="height:44px;padding:0 14px;border:1px solid #C9C5D0;border-radius:22px;background:#FFFFFF;font-family:ui-monospace,monospace">.*</button>
+<a href="#" style="display:inline-flex;align-items:center;height:44px;padding:0 20px;border-radius:22px;background:var(--accent);color:#FFFFFF;text-decoration:none;font-weight:600">Download v0.3.0</a>
+</header>
+<section style="max-width:1200px;margin:0 auto;padding:56px 24px 40px;display:flex;flex-wrap:wrap;gap:40px;align-items:center">
+<div style="flex:1 1 480px;min-width:0">
+<h1 style="margin:0;font-family:Fraunces,serif;font-size:64px;line-height:1.02;font-weight:700;letter-spacing:-1.5px;animation:unmask 900ms cubic-bezier(.05,.7,.1,1) both">An encrypted drive that feels like any other folder.</h1>
+<p style="margin:20px 0 0;font-size:19px;line-height:1.55;max-width:560px;color:#3B3A45;animation:rise 700ms 240ms cubic-bezier(.05,.7,.1,1) both">Files stay encrypted on disk, in the cache and in every backup. Unlock, work in File Explorer, lock again.</p>
+</div>
+<figure style="flex:1 1 420px;margin:0;min-width:0" aria-label="A file becomes encrypted parts and travels to backup">
+<svg viewBox="0 0 520 260" width="100%" role="img" aria-label="Diagram: file to encrypted parts to drive to cloud backup">
+<path d="M60 130 C 150 40, 210 220, 300 130 S 440 60, 480 130" fill="none" stroke="var(--accent)" stroke-width="3" stroke-dasharray="900" style="animation:draw 1800ms 300ms cubic-bezier(.2,0,0,1) both"></path>
+<rect x="20" y="100" width="80" height="60" rx="14" fill="#FFFFFF" stroke="#C9C5D0"></rect><text x="60" y="136" text-anchor="middle" font-size="14">File</text>
+<rect x="250" y="100" width="100" height="60" rx="14" fill="#E3E5FF"></rect><text x="300" y="136" text-anchor="middle" font-size="14">4 MB parts</text>
+<g style="animation:close 900ms 1200ms cubic-bezier(.05,.7,.1,1) both"><rect x="440" y="100" width="70" height="60" rx="14" fill="var(--accent)"></rect></g><text x="475" y="136" text-anchor="middle" font-size="13" fill="#FFFFFF">Backup</text>
+</svg>
+<figcaption style="font-size:13px;color:#5B5966">Example only. Nothing here runs the installed app.</figcaption>
+</figure>
+</section>
+<section aria-labelledby="todo" style="max-width:1200px;margin:0 auto;padding:16px 24px 56px">
+<h2 id="todo" style="margin:0 0 18px;font-family:Fraunces,serif;font-size:34px">What do you want to do?</h2>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px">
+<sc-for list="{{tasks}}" as="t" hint-placeholder-count="6">
+<a href="#" class="task" style="{{t.s}}"><span style="font-size:13px;font-weight:700;color:var(--accent)">{{t.time}}</span><strong style="font-size:20px;font-family:Fraunces,serif">{{t.title}}</strong><span style="font-size:15px;line-height:1.5;color:#3B3A45">{{t.body}}</span><span style="margin-top:auto;font-weight:600">Start guide →</span></a>
+</sc-for>
+</div>
+</section>
+<section style="background:#1F1E2E;color:#F3F1FF">
+<div style="max-width:1200px;margin:0 auto;padding:48px 24px;display:flex;flex-wrap:wrap;gap:32px">
+<div style="flex:1 1 360px"><h2 style="margin:0;font-family:Fraunces,serif;font-size:30px">Try the part size explorer</h2><p style="margin:12px 0 0;line-height:1.6;color:#CFCDE6">Drag the slider to see how one file splits into encrypted parts and what each part costs to upload.</p></div>
+<div style="flex:1 1 420px;display:flex;flex-direction:column;gap:12px">
+<label for="ps" style="font-size:14px">Part size: {{part}} MB</label>
+<input id="ps" type="range" min="1" max="64" value="{{part}}" onInput="{{setPart}}" style="accent-color:#BEC2FF">
+<div style="display:flex;flex-wrap:wrap;gap:4px"><sc-for list="{{parts}}" as="p" hint-placeholder-count="12"><span style="{{p}}"></span></sc-for></div>
+<p style="margin:0;font-size:14px;color:#CFCDE6">A 48 MB file becomes {{count}} parts. Editing one page re-uploads about {{part}} MB.</p>
+</div>
+</div>
+</section>
+<footer style="max-width:1200px;margin:0 auto;padding:28px 24px;display:flex;flex-wrap:wrap;gap:16px;font-size:14px;color:#5B5966"><span>GPL-3.0 · free, no ads, no telemetry</span><span style="flex:1"></span><a href="#">Settings: language, theme, motion, sound</a></footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#4B57C9","options":["#4B57C9","#00696B","#8B4A00","#A23B72"],"section":"Look"},"motion":{"editor":"boolean","default":true,"section":"Look"},"$preview":{"width":1440,"height":1500}}'>
+class Component extends DCLogic {
+  constructor(p){super(p);this.state={part:4};}
+  renderVals(){
+    const part=this.state.part,count=Math.ceil(48/part);
+    return {accent:this.props.accent??'#4B57C9',motion:this.props.motion===false?'off':'on',part,count,
+      setPart:e=>this.setState({part:Number(e.target.value)}),
+      parts:Array.from({length:Math.min(count,48)},(_,i)=>'width:'+Math.max(10,part*2)+'px;height:22px;border-radius:5px;background:#7B86FF;opacity:'+(0.55+((i%4)*0.12))),
+      tasks:[['4 min','Set up your drive','Install, create a drive, choose where encrypted parts are kept.'],['1 min','Unlock and lock','Password, key file or automatic unlock on this PC.'],['3 min','Back up to Docker Hub','One click copies only encrypted data, public by default.'],['2 min','Work offline','Pin folders so they open without a connection.'],['3 min','Recover a version','Find an earlier copy or restore from the Recycle Bin.'],['5 min','Browse every feature','See what each feature does and how finished it is.']].map(([time,title,body],i)=>({time,title,body,s:'display:flex;flex-direction:column;gap:10px;min-height:150px;padding:22px;border-radius:24px;background:#FFFFFF;border:1px solid #E6E3EE;text-decoration:none;color:#1C1B1F;animation:rise 600ms '+(200+i*80)+'ms cubic-bezier(.05,.7,.1,1) both'}))};
+  }
+}
+</script>
+</body>
+</html>

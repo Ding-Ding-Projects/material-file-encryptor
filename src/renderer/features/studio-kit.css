@@ -1,0 +1,21 @@
+:where(.studio-suite){display:grid;gap:var(--mfe-space-4,16px);min-width:0;color:var(--md-sys-color-on-surface);container-type:inline-size}
+:where(.studio-suite) [hidden]{display:none!important}
+:where(.studio-suite) :where(h2,h3,h4,p){margin:0;overflow-wrap:anywhere}
+:where(.studio-suite) .studio-lede{color:var(--md-sys-color-on-surface-variant)}
+:where(.studio-suite) .studio-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start}
+:where(.studio-suite) .studio-col{display:grid;gap:12px;min-width:0}
+:where(.studio-suite) .studio-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+:where(.studio-suite) :where(md-outlined-text-field,md-outlined-select){max-width:100%;min-width:0;width:100%}
+:where(.studio-suite) :where(md-text-button,md-outlined-button,md-filled-button){min-height:48px;max-width:100%;white-space:normal;overflow-wrap:anywhere}
+:where(.studio-suite) .studio-fieldset{display:grid;gap:8px;margin:0;padding:12px;border:1px solid var(--md-sys-color-outline-variant);border-radius:12px;min-width:0}
+:where(.studio-suite) .studio-toggle{display:flex;align-items:center;gap:8px;min-height:48px;cursor:pointer;border-radius:8px;transition:background-color var(--md-sys-motion-duration-short4,200ms) var(--md-sys-motion-easing-standard,cubic-bezier(.2,0,0,1))}
+:where(.studio-suite) .studio-toggle:hover{background:var(--md-sys-color-surface-container-low)}
+@media (prefers-reduced-motion:reduce){:where(.studio-suite) .studio-toggle{transition:none}}
+:where(.studio-suite) .studio-status{min-height:1.5em;color:var(--md-sys-color-on-surface-variant);overflow-wrap:anywhere}
+:where(.studio-suite) .studio-status[data-tone=error]{color:var(--md-sys-color-error)}
+:where(.studio-suite) table{width:100%;border-collapse:collapse}
+:where(.studio-suite) :where(th,td){text-align:start;padding:8px;border-bottom:1px solid var(--md-sys-color-outline-variant);overflow-wrap:anywhere}
+:where(.studio-suite) pre{white-space:pre-wrap;overflow-wrap:anywhere;max-width:100%;padding:12px;background:var(--md-sys-color-surface-container-low);border-radius:12px;margin:0}
+:where(.studio-suite) canvas{max-width:100%;border:1px solid var(--md-sys-color-outline-variant);border-radius:12px;background:var(--md-sys-color-surface-container-low);touch-action:none}
+:where(.studio-suite) progress{width:100%}
+@container (max-width:720px){:where(.studio-suite) .studio-grid{grid-template-columns:minmax(0,1fr)}}

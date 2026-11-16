@@ -45,7 +45,8 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
       if (value.version !== 1 || !value.rows || typeof value.rows !== 'object' || Array.isArray(value.rows) || Object.keys(value.rows).length > 100) throw Error(ERROR);
       for (const [key, row] of Object.entries(value.rows)) {
         if (!row || typeof row !== 'object' || !/^[a-f0-9]{64}$/.test(key) || !/^[a-f0-9]{32}$/.test(row.deviceId)) throw Error(ERROR);
-        row.visibility = registryDestination({ repository: row.repository, visibility: row.visibility }).visibility; validateRegistrySchedule(row.schedule);
+        // Destinations saved before visibility existed were private; only new destinations default to public.
+        row.visibility = registryDestination({ repository: row.repository, visibility: row.visibility ?? 'private' }).visibility; validateRegistrySchedule(row.schedule);
         if (row.nextDue !== null && !Number.isFinite(row.nextDue) || row.retryOccurrence !== undefined && !Number.isFinite(row.retryOccurrence)) throw Error(ERROR);
         row.state = row.interrupted ? 'incomplete' : 'idle'; row.lastError = row.interrupted ? ERROR : row.lastError;
         row.progress = null;
@@ -159,7 +160,9 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
     },
     async configure(id, configuration) {
       await load(); if (active || configuring || ticking) throw Error('Wait for registry synchronization.');
-      const current = context(id, false); const destination = registryDestination({ repository: configuration.repository, visibility: configuration.visibility });
+      const current = context(id, false);
+      // A request that omits visibility keeps an existing destination's choice and otherwise defaults to public.
+      const destination = registryDestination({ repository: configuration.repository, visibility: configuration.visibility ?? rows[current.key]?.visibility });
       const schedule = validateRegistrySchedule(configuration.schedule);
       if (schedule.enabled && (!current.storageDir || current.transport !== 'folder')) throw Error('Restore or select a folder-backed vault before enabling its schedule.');
       if (!rows[current.key] && Object.keys(rows).length >= 100) throw Error('The registry destination limit has been reached.');

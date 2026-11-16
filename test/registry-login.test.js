@@ -92,11 +92,24 @@ test('malformed codes, changed codes, foreign URLs and fallback prompts fail clo
     assert.ok(!JSON.stringify(f.service.status()).includes('example.invalid')); f.child.emit('close', 1);
   }
 });
-test('cancellation retires code and prevents duplicate start until exact child close', async () => {
+test('cancellation retires code and keeps ownership of the closing child until it exits', async () => {
   const f = await fixture(); await f.start(); f.child.stdout.write(instruction); f.service.cancel();
   assert.equal(f.service.status().state, 'cancelled'); assert.equal(f.service.status().deviceCode, null); assert.equal(f.service.pending, true);
-  f.service.start(); assert.equal(f.calls.length, 1); f.child.emit('close', 0); await tick();
+  f.child.emit('close', 0); await tick();
   assert.equal(f.service.pending, false); assert.equal(f.service.status().state, 'cancelled'); assert.equal(f.checks(), 1);
+});
+test('P6: start right after cancel begins a new operation on the first click', async () => {
+  const f = await fixture({ inspect: async n => ({ state: n >= 3 ? 'signed-in' : 'missing', account: 'yourname' }) });
+  await f.start(); f.child.stdout.write(instruction); f.service.cancel();
+  assert.equal(f.service.status().state, 'cancelled'); assert.equal(f.service.pending, true);
+  assert.equal(f.service.start().state, 'checking'); assert.equal(f.checks(), 2);
+  f.child.emit('close', 0); await tick();
+  assert.equal(f.service.status().state, 'checking', 'the retired child closing must not disturb the new attempt');
+});
+test('P6: start right after expiry begins a new operation', async () => {
+  const f = await fixture(); await f.start(); f.child.stdout.write(instruction); f.timers[0].callback();
+  assert.equal(f.service.status().state, 'expired');
+  assert.equal(f.service.start().state, 'checking');
 });
 test('concurrent starts share one inspection and one owned child', async () => {
   let resolve; const f = await fixture({ inspect: () => new Promise(done => { resolve = done; }) });
@@ -119,8 +132,50 @@ test('CLI success still requires independently verified stored sign-in', async (
   const f = await fixture({ inspect: async n => ({ state: n === 1 ? 'missing' : 'stale' }) }); await f.start(); f.child.stdout.write(instruction); f.child.emit('close', 0); await tick();
   assert.equal(f.service.status().state, 'stale'); assert.equal(f.service.status().deviceCode, null);
 });
-test('stale or unavailable existing sign-in is retained without launching login', async () => {
-  for (const state of ['stale', 'unavailable']) { const f = await fixture({ inspect: async () => ({ state, reason: 'stored-sign-in-unverified' }) }); await f.start(); assert.equal(f.service.status().state, state); assert.equal(f.calls.length, 0); }
+test('unavailable existing sign-in is retained with its precise reason and never launches login', async () => {
+  const f = await fixture({ inspect: async () => ({ state: 'unavailable', reason: 'docker-not-running' }) }); await f.start();
+  assert.equal(f.service.status().state, 'unavailable'); assert.equal(f.service.status().reason, 'docker-not-running'); assert.equal(f.calls.length, 0);
+});
+test('P4: a stale saved sign-in offers a fresh device flow instead of a dead end', async () => {
+  const f = await fixture({ inspect: async n => n === 1 ? { state: 'stale', reason: 'stored-sign-in-unverified' } : { state: 'signed-in', account: 'yourname' } });
+  await f.start(); assert.equal(f.calls.length, 1); f.child.stdout.write(instruction);
+  assert.equal(f.service.status().state, 'authorizing'); assert.equal(f.service.status().deviceCode, 'ABCD-EFGH');
+  f.child.stdout.write('Login Succeeded\n'); f.child.emit('close', 0); await tick();
+  assert.equal(f.service.status().state, 'signed-in'); assert.equal(f.service.status().account, 'yourname');
+});
+test('P2: documentation links printed around a successful login do not turn it into a failure', async () => {
+  const f = await fixture({ inspect: async n => n === 1 ? { state: 'missing' } : { state: 'signed-in', account: 'yourname' } });
+  await f.start(); f.child.stdout.write(instruction);
+  f.child.stdout.write('Login Succeeded\nFor more information see https://docs.docker.com/go/credential-store/\n'); f.child.emit('close', 0); await tick();
+  assert.equal(f.service.status().state, 'signed-in'); assert.equal(f.service.status().reason, null);
+});
+test('P2: an unrelated address is still refused before success and never offered', async () => {
+  const f = await fixture(); await f.start(); f.child.stdout.write('Visit https://example.invalid/steal now\n');
+  assert.equal(f.service.status().state, 'failed'); assert.equal(f.service.status().reason, 'invalid-cli-output'); f.child.emit('close', 1);
+});
+test('P3: a Username prompt without a newline is detected at once as an unsupported flow', async () => {
+  const f = await fixture(); await f.start(); f.child.stdout.write('Username: ');
+  assert.equal(f.service.status().state, 'unavailable'); assert.equal(f.service.status().reason, 'device-flow-unavailable'); f.child.emit('close', 1);
+});
+test('P5: recheck re-inspects the saved sign-in without launching a browser flow', async () => {
+  let call = 0; const f = await fixture({ inspect: async () => [{ state: 'stale', reason: 'stored-sign-in-unverified' }, { state: 'signed-in', account: 'yourname' }][call++] });
+  assert.equal((await f.service.recheck()).state, 'stale'); assert.equal(f.service.pending, false);
+  const next = await f.service.recheck(); assert.equal(next.state, 'signed-in'); assert.equal(next.account, 'yourname'); assert.equal(f.calls.length, 0); assert.equal(f.checks(), 2);
+});
+test('P5: recheck never interrupts an active attempt', async () => {
+  const f = await fixture(); await f.start(); const before = f.checks();
+  assert.equal((await f.service.recheck()).state, 'checking'); assert.equal(f.checks(), before); f.service.cancel(); f.child.emit('close', 1);
+});
+test('P8: repeated spinner redraws do not count toward the output cap', async () => {
+  const f = await fixture(); await f.start();
+  for (let i = 0; i < 4000; i++) f.child.stdout.write('\r\x1b[2K| waiting for authentication\n');
+  assert.notEqual(f.service.status().state, 'failed'); f.child.stdout.write(instruction);
+  assert.equal(f.service.status().state, 'authorizing'); f.service.cancel(); f.child.emit('close', 1);
+});
+test('P8: genuinely distinct oversized output still fails closed', async () => {
+  const f = await fixture(); await f.start();
+  for (let i = 0; i < 5000; i++) f.child.stdout.write('distinct line number ' + i + ' ' + 'x'.repeat(40) + '\n');
+  assert.equal(f.service.status().state, 'failed'); f.child.emit('close', 1);
 });
 test('oversized or malformed UTF-8 output fails without exposing payload', async () => {
   for (const bytes of [Buffer.alloc(70000, 65), Buffer.from([255])]) { const f = await fixture(); await f.start(); f.child.stdout.write(bytes); assert.equal(f.service.status().state, 'failed'); assert.equal(f.service.status().deviceCode, null); f.child.emit('close', 1); }

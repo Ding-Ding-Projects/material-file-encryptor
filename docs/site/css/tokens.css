@@ -1,0 +1,27 @@
+/* Design tokens for the editorial layer. Colour roles come from site.css, so light, dark and system themes keep working. */
+:root{
+ --font-display:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,"Noto Serif CJK HK","MFE Noto Sans CJK HK",serif;
+ --font-text:var(--local-ux-font,"MFE Noto Sans Regular","MFE Noto Sans CJK HK",system-ui,sans-serif);
+ --font-mono:ui-monospace,"Cascadia Mono",Consolas,"SFMono-Regular",monospace;
+ --measure:68ch;
+ --paper:color-mix(in srgb,var(--surface) 90%,var(--primary-container));
+ --paper-deep:color-mix(in srgb,var(--surface) 78%,var(--primary-container));
+ --ink-soft:color-mix(in srgb,var(--on-surface) 72%,var(--surface));
+ --accent-warm:#b3541e;
+ --rule:color-mix(in srgb,var(--on-surface) 18%,transparent);
+ --radius-s:10px;--radius-m:18px;--radius-l:28px;
+ --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:24px;--space-6:36px;--space-7:56px;--space-8:88px;
+ --touch:48px;
+ --type-hero:clamp(2.6rem,6.4vw,5.2rem);--type-display:clamp(1.9rem,3.6vw,3rem);--type-lead:clamp(1.1rem,1.6vw,1.3rem);
+ /* Motion: resolved values that the site motion editor rewrites at runtime. */
+ --m-speed:1;
+ --m-page-dur:560ms;--m-page-delay:0ms;--m-page-dist:18px;--m-page-ease:cubic-bezier(.05,.7,.1,1);
+ --m-stagger-dur:520ms;--m-stagger-step:60ms;--m-stagger-dist:22px;--m-stagger-ease:cubic-bezier(.05,.7,.1,1);
+ --m-reveal-dur:640ms;--m-reveal-dist:28px;--m-reveal-ease:cubic-bezier(.05,.7,.1,1);
+ --m-card-dur:240ms;--m-card-dist:4px;--m-card-ease:cubic-bezier(.2,0,0,1);
+ --m-popup-dur:260ms;--m-popup-scale:.9;--m-popup-ease:cubic-bezier(.05,.7,.1,1);
+ --m-toast-dur:420ms;--m-toast-dist:16px;--m-toast-ease:cubic-bezier(.34,1.56,.64,1);
+ --m-draw-dur:1100ms;--m-draw-ease:cubic-bezier(.2,0,0,1);
+ --m-transition-dur:360ms;--m-transition-ease:cubic-bezier(.2,0,0,1);
+}
+:lang(zh){--font-display:"MFE Noto Sans CJK HK",system-ui,sans-serif}

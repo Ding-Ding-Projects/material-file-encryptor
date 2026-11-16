@@ -42,17 +42,40 @@ function validateDesktopWorkflow(action, payload) {
   const schema=schemas[action],prototype=Object.getPrototypeOf(payload);
   if ((prototype!==Object.prototype&&prototype!==null)||Reflect.ownKeys(payload).some(key=>typeof key!=='string'||!Object.hasOwn(schema,key))||Object.entries(schema).some(([key,valid])=>!valid(payload[key]))||(action==='preparePublication'&&payload.route==='fork'&&!payload.upstream)||Object.hasOwn(schema,'sourceKind')&&(payload.sourceKind==='gh-keyring'&&payload.credentialRevision!==null||payload.sourceKind==='protected-product'&&!uuid(payload.credentialRevision))) throw new Error('Unsupported account or publication payload.');
 }
+import { TOOLBOX_ACTIONS } from './toolbox-host.js';
+/** Shape checks for the world generator. The detailed rules (area, tweaks, typed game rules) are enforced again by the generator itself. */
+function worldGeneratorSchemas(uuid) {
+  const optional = check => value => value === undefined || check(value);
+  const text = max => value => typeof value === 'string' && value.length <= max;
+  const int = value => Number.isSafeInteger(value);
+  const flag = value => typeof value === 'boolean';
+  const record = value => value !== null && typeof value === 'object' && !Array.isArray(value);
+  return {
+    worldOptions: {versionId: value => typeof value === 'string' && /^[A-Za-z0-9._ -]{1,64}$/.test(value)},
+    pickWorldDestination: {kind: value => value === 'folder' || value === 'zip'},
+    startWorldGeneration: {
+      versionId: value => typeof value === 'string' && /^[A-Za-z0-9._ -]{1,64}$/.test(value), seed: optional(text(64)), levelName: optional(text(60)), worldType: optional(text(64)),
+      widthChunks: optional(int), depthChunks: optional(int), centerChunkX: optional(int), centerChunkZ: optional(int), difficulty: optional(text(16)), gamemode: optional(text(16)),
+      hardcore: optional(flag), generateStructures: optional(flag), borderFollowsArea: optional(flag), eulaAccepted: optional(flag), gamerules: optional(record), tweaks: optional(record),
+      output: value => record(value) && ['folder', 'zip'].includes(value.kind) && uuid(value.destinationId)
+    },
+    worldGenerationStatus: {}, abortWorldGeneration: {}
+  };
+}
 export function validateFeatureRequest(feature, action, payload, { browser = false } = {}) {
   const actions = {
     ...(!browser?{surprise:['resolvePublishedDish']}:{}),
+    ...(!browser?{dimsum:['catalogue','photo']}:{}),
     converter: ['catalog','inspect','enqueue','list','control','pickSources','pickDestination','pickDestinationDirectory'],
     workflow: ['documents','pickDocument','pickProject','readDocument','saveDocument','createDocument','templates','editors','pickEditor','openEditor','openInCode','editorDownload','downloads','prepareDownload','startDownload','cancelDownload','accounts','prepareHandoff','exportHandoff','openHandoff',...(!browser?WORKFLOW_DESKTOP_ACTIONS:[])],
     updates: ['status','check','download',...(!browser?['install']:[])],
     ollama: [...(!browser?['configureRuntime','runtimeInstall','runtimeInstallCancel','runtimeStop']:[]),'status','catalog','refreshCatalog','models','show','deleteModel','copyModel','generate','hardware','cart','addToCart','removeFromCart','retryPull','startPulls','cancel','sessions','session','renameSession','deleteSession','exportSession','chat','profiles','preflight','launch','snapshots','restore','events','runtimeInstallStatus','runtimeStart','chooseRuntimeExecutable','registerProfile'],
     documentation: ['catalog','changelog'], status: ['status'],
+    ...(!browser?{toolbox:TOOLBOX_ACTIONS}:{}),
+    ...(!browser?{quicktype:['languages','generate'],'virtual-disks':['capabilities','list','inspect','pickDisk','pickNewDisk','create','attach','detach','mountIso','resize','compact','convert','script']}:{}),
     ...(!browser?{'browser-pairing':['issue','clear']}:{}),
     personalization: [...(!browser?['accessibilityState']:[]),'sharedRead','sharedWrite','verifySharedCredential','setSharedCredential','fetchScheduleSource','listFonts',...(!browser?['setScheduleCredential','clearScheduleCredential','normalizeImage','fontMetadata','cancelFontMetadata']:[])],
-    ...(!browser ? { 'server-manager': ['snapshot','refreshCatalogue','versions','resolveVersion','prepare','cancel','reviewLicense','capabilities','acceptLicense','start','status','stop','runtimeCandidate','prepareRuntime','runtimeStatus','cancelRuntime',...MANAGED_SERVER_ACTIONS] } : {}),
+    ...(!browser ? { 'server-manager': ['snapshot','refreshCatalogue','versions','resolveVersion','prepare','cancel','reviewLicense','capabilities','acceptLicense','start','status','stop','runtimeCandidate','prepareRuntime','runtimeStatus','cancelRuntime','worldOptions','pickWorldDestination','startWorldGeneration','worldGenerationStatus','abortWorldGeneration',...MANAGED_SERVER_ACTIONS] } : {}),
     ...(!browser ? { access: ['credentialGet','credentialSet','credentialDelete','credentialList','openDataFolder','dataFolder',...ACCESS_HOST_ACTIONS] } : {}),
   };
   const limit=!browser&&feature==='personalization'&&action==='normalizeImage'?Math.ceil(4*1024*1024*4/3)+256:262144;
@@ -64,6 +87,12 @@ export function validateFeatureRequest(feature, action, payload, { browser = fal
   }
   if(Buffer.byteLength(JSON.stringify(payload))>limit)throw new Error('Unsupported feature request.');
   if ((feature==='surprise'||feature==='personalization'&&action==='accessibilityState') && (Object.getPrototypeOf(payload)!==Object.prototype&&Object.getPrototypeOf(payload)!==null||Reflect.ownKeys(payload).length!==0)) throw new Error('This read-only request accepts no payload.');
+  if (feature === 'dimsum') {
+    // The catalogue loads on request only: an optional refresh flag, or one published illustration name.
+    const schema = action === 'photo' ? {file: value => typeof value === 'string' && /^hk-dish-\d{4}-[a-z0-9-]+\.png$/.test(value)} : {force: value => value === undefined || typeof value === 'boolean'};
+    const prototype = Object.getPrototypeOf(payload);
+    if (prototype !== Object.prototype && prototype !== null || Reflect.ownKeys(payload).some(key => typeof key !== 'string' || !Object.hasOwn(schema, key)) || Object.entries(schema).some(([key, valid]) => !valid(payload[key]))) throw new Error('Unsupported dim sum request.');
+  }
   if (feature === 'workflow' && WORKFLOW_DESKTOP_ACTIONS.includes(action)) validateDesktopWorkflow(action,payload);
   if (feature === 'server-manager') {
     const uuid = value => typeof value === 'string' && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(value);
@@ -76,6 +105,7 @@ export function validateFeatureRequest(feature, action, payload, { browser = fal
       reviewLicense: { serverId: value => typeof value === 'string' && value.startsWith('server-') && uuid(value.slice(7)) },
       ...Object.fromEntries(['acceptLicense','start','status','stop','runtimeCandidate','prepareRuntime','runtimeStatus'].map(action=>[action,{serverId:value=>typeof value==='string'&&value.startsWith('server-')&&uuid(value.slice(7))}])),
       cancelRuntime:{operationId:uuid},
+      ...worldGeneratorSchemas(uuid),
       ...managedServerSchemas(),
     };
     const schema = schemas[action];
@@ -88,15 +118,23 @@ export function validateRequest(method, value = {}) {
   if (!object(value)) throw new Error('Invalid request.');
   if (REGISTRY_CONFLICT_METHODS.has(method)) return validateRegistryConflictRequest(method, value);
   if (method === 'configureRegistryStorage') {
-    if (!Object.hasOwn(value, 'repository') || !Object.hasOwn(value, 'schedule') || Object.keys(value).some(key => !['repository', 'visibility', 'schedule'].includes(key)) || !['private', 'public'].includes(value.visibility === undefined ? 'private' : value.visibility) || typeof value.repository !== 'string' || !/^[a-z0-9][a-z0-9_-]{1,38}\/[a-z0-9]+(?:(?:[._]|__|-+)[a-z0-9]+)*$/.test(value.repository) || value.repository.length > 220) throw Error('Invalid registry destination.');
-    return { repository: value.repository, visibility: value.visibility === undefined ? 'private' : value.visibility, schedule: validateRegistrySchedule(value.schedule) };
+    if (!Object.hasOwn(value, 'repository') || !Object.hasOwn(value, 'schedule') || Object.keys(value).some(key => !['repository', 'visibility', 'schedule'].includes(key)) || !['private', 'public'].includes(value.visibility === undefined ? 'public' : value.visibility) || typeof value.repository !== 'string' || !/^[a-z0-9][a-z0-9_-]{1,38}\/[a-z0-9]+(?:(?:[._]|__|-+)[a-z0-9]+)*$/.test(value.repository) || value.repository.length > 220) throw Error('Invalid registry destination.');
+    return { repository: value.repository, ...(value.visibility === undefined ? {} : { visibility: value.visibility }), schedule: validateRegistrySchedule(value.schedule) };
+  }
+  if (method === 'backupAllStart') {
+    const names = value.names ?? {};
+    if (Object.keys(value).some(key => !['sessionIds', 'names'].includes(key)) || !Array.isArray(value.sessionIds) || value.sessionIds.length < 1 || value.sessionIds.length > 100 ||
+        value.sessionIds.some(id => typeof id !== 'string' || !/^[A-Za-z0-9-]{1,64}$/.test(id)) || new Set(value.sessionIds).size !== value.sessionIds.length ||
+        !object(names) || Object.keys(names).length > 100 || Object.entries(names).some(([id, name]) => !/^[A-Za-z0-9-]{1,64}$/.test(id) || typeof name !== 'string' || name.length > 100 || !/^[a-z0-9]+(?:(?:[._]|__|-+)[a-z0-9]+)*$/.test(name)))
+      throw new Error('Invalid backup request.');
+    return { sessionIds: [...value.sessionIds], names: { ...names } };
   }
   if (method === 'featureRequest') {
     if (Object.keys(value).length !== 3) throw new Error('Unsupported feature request.');
     return validateFeatureRequest(value.feature, value.action, value.payload, { browser: true });
   }
   const schemas = {
-    registryLoginStatus: {}, startRegistryLogin: {}, cancelRegistryLogin: {}, openRegistryLoginPage: {},
+    registryLoginStatus: {}, recheckRegistryLogin: {}, startRegistryLogin: {}, cancelRegistryLogin: {}, openRegistryLoginPage: {}, backupAllPlan: {}, backupAllStatus: {}, backupAllCancel: {},
     registryStorageStatus: {}, syncRegistryStorage: {}, listRegistrySnapshots: {}, restoreRegistrySnapshot: { digest: 'digest' }, cancelRegistryStorage: {},
     vaultImageStatus: {}, prepareVaultImage: { reference: 'short' }, buildVaultImage: { previewId: 'session' }, uploadVaultImage: { previewId: 'session' }, discardVaultImage: {}, cancelVaultImage: {},
     addSession: {}, selectSession: { sessionId: 'session' }, removeSession: { sessionId: 'session' }, getState: {}, buildMetadata: {}, browserPairing: {}, mount: { driveLetter: 'drive?', driveName: 'driveName?' }, unmount: {}, chooseFiles: {}, chooseExport: { name: 'path' }, chooseExportFolder: {}, importSelected: { paths: 'paths' }, startImport: { paths: 'paths' }, operations: {}, storageDiagnostics: {}, startPacking: { path: 'relative?', partSizeBytes: 'size?' }, cancelOperation: { operationId: 'path' }, forceLock: { language: 'language?' }, quit: {}, listFiles: { cursor: 'nonnegative?', limit: 'page?', revision: 'nonnegative?' }, listVersionLabels: { entryId: 'path' }, listActivity: { entryId: 'path?', cursor: 'path?', limit: 'page?', action: 'short?', from: 'short?', to: 'short?', fromUtc:'short?',toUtc:'short?',pattern:'short?' }, previewVersion: { versionId: 'path' }, labelVersion: { versionId: 'path', label: 'short' }, exportVersion: { versionId: 'path' }, exportText: { name: 'filename', mime: 'mime', content: 'text' }, fileAction: { id: 'path', action: 'fileAction', destination: 'path?' }, resplitAll: {}, createVault: { storageDir: 'path', cacheDir: 'path', driveLetter: 'drive', password: 'password?', keyFilePath: 'path?', partSizeBytes: 'size', transport: 'transport?', remoteRepository: 'repository?', autoUnlock: 'boolean?', driveName: 'driveName?' },

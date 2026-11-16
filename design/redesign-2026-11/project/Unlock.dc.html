@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Unlock a drive in its tab</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..800&amp;family=Roboto+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+@keyframes shackle{to{transform:translateY(-5px) rotate(-16deg)}}
+@keyframes ring{from{stroke-dashoffset:126}to{stroke-dashoffset:0}}
+@keyframes burst{from{transform:scale(.5);opacity:.8}to{transform:scale(3);opacity:0}}
+@keyframes shake{0%,100%{transform:none}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+@keyframes rowIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes collapse{to{opacity:0;transform:scale(.92) translateY(-12px)}}
+[data-motion=off] *{animation:none!important;transition:none!important}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</helmet>
+<div data-motion="{{motion}}" style="--accent:{{accent}};width:1440px;height:900px;box-sizing:border-box;font-family:'Roboto Flex',system-ui,sans-serif;font-size:13px;color:#1A1B24;background:#E9EBF2;display:flex;flex-direction:column">
+<div role="tablist" aria-label="Drives" style="display:flex;align-items:flex-end;gap:2px;height:40px;padding-left:10px;background:#DADDE8">
+<span style="display:flex;align-items:center;gap:8px;height:34px;padding:0 14px;border-radius:10px 10px 0 0;color:#1A1B24"><span style="width:7px;height:7px;border-radius:4px;background:#0B6B57"></span><b>M:</b> Work vault</span>
+<span style="display:flex;align-items:center;gap:8px;height:34px;padding:0 14px;border-radius:10px 10px 0 0;color:#1A1B24"><span style="width:7px;height:7px;border-radius:4px;background:#8A5300"></span><b>P:</b> Family photos</span>
+<span role="tab" aria-selected="true" style="display:flex;align-items:center;gap:8px;height:34px;padding:0 14px;border-radius:10px 10px 0 0;background:#FFFFFF"><span style="{{tabDot}}"></span><b>T:</b> Tax records</span>
+</div>
+<div role="toolbar" aria-label="Drive commands" style="display:flex;align-items:center;gap:14px;height:44px;padding:0 16px;background:#FFFFFF;border-bottom:1px solid #DCDEE8;color:#767680"><span>+ New</span><span>↥ Upload</span><span>✎ Rename</span><span>⇩ Keep offline</span><span>⟲ Versions</span><span style="flex:1"></span><span style="color:#3A3C4C">Commands unlock with the drive</span></div>
+<div style="flex:1;display:flex;gap:1px;background:#DCDEE8;min-height:0">
+<div style="flex:0 0 232px;box-sizing:border-box;background:#F7F8FB;padding:12px 14px;display:flex;flex-direction:column;gap:10px">
+<p style="margin:0;font-size:11px;font-weight:700;letter-spacing:.06em;color:#4A4C5C">T: TAX RECORDS</p>
+<p style="margin:0;color:#4A4C5C;line-height:1.5">{{treeNote}}</p>
+</div>
+<main style="flex:1;min-width:0;background:#FFFFFF;display:grid;place-items:center;position:relative;overflow:hidden">
+<sc-if value="{{showFiles}}" hint-placeholder-val="{{false}}">
+<div style="position:absolute;inset:0;padding:16px">
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="8"><div style="{{r.s}}"><span style="width:30px;height:20px;border-radius:5px;background:#ECEDF6"></span>{{r.n}}</div></sc-for>
+</div>
+</sc-if>
+<form aria-label="Unlock Tax records" style="{{cardStyle}}">
+<div style="display:flex;align-items:center;gap:14px">
+<span style="position:relative;width:52px;height:52px;display:grid;place-items:center">
+<sc-if value="{{burst}}" hint-placeholder-val="{{false}}"><span aria-hidden="true" style="position:absolute;inset:0;border-radius:16px;background:#0B6B57;animation:burst 700ms cubic-bezier(.2,0,0,1) both"></span></sc-if>
+<span style="{{badge}}"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="3"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3" style="{{shackle}}"></path></svg></span>
+<sc-if value="{{working}}" hint-placeholder-val="{{false}}"><svg width="60" height="60" viewBox="0 0 44 44" aria-hidden="true" style="position:absolute;inset:-4px"><circle cx="22" cy="22" r="20" fill="none" stroke="var(--accent)" stroke-width="2" stroke-dasharray="126" style="animation:ring 900ms cubic-bezier(.2,0,0,1) both;transform:rotate(-90deg);transform-origin:center"></circle></svg></sc-if>
+</span>
+<div><h1 style="margin:0;font-size:17px;font-weight:600">{{title}}</h1><p style="margin:2px 0 0;color:#4A4C5C">{{subtitle}}</p></div>
+</div>
+<div style="display:flex;gap:6px" role="radiogroup" aria-label="Unlock with">
+<span style="padding:6px 12px;border-radius:8px;background:#E6E8FF;color:#26318F;font-weight:600">Password</span><span style="padding:6px 12px;border-radius:8px;background:#F1F2F8">Key file</span><span style="padding:6px 12px;border-radius:8px;background:#F1F2F8">Windows Hello</span>
+</div>
+<label for="pw" style="font-size:12px;font-weight:600;color:#4A4C5C">Password</label>
+<input id="pw" type="password" value="correct horse battery" style="height:36px;padding:0 10px;border:1px solid #C6C8D8;border-radius:8px;font:inherit;font-size:14px">
+<label style="display:flex;align-items:center;gap:8px;color:#4A4C5C"><input type="checkbox" style="accent-color:var(--accent)"> Unlock automatically on this PC</label>
+<p role="alert" style="margin:0;min-height:18px;color:#B3261E;font-weight:600">{{error}}</p>
+<div style="display:flex;gap:8px;justify-content:flex-end">
+<button type="button" onClick="{{fail}}" style="height:34px;padding:0 8px;border:0;background:transparent;color:#4A4C5C;font:inherit;text-decoration:underline;cursor:pointer">Preview a wrong password</button>
+<button type="button" onClick="{{unlock}}" style="height:34px;padding:0 16px;border:0;border-radius:8px;background:var(--accent);color:#FFFFFF;font:inherit;font-weight:600;cursor:pointer">Unlock and mount as T:</button>
+</div>
+</form>
+</main>
+<aside aria-label="Choreography" style="flex:0 0 300px;box-sizing:border-box;background:#F7F8FB;padding:14px 16px;display:flex;flex-direction:column;gap:8px">
+<p style="margin:0;font-size:11px;font-weight:700;letter-spacing:.06em;color:#4A4C5C">UNLOCK TIMELINE</p>
+<sc-for list="{{steps}}" as="s" hint-placeholder-count="5"><div style="display:grid;grid-template-columns:56px minmax(0,1fr);gap:8px;padding:6px 0;border-bottom:1px solid #E4E6F0"><span style="font-family:'Roboto Mono',monospace;font-size:11px;color:#26318F">{{s.t}}</span><span><b>{{s.n}}</b><br><span style="color:#4A4C5C">{{s.d}}</span></span></div></sc-for>
+</aside>
+</div>
+<footer role="status" style="display:flex;align-items:center;gap:16px;height:26px;padding:0 12px;background:var(--accent);color:#FFFFFF;font-size:12px"><span>{{status}}</span></footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#4B57C9","options":["#4B57C9","#00696B","#8B4A00","#A23B72"],"section":"Look"},"motion":{"editor":"boolean","default":true,"section":"Look"},"stage":{"editor":"enum","options":["locked","unlocking","unlocked","wrong password"],"default":"locked","section":"Stage"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(p){super(p);this.state={mode:null};}
+  componentWillUnmount(){clearTimeout(this.t);}
+  renderVals(){
+    const m=this.state.mode||(this.props.stage==='wrong password'?'failed':this.props.stage)||'locked';
+    const open=m==='unlocked';
+    return {
+      accent:this.props.accent??'#4B57C9',motion:this.props.motion===false?'off':'on',
+      tabDot:'width:7px;height:7px;border-radius:4px;transition:background 300ms;background:'+(open?'#0B6B57':'#767680'),
+      treeNote:open?'14 folders · 2,104 files':'Folders appear after unlock. Nothing readable is stored on this PC while locked.',
+      showFiles:open,burst:open,working:m==='unlocking',
+      rows:Array.from({length:8},(_,i)=>({n:['Receipts','2025 return','2026 estimates','Bank letters','Donations','Property','Invoices','Notes.md'][i],s:'display:flex;align-items:center;gap:10px;height:34px;padding:0 8px;border-bottom:1px solid #F1F2F6;animation:rowIn 260ms '+(300+i*40)+'ms cubic-bezier(.05,.7,.1,1) both'})),
+      cardStyle:'position:relative;width:420px;padding:20px;border:1px solid #DCDEE8;border-radius:16px;background:#FFFFFF;box-shadow:0 8px 30px rgba(30,32,70,.10);display:flex;flex-direction:column;gap:10px;'+(m==='failed'?'animation:shake 420ms cubic-bezier(.36,.07,.19,.97) both':open?'animation:collapse 320ms 380ms cubic-bezier(.3,0,.8,.15) both;pointer-events:none':''),
+      badge:'position:relative;width:52px;height:52px;border-radius:16px;display:grid;place-items:center;transition:background 300ms;background:'+(open?'#0B6B57':m==='failed'?'#B3261E':'var(--accent)'),
+      shackle:open?'transform-origin:16px 10px;animation:shackle 420ms cubic-bezier(.05,.7,.1,1) both':'',
+      title:open?'Tax records unlocked':m==='unlocking'?'Deriving key…':'Tax records is locked',
+      subtitle:open?'Mounted as T: in File Explorer':'Unlock to mount it in File Explorer.',
+      error:m==='failed'?'That password did not match. Nothing was changed.':'',
+      status:open?'● T: mounted · 2.3 GB':m==='failed'?'Unlock failed · drive stays locked':'T: locked · encrypted at rest',
+      unlock:()=>{this.setState({mode:'unlocking'});clearTimeout(this.t);this.t=setTimeout(()=>this.setState({mode:'unlocked'}),900);},
+      fail:()=>this.setState({mode:'failed'}),
+      steps:[['0','Press','Field locks; progress ring draws round the badge.'],['900','Key ready','Badge turns green; shackle lifts on a spring.'],['900','Burst','A green ring scales out from the badge and fades.'],['1280','Hand-off','Card shrinks away; files rise in a 40 ms stagger; tab dot turns green.'],['Fail','Shake','Card shakes 420 ms; error announced; nothing retried.']].map(([t,n,d])=>({t:t==='Fail'?t:t+' ms',n,d}))
+    };
+  }
+}
+</script>
+</body>
+</html>

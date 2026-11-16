@@ -35,3 +35,9 @@
 .local-ux :is(.local-ux-section,:has(>mfe-search+mfe-control-guidance))>mfe-search{grid-column:1}
 .local-ux :is(.local-ux-section,:has(>mfe-search+mfe-control-guidance))>mfe-search+mfe-control-guidance:not([data-open]){align-self:start;margin-block-start:16px}
 [data-focus-mode=true] [data-focus-secondary]{transition:opacity var(--md-sys-motion-duration-short4,200ms) var(--md-sys-motion-easing-standard,cubic-bezier(.2,0,0,1))}
+/* Low stimulation: calmer colours and less visual noise. Motion and celebration are removed above and in the scripts;
+   this block owns colour and decoration. The filter sits on the root so fixed overlays keep their viewport anchoring. */
+:root[data-low-stimulation=true]{filter:saturate(.55) contrast(.96)}
+[data-low-stimulation=true] *{text-shadow:none!important;scroll-behavior:auto!important}
+[data-low-stimulation=true] :is(.wording-drop-overlay,.wording-celebration,mfe-startup-surprise){box-shadow:none}
+[data-low-stimulation=true] md-ripple{display:none}

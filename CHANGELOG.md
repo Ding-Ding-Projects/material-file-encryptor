@@ -1,3 +1,12 @@
+# Redesign and required features, 2026-11-16
+
+- Rebuild the desktop window as a dense three-pane file tool with drive tabs, a command bar, folder tree, inspector and status bar, and unlock inside the drive tab. The window now works down to 360 px wide.
+- Add the animation and transition editor, token-driven motion everywhere, installation success and failure screens, sound effects with a Settings switch, high contrast and text size.
+- Add one-click public Docker Hub backup of current drives. Only the encrypted objects already on disk are uploaded; a public copy allows offline password guessing, so the app recommends a key file or long passphrase. Fix several guided sign-in failures.
+- Add the New tab catalog, a much larger regex builder, Base64, live charts, screen recording, a sketch board, a type generator, a virtual disk manager and a Minecraft world generator.
+- Rebuild the documentation site around tasks, with full-text search, reading aids, motion that respects reduced motion, and a public features page.
+- Not yet proven in the installed app; see ROADMAP.md.
+
 # Encrypted folder image workflow, 2026-10-18
 
 - Add reviewed, locked encrypted-storage snapshots, fixed data-only Docker images, and a separate explicit upload action restricted to existing private Docker Hub repositories.

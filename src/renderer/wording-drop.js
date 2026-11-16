@@ -57,7 +57,7 @@ export function headlineFrom(name) {
  * The full-window celebration. `show(name)` animates the headline in, holds it, animates it out and removes it.
  * Phases are exposed as data-phase so the stylesheet owns the motion; timers only move between phases.
  */
-export function createCelebration({ doc, neutral, reducedMotion = () => false, setTimer = setTimeout, clearTimer = clearTimeout }) {
+export function createCelebration({ doc, neutral, reducedMotion = () => false, calm = () => false, setTimer = setTimeout, clearTimer = clearTimeout }) {
   let root = null, timers = [];
   const stop = () => { for (const id of timers) clearTimer(id); timers = []; root?.remove(); root = null; };
   const phase = value => { if (root) root.dataset.phase = value; };
@@ -67,11 +67,12 @@ export function createCelebration({ doc, neutral, reducedMotion = () => false, s
       stop();
       const headline = headlineFrom(name) || (typeof neutral === 'function' ? neutral() : String(neutral));
       root = doc.createElement('div');
-      root.className = 'wording-celebration';
+      // Low stimulation keeps the announcement but drops the full-window celebration: a small static notice instead.
+      root.className = calm() === true ? 'wording-celebration wording-celebration--calm' : 'wording-celebration';
       root.setAttribute('role', 'status');
       root.setAttribute('aria-live', 'polite');
       root.setAttribute('aria-atomic', 'true');
-      const reduced = reducedMotion() === true;
+      const reduced = reducedMotion() === true || calm() === true;
       root.dataset.reduced = String(reduced);
       root.dataset.phase = reduced ? 'hold' : 'in';
       doc.body.append(root);
@@ -113,10 +114,14 @@ export function createNotice({ doc, ms = 5000, setTimer = setTimeout, clearTimer
  * Installs the window-wide drop handling.
  *   apply(text)  validates and stores the file, returning { name } to celebrate, or throwing to refuse;
  *   refuse(code, error)  tells the user nothing changed; code is count, type, size, unreadable or invalid;
- *   overlayText()  the localized drop-target label.
+ *   overlayText()  the localized drop-target label;
+ *   cues  optional { applied(), refused() } sound hooks: applied runs exactly once beside the celebration of a
+ *         valid drop, refused exactly once for a refused drop, and a hook that throws never changes the outcome.
  * Returns { dispose, celebration }.
  */
-export function installWordingDrop({ doc, win = doc.defaultView, maxBytes, apply, refuse, overlayText, celebration, readFile = file => file.text() }) {
+export function installWordingDrop({ doc, win = doc.defaultView, maxBytes, apply, refuse: refuseDrop, overlayText, celebration, cues, readFile = file => file.text() }) {
+  const cue = name => { try { cues?.[name]?.(); } catch { /* a sound is never required */ } };
+  const refuse = (code, error) => { cue('refused'); refuseDrop(code, error); };
   const overlay = doc.createElement('div');
   overlay.className = 'wording-drop-overlay';
   overlay.setAttribute('aria-hidden', 'true');
@@ -153,7 +158,7 @@ export function installWordingDrop({ doc, win = doc.defaultView, maxBytes, apply
     if (ticket !== latest) return;
     let result;
     try { result = await apply(String(text)); } catch (error) { if (ticket === latest) refuse('invalid', error); return; }
-    if (ticket === latest && result) celebration.show(result.name);
+    if (ticket === latest && result) { celebration.show(result.name); cue('applied'); }
   };
 
   const target = win || doc;
