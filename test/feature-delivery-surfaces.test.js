@@ -42,11 +42,11 @@ test('publication catalogue omission of an actual feature article fails before r
   catalog.articles = catalog.articles.filter(file => file !== omitted);
   assert.throws(() => validatePublicationSurfaceCatalogue(catalog, bundled.documents), /Publication catalogue omits or invents concrete feature article routes/);
 });
-test('concrete inventory retains 109 families and independent unverified defaults', async () => {
-  assert.equal(REQUIRED_FEATURE_IDS.length, 109);
+test('concrete inventory retains 121 families and independent unverified defaults', async () => {
+  assert.equal(REQUIRED_FEATURE_IDS.length, 121);
   assert.deepEqual(validateSurfaceRegistry(registry, expected), []);
   const rows = expandSurfaceFeatureDelivery(registry);
-  assert.equal(rows.length, expected.length * 109);
+  assert.equal(rows.length, expected.length * REQUIRED_FEATURE_IDS.length);
   assert.ok(rows.every(row => row.status === 'implemented' ? row.proof?.status === 'implemented' : row.status === 'unverified' && (row.proof === null || row.proof.status !== 'implemented')));
   const manifest = JSON.parse(await fs.readFile(new URL('../contracts/feature-delivery.json', import.meta.url), 'utf8'));
   assert.deepEqual(implementedClaimProblems(manifest, registry, file => existsSync(fileURLToPath(new URL('../' + file, import.meta.url)))), []);

@@ -10,6 +10,10 @@ import {createNotificationNarration} from './features/shell/notification-narrati
 import {control,prepareControl,controlKind,CONTROL_SELECTOR,setControlLanguage} from '../shared/surface/controls.js';
 import {resolveGuidanceArticle,GUIDANCE_COPY} from '../shared/surface/control-guidance.js';
 import {createShellInfoIcons,INFO_ICON_COPY} from './features/shell/info-icons.js';
+import {createCollapsibleSection,renderStatistics,activeFilterText,COLLAPSE_COPY} from '../shared/surface/collapsible-section.js';
+import {createBulkSelection,runBulk,summarizeBulk,mountBulkBar,bulkLabels,BULK_COPY} from '../shared/surface/bulk-actions.js';
+import {personalizationSettingCommands} from './features/personalization/settings-index.js';
+import {DIMSUM_COPY} from './features/dimsum/copy.js';
 import {createOnboardingSession} from './features/onboarding/model.js';
 import {ONBOARDING_COPY} from './features/onboarding/copy.js';
 import { installClearFields } from './clear-fields.js';
@@ -89,8 +93,12 @@ const fileSelection = createFileSelection();
 let state = null, selected = null, view = 'drive', busy = false, dialogMode = 'create', snackbarTimer;
 let vaultConfirmationLifetime=new AbortController();
 let archiveRows = {history:[],recycle:[]}, archiveRequests={history:0,recycle:0};
+const archiveFilters={},archiveStats={};
 const archiveRenders={history:0,recycle:0};
-const recycledSelection=new Set(); let historySearch, recycleSearch, historySelection;let historyRetentionDraft=false,historyRetentionRevision=0;
+const historyBulk=createBulkSelection(),recycleBulk=createBulkSelection(),vaultBulk=createBulkSelection(),archiveBulk={};
+// The Recycle Bin selection keeps the Set interface its restore code uses while sharing the bulk selection model.
+const recycledSelection={add:id=>recycleBulk.toggle(id,true),delete:id=>recycleBulk.toggle(id,false),has:id=>recycleBulk.has(id),clear:()=>recycleBulk.clear(),get size(){return recycleBulk.size;},[Symbol.iterator]:()=>recycleBulk.ids()[Symbol.iterator]()};
+let historySearch, recycleSearch, historySelection;let historyRetentionDraft=false,historyRetentionRevision=0;
 let driveLetterEdited = false, activeDriveLetter = '';
 // Motion tokens apply from the first paint; the Settings editor edits this same controller.
 const motionController=createMotionController({doc:document,storage:localStorage,onError:error=>console.error(error)});
@@ -107,7 +115,7 @@ const sinceMs=started=>started>0?Math.max(0,Date.now()-started):undefined;
 let foundation=null,fileDetails=null,fileSearch=null,renderedFilesKey='',pagedFiles=null,fileNextCursor=null,filePageRevision=null,filePageRequest=0;
 const featureMounts=new Map(),featureRoots=new Map(),workspaceDisposers=[];
 const operationNotifications=new Map();
-const canonicalViewLabels={drive:'My drive',offline:'Available offline',history:'History',recycle:'Recycle Bin',settings:'Settings',help:'How it works',details:'File details',converter:'Converter',ollama:'Local models',access:'Local access',personalization:'Personalization',documentation:'Documentation',changelog:'Changelog',status:'Status',workflow:'Documents and downloads',updates:'Updates',storage:'Docker Hub storage',onboarding:'Setup guide',...TOOLBOX_VIEW_LABELS};
+const canonicalViewLabels={drive:'My drive',offline:'Available offline',history:'History',recycle:'Recycle Bin',settings:'Settings',help:'How it works',details:'File details',converter:'Converter',ollama:'Local models',access:'Local access',personalization:'Personalization',documentation:'Documentation',changelog:'Changelog',status:'Status',dimsum:'Dim sum',workflow:'Documents and downloads',updates:'Updates',storage:'Docker Hub storage',onboarding:'Setup guide',...TOOLBOX_VIEW_LABELS};
 const settingsIntegrity=createDesktopSettingsIntegrity({storage:localStorage,isAuthenticated:()=>featureMounts.get('access')?.authenticated===true,onError:message=>foundation?.notify({title:t('Private history unavailable'),message:String(message),level:'warning'}),verifyCredential:password=>featureRequest('personalization','verifySharedCredential',{password}),setCredential:password=>featureRequest('personalization','setSharedCredential',{password}),writeSharedMode:value=>featureRequest('personalization','sharedWrite',{value})});
 const localSettings=settingsIntegrity.store;
 if(localSettings.provenance==='default')try{localSettings.update({...LOCAL_DEFAULTS,...preferences,vocabulary:undefined},'existing preferences migrated');}catch{}
@@ -153,7 +161,7 @@ document.addEventListener('scroll', event => {
  scrollTimers.set(surface, setTimeout(() => { surface.classList.remove('is-scrolling'); scrollTimers.delete(surface); }, 900));
 }, {capture:true,passive:true});
 $('view-drive').prepend($('operation'));
-const translateWorkspace=createTranslator(()=>({...effectiveLocalSettings,...preferences,school:effectiveLocalSettings.school}),{dictionary:{...GUIDANCE_COPY,...INFO_ICON_COPY,...ONBOARDING_COPY,...cantonese,...enhancedLabels}});
+const translateWorkspace=createTranslator(()=>({...effectiveLocalSettings,...preferences,school:effectiveLocalSettings.school}),{dictionary:{...GUIDANCE_COPY,...INFO_ICON_COPY,...COLLAPSE_COPY,...BULK_COPY,...DIMSUM_COPY,...ONBOARDING_COPY,...cantonese,...enhancedLabels}});
 function t(source,options) { return translateWorkspace(source,options); }
 /** Quits the whole application (not just the window). Ctrl+Q, the Help and Settings menus, the New tab menu and the command palette all use this. */
 function quitApplication() { return api.quit ? api.quit() : api.windowControl('close'); }
@@ -235,7 +243,7 @@ function resetVaultPresentation() {
  vaultConfirmationLifetime.abort();vaultConfirmationLifetime=new AbortController();
  // Invalidate requests before clearing their presentation, including same-revision vaults.
  filePageRequest++; filePageRevision=null; fileNextCursor=null; pagedFiles=null; renderedFilesKey='';
- selected=null; fileSelection.clear(); fileDetails?.selectEntry(null,{resetFilters:true}); historySelection?.clear(); recycledSelection.clear();
+ selected=null; fileSelection.clear(); fileDetails?.selectEntry(null,{resetFilters:true}); historySelection?.clear();historyBulk.clear(); recycledSelection.clear();
  $('file-list').replaceChildren(); $('file-search').value='';
  for(const search of [fileSearch,historySearch?.input,recycleSearch?.input])if(search){search.query='';search.regex=false;search.flags='iu';search.render();}
  for(const kind of ['history','recycle']) { archiveRequests[kind]++;archiveRenders[kind]++;archiveRows[kind]=[];$(kind+'-list').replaceChildren();$('view-'+kind).setAttribute('aria-busy','false');setArchiveMessage(kind,''); }
@@ -264,6 +272,7 @@ function renderVaultSessions() {
  picker.disabled=!can.switch||!api?.selectSession;
  $('add-vault-session').disabled=!can.add||!api?.addSession;
  $('remove-vault-session').disabled=!can.remove||!api?.removeSession;
+ renderVaultBulkList();
 }
 async function changeVaultSession(action,id) {
  if(busy||fileDetails?.busy)return;
@@ -327,7 +336,7 @@ function renderAvailability() {
 function currentFiles(){return pagedFiles??state?.files??[];}
 function render() {
  if (!state) return;
- if(state.locked) {historySelection?.clear();filePageRequest++;pagedFiles=null;filePageRevision=null;selected=null;fileSelection.clear();fileDetails?.selectEntry(null);for(const kind of ['history','recycle']) {archiveRequests[kind]++;archiveRenders[kind]++;archiveRows[kind]=[];$(kind+'-list').replaceChildren();setArchiveMessage(kind,'Unlock a drive to view its history and recycle bin.');}recycledSelection.clear();}
+ if(state.locked) {historySelection?.clear();historyBulk.clear();filePageRequest++;pagedFiles=null;filePageRevision=null;selected=null;fileSelection.clear();fileDetails?.selectEntry(null);for(const kind of ['history','recycle']) {archiveRequests[kind]++;archiveRenders[kind]++;archiveRows[kind]=[];$(kind+'-list').replaceChildren();setArchiveMessage(kind,'Unlock a drive to view its history and recycle bin.');}recycledSelection.clear();}
  const status = mountState(); setText('vault-badge',status); $('vault-badge').dataset.state = state.mounted ? 'mounted' : 'locked';
  $('locked-state').hidden = !state.locked; $('drive-content').hidden = state.locked; $('lock-button').hidden = state.locked;
  $('driver-notice').hidden = state.driver?.checking || state.driver?.available !== false;
@@ -663,7 +672,7 @@ for (const key of ['theme','language','emoji','funnyEnglish','funnyCantonese']) 
 // Dropping a wording file anywhere on the window takes the same path as the Settings upload, then celebrates.
 const wordingDrop = installWordingDrop({
  doc: document, maxBytes: 256 * 1024,
- celebration: createCelebration({ doc: document, neutral: () => t('Personal wording applied', { message: true }), reducedMotion: () => matchMedia('(prefers-reduced-motion: reduce)').matches }),
+ celebration: createCelebration({ doc: document, neutral: () => t('Personal wording applied', { message: true }), reducedMotion: () => matchMedia('(prefers-reduced-motion: reduce)').matches, calm: () => effectiveLocalSettings.attention?.lowStimulation === true }),
  overlayText: () => t('Drop your wording file to apply it', { message: true }),
  cues: { applied: () => playCue('celebration'), refused: () => playCue('error') },
  apply: source => {
@@ -730,8 +739,9 @@ function initializeArchive() {
  const days=control('input');days.id='history-days';days.type='number';days.min='1';days.max='36500';days.value='365';days.hidden=true;days.label=t('Custom days');days.setAttribute('aria-label',t('Custom days'));
  retention.onchange=()=>{historyRetentionDraft=true;historyRetentionRevision++;days.hidden=retention.value!=='custom';};days.oninput=days.onchange=()=>{historyRetentionDraft=true;historyRetentionRevision++;};
  $('history-actions').append(retention,days,button('history-retention-apply','Apply',()=>{const value=retention.value==='forever'?null:retention.value==='custom'?Number(days.value):Number(retention.value);if(value!==null&&(!Number.isInteger(value)||value<1||value>36500))return showError(t('Enter 1 to 36500 days.'));const editRevision=historyRetentionRevision;archiveMutation('history',async()=>{const result=await api.setHistoryRetention(value);if(historyRetentionRevision===editRevision)historyRetentionDraft=false;return result;});}));
- $('recycle-actions').append(button('select-recycled','Select all visible',()=>{for(const el of $('recycle-list').querySelectorAll('md-checkbox:not([disabled])')) {el.checked=true;recycledSelection.add(el.value);}renderAvailability();}),button('restore-recycled','Restore selected',()=>restoreRecycledSelection()),button('empty-recycle','Empty Recycle Bin',async()=>{if(await superConfirm('desktop.empty-recycle-bin'))archiveMutation('recycle',()=>api.emptyRecycleBin());}));
+ $('recycle-actions').append(button('select-recycled','Select all visible',()=>{for(const el of $('recycle-list').querySelectorAll('md-checkbox:not([disabled])')) {el.checked=true;recycledSelection.add(el.value);}renderAvailability();archiveBulk.recycle?.refresh();}),button('restore-recycled','Restore selected',()=>restoreRecycledSelection()),button('empty-recycle','Empty Recycle Bin',async()=>{if(await superConfirm('desktop.empty-recycle-bin'))archiveMutation('recycle',()=>api.emptyRecycleBin());}));
  historySearch=createScopedSearch($('history-search-host'),t,()=>renderArchive('history'));recycleSearch=createScopedSearch($('recycle-search-host'),t,()=>renderArchive('recycle'));
+ mountArchiveChrome();
  $('transport-mode').onchange=()=>{$('private-git-fields').hidden=$('transport-mode').value!=='privateGit';};
 }
 async function archiveMutation(kind,task) {const result=await run('Working…',task,'Saved.');if(result?.ok){recycledSelection.clear();await loadArchive(kind);}}
@@ -751,10 +761,83 @@ async function renderArchive(kind) {
  const generation=++archiveRenders[kind];$('view-'+kind).dataset.archiveRender=String(generation);const result=await (kind==='history'?historySearch:recycleSearch).filterWithOutcome(archiveRows[kind]);if(generation!==archiveRenders[kind]||result.outcome==='superseded')return 'superseded';const rows=result.rows;const fragment=document.createDocumentFragment();
  if(kind==='history')historySelection.beginRows(rows);
  for(const version of rows) {const row=document.createElement('tr');const cell=text=>{const el=document.createElement('td');el.textContent=text;row.append(el);return el;};
- const selection=cell('');if(kind==='history')historySelection.bindRow(row,version,selection);if(kind==='recycle'){const check=control('input',{type:'checkbox'});check.type='checkbox';check.value=version.id;check.checked=recycledSelection.has(version.id);check.disabled=!version.isAvailable;check.setAttribute('aria-label',t('Select')+' '+version.path);check.onchange=()=>{check.checked?recycledSelection.add(version.id):recycledSelection.delete(version.id);renderAvailability();};selection.append(check);}
+ const selection=cell('');if(kind==='history')historySelection.bindRow(row,version,selection);if(kind==='history'){const check=control('input',{type:'checkbox'});check.type='checkbox';check.value=version.id;check.checked=historyBulk.has(version.id);check.setAttribute('aria-label',t('Select')+' '+version.path);bindBulkCheckbox(check,'history');selection.append(check);}if(kind==='recycle'){const check=control('input',{type:'checkbox'});check.type='checkbox';check.value=version.id;check.checked=recycledSelection.has(version.id);check.disabled=!version.isAvailable;check.setAttribute('aria-label',t('Select')+' '+version.path);bindBulkCheckbox(check,'recycle');selection.append(check);}
  cell(version.path);cell(formatDate(version.timestampUtc));cell(version.isDirectory?t('Folder'):formatBytes(version.length));cell(t(version.isAvailable?'Available':'Encrypted data unavailable'));const actions=cell('');
  if(kind==='history'){const restore=control('button');restore.className='button small';restore.textContent=t('Restore as new version');restore.disabled=busy||!version.isAvailable;restore.dataset.archiveRestore='true';restore.dataset.versionId=version.id;restore.dataset.available=String(version.isAvailable);restore.onclick=()=>restoreHistoryVersion(version.id);actions.append(restore);}fragment.append(row);}
- $(kind+'-list').replaceChildren(fragment);if(kind==='history')historySelection.refresh();setArchiveMessage(kind,rows.length?'':'No matching entries.');renderAvailability();$('view-'+kind).dataset.archiveRendered=String(generation);return result.outcome;
+ $(kind+'-list').replaceChildren(fragment);if(kind==='history')historySelection.refresh();setArchiveMessage(kind,rows.length?'':'No matching entries.');renderAvailability();$('view-'+kind).dataset.archiveRendered=String(generation);updateArchiveStatistics(kind,rows);(kind==='history'?historyBulk:recycleBulk).prune(bulkOrderedIds(kind));archiveBulk[kind]?.refresh();return result.outcome;
+}
+
+/** Search rows, statistics and bulk toolbars for history and the Recycle Bin, and the Manage vaults section. */
+function mountArchiveChrome(){
+ // The search row and the collection statistics fold away. Statistics describe the list, so they start closed; the search stays open and, when it is folded, still says that a filter is excluding rows.
+ for(const kind of ['history','recycle']){
+  const searchHost=$(kind+'-search-host'),filters=createCollapsibleSection({doc:document,id:'desktop-'+kind+'-filters',title:t('Search and filters'),storage:localStorage,open:true});
+  searchHost.before(filters.root);filters.body.append(searchHost);dictionary.set(filters.toggle,'Search and filters');
+  const stats=createCollapsibleSection({doc:document,id:'desktop-'+kind+'-statistics',title:t('Statistics'),storage:localStorage,open:false});
+  filters.root.after(stats.root);dictionary.set(stats.toggle,'Statistics');archiveFilters[kind]=filters;archiveStats[kind]=stats;
+  // Select shown, invert, clear and an exact count, with Export selected for what is ticked.
+  const bulkHost=document.createElement('div');bulkHost.className='bulk-host';$(kind+'-actions').after(bulkHost);
+  archiveBulk[kind]=mountBulkBar({doc:document,host:bulkHost,labels:bulkLabels(en=>t(en)),noun:t(kind==='history'?'versions':'deleted entries'),selection:bulkSelectionFor(kind),getShown:()=>bulkOrderedIds(kind),onChange:()=>syncBulkChecks(kind),actions:[{label:t('Export selected'),run:()=>exportSelectedArchive(kind)}]});
+ }
+ mountVaultBulk();
+}
+
+/** Ids of the checkboxes a list shows right now, in display order. */
+function bulkOrderedIds(kind){return [...(kind==='vault'?document.querySelector('.vault-bulk-list'):$(kind+'-list'))?.querySelectorAll('input[data-bulk]')||[]].map(input=>input.value);}
+const bulkSelectionFor=kind=>kind==='history'?historyBulk:kind==='recycle'?recycleBulk:vaultBulk;
+function syncBulkChecks(kind){const selection=bulkSelectionFor(kind);for(const input of (kind==='vault'?document.querySelector('.vault-bulk-list'):$(kind+'-list'))?.querySelectorAll('input[data-bulk]')||[])input.checked=selection.has(input.value);}
+/** One checkbox for a bulk list: click toggles it, Shift+click selects the range from the last one, and the toolbar count follows. */
+function bindBulkCheckbox(input,kind){
+ input.dataset.bulk='true';const selection=bulkSelectionFor(kind);
+ const settle=()=>{if(kind==='recycle')renderAvailability();archiveBulk[kind]?.refresh();};
+ input.addEventListener('click',event=>{if(!event.shiftKey)return;event.preventDefault();selection.range(bulkOrderedIds(kind),input.value);syncBulkChecks(kind);settle();});
+ input.addEventListener('change',()=>{selection.toggle(input.value,input.checked);settle();});
+}
+async function exportSelectedArchive(kind){
+ const ids=new Set(bulkSelectionFor(kind).list(bulkOrderedIds(kind)));
+ const rows=(archiveRows[kind]||[]).filter(row=>ids.has(row.id)).map(row=>({id:row.id,path:row.path,savedUtc:row.timestampUtc,bytes:row.isDirectory?null:row.length,isDirectory:Boolean(row.isDirectory),isAvailable:Boolean(row.isAvailable)}));
+ if(!rows.length)return;
+ await exportText({name:kind+'-selected.json',mime:'application/json',content:JSON.stringify(rows,null,2)});
+ archiveBulk[kind]?.showReport(t('Exported selected')+': '+rows.length+' '+t(kind==='history'?'versions':'deleted entries'));
+}
+/** Why a vault cannot be removed, or null when it can. Reasons are reported, never hidden. */
+function vaultRemovalReason(session){
+ if(!session)return t('Only a locked vault that is not mounted can be removed');
+ if(session.sessionId==='main')return t('The main vault cannot be removed');
+ if(session.recoveryRequired)return t('Finish the recovery first');
+ if(!session.locked||session.mounted||session.operation)return t('Only a locked vault that is not mounted can be removed');
+ return null;
+}
+async function removeSelectedVaults(){
+ if(busy||fileDetails?.busy||!api?.removeSession)return;
+ const ids=vaultBulk.list(bulkOrderedIds('vault'));if(!ids.length)return;
+ const sessions=new Map((state?.sessions||[]).map(session=>[session.sessionId,session]));
+ const nameOf=id=>vaultSessionChoices(state,t).find(choice=>choice.id===id)?.label||id;
+ let summary='';
+ const outcome=await run('Working…',async()=>{const result=await runBulk(ids,id=>api.removeSession(id),{skip:id=>vaultRemovalReason(sessions.get(id))});summary=summarizeBulk(result,{noun:t('vaults'),describe:nameOf,labels:bulkLabels(en=>t(en))});vaultBulk.clear();});
+ archiveBulk.vault?.showReport(summary);
+ if(outcome?.ok&&summary)toast(summary);
+}
+/** Builds the Manage vaults section: a list with a checkbox per vault and the shared bulk toolbar. */
+function mountVaultBulk(){
+ const bar=document.querySelector('.vault-session-bar');if(!bar||bar.querySelector('.vault-bulk-list'))return;
+ const section=createCollapsibleSection({doc:document,id:'desktop-vault-manage',title:t('Manage vaults'),storage:localStorage,open:false});dictionary.set(section.toggle,'Manage vaults');
+ const list=document.createElement('div');list.className='vault-bulk-list';list.setAttribute('role','group');list.setAttribute('aria-label',t('Vault sessions'));section.body.append(list);bar.append(section.root);
+ archiveBulk.vault=mountBulkBar({doc:document,host:section.body,labels:bulkLabels(en=>t(en)),noun:t('vaults'),selection:vaultBulk,getShown:()=>bulkOrderedIds('vault'),onChange:()=>syncBulkChecks('vault'),actions:[{label:t('Remove selected locked vaults'),run:removeSelectedVaults}]});
+ renderVaultBulkList();
+}
+function renderVaultBulkList(){
+ const list=document.querySelector('.vault-bulk-list');if(!list)return;
+ const choices=vaultSessionChoices(state,t),signature=JSON.stringify(choices);
+ if(list.dataset.choices!==signature){list.replaceChildren(...choices.map(choice=>{const label=document.createElement('label'),input=control('input',{type:'checkbox'}),name=document.createElement('span');input.type='checkbox';input.value=choice.id;input.checked=vaultBulk.has(choice.id);input.setAttribute('aria-label',t('Select')+' '+choice.label);name.textContent=choice.label;label.append(input,name);bindBulkCheckbox(input,'vault');return label;}));list.dataset.choices=signature;}
+ vaultBulk.prune(bulkOrderedIds('vault'));archiveBulk.vault?.refresh();
+}
+
+/** Refreshes the statistics panel and the folded-filter disclosure after every history or Recycle Bin render. */
+function updateArchiveStatistics(kind,rows){
+ const all=archiveRows[kind]||[],size=list=>list.reduce((sum,row)=>sum+(row.isDirectory?0:Number(row.length)||0),0),available=all.filter(row=>row.isAvailable).length;
+ if(archiveStats[kind])renderStatistics(document,archiveStats[kind].body,[[t('Entries'),all.length],[t('Shown'),rows.length],[t('Total size'),formatBytes(size(all))],[t('Available'),available],[t('Unavailable'),all.length-available]]);
+ archiveFilters[kind]?.setActive(activeFilterText(t('Filter active'),rows.length,all.length));
 }
 
 async function restoreHistoryVersion(id) {
@@ -831,6 +914,8 @@ function workspaceCommands() {
  const command=(id,label,run)=>({id,label:{en:label,yue:cantonese[label]||enhancedLabels[label]||label},run});
  const commands=[command('vault:create','Create a drive',()=>openVaultDialog('create')),command('vault:unlock','Unlock existing drive',()=>openVaultDialog('unlock')),command('vault:lock','Lock drive',()=>$('lock-button').click()),command('vault:import','Import files',importFiles),command('vault:sync','Sync now',()=>$('sync-button').click()),command('file:open','Open',openSelected),command('file:export','Export copy',()=>$('export-button').click()),command('file:offline','Keep offline',()=>$('offline-button').click()),command('file:release','Remove offline copy',()=>$('release-button').click()),command('history:save','Save version now',()=>$('save-version').click()),command('settings:vocabulary','Your vocabulary',()=>{foundation.shell.activate('settings');$('vocabulary-label').focus();})];
  for(const key of ['theme','language','emoji','funnyEnglish','funnyCantonese']){const field=$(`${key}-setting`);const label=field.getAttribute('aria-label')||key;commands.push({id:`settings:${key}`,label:{en:label,yue:cantonese[label]||label},description:{en:'Application preferences',yue:'程式偏好設定'},group:{en:'Settings',yue:'設定'},control:{type:controlKind(field)==='select'?'select':['switch','checkbox'].includes(controlKind(field))?'switch':'range',min:Number(field.min)||0,max:Number(field.max)||100,options:controlKind(field)==='select'?[...field.options].map(option=>({value:option.value,label:{en:option.textContent,yue:cantonese[option.textContent]||option.textContent}})):undefined,get:()=>preferences[key],set:value=>{preferences[key]=value;savePreferences();applyPreferences();}},reveal:()=>{foundation.shell.activate('settings');field.scrollIntoView({block:'center'});field.focus();}});}
+ // Every personalization setting is reachable from the palette, whichever Personalization tab is showing.
+ commands.push(...personalizationSettingCommands({translate:text=>translateWorkspace(text,{language:'yue'}),open:(tab,label)=>{foundation.model.openTab({id:'personalization',label:canonicalViewLabels.personalization});foundation.shell.activate('personalization');const mounted=featureMounts.get('personalization');mounted?.open?.(tab);queueMicrotask(()=>{const root=document.getElementById('view-personalization');const wanted=t(label);const target=[...root?.querySelectorAll(CONTROL_SELECTOR+',input,select')||[]].find(node=>[node.getAttribute('aria-label'),node.label].includes(wanted)||[node.getAttribute('aria-label'),node.label].includes(label));target?.scrollIntoView?.({block:'center'});target?.focus?.();});}}));
  commands.push({id:'vault:force-lock',label:{en:'Force lock',yue:'強制鎖定'},disabled:!api?.forceLock,run:async()=>{if(await superConfirm('desktop.force-lock'))return run('Locking drive…',()=>api.forceLock(forceLockOptions()));}},{id:'application:quit',label:{en:'Quit application',yue:'結束程式'},shortcut:'Control+q',run:()=>quitApplication()});
  return commands;
 }
@@ -927,7 +1012,8 @@ function setupEnhancedWorkspace() {
   mountFeature('live-charts','Live charts','即時圖表',()=>import('./features/live-charts/index.js'),(module,root)=>{const view=module.mountLiveCharts(root,{getLanguage:()=>preferences.language});workspaceDisposers.push(subscribeLanguage(()=>view.refreshLanguage()));return view;}),
   mountFeature('screen-recording','Screen recording','螢幕錄影',()=>import('./features/screen-recording/index.js'),(module,root)=>{const view=module.mountScreenRecording(root,{api,getLanguage:()=>preferences.language,notify:featureNotify});workspaceDisposers.push(subscribeLanguage(()=>view.refreshLanguage()));return view;}),
   mountFeature('drawing','Sketch board','繪圖板',()=>import('./features/drawing/index.js'),(module,root)=>{const view=module.mountDrawing(root,{api,getLanguage:()=>preferences.language,getDriveLetter:()=>state&&!state.locked&&state.mounted?state.driveLetter||null:null,notify:featureNotify});workspaceDisposers.push(subscribeLanguage(()=>view.refreshLanguage()));return view;}),
-  mountFeature('status','Status','狀態',()=>import('./features/status/index.js'),(module,root)=>module.mountStatus(root,{translate:t,getStatus:()=>featureRequest('status','status')}))
+  mountFeature('status','Status','狀態',()=>import('./features/status/index.js'),(module,root)=>module.mountStatus(root,{translate:t,getStatus:()=>featureRequest('status','status')})),
+  mountFeature('dimsum','Dim sum','點心',()=>import('./features/dimsum/index.js'),(module,root)=>module.mountDimsum(root,{translate:t,getLanguage:()=>preferences.language,storage:localStorage,request:(action,payload)=>featureRequest('dimsum',action,payload)}))
  ];
  Promise.allSettled(mounts).then(()=>{foundation.shell.activate(view);refreshPaletteInventory();rendererTiming.finish(rendererTiming.begin('startup-settled'),'settled');startupReady=true;attemptStartup();});
  foundation.registerCommands([...TOOLBOX_DESTINATIONS.map(d=>({id:`tool:${d.id}`,label:d.label,description:d.description,group:d.group,keywords:[...d.keywords],run:()=>{foundation.model.openTab({id:d.id,label:d.label.en});foundation.shell.activate(d.id);}})),{id:'onboarding:open',label:{en:'Open the setup guide',yue:'開啟設定指南'},run:()=>openSetupGuide()},{id:'vault:force-lock',label:{en:'Force lock',yue:'強制鎖定'},run:async()=>{if(await superConfirm('desktop.force-lock'))return run('Locking drive…',()=>api.forceLock(forceLockOptions()));}},{id:'application:quit',label:{en:'Quit application',yue:'結束程式'},shortcut:'Control+q',run:()=>quitApplication()}]);

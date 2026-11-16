@@ -1,6 +1,7 @@
 import {control} from '../../../shared/surface/controls.js';
 import { createScopedSearch } from '../../scoped-search.js';
 import { renderMarkdown } from './markdown.js';
+import {createCollapsibleSection, renderStatistics, activeFilterText} from '../../../shared/surface/collapsible-section.js';
 
 function element(tag, text, className) { const node = control(tag, tag === 'button' ? {type:'button'} : {}); if (text !== undefined) node.textContent = text; if (className) node.className = className; return node; }
 export function mountDocumentation(host, { catalog, translate = value => value, onExport, initialId } = {}) {
@@ -12,7 +13,11 @@ export function mountDocumentation(host, { catalog, translate = value => value, 
   navigation.setAttribute('aria-label', translate('Documentation articles')); navigation.className = 'docs-nav'; article.tabIndex = -1;
   const workspace = element('div'); workspace.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:16px;min-height:0;max-height:65dvh;overflow:auto';
   navigation.style.cssText = 'display:flex;flex-direction:column;min-width:0;overflow:auto'; article.style.cssText = 'min-width:0;overflow:auto;overflow-wrap:anywhere';
-  workspace.append(navigation, article); host.append(searchHost, actions, message, workspace);
+  workspace.append(navigation, article);
+  const storage = (() => { try { return globalThis.localStorage; } catch { return undefined; } })();
+  const filterSection = createCollapsibleSection({doc: document, id: 'desktop-documentation-filters', title: translate('Search and filters'), storage, open: true, children: [searchHost]});
+  const statsSection = createCollapsibleSection({doc: document, id: 'desktop-documentation-statistics', title: translate('Statistics'), storage, open: false});
+  host.append(filterSection.root, statsSection.root, actions, message, workspace);
   let disposed = false;
   let resolveReady;const ready=new Promise(resolve=>resolveReady=resolve);const finishReady=outcome=>{resolveReady?.(outcome);resolveReady=null;};
   let active = catalog.documents.find(row => row.id === initialId) || catalog.documents[0], generation = 0;
@@ -22,6 +27,8 @@ export function mountDocumentation(host, { catalog, translate = value => value, 
     const result = await search.filterWithOutcome(catalog.documents.map(row => ({ ...row, path: `${row.category} ${row.title}\n${row.markdown}` })));
     if (disposed || request !== generation) return;
     if(result.outcome==='superseded')return;const rows=result.rows;
+    renderStatistics(document, statsSection.body, [[translate('Entries'), catalog.documents.length], [translate('Shown'), rows.length], [translate('Categories'), new Set(catalog.documents.map(row => row.category).filter(Boolean)).size]]);
+    filterSection.setActive(activeFilterText(translate('Filter active'), rows.length, catalog.documents.length));
     navigation.replaceChildren();
     for (const row of rows) { const button = element('button', row.title); button.type = 'button'; button.setAttribute('aria-current', String(active?.id === row.id)); button.toggleAttribute('data-current', active?.id === row.id); button.addEventListener('click', () => open(row.id)); navigation.append(button); }
     message.textContent = rows.length ? '' : translate('No matching articles.');finishReady(result.outcome);
@@ -43,5 +50,5 @@ export function mountDocumentation(host, { catalog, translate = value => value, 
     const url = URL.createObjectURL(new Blob([active.markdown], { type: 'text/markdown' })); const link = element('a'); link.href = url; link.download = `${active.id.split('/').pop()}.md`; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
   });
   if (active) open(active.id); else {message.textContent = translate('No bundled documentation is available.');finishReady('ready');}
-  return { ready,open, refresh: () => { search.refresh(); if (active) open(active.id); }, destroy: () => { disposed = true; generation++;finishReady('disposed'); search.destroy?.(); host.replaceChildren(); } };
+  return { ready,open, refresh: () => { filterSection.setTitle(translate('Search and filters')); statsSection.setTitle(translate('Statistics')); search.refresh(); if (active) open(active.id); }, destroy: () => { disposed = true; generation++;finishReady('disposed'); search.destroy?.(); filterSection.destroy(); statsSection.destroy(); host.replaceChildren(); } };
 }

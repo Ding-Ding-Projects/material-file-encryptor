@@ -107,5 +107,17 @@ export const REQUIRED_FEATURE_IDS = Object.freeze([
   'uh-single-file-editions',
   'project-profile',
   'roblox-model-catalogue',
-  'roblox-visual-realism'
+  'roblox-visual-realism',
+  'job-experience-document-label',
+  'action-sound-effects',
+  'live-charts',
+  'extension-support',
+  'base64-tools',
+  'quicktype-studio',
+  'virtual-disk-manager',
+  'minecraft-world-generator',
+  'drawesome-drawing',
+  'animation-editor',
+  'paired-hosted-forms',
+  'three-delivery-forms'
 ]);

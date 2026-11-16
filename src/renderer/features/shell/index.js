@@ -40,7 +40,7 @@ export function mountSurfaceFoundation({host,before=null,storage,language='en',p
   const offerViews=list=>offerRegisteredViews(model,list,view=>localized(labels.get(view.id)||view.label,'en'));
   offerViews(tabs);
   let frame;
-  const audio=createNotificationAudio();
+  const audio=createNotificationAudio({calm:()=>document.documentElement.dataset.lowStimulation==='true'});
   let messageTimer;
   const live=element('mfe-live-notification',{role:'status','aria-live':'polite'});
   if(!customElements.get('mfe-surface-actions'))customElements.define('mfe-surface-actions',class extends HTMLElement{constructor(){super();this.attachShadow({mode:'open'});}});

@@ -1,3 +1,11 @@
+## Feature inventory refresh and comfort features, 2026-11-16
+
+- [x] Extend the required feature inventory with twelve entries (action sounds, live charts, extension support, Base64 tools, type generator, virtual disk manager, world generator, drawing, animation editor, paired hosted forms, three delivery forms, job document wording). Each row is unverified, partial or missing and none is marked implemented.
+- [x] Record specific not-applicable reasons per surface in contracts/feature-delivery.json.
+- [x] Delivery forms: the paired hosted forms (a Docker-hosted web app and an appliance OS image) and the three-delivery-forms duty do not apply. This product is a Windows drive built on WinFsp with a native .NET engine and a desktop shell, which cannot run inside a Linux container. The desktop build is its only delivery form. This is a recorded decision, not a gap; revisit only if a container-capable core is ever split out.
+- [ ] Installation takeover: no contract text was found in the local feature catalogue, so it is not inventoried yet.
+- [ ] Every row above still needs built-application interaction proof before any status can become implemented.
+
 ## Installed product icon repair, 2026-10-17
 
 - [x] Reproduce the default framework icon in installed executables and shortcut references.

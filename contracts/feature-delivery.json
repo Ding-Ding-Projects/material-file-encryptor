@@ -443,7 +443,7 @@
         "test/local-language.test.js"
       ],
       "evidence": [],
-      "reason": "Attention modes and their local settings controls exist. Current interaction, persistence and cross-surface presentation remain unverified.",
+      "reason": "Attention modes and their local settings controls exist. Current interaction, persistence and cross-surface presentation remain unverified. Source update: Low stimulation now also softens colours, replaces the full-window wording celebration with a small static notice and lowers the notification cue; it overrides the Motion setting. Not verified in a built application.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -504,7 +504,7 @@
         "test/local-personalization.test.js"
       ],
       "evidence": [],
-      "reason": "Desktop startup coordinator integrates the single 10 percent draw, exclusions and transient presentation with the verified public-photo host. Current startup timing, no-focus-steal and visual acceptance remain unverified.",
+      "reason": "Desktop startup coordinator integrates the single 10 percent draw, exclusions and transient presentation with the verified public-photo host. Current startup timing, no-focus-steal and visual acceptance remain unverified. Source update: a Dim sum catalogue view loads the public catalogue only on request through the main process, with search, category, a saved personal list and one illustration at a time. Not verified in a built application.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -1034,7 +1034,7 @@
         "test/surface-workbench.test.js"
       ],
       "evidence": [],
-      "reason": "Search/filter disclosures exist. Universal persisted collapsed state and active-filter disclosure across every surface remain unverified.",
+      "reason": "Search/filter disclosures exist. Universal persisted collapsed state and active-filter disclosure across every surface remain unverified. Source update: search rows and statistics panels on history, Recycle Bin, changelog, documentation and the dim sum catalogue fold away, remember their state and disclose an active filter while folded. Statistics start closed. Not verified in a built application.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -1397,7 +1397,7 @@
       "evidence": [
         "docs/evidence/installed-proof-1.772.1.json"
       ],
-      "reason": "Command discovery and activation are integrated. Complete feature/settings coverage and target focus/scroll behavior remain unverified. Release package run of 1.772.1 (not an installed copy) opened the command palette from the top bar and its regex builder. Status stays unverified: command execution and every language tuple were not driven.",
+      "reason": "Command discovery and activation are integrated. Complete feature/settings coverage and target focus/scroll behavior remain unverified. Release package run of 1.772.1 (not an installed copy) opened the command palette from the top bar and its regex builder. Status stays unverified: command execution and every language tuple were not driven. Source update: every personalization setting and tab is registered as a palette command whichever tab is showing. Not verified in a built application.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -1696,7 +1696,7 @@
         "docs/evidence/installed-proof-1.779.1.json",
         "docs/evidence/installed-proof-1.782.1.json"
       ],
-      "reason": "Every control in the desktop shell markup has an authored explanation, guided steps and an isolated sample, mounted before its control and covered by a markup-scanning coverage test and a guard test. A headless browser run of the real renderer against a stubbed bridge mounted every icon. Controls that feature modules create after start-up, built-app interaction and visual evidence remain unverified. Release package run of 1.772.1 (not an installed copy) showed an information icon beside shell controls, opened a panel with a real pointer click and with Enter, closed it with Escape and returned focus. Status stays unverified: the navigation icon above the application name and the detached select search icons were found and are fixed in source only. Later release package run of 1.779.1 (not an installed copy): the information controls measured 28 by 28 CSS pixels beside drive, file toolbar, search and settings controls in light and dark, and a real pointer click opened a panel that Escape closed. Status stays unverified: the panel squeezed the page heading while open at the default window size and that was not investigated, and no installed-copy run was made. Later release package run of 1.782.1 (not an installed copy): the squeezed page heading was reproduced (78 by 62 CSS pixels with the Force lock panel open), its cause found in the open panel's full-row flex basis inside the non-wrapping page header, and a fix with a failing-first test written in source; the same rules applied to the live window through a stylesheet gave a one-line 99 by 31 heading. Status stays unverified: the fix is in source only and not in a published build, and no installed-copy run was made.",
+      "reason": "Every control in the desktop shell markup has an authored explanation, guided steps and an isolated sample, mounted before its control and covered by a markup-scanning coverage test and a guard test. A headless browser run of the real renderer against a stubbed bridge mounted every icon. Controls that feature modules create after start-up, built-app interaction and visual evidence remain unverified. Release package run of 1.772.1 (not an installed copy) showed an information icon beside shell controls, opened a panel with a real pointer click and with Enter, closed it with Escape and returned focus. Status stays unverified: the navigation icon above the application name and the detached select search icons were found and are fixed in source only. Later release package run of 1.779.1 (not an installed copy): the information controls measured 28 by 28 CSS pixels beside drive, file toolbar, search and settings controls in light and dark, and a real pointer click opened a panel that Escape closed. Status stays unverified: the panel squeezed the page heading while open at the default window size and that was not investigated, and no installed-copy run was made. Later release package run of 1.782.1 (not an installed copy): the squeezed page heading was reproduced (78 by 62 CSS pixels with the Force lock panel open), its cause found in the open panel's full-row flex basis inside the non-wrapping page header, and a fix with a failing-first test written in source; the same rules applied to the live window through a stylesheet gave a one-line 99 by 31 heading. Status stays unverified: the fix is in source only and not in a published build, and no installed-copy run was made. Source update: icons are now mounted for controls the renderer creates after start-up (history and Recycle Bin actions) by observing the document, and the vault session controls are covered. Feature module controls and per-row controls are still not covered.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -1750,7 +1750,7 @@
         "test/local-personalization.test.js"
       ],
       "evidence": [],
-      "reason": "Shared optional guidance and nested inspector explanations exist. Exhaustive setting coverage, localization and actual presentation remain unverified.",
+      "reason": "Shared optional guidance and nested inspector explanations exist. Exhaustive setting coverage, localization and actual presentation remain unverified. Source update: a hand-written Settings inventory test compares the Settings view, the stored defaults, field help and Cantonese copy. Not verified in a built application.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -2245,7 +2245,7 @@
       "localization": [],
       "tests": [],
       "evidence": [],
-      "reason": "The reviewed source introduces no paid feature. An exhaustive free-workflow and unwanted-prompt audit was not performed.",
+      "reason": "The reviewed source introduces no paid feature. An exhaustive free-workflow and unwanted-prompt audit was not performed. Source update: the Help price statement now also states open source (GPL-3.0-only), no advertising, no telemetry and when the app connects to the internet; a test checks the claims against package metadata and shipped code. Not verified in a built application.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -2435,7 +2435,7 @@
         "docs/evidence/installed-proof-1.772.1.json",
         "docs/evidence/installed-proof-1.779.1.json"
       ],
-      "reason": "Selected-record, notification, access and export actions exist. Exhaustive collection coverage remains unverified; thin access composition wiring is pending beyond this baseline. Release package run of 1.772.1 (not an installed copy) used select-all, a two-file selection, bulk offline release, bulk delete to the Recycle Bin and restore. Status stays unverified: only one language and theme tuple was driven. Later release package run of 1.779.1 (not an installed copy): two files were selected with real clicks and the bulk toolbar and delete confirmation were captured. Status stays unverified: only one language and theme tuple was driven.",
+      "reason": "Selected-record, notification, access and export actions exist. Exhaustive collection coverage remains unverified; thin access composition wiring is pending beyond this baseline. Release package run of 1.772.1 (not an installed copy) used select-all, a two-file selection, bulk offline release, bulk delete to the Recycle Bin and restore. Status stays unverified: only one language and theme tuple was driven. Later release package run of 1.779.1 (not an installed copy): two files were selected with real clicks and the bulk toolbar and delete confirmation were captured. Status stays unverified: only one language and theme tuple was driven. Source update: history, Recycle Bin, vault sessions and notifications gained multi-select with Shift ranges, select shown, invert, clear, an exact count, export of the selection and a bulk removal of locked vaults with skipped-item reporting. History restore in bulk and undo are not implemented. Not verified in a built application.",
       "builtInteraction": "unverified",
       "visualEvidence": "unverified",
       "sourceReview": {
@@ -18340,6 +18340,1217 @@
         ],
         "persistence": "Nothing beyond existing local preferences is stored in the browser; desktop records stay on the desktop."
       }
+    },
+    {
+      "id": "job-experience-document-label",
+      "surface": "desktop",
+      "status": "not-applicable",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "This product mounts an encrypted drive and is not a job-related workflow, so the Job Experience Document wording has no surface here.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "persistence": [],
+      "applicability": {
+        "kind": "not-applicable",
+        "applies": false,
+        "directSurface": false,
+        "reason": "This product mounts an encrypted drive and is not a job-related workflow, so the Job Experience Document wording has no surface here.",
+        "source": "Declared canonical catalogue applicability, reviewed for this product.",
+        "scopeReference": {
+          "entry": "job-experience-document-label",
+          "declaredScope": "Job-related products only"
+        }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "not-applicable"
+    },
+    {
+      "id": "job-experience-document-label",
+      "surface": "site",
+      "status": "not-applicable",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "This product mounts an encrypted drive and is not a job-related workflow, so the Job Experience Document wording has no surface here.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "persistence": [],
+      "applicability": {
+        "kind": "not-applicable",
+        "applies": false,
+        "directSurface": false,
+        "reason": "This product mounts an encrypted drive and is not a job-related workflow, so the Job Experience Document wording has no surface here.",
+        "source": "Declared canonical catalogue applicability, reviewed for this product.",
+        "scopeReference": {
+          "entry": "job-experience-document-label",
+          "declaredScope": "Job-related products only"
+        }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "not-applicable"
+    },
+    {
+      "id": "job-experience-document-label",
+      "surface": "extension",
+      "status": "not-applicable",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "This product mounts an encrypted drive and is not a job-related workflow, so the Job Experience Document wording has no surface here.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "persistence": [],
+      "applicability": {
+        "kind": "not-applicable",
+        "applies": false,
+        "directSurface": false,
+        "reason": "This product mounts an encrypted drive and is not a job-related workflow, so the Job Experience Document wording has no surface here.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "job-experience-document-label",
+          "declaredScope": "Job-related products only"
+        }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "current-runtime-unverified"
+    },
+    {
+      "id": "action-sound-effects",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [
+        "src/shared/surface/notification-audio.js",
+        "src/shared/surface/notification-center.js"
+      ],
+      "documentation": [
+        "docs/features/surface-foundation/layout-and-notifications.md"
+      ],
+      "localization": [],
+      "tests": [
+        "test/notification-audio.test.js"
+      ],
+      "evidence": [],
+      "reason": "A single notification beep exists in the notification centre with its own off switch. There is no global Settings switch, no cue set for real outcomes, no volume or quiet hours, and no cue on a vocabulary drop yet; the settings and cue service are being added. Nothing is verified in a built application.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "persistence": [
+        "src/shared/surface/notification-center.js"
+      ],
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "The canonical scope includes user-facing product surfaces; incomplete implementation is not an exemption.",
+        "source": "Declared canonical catalogue applicability, reviewed for this product.",
+        "scopeReference": {
+          "entry": "action-sound-effects",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified",
+      "sourceVerification": {
+        "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
+        "verdict": "references-present",
+        "checkedPaths": 4,
+        "missingPaths": [],
+        "scope": "Current revision path existence verified. Behavior verdict is bounded source review; test paths do not assert execution."
+      },
+      "builtEvidenceVerdict": {
+        "interaction": "unverified",
+        "visual": "unverified",
+        "reason": "No complete current-source surface acceptance receipt."
+      }
+    },
+    {
+      "id": "action-sound-effects",
+      "surface": "site",
+      "status": "not-applicable",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Action sounds belong to applications. The documentation website is not an application and plays no action cues.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "persistence": [],
+      "applicability": {
+        "kind": "not-applicable",
+        "applies": false,
+        "directSurface": false,
+        "reason": "Action sounds belong to applications. The documentation website is not an application and plays no action cues.",
+        "source": "Declared canonical catalogue applicability, reviewed for this product.",
+        "scopeReference": {
+          "entry": "action-sound-effects",
+          "declaredScope": "Applications only"
+        }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "not-applicable"
+    },
+    {
+      "id": "action-sound-effects",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [
+        "docs/features/workflows/browser-extension-workspace.md"
+      ],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "The extension has no action sound service or Settings switch.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "persistence": [],
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "action-sound-effects",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "wiring",
+          "proof"
+        ],
+        "action": "Play short, optional action cues with a visible Settings switch that persists.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Play short, optional action cues with a visible Settings switch that persists.",
+            "nextProof": "Implement the workflow, then retain independent installed-build identity, interaction and visual receipts including invalid and reset states."
+          }
+        ],
+        "persistence": "No extension persistence exists for this workflow yet. Define scoped durable state where needed and never store secrets in general preferences."
+      }
+    },
+    {
+      "id": "live-charts",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "No live chart exists in the desktop application.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "persistence": [],
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "The canonical scope includes user-facing product surfaces; incomplete implementation is not an exemption.",
+        "source": "Declared canonical catalogue applicability, reviewed for this product.",
+        "scopeReference": {
+          "entry": "live-charts",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "sourceVerification": {
+        "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
+        "verdict": "references-present",
+        "checkedPaths": 0,
+        "missingPaths": [],
+        "scope": "Current revision path existence verified. Behavior verdict is bounded source review; test paths do not assert execution."
+      },
+      "builtEvidenceVerdict": {
+        "interaction": "unverified",
+        "visual": "unverified",
+        "reason": "No complete current-source surface acceptance receipt."
+      }
+    },
+    {
+      "id": "live-charts",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "No live chart exists on the documentation website.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "persistence": [],
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "The canonical scope includes user-facing product surfaces; incomplete implementation is not an exemption.",
+        "source": "Declared canonical catalogue applicability, reviewed for this product.",
+        "scopeReference": {
+          "entry": "live-charts",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "sourceVerification": {
+        "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
+        "verdict": "references-present",
+        "checkedPaths": 0,
+        "missingPaths": [],
+        "scope": "Current revision path existence verified. Behavior verdict is bounded source review; test paths do not assert execution."
+      },
+      "builtEvidenceVerdict": {
+        "interaction": "unverified",
+        "visual": "unverified",
+        "reason": "No complete current-source surface acceptance receipt."
+      }
+    },
+    {
+      "id": "live-charts",
+      "surface": "extension",
+      "status": "missing",
+      "implementation": [
+        "browser-extension/options.js"
+      ],
+      "documentation": [
+        "docs/features/workflows/browser-extension-workspace.md"
+      ],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "No live chart exists in the extension.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "persistence": [],
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "Missing extension capability does not justify an exemption.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "live-charts",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "completion": {
+        "owner": "browser-extension/options.js",
+        "gaps": [
+          "behavior",
+          "wiring",
+          "proof"
+        ],
+        "action": "Show live values as animated charts with an accessible text alternative.",
+        "targets": [
+          {
+            "state": "missing",
+            "surface": null,
+            "selector": null,
+            "outcome": "Show live values as animated charts with an accessible text alternative.",
+            "nextProof": "Implement the workflow, then retain independent installed-build identity, interaction and visual receipts including invalid and reset states."
+          }
+        ],
+        "persistence": "No extension persistence exists for this workflow yet. Define scoped durable state where needed and never store secrets in general preferences."
+      }
+    },
+    {
+      "id": "extension-support",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [
+        "src/main/browser-protected-mediation.js",
+        "src/main/browser-native-host.js"
+      ],
+      "documentation": [
+        "docs/features/browser/README.md"
+      ],
+      "localization": [],
+      "tests": [
+        "test/browser-native-host.test.js"
+      ],
+      "evidence": [],
+      "reason": "Browser pairing, protected mediation and download hand-off exist in the desktop application. Installed pairing with a real browser and the reviewed native host identity remain unverified.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "persistence": [],
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "The canonical scope includes user-facing product surfaces; incomplete implementation is not an exemption.",
+        "source": "Declared canonical catalogue applicability, reviewed for this product.",
+        "scopeReference": {
+          "entry": "extension-support",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified",
+      "sourceVerification": {
+        "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
+        "verdict": "references-present",
+        "checkedPaths": 4,
+        "missingPaths": [],
+        "scope": "Current revision path existence verified. Behavior verdict is bounded source review; test paths do not assert execution."
+      },
+      "builtEvidenceVerdict": {
+        "interaction": "unverified",
+        "visual": "unverified",
+        "reason": "No complete current-source surface acceptance receipt."
+      }
+    },
+    {
+      "id": "extension-support",
+      "surface": "site",
+      "status": "not-applicable",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Supporting the browser extension is a duty of the desktop application. Neither the documentation website nor the extension itself can host it.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "persistence": [],
+      "applicability": {
+        "kind": "not-applicable",
+        "applies": false,
+        "directSurface": false,
+        "reason": "Supporting the browser extension is a duty of the desktop application. Neither the documentation website nor the extension itself can host it.",
+        "source": "Declared canonical catalogue applicability, reviewed for this product.",
+        "scopeReference": {
+          "entry": "extension-support",
+          "declaredScope": "Desktop application only"
+        }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "not-applicable"
+    },
+    {
+      "id": "extension-support",
+      "surface": "extension",
+      "status": "not-applicable",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Supporting the browser extension is a duty of the desktop application. Neither the documentation website nor the extension itself can host it.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "persistence": [],
+      "applicability": {
+        "kind": "not-applicable",
+        "applies": false,
+        "directSurface": false,
+        "reason": "Supporting the browser extension is a duty of the desktop application. Neither the documentation website nor the extension itself can host it.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "extension-support",
+          "declaredScope": "Desktop application only"
+        }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "current-runtime-unverified"
+    },
+    {
+      "id": "base64-tools",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "There is no dedicated Base64 toolkit view. Base64 appears only incidentally inside the converter.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "persistence": [],
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "The canonical scope includes user-facing product surfaces; incomplete implementation is not an exemption.",
+        "source": "Declared canonical catalogue applicability, reviewed for this product.",
+        "scopeReference": {
+          "entry": "base64-tools",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "sourceVerification": {
+        "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
+        "verdict": "references-present",
+        "checkedPaths": 0,
+        "missingPaths": [],
+        "scope": "Current revision path existence verified. Behavior verdict is bounded source review; test paths do not assert execution."
+      },
+      "builtEvidenceVerdict": {
+        "interaction": "unverified",
+        "visual": "unverified",
+        "reason": "No complete current-source surface acceptance receipt."
+      }
+    },
+    {
+      "id": "base64-tools",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "There is no Base64 toolkit article or interactive example on the documentation website.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "persistence": [],
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "The canonical scope includes user-facing product surfaces; incomplete implementation is not an exemption.",
+        "source": "Declared canonical catalogue applicability, reviewed for this product.",
+        "scopeReference": {
+          "entry": "base64-tools",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "sourceVerification": {
+        "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
+        "verdict": "references-present",
+        "checkedPaths": 0,
+        "missingPaths": [],
+        "scope": "Current revision path existence verified. Behavior verdict is bounded source review; test paths do not assert execution."
+      },
+      "builtEvidenceVerdict": {
+        "interaction": "unverified",
+        "visual": "unverified",
+        "reason": "No complete current-source surface acceptance receipt."
+      }
+    },
+    {
+      "id": "base64-tools",
+      "surface": "extension",
+      "status": "not-applicable",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "The catalogue assigns the Base64 toolkit to the desktop application and its documentation article, not the extension.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "persistence": [],
+      "applicability": {
+        "kind": "not-applicable",
+        "applies": false,
+        "directSurface": false,
+        "reason": "The catalogue assigns the Base64 toolkit to the desktop application and its documentation article, not the extension.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "base64-tools",
+          "declaredScope": "Desktop application and documentation website only"
+        }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "current-runtime-unverified"
+    },
+    {
+      "id": "quicktype-studio",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "There is no type generator or JSON editor in the desktop application.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "persistence": [],
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "The canonical scope includes user-facing product surfaces; incomplete implementation is not an exemption.",
+        "source": "Declared canonical catalogue applicability, reviewed for this product.",
+        "scopeReference": {
+          "entry": "quicktype-studio",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "sourceVerification": {
+        "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
+        "verdict": "references-present",
+        "checkedPaths": 0,
+        "missingPaths": [],
+        "scope": "Current revision path existence verified. Behavior verdict is bounded source review; test paths do not assert execution."
+      },
+      "builtEvidenceVerdict": {
+        "interaction": "unverified",
+        "visual": "unverified",
+        "reason": "No complete current-source surface acceptance receipt."
+      }
+    },
+    {
+      "id": "quicktype-studio",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "There is no type generator article on the documentation website.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "persistence": [],
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "The canonical scope includes user-facing product surfaces; incomplete implementation is not an exemption.",
+        "source": "Declared canonical catalogue applicability, reviewed for this product.",
+        "scopeReference": {
+          "entry": "quicktype-studio",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "sourceVerification": {
+        "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
+        "verdict": "references-present",
+        "checkedPaths": 0,
+        "missingPaths": [],
+        "scope": "Current revision path existence verified. Behavior verdict is bounded source review; test paths do not assert execution."
+      },
+      "builtEvidenceVerdict": {
+        "interaction": "unverified",
+        "visual": "unverified",
+        "reason": "No complete current-source surface acceptance receipt."
+      }
+    },
+    {
+      "id": "quicktype-studio",
+      "surface": "extension",
+      "status": "not-applicable",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "The catalogue assigns the type generator to the desktop application and its documentation article, not the extension.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "persistence": [],
+      "applicability": {
+        "kind": "not-applicable",
+        "applies": false,
+        "directSurface": false,
+        "reason": "The catalogue assigns the type generator to the desktop application and its documentation article, not the extension.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "quicktype-studio",
+          "declaredScope": "Desktop application and documentation website only"
+        }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "current-runtime-unverified"
+    },
+    {
+      "id": "virtual-disk-manager",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "There is no virtual disk manager. Applicability for an encryption product is confirmed by the catalogue scope but not yet scheduled.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "persistence": [],
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "The canonical scope includes user-facing product surfaces; incomplete implementation is not an exemption.",
+        "source": "Declared canonical catalogue applicability, reviewed for this product.",
+        "scopeReference": {
+          "entry": "virtual-disk-manager",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "sourceVerification": {
+        "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
+        "verdict": "references-present",
+        "checkedPaths": 0,
+        "missingPaths": [],
+        "scope": "Current revision path existence verified. Behavior verdict is bounded source review; test paths do not assert execution."
+      },
+      "builtEvidenceVerdict": {
+        "interaction": "unverified",
+        "visual": "unverified",
+        "reason": "No complete current-source surface acceptance receipt."
+      }
+    },
+    {
+      "id": "virtual-disk-manager",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "There is no virtual disk manager article on the documentation website.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "persistence": [],
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "The canonical scope includes user-facing product surfaces; incomplete implementation is not an exemption.",
+        "source": "Declared canonical catalogue applicability, reviewed for this product.",
+        "scopeReference": {
+          "entry": "virtual-disk-manager",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "sourceVerification": {
+        "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
+        "verdict": "references-present",
+        "checkedPaths": 0,
+        "missingPaths": [],
+        "scope": "Current revision path existence verified. Behavior verdict is bounded source review; test paths do not assert execution."
+      },
+      "builtEvidenceVerdict": {
+        "interaction": "unverified",
+        "visual": "unverified",
+        "reason": "No complete current-source surface acceptance receipt."
+      }
+    },
+    {
+      "id": "virtual-disk-manager",
+      "surface": "extension",
+      "status": "not-applicable",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "The catalogue assigns the virtual disk manager to the desktop application on Windows and its documentation article, not the extension.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "persistence": [],
+      "applicability": {
+        "kind": "not-applicable",
+        "applies": false,
+        "directSurface": false,
+        "reason": "The catalogue assigns the virtual disk manager to the desktop application on Windows and its documentation article, not the extension.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "virtual-disk-manager",
+          "declaredScope": "Desktop application and documentation website only"
+        }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "current-runtime-unverified"
+    },
+    {
+      "id": "minecraft-world-generator",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [
+        "src/renderer/features/server-manager/index.js"
+      ],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "There are no world generation controls in the server preparation view.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "persistence": [],
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "The canonical scope includes user-facing product surfaces; incomplete implementation is not an exemption.",
+        "source": "Declared canonical catalogue applicability, reviewed for this product.",
+        "scopeReference": {
+          "entry": "minecraft-world-generator",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "sourceVerification": {
+        "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
+        "verdict": "references-present",
+        "checkedPaths": 1,
+        "missingPaths": [],
+        "scope": "Current revision path existence verified. Behavior verdict is bounded source review; test paths do not assert execution."
+      },
+      "builtEvidenceVerdict": {
+        "interaction": "unverified",
+        "visual": "unverified",
+        "reason": "No complete current-source surface acceptance receipt."
+      }
+    },
+    {
+      "id": "minecraft-world-generator",
+      "surface": "site",
+      "status": "not-applicable",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "World generation lives in the desktop application server manager. The documentation website and the extension have no server manager.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "persistence": [],
+      "applicability": {
+        "kind": "not-applicable",
+        "applies": false,
+        "directSurface": false,
+        "reason": "World generation lives in the desktop application server manager. The documentation website and the extension have no server manager.",
+        "source": "Declared canonical catalogue applicability, reviewed for this product.",
+        "scopeReference": {
+          "entry": "minecraft-world-generator",
+          "declaredScope": "Desktop application only"
+        }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "not-applicable"
+    },
+    {
+      "id": "minecraft-world-generator",
+      "surface": "extension",
+      "status": "not-applicable",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "World generation lives in the desktop application server manager. The documentation website and the extension have no server manager.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "persistence": [],
+      "applicability": {
+        "kind": "not-applicable",
+        "applies": false,
+        "directSurface": false,
+        "reason": "World generation lives in the desktop application server manager. The documentation website and the extension have no server manager.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "minecraft-world-generator",
+          "declaredScope": "Desktop application only"
+        }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "current-runtime-unverified"
+    },
+    {
+      "id": "drawesome-drawing",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "There is no drawing or annotation surface.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "persistence": [],
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "The canonical scope includes user-facing product surfaces; incomplete implementation is not an exemption.",
+        "source": "Declared canonical catalogue applicability, reviewed for this product.",
+        "scopeReference": {
+          "entry": "drawesome-drawing",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "sourceVerification": {
+        "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
+        "verdict": "references-present",
+        "checkedPaths": 0,
+        "missingPaths": [],
+        "scope": "Current revision path existence verified. Behavior verdict is bounded source review; test paths do not assert execution."
+      },
+      "builtEvidenceVerdict": {
+        "interaction": "unverified",
+        "visual": "unverified",
+        "reason": "No complete current-source surface acceptance receipt."
+      }
+    },
+    {
+      "id": "drawesome-drawing",
+      "surface": "site",
+      "status": "not-applicable",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Drawing and annotation is a desktop application surface. The documentation website and the extension carry no editor canvas.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "persistence": [],
+      "applicability": {
+        "kind": "not-applicable",
+        "applies": false,
+        "directSurface": false,
+        "reason": "Drawing and annotation is a desktop application surface. The documentation website and the extension carry no editor canvas.",
+        "source": "Declared canonical catalogue applicability, reviewed for this product.",
+        "scopeReference": {
+          "entry": "drawesome-drawing",
+          "declaredScope": "Desktop application only"
+        }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "not-applicable"
+    },
+    {
+      "id": "drawesome-drawing",
+      "surface": "extension",
+      "status": "not-applicable",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "Drawing and annotation is a desktop application surface. The documentation website and the extension carry no editor canvas.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "persistence": [],
+      "applicability": {
+        "kind": "not-applicable",
+        "applies": false,
+        "directSurface": false,
+        "reason": "Drawing and annotation is a desktop application surface. The documentation website and the extension carry no editor canvas.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "drawesome-drawing",
+          "declaredScope": "Desktop application only"
+        }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "current-runtime-unverified"
+    },
+    {
+      "id": "animation-editor",
+      "surface": "desktop",
+      "status": "unverified",
+      "implementation": [
+        "src/renderer/features/personalization/motion-editor.js",
+        "src/renderer/features/personalization/motion-runtime.js"
+      ],
+      "documentation": [
+        "docs/features/interface/animation-transition.md"
+      ],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "A per-element animation and transition editor exists. The global editor over animated element kinds with profiles, speed multiplier, master switch and JSON import and export does not.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "persistence": [
+        "src/renderer/features/personalization/motion-runtime.js"
+      ],
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "The canonical scope includes user-facing product surfaces; incomplete implementation is not an exemption.",
+        "source": "Declared canonical catalogue applicability, reviewed for this product.",
+        "scopeReference": {
+          "entry": "animation-editor",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "partial",
+      "evidenceVerdict": "current-runtime-unverified",
+      "sourceVerification": {
+        "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
+        "verdict": "references-present",
+        "checkedPaths": 3,
+        "missingPaths": [],
+        "scope": "Current revision path existence verified. Behavior verdict is bounded source review; test paths do not assert execution."
+      },
+      "builtEvidenceVerdict": {
+        "interaction": "unverified",
+        "visual": "unverified",
+        "reason": "No complete current-source surface acceptance receipt."
+      }
+    },
+    {
+      "id": "animation-editor",
+      "surface": "site",
+      "status": "unverified",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "The documentation website has no animation profile editor.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "persistence": [],
+      "applicability": {
+        "kind": "product",
+        "applies": true,
+        "directSurface": true,
+        "reason": "The canonical scope includes user-facing product surfaces; incomplete implementation is not an exemption.",
+        "source": "Declared canonical catalogue applicability, reviewed for this product.",
+        "scopeReference": {
+          "entry": "animation-editor",
+          "declaredScope": "User-facing product surface"
+        }
+      },
+      "behaviorVerdict": "missing",
+      "evidenceVerdict": "current-runtime-unverified",
+      "sourceVerification": {
+        "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
+        "verdict": "references-present",
+        "checkedPaths": 0,
+        "missingPaths": [],
+        "scope": "Current revision path existence verified. Behavior verdict is bounded source review; test paths do not assert execution."
+      },
+      "builtEvidenceVerdict": {
+        "interaction": "unverified",
+        "visual": "unverified",
+        "reason": "No complete current-source surface acceptance receipt."
+      }
+    },
+    {
+      "id": "animation-editor",
+      "surface": "extension",
+      "status": "not-applicable",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "The motion editor is a desktop application and documentation website duty. The extension carries its own reduced-motion handling and no editor.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "persistence": [],
+      "applicability": {
+        "kind": "not-applicable",
+        "applies": false,
+        "directSurface": false,
+        "reason": "The motion editor is a desktop application and documentation website duty. The extension carries its own reduced-motion handling and no editor.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "animation-editor",
+          "declaredScope": "Desktop application and documentation website only"
+        }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "current-runtime-unverified"
+    },
+    {
+      "id": "paired-hosted-forms",
+      "surface": "desktop",
+      "status": "not-applicable",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "This product is a Windows drive built on WinFsp with a native .NET engine and a desktop shell. It cannot run in a Linux container, so a container-hosted web app and an appliance OS image could not deliver its real function. The desktop build is its only delivery form; the decision is recorded in ROADMAP.md.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "persistence": [],
+      "applicability": {
+        "kind": "not-applicable",
+        "applies": false,
+        "directSurface": false,
+        "reason": "This product is a Windows drive built on WinFsp with a native .NET engine and a desktop shell. It cannot run in a Linux container, so a container-hosted web app and an appliance OS image could not deliver its real function. The desktop build is its only delivery form; the decision is recorded in ROADMAP.md.",
+        "source": "Declared canonical catalogue applicability, reviewed for this product.",
+        "scopeReference": {
+          "entry": "paired-hosted-forms",
+          "declaredScope": "Products able to run in a Linux container only"
+        }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "not-applicable"
+    },
+    {
+      "id": "paired-hosted-forms",
+      "surface": "site",
+      "status": "not-applicable",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "This product is a Windows drive built on WinFsp with a native .NET engine and a desktop shell. It cannot run in a Linux container, so a container-hosted web app and an appliance OS image could not deliver its real function. The desktop build is its only delivery form; the decision is recorded in ROADMAP.md.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "persistence": [],
+      "applicability": {
+        "kind": "not-applicable",
+        "applies": false,
+        "directSurface": false,
+        "reason": "This product is a Windows drive built on WinFsp with a native .NET engine and a desktop shell. It cannot run in a Linux container, so a container-hosted web app and an appliance OS image could not deliver its real function. The desktop build is its only delivery form; the decision is recorded in ROADMAP.md.",
+        "source": "Declared canonical catalogue applicability, reviewed for this product.",
+        "scopeReference": {
+          "entry": "paired-hosted-forms",
+          "declaredScope": "Products able to run in a Linux container only"
+        }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "not-applicable"
+    },
+    {
+      "id": "paired-hosted-forms",
+      "surface": "extension",
+      "status": "not-applicable",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "This product is a Windows drive built on WinFsp with a native .NET engine and a desktop shell. It cannot run in a Linux container, so a container-hosted web app and an appliance OS image could not deliver its real function. The desktop build is its only delivery form; the decision is recorded in ROADMAP.md.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "persistence": [],
+      "applicability": {
+        "kind": "not-applicable",
+        "applies": false,
+        "directSurface": false,
+        "reason": "This product is a Windows drive built on WinFsp with a native .NET engine and a desktop shell. It cannot run in a Linux container, so a container-hosted web app and an appliance OS image could not deliver its real function. The desktop build is its only delivery form; the decision is recorded in ROADMAP.md.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "paired-hosted-forms",
+          "declaredScope": "Products able to run in a Linux container only"
+        }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "current-runtime-unverified"
+    },
+    {
+      "id": "three-delivery-forms",
+      "surface": "desktop",
+      "status": "not-applicable",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "This product is a Windows drive built on WinFsp with a native .NET engine and a desktop shell. It cannot run in a Linux container, so a hosted web app and an appliance OS image cannot be built from the same core. The desktop build is its only delivery form; the decision is recorded in ROADMAP.md.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "persistence": [],
+      "applicability": {
+        "kind": "not-applicable",
+        "applies": false,
+        "directSurface": false,
+        "reason": "This product is a Windows drive built on WinFsp with a native .NET engine and a desktop shell. It cannot run in a Linux container, so a hosted web app and an appliance OS image cannot be built from the same core. The desktop build is its only delivery form; the decision is recorded in ROADMAP.md.",
+        "source": "Declared canonical catalogue applicability, reviewed for this product.",
+        "scopeReference": {
+          "entry": "three-delivery-forms",
+          "declaredScope": "Products able to run in a Linux container only"
+        }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "not-applicable"
+    },
+    {
+      "id": "three-delivery-forms",
+      "surface": "site",
+      "status": "not-applicable",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "This product is a Windows drive built on WinFsp with a native .NET engine and a desktop shell. It cannot run in a Linux container, so a hosted web app and an appliance OS image cannot be built from the same core. The desktop build is its only delivery form; the decision is recorded in ROADMAP.md.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "persistence": [],
+      "applicability": {
+        "kind": "not-applicable",
+        "applies": false,
+        "directSurface": false,
+        "reason": "This product is a Windows drive built on WinFsp with a native .NET engine and a desktop shell. It cannot run in a Linux container, so a hosted web app and an appliance OS image cannot be built from the same core. The desktop build is its only delivery form; the decision is recorded in ROADMAP.md.",
+        "source": "Declared canonical catalogue applicability, reviewed for this product.",
+        "scopeReference": {
+          "entry": "three-delivery-forms",
+          "declaredScope": "Products able to run in a Linux container only"
+        }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "not-applicable"
+    },
+    {
+      "id": "three-delivery-forms",
+      "surface": "extension",
+      "status": "not-applicable",
+      "implementation": [],
+      "documentation": [],
+      "localization": [],
+      "tests": [],
+      "evidence": [],
+      "reason": "This product is a Windows drive built on WinFsp with a native .NET engine and a desktop shell. It cannot run in a Linux container, so a hosted web app and an appliance OS image cannot be built from the same core. The desktop build is its only delivery form; the decision is recorded in ROADMAP.md.",
+      "builtInteraction": "unverified",
+      "visualEvidence": "unverified",
+      "persistence": [],
+      "applicability": {
+        "kind": "not-applicable",
+        "applies": false,
+        "directSurface": false,
+        "reason": "This product is a Windows drive built on WinFsp with a native .NET engine and a desktop shell. It cannot run in a Linux container, so a hosted web app and an appliance OS image cannot be built from the same core. The desktop build is its only delivery form; the decision is recorded in ROADMAP.md.",
+        "source": "Canonical feature catalogue scope independently assessed for extension.",
+        "scopeReference": {
+          "entry": "three-delivery-forms",
+          "declaredScope": "Products able to run in a Linux container only"
+        }
+      },
+      "behaviorVerdict": "not-applicable",
+      "evidenceVerdict": "current-runtime-unverified"
     }
   ],
   "referenceSources": {
@@ -18730,7 +19941,12 @@
     "docs/evidence/site-row-proofs-6acd512a/site-phone-index-bilingual-dark.png": "3733a6f4996342bec68e5c650d07c075fa1cc7b3",
     "docs/evidence/site-row-proofs-6acd512a/findings-desktop-library-moved-articles.png": "3733a6f4996342bec68e5c650d07c075fa1cc7b3",
     "docs/evidence/site-row-proofs-6acd512a/findings-desktop-moved-article.png": "3733a6f4996342bec68e5c650d07c075fa1cc7b3",
-    "docs/evidence/site-row-proofs-6acd512a/site-phone-articles-DESIGN-html.png": "3733a6f4996342bec68e5c650d07c075fa1cc7b3"
+    "docs/evidence/site-row-proofs-6acd512a/site-phone-articles-DESIGN-html.png": "3733a6f4996342bec68e5c650d07c075fa1cc7b3",
+    "src/main/browser-protected-mediation.js": "ca21f77013ee11420c46765ac8c01f184fb8fceb",
+    "docs/features/browser/README.md": "ca21f77013ee11420c46765ac8c01f184fb8fceb",
+    "src/renderer/features/personalization/motion-editor.js": "ca21f77013ee11420c46765ac8c01f184fb8fceb",
+    "src/renderer/features/personalization/motion-runtime.js": "ca21f77013ee11420c46765ac8c01f184fb8fceb",
+    "docs/features/interface/animation-transition.md": "ca21f77013ee11420c46765ac8c01f184fb8fceb"
   },
   "assessmentContext": {
     "baseline": "0f5d2b9f0990f213ee78b3fcc1867f289e24843c",
@@ -18738,8 +19954,8 @@
       "families": 104,
       "rows": 208
     },
-    "families": 109,
-    "rows": 218,
+    "families": 121,
+    "rows": 242,
     "scope": "Finite source-reference reconciliation and bounded source inspection, not an exhaustive behavioral audit. Historical source bindings and assessments remain preserved.",
     "guiMatrix": "89 declared states, 4272 viewport/language/theme/scale tuples pending.",
     "builtCandidate": "Prior 1d3 candidate exposed title and dialog accessible-name defects; source fixes are integrated. The 0f5 candidate build is running by owner receipt, with no accepted replacement runtime result.",

@@ -18,7 +18,7 @@ An icon never reads the live value of its control, never copies private text suc
 
 The inventories below cover the static markup of each page and the controls that the page code creates at start-up. A coverage check reads each page as text and fails when a capable control has neither an explanation nor a stated reason.
 
-- Desktop app (`src/renderer/index.html`): 69 explanations (1 for groups of related controls), 6 stated exemptions.
+- Desktop app (`src/renderer/index.html`): 72 explanations (1 for groups of related controls), 6 stated exemptions.
 - Website (`docs/site/index.html`): 22 explanations (0 for groups of related controls), 7 stated exemptions.
 - Browser extension popup (`browser-extension/popup.html`): 15 explanations (1 for groups of related controls), 0 stated exemptions.
 - Browser extension workspace (`browser-extension/options.html`): 140 explanations (3 for groups of related controls), 3 stated exemptions.
@@ -210,6 +210,36 @@ Source checks mount every icon on a document fixture and open it from the keyboa
 - Effects: Only the list on screen is filtered; files are not opened or moved.
 - Default: Empty
 - Example: Example for "Search files": only the list on screen is filtered; files are not opened or moved.
+
+### desktop-vault-session
+
+**Selected vault** — `#vault-session`
+
+- Kind: choice
+- Purpose: Choose which of your vaults the window shows and works on.
+- Effects: Switching only changes which vault is in view. Other drives that are already mounted stay mounted.
+- Default: The first entry in the list
+- Example: Example for "Selected vault": switching only changes which vault is in view. Other drives that are already mounted stay mounted.
+
+### desktop-add-vault-session
+
+**Add vault** — `#add-vault-session`
+
+- Kind: button
+- Purpose: Add another encrypted vault to the list so you can switch between vaults.
+- Effects: The list gains one entry. Existing vaults and their files are not changed.
+- Default: Not invoked
+- Example: Example for "Add vault": the list gains one entry. Existing vaults and their files are not changed.
+
+### desktop-remove-vault-session
+
+**Remove locked vault** — `#remove-vault-session`
+
+- Kind: button
+- Purpose: Take a locked vault out of the list.
+- Effects: Only the list entry is removed. The encrypted storage and its files are not deleted.
+- Default: Not invoked
+- Example: Example for "Remove locked vault": only the list entry is removed. The encrypted storage and its files are not deleted.
 
 ### desktop-force-lock-button
 

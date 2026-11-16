@@ -73,3 +73,25 @@ test('the desktop Help view carries a localized price statement in a Material co
   const css = await fs.readFile('src/renderer/style.css', 'utf8');
   assert.match(css, /\.view:not\(\[hidden\]\)/, 'views, and the card inside them, enter with the shared Material motion');
 });
+
+test('the Help disclosure claims only what the code and package metadata show', async () => {
+  const html = await fs.readFile('src/renderer/index.html', 'utf8');
+  const statement = html.match(/<section class="card price-statement"[\s\S]*?<\/section>/)?.[0] ?? '';
+  const i18n = await fs.readFile('src/renderer/i18n.js', 'utf8');
+  for (const headline of ['Open source, GNU GPLv3', 'No advertising', 'No telemetry', 'When it connects to the internet']) {
+    assert.ok(statement.includes(`data-i18n>${headline}<`), `Help lists "${headline}"`);
+    assert.ok(i18n.includes(`'${headline}':'`), `Cantonese entry for "${headline}"`);
+  }
+  // The open-source claim must match the package metadata and the shipped licence text.
+  const pkg = JSON.parse(await fs.readFile('package.json', 'utf8'));
+  assert.equal(pkg.license, 'GPL-3.0-only');
+  assert.match(await fs.readFile('LICENSE', 'utf8'), /GNU GENERAL PUBLIC LICENSE\s+Version 3/);
+  // The no-telemetry claim: no analytics, crash-reporting or advertising SDK in dependencies or shipped renderer and main code.
+  const dependencies = Object.keys({ ...pkg.dependencies, ...pkg.devDependencies }).join(' ');
+  assert.doesNotMatch(dependencies, /sentry|mixpanel|amplitude|posthog|segment|analytics|bugsnag|datadog/i);
+  const shipped = [];
+  for (const dir of ['src/main', 'src/renderer', 'src/shared']) {
+    for (const entry of await fs.readdir(dir, { recursive: true, withFileTypes: true })) if (entry.isFile() && /\.(?:js|mjs|html)$/.test(entry.name)) shipped.push(await fs.readFile(`${entry.parentPath ?? entry.path}/${entry.name}`, 'utf8'));
+  }
+  assert.doesNotMatch(shipped.join('\n'), /crashReporter\.start|google-analytics|googletagmanager|sentry\.io|mixpanel|amplitude\.com|posthog|doubleclick|adsbygoogle/i);
+});

@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import {DESKTOP_INFO_ICON_INVENTORY} from '../src/shared/local-ux/info-icon-desktop.js';
+import {DESKTOP_DYNAMIC_INFO_ICON_INVENTORY} from '../src/shared/local-ux/info-icon-desktop-dynamic.js';
 import {SITE_INFO_ICON_INVENTORY} from '../src/shared/local-ux/info-icon-site.js';
 import {EXTENSION_POPUP_INFO_ICON_INVENTORY, EXTENSION_OPTIONS_INFO_ICON_INVENTORY} from '../src/shared/local-ux/info-icon-extension.js';
 import {INFO_ICON_COPY, buildSurfaceInventory, infoIconDescriptor} from '../src/shared/local-ux/info-icon-inventory.js';
@@ -300,4 +301,61 @@ test('the published article and its Cantonese twin are generated from the regist
   }
   const english = articleText('en');
   for (const surface of SURFACES) for (const row of surface.inventory.descriptors) assert.ok(english.includes(`### ${row.concept}`), `${row.id} has an article section its help link can reach`);
+});
+
+// ---------------------------------------------------------------- controls created after start-up
+
+test('an icon appears for a control the renderer creates after start-up, and never doubles', () => {
+  const {root, target} = infoIconDom();
+  const [early, late] = DESKTOP_DYNAMIC_INFO_ICON_INVENTORY.descriptors;
+  target(early.selector);
+  let callback = null, pending = null;
+  class FakeObserver { constructor(fn) { callback = fn; } observe() {} disconnect() { callback = null; } }
+  const batches = [];
+  const controller = createInfoIconController(root, {
+    inventory: {descriptors: [early, late]}, observe: true, ObserverImpl: FakeObserver,
+    schedule: fn => { pending = fn; return 1; }, cancel: () => { pending = null; },
+    registerCommands: rows => { batches.push(rows.length); return () => batches.push('disposed'); }
+  });
+  assert.equal(controller.lateCount, 0);
+  assert.equal(root.children.length, 2, 'the early control has its icon only');
+  // A new control is added later; the observer reports it and one scheduled pass mounts exactly its icon.
+  const lateNode = target(late.selector);
+  callback([{addedNodes: [lateNode]}]);
+  assert.equal(typeof pending, 'function', 'a pass is scheduled');
+  callback([{addedNodes: [lateNode]}]);
+  pending(); pending = null;
+  assert.equal(controller.lateCount, 1);
+  assert.equal(root.children.length, 4);
+  assert.equal(lateNode.previousElementSibling?.dataset?.guidanceId, late.id);
+  // The icons themselves are insertions; the follow-up pass must find nothing new.
+  callback([{addedNodes: [root.children[2]]}]);
+  pending(); pending = null;
+  assert.equal(controller.lateCount, 1, 'a second pass adds no duplicate');
+  assert.equal(root.children.length, 4);
+  // Removals alone never trigger a pass.
+  callback([{addedNodes: []}]);
+  assert.equal(pending, null);
+  controller.destroy();
+  assert.equal(root.children.length, 2, 'only the two controls remain');
+  assert.ok(batches.includes('disposed'));
+});
+
+test('the late-control inventory names real ids and does not repeat the static inventory', () => {
+  const lateSelectors = DESKTOP_DYNAMIC_INFO_ICON_INVENTORY.descriptors.map(row => row.selector);
+  const staticSelectors = new Set(DESKTOP_INFO_ICON_INVENTORY.descriptors.map(row => row.selector));
+  for (const selector of ['#save-version', '#history-retention', '#history-days', '#history-retention-apply', '#select-recycled', '#restore-recycled', '#empty-recycle']) assert.ok(lateSelectors.includes(selector), selector);
+  for (const selector of lateSelectors) assert.ok(!staticSelectors.has(selector), `${selector} is already in the static inventory`);
+  const ids = new Set([...DESKTOP_INFO_ICON_INVENTORY.descriptors, ...DESKTOP_DYNAMIC_INFO_ICON_INVENTORY.descriptors].map(row => row.id));
+  assert.equal(ids.size, DESKTOP_INFO_ICON_INVENTORY.descriptors.length + lateSelectors.length);
+});
+
+test('every late-control selector is assigned by the renderer source, so the inventory cannot name a control that never exists', async () => {
+  const app = await read('src/renderer/app.js');
+  for (const row of DESKTOP_DYNAMIC_INFO_ICON_INVENTORY.descriptors) {
+    const id = row.selector.slice(1);
+    assert.ok(app.includes(`'${id}'`) || app.includes(`"${id}"`), `${id} is created by the renderer`);
+  }
+  const shell = await read('src/renderer/features/shell/info-icons.js');
+  assert.match(shell, /observe: true/);
 });

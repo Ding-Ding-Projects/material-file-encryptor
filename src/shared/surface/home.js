@@ -40,6 +40,7 @@ export const HOME_CATALOG = Object.freeze([
   ['server-manager', text('Prepare and manage game servers on this or another computer.', '喺本機或者其他電腦準備同管理遊戲伺服器。')],
   ['storage', text('Sign in to Docker Hub, choose encrypted backup storage, synchronize and restore.', '登入 Docker Hub、選擇加密備份儲存、同步同還原。')],
   ['status', text('Version, build details and feature coverage.', '版本、建置資料同功能覆蓋。')],
+  ['dimsum', text('Browse the public dim sum catalogue, load only when you ask.', '瀏覽公開點心目錄，只會喺你要求時先載入。')],
   ['details', text('Properties and metadata of the selected file.', '所選檔案嘅屬性同中繼資料。')],
   ['settings', text('Language, theme, notifications and everyday options.', '語言、主題、通知同日常選項。')],
   ['personalization', text('Colours, type, motion and your own wording.', '顏色、字體、動態同你自己嘅用字。')],
