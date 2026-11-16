@@ -1,0 +1,51 @@
+/* Motion layer. Content is visible by default. The script adds html.motion-on only when the visitor allows motion
+   (no prefers-reduced-motion request and the site Motion setting is Full), so every rule below is absent otherwise. */
+@media (prefers-reduced-motion:no-preference){
+ @view-transition{navigation:auto}
+ ::view-transition-old(root){animation-duration:calc(var(--m-transition-dur) * .6);animation-timing-function:var(--m-transition-ease)}
+ ::view-transition-new(root){animation-duration:var(--m-transition-dur);animation-timing-function:var(--m-transition-ease)}
+ .site-header{view-transition-name:site-header}
+ ::view-transition-group(site-header){animation-duration:0s}
+ .reading-title,.hub-title{view-transition-name:page-title}
+ ::view-transition-group(page-title){animation-duration:var(--m-transition-dur);animation-timing-function:var(--m-transition-ease)}
+}
+/* The setting turns page transitions off even though the at-rule stays declared. */
+html[data-motion-mode="reduced"]::view-transition-group(*),html[data-motion-mode="off"]::view-transition-group(*),
+html[data-motion-mode="reduced"]::view-transition-old(*),html[data-motion-mode="off"]::view-transition-old(*),
+html[data-motion-mode="reduced"]::view-transition-new(*),html[data-motion-mode="off"]::view-transition-new(*){animation:none!important}
+
+/* Hero headline: each line unmasks upward. */
+html.motion-on .unmask>span{display:block;overflow:hidden}
+html.motion-on .unmask>span>span{display:block;animation:unmask var(--m-page-dur) var(--m-page-ease) both;animation-delay:calc(var(--m-page-delay) + var(--line,0) * 90ms)}
+@keyframes unmask{from{transform:translateY(105%);clip-path:inset(0 0 100% 0)}to{transform:none;clip-path:inset(0)}}
+/* Staggered cards. */
+html.motion-on .stagger>*{animation:rise var(--m-stagger-dur) var(--m-stagger-ease) both;animation-delay:calc(var(--i,0) * var(--m-stagger-step))}
+@keyframes rise{from{opacity:0;transform:translateY(var(--m-stagger-dist))}to{opacity:1;transform:none}}
+/* Scroll reveals: .js-reveal is set by script only while motion is allowed. */
+html.motion-on.js-reveal [data-reveal]:not(.is-in){opacity:0;transform:translateY(var(--m-reveal-dist)) scale(.97)}
+html.motion-on.js-reveal [data-reveal]{transition:opacity var(--m-reveal-dur) var(--m-reveal-ease),transform var(--m-reveal-dur) var(--m-reveal-ease)}
+/* Stroke draw. Shapes carry pathLength=1, so one dash value suits every path. */
+html.motion-on .draw path,html.motion-on .draw circle,html.motion-on .draw polyline,html.motion-on .draw rect{stroke-dasharray:1;stroke-dashoffset:1;animation:draw var(--m-draw-dur) var(--m-draw-ease) forwards;animation-delay:calc(var(--m-page-delay) + 300ms + var(--i,0) * 160ms)}
+html.motion-on .check-draw path{stroke-dasharray:1;stroke-dashoffset:1;animation:draw 420ms var(--m-draw-ease) forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+/* Hover lift. */
+html.motion-on .lift{transition:transform var(--m-card-dur) var(--m-card-ease),box-shadow var(--m-card-dur) var(--m-card-ease)}
+html.motion-on .lift:hover,html.motion-on .lift:focus-visible{transform:translateY(calc(var(--m-card-dist) * -1));box-shadow:0 12px 28px #0000001f}
+/* Popups and dialogs grow from their trigger. */
+html.motion-on .popup.is-open,html.motion-on dialog#preferences-dialog[open]{animation:pop var(--m-popup-dur) var(--m-popup-ease) both;transform-origin:var(--origin-x,50%) var(--origin-y,10%)}
+@keyframes pop{from{opacity:0;transform:scale(var(--m-popup-scale))}to{opacity:1;transform:none}}
+/* Toasts pulse once. */
+html.motion-on .site-toast{animation:toast-in var(--m-toast-dur) var(--m-toast-ease) both}
+html.motion-on .site-toast .toast-dot{animation:pulse 900ms var(--m-toast-ease) 1}
+@keyframes toast-in{from{opacity:0;transform:translateY(var(--m-toast-dist)) scale(.96)}to{opacity:1;transform:none}}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--primary) 55%,transparent)}100%{box-shadow:0 0 0 14px transparent}}
+html.motion-on .drop-celebrate{animation:celebrate 1000ms var(--m-toast-ease) both}
+@keyframes celebrate{0%{opacity:0;transform:scale(.6)}40%{opacity:1;transform:scale(1.08)}100%{opacity:0;transform:scale(1.2)}}
+/* Diagram blocks glide between states. */
+html.motion-on .diagram-block{transition:transform var(--m-card-dur) var(--m-card-ease),opacity var(--m-card-dur) var(--m-card-ease),background-color var(--m-card-dur)}
+html.motion-on .reading-progress i{transition:transform 90ms linear}
+html.motion-on .search-result{animation:rise 320ms var(--m-stagger-ease) both;animation-delay:calc(var(--i,0) * 30ms)}
+/* Reduced and Off remove every animation and transition on the page, including those from the base stylesheet. */
+html[data-motion-mode="reduced"] *,html[data-motion-mode="reduced"] *::before,html[data-motion-mode="reduced"] *::after,
+html[data-motion-mode="off"] *,html[data-motion-mode="off"] *::before,html[data-motion-mode="off"] *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+html[data-motion-mode="reduced"] .draw path,html[data-motion-mode="off"] .draw path,html[data-motion-mode="reduced"] .draw rect,html[data-motion-mode="off"] .draw rect{stroke-dasharray:none}

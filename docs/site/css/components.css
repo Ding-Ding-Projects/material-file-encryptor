@@ -1,0 +1,62 @@
+/* Shared components: chips, buttons, search panel, toast, drop overlay, copy button, settings controls. */
+.chip{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:2px 12px;border-radius:999px;border:1px solid var(--rule);background:transparent;color:var(--on-surface);font:inherit;font-size:.8rem}
+button.chip{min-height:var(--touch);padding-inline:16px;cursor:pointer}
+button.chip[aria-pressed="true"]{background:var(--primary-container);color:var(--on-primary-container);border-color:transparent}
+.chip.status-implemented{background:color-mix(in srgb,#2e7d32 18%,var(--surface));border-color:#2e7d32}
+.chip.status-unverified{background:color-mix(in srgb,var(--accent-warm) 14%,var(--surface));border-color:var(--accent-warm)}
+.chip.status-not-applicable{border-style:dashed}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:var(--touch);min-width:var(--touch);padding:0 20px;border-radius:999px;border:1px solid var(--outline);background:transparent;color:var(--primary);font:inherit;font-weight:600;cursor:pointer;text-decoration:none}
+.btn:hover{background:var(--primary-container)}
+.btn.primary{background:var(--primary);color:var(--on-primary);border-color:transparent}
+.btn.primary:hover{box-shadow:inset 0 0 0 40px #ffffff1c;background:var(--primary)}
+.btn svg{width:20px;height:20px}
+.text-field{min-height:var(--touch);width:100%;padding:0 16px;border:1px solid var(--outline);border-radius:var(--radius-s);background:var(--surface);color:var(--on-surface);font:inherit}
+select.text-field{padding-right:8px}
+
+/* Cross-article search */
+.site-search{margin:0 0 var(--space-5);padding:var(--space-4) var(--space-5);border:1px solid var(--rule);border-radius:var(--radius-l);background:var(--paper)}
+.site-search>label,.site-search .site-search-title{display:block;font-weight:600;margin-bottom:var(--space-2)}
+.search-results{list-style:none;margin:var(--space-3) 0 0;padding:0;display:grid;gap:2px;max-height:min(60vh,520px);overflow:auto}
+.search-result a{display:block;min-height:var(--touch);padding:10px var(--space-3);border-radius:var(--radius-s);text-decoration:none;color:var(--on-surface)}
+.search-result a:hover,.search-result a:focus-visible{background:var(--paper-deep)}
+.search-result strong{display:block}
+.search-result span{display:block;font-size:.85rem;color:var(--ink-soft)}
+.search-result mark{background:color-mix(in srgb,var(--primary) 25%,transparent);color:inherit;border-radius:3px}
+.search-status{font-size:.85rem;color:var(--ink-soft);margin:var(--space-2) 0 0}
+
+/* Toast */
+.site-toasts{position:fixed;inset:auto 16px 16px auto;z-index:60;display:grid;gap:8px;max-width:min(420px,calc(100vw - 32px))}
+.site-toast{display:flex;gap:12px;align-items:center;padding:14px 18px;border-radius:var(--radius-m);background:var(--on-surface);color:var(--surface);box-shadow:0 8px 24px #0004}
+.site-toast .toast-dot{width:12px;height:12px;border-radius:50%;background:var(--primary-container);flex:none}
+.site-toast.error .toast-dot{background:var(--error)}
+
+/* Drop overlay and celebration */
+.drop-overlay{position:fixed;inset:0;z-index:70;display:grid;place-items:center;background:color-mix(in srgb,var(--surface) 82%,transparent);backdrop-filter:blur(3px);pointer-events:none;text-align:center;padding:24px}
+.drop-overlay div{padding:var(--space-6);border:3px dashed var(--primary);border-radius:var(--radius-l);background:var(--surface);font-family:var(--font-display);font-size:1.6rem}
+.drop-celebrate{position:fixed;inset:0;z-index:71;display:grid;place-items:center;pointer-events:none;font-size:clamp(4rem,14vw,9rem)}
+
+/* Copy button on code */
+.copy-button{position:absolute;top:8px;right:8px;min-width:var(--touch);min-height:var(--touch);border:1px solid var(--outline);border-radius:var(--radius-s);background:var(--surface);color:var(--on-surface);cursor:pointer;display:grid;place-items:center}
+.copy-button svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* Explore menu pops from its trigger */
+.popup{transform-origin:var(--origin-x,50%) var(--origin-y,0)}
+.motion-profile-row{display:flex;flex-wrap:wrap;gap:8px}
+.motion-preview{display:inline-block;min-width:var(--touch);min-height:var(--touch);padding:0 16px;border-radius:var(--radius-s);background:var(--primary-container);color:var(--on-primary-container);display:inline-grid;place-items:center}
+.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+
+/* The foundation upgrades buttons to Material components, so chip and button styling also targets the upgraded hosts. */
+md-text-button.chip,md-outlined-button.btn,md-filled-button.btn,md-filled-tonal-button.btn{--md-text-button-container-height:var(--touch);--md-outlined-button-container-height:var(--touch);--md-filled-button-container-height:var(--touch);--md-text-button-container-shape:999px;min-height:var(--touch)}
+md-text-button.chip{border:1px solid var(--rule);border-radius:999px;--md-text-button-label-text-color:var(--on-surface);--md-text-button-label-text-size:.85rem}
+md-text-button.chip[data-aria-pressed="true"],md-text-button.chip[aria-pressed="true"]{background:var(--primary-container);--md-text-button-label-text-color:var(--on-primary-container);border-color:transparent}
+md-text-button.btn,md-outlined-button.btn{--md-outlined-button-label-text-color:var(--primary)}
+md-outlined-select,md-slider,md-outlined-text-field{max-width:100%}
+.setting-row md-slider{width:100%}
+.site-search{padding:12px 16px;border-radius:20px;margin-bottom:var(--space-4)}
+.site-search>.site-search-title{font-size:.85rem;font-weight:600;margin:0 0 4px;color:var(--ink-soft)}
+.search-results:empty,.search-status:empty{display:none}
+.diagram-controls md-slider{min-width:220px}
+
+/* State transitions and their reduced-motion override, as the Material and motion audit requires. */
+.btn,.btn.primary,.copy-button,.task-card{transition:background-color var(--m-card-dur) var(--m-card-ease),border-color var(--m-card-dur) var(--m-card-ease),box-shadow var(--m-card-dur) var(--m-card-ease)}
+@media (prefers-reduced-motion:reduce){.btn,.btn.primary,.copy-button,.task-card{transition:none}}

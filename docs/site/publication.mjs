@@ -5,6 +5,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {createHash} from 'node:crypto';
 import {SITE_URL} from './social-metadata.mjs';
+import {tasksWithArticles,enrichArticles,articlePage,provenanceFooter,categoryPage,libraryPage,wikiPage,buildSearchIndex,diagram,diagramKindFor,searchPanel,bi} from './modern-pages.mjs';
 const repository='https://github.com/Ding-Ding-Projects/material-file-encryptor';
 export const escapeHtml=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const digest=bytes=>createHash('sha256').update(bytes).digest('hex');
@@ -56,7 +57,8 @@ export function renderMarkdown(markdown,source,routeMap,prefix='../',images=new 
  }
  flush();return output;
 }
-export function pageShell(home,title,body,{depth=0,search=true,head=''}={}) {
+export const modernHead=prefix=>['tokens','layout','components','motion'].map(name=>`<link rel="stylesheet" href="${prefix}css/${name}.css">`).join('')+`<link rel="stylesheet" href="${prefix}css/print.css" media="print">`;
+export function pageShell(home,title,body,{depth=0,search=true,head='',lang='en',bodyClass='',searchPanelOnPage=true}={}) {
  if(!Number.isInteger(depth)||depth<0||depth>8)throw Error('Unsupported publication route depth');
  const prefix=depth?'../'.repeat(depth):'./';
  const header=home.match(/<header\b[^>]*class="[^"]*\bsite-header\b[^"]*"[^>]*>[\s\S]*?<\/header>/)?.[0];
@@ -64,10 +66,10 @@ export function pageShell(home,title,body,{depth=0,search=true,head=''}={}) {
  const footer=home.match(/<footer class="container site-footer">[\s\S]*?<\/footer>/)[0];
  const dialog=home.match(/<dialog id="preferences-dialog"[\s\S]*?<\/dialog>/)[0];
  const navigation=(header+footer).replace(/href="#([^\"]+)"/g,(_,anchor)=>`href="${prefix}index.html#${anchor}"`);
- const linkedNavigation=navigation.replace(/href="(library|wiki|gallery|workspace)\.html"/g,(_,name)=>`href="${prefix}${name}.html"`);
+ const linkedNavigation=navigation.replace(/href="(library|wiki|gallery|workspace|features|settings|diagrams)\.html"/g,(_,name)=>`href="${prefix}${name}.html"`);
  const split=linkedNavigation.indexOf('<footer');
  const searchBox=`<div class="search-wrap publication-search" ${search?'':'hidden'}><label for="doc-search">Find in this page</label><div class="search-field"><input id="doc-search" type="search" maxlength="160" autocomplete="off"><button id="search-clear" type="button" aria-label="Clear documentation search" hidden>×</button></div><p id="search-status" class="small" role="status"></p></div>`;
- return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark"><title>${escapeHtml(title)} · Material File Encryptor</title><meta name="description" content="Complete product documentation and source-bound capture records.">${head}<link rel="icon" href="${prefix}favicon.svg"><link rel="stylesheet" href="${prefix}fonts/fonts.css"><link rel="stylesheet" href="${prefix}site.css"><script type="module" src="${prefix}site.js"></script></head><body><a class="skip-link" href="#main">Skip to content</a>${linkedNavigation.slice(0,split)}<main id="main" class="container publication"><nav class="publication-nav" aria-label="Documentation navigation"><a href="${prefix}index.html">Home</a><a href="${prefix}library.html">Documentation library</a><a href="${prefix}wiki.html">Wiki</a><a href="${prefix}gallery.html">Capture gallery</a></nav>${searchBox}${body}<p id="no-results" class="no-results" hidden>No entries match this search.</p></main>${linkedNavigation.slice(split)}${dialog}</body></html>`;
+ return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark"><title>${escapeHtml(title)} · Material File Encryptor</title><meta name="description" content="Complete product documentation and source-bound capture records.">${head}<link rel="icon" href="${prefix}favicon.svg"><link rel="stylesheet" href="${prefix}fonts/fonts.css"><link rel="stylesheet" href="${prefix}site.css">${modernHead(prefix)}<script src="${prefix}motion-boot.js"></script><script type="module" src="${prefix}site.js"></script><script type="module" src="${prefix}modern/entry.js"></script></head><body class="${bodyClass}"><a class="skip-link" href="#main">Skip to content</a>${linkedNavigation.slice(0,split)}<main id="main" class="container publication"><nav class="publication-nav" aria-label="Documentation navigation"><a href="${prefix}index.html">${bi('Home','首頁')}</a><a href="${prefix}library.html">${bi('Documentation library','文件資料庫')}</a><a href="${prefix}features.html">${bi('Features','功能')}</a><a href="${prefix}diagrams.html">${bi('Examples','示範')}</a><a href="${prefix}wiki.html">${bi('Wiki','維基')}</a><a href="${prefix}gallery.html">${bi('Capture gallery','畫面紀錄集')}</a><a href="${prefix}settings.html">${bi('Settings','設定')}</a></nav>${searchPanelOnPage&&!/data-site-search-(all|rows|settings)/.test(body)?searchPanel(prefix==='./'?'':prefix):''}${searchBox}${body}<p id="no-results" class="no-results" hidden>No entries match this search.</p></main>${linkedNavigation.slice(split)}${dialog}</body></html>`;
 }
 async function markdownFiles(directory) {
  const result=[];for(const entry of await fs.readdir(directory,{withFileTypes:true})){
@@ -102,18 +104,33 @@ export async function buildDocumentation(root,output,home) {
  }
  await fs.mkdir(path.join(output,'articles'),{recursive:true});await fs.mkdir(path.join(output,'categories'),{recursive:true});
  const links=(list,prefix='')=>`<ul class="article-links">${list.map(a=>`<li><a href="${prefix}${a.url}">${escapeHtml(a.title)}</a></li>`).join('')}</ul>`;
- for(const article of articles){if(article.moved)continue;const related=articles.filter(a=>a!==article&&a.category===article.category);const body=`<article class="guide documentation-article" id="article" data-search="${escapeHtml(article.title)}"><p class="eyebrow">Complete source article</p>${renderMarkdown(article.markdown,article.source,routes,'../',images,{documentTitle:true})}<p class="small source-reference">Source: <a href="${article.source.startsWith('docs/site/wiki/')?catalog.wiki.source+'/'+path.basename(article.source,'.md'):repository+'/blob/main/'+article.source}">${escapeHtml(article.source.startsWith('docs/site/wiki/')?'Wiki '+path.basename(article.source,'.md'):article.source)}</a> · SHA-256 <code>${article.sha256}</code></p><nav aria-label="Suggested articles"><h2>Suggested articles</h2>${links(related.length?related:articles.filter(a=>a!==article).slice(0,3),'../')}<a href="../library.html">All documentation categories</a></nav></article>`;await fs.writeFile(path.join(output,article.url),pageShell(home,article.title,body,{depth:1}));}
+ enrichArticles(articles);
+ for(const article of articles){
+  if(article.moved)continue;
+  const inCategory=articles.filter(a=>a!==article&&!a.moved&&a.task===article.task&&a.cantonese===article.cantonese);
+  const sameCategory=inCategory.filter(a=>a.category===article.category);
+  const pool=sameCategory.length?sameCategory:inCategory.length?inCategory:articles.filter(a=>a!==article&&!a.moved&&!a.cantonese).slice(0,3);
+  const position=sameCategory.length?pool.findIndex(a=>a.source>article.source):-1;
+  const nextInCategory=position>=0?pool[position]:pool[0];
+  const wiki=article.source.startsWith('docs/site/wiki/');
+  const provenance=provenanceFooter({sourceUrl:wiki?catalog.wiki.source+'/'+path.basename(article.source,'.md'):repository+'/blob/main/'+article.source,sourceLabel:wiki?'Wiki '+path.basename(article.source,'.md'):article.source,sha256:article.sha256});
+  const kind=diagramKindFor(article.source);
+  const body=articlePage({article,body:renderMarkdown(article.markdown,article.source,routes,'../',images,{documentTitle:true}),related:pool.slice(0,4),nextInCategory,provenance,diagram:kind&&!article.cantonese?diagram(kind):''});
+  await fs.writeFile(path.join(output,article.url),pageShell(home,article.title,body,{depth:1,lang:article.cantonese?'zh-HK':'en',bodyClass:'page-reading'}));
+ }
  for(const article of articles.filter(a=>a.moved)){
   const target=article.moved.replace(/^articles\//,'');
   const body=`<article class="guide documentation-article" id="article" data-search="${escapeHtml(article.title)}"><p class="eyebrow">Moved article</p>${renderMarkdown(article.markdown,article.source,routes,'../',images,{documentTitle:true})}<p>This page redirects to <a href="${target}">its new location</a>.</p><p><a href="../library.html">All documentation categories</a></p></article>`;
   const head=`<meta http-equiv="refresh" content="0; url=${target}"><link rel="canonical" href="${SITE_URL}${article.moved}">`;
   await fs.writeFile(path.join(output,article.url),pageShell(home,article.title,body,{depth:1,head}));
  }
- let categories='';
- for(const category of catalog.categories){const list=articles.filter(a=>a.category===category);if(!list.length)throw new Error('Empty documentation category');const name=category[0].toUpperCase()+category.slice(1);categories+=`<section class="guide category-index" id="category-${category}" data-search="${category}"><h2><a href="categories/${category}.html">${name}</a></h2>${links(list)}</section>`;await fs.writeFile(path.join(output,'categories',category+'.html'),pageShell(home,name+' documentation',`<section class="guide category-index" id="category-${category}"><h1>${name} documentation</h1>${links(list,'../')}</section>`,{depth:1}));}
- await fs.writeFile(path.join(output,'library.html'),pageShell(home,'Documentation library',`<h1>Documentation library</h1><p>Complete articles are available here without leaving this website. Commands and source articles retain their original language. This website documents the separate Windows application; it cannot open a vault.</p>${categories}<section class="guide" id="references"><h2>Project reference and wiki</h2>${links(articles.filter(a=>a.category==='reference'||a.source==='docs/features/README.md'||a.source==='docs/features/README.zh-HK.md'))}</section><section class="guide" id="moved"><h2>Moved articles</h2><p>Older addresses that now redirect to the current article.</p>${links(articles.filter(a=>a.moved))}</section>`));
+ for(const category of catalog.categories){const list=articles.filter(a=>a.category===category);if(!list.length)throw new Error('Empty documentation category');const name=category.split('-').map(part=>part[0].toUpperCase()+part.slice(1)).join(' ');await fs.writeFile(path.join(output,'categories',category+'.html'),pageShell(home,name+' documentation',categoryPage(category,list),{depth:1,bodyClass:'page-hub'}));}
+ const moved=articles.filter(a=>a.moved);
+ await fs.writeFile(path.join(output,'library.html'),pageShell(home,'Documentation library',libraryPage(tasksWithArticles(articles),{wikiCount:wikiFiles.length,categories:catalog.categories})+(moved.length?`<section class="guide hub-quiet" id="moved"><h2>Moved articles</h2><p>Older addresses that now redirect to the current article.</p>${links(moved)}</section>`:''),{bodyClass:'page-hub'}));
  const wiki=articles.filter(a=>a.source.startsWith('docs/site/wiki/'));
- await fs.writeFile(path.join(output,'wiki.html'),pageShell(home,'Wiki',`<h1>Wiki</h1><p>The complete ${wiki.length}-page Markdown snapshot from wiki revision <code>${catalog.wiki.sourceCommit}</code> is included below. Earlier access was unavailable; the subsequent Git CLI read succeeded.</p>${wiki.map(a=>{const sectionId='wiki-'+path.basename(a.source,'.md');return `<section class="guide documentation-article" id="${sectionId}"><h2>${escapeHtml(a.title)}</h2>${renderMarkdown(a.markdown,a.source,routes,'',images).replace(/id="([^"]+)"/g,(_,id)=>`id="${sectionId}-${id}"`).replace(/href="#([^"]+)"/g,(_,id)=>`href="#${sectionId}-${id}"`)}<a href="${a.url}">Open this wiki article</a></section>`;}).join('')}`));
+ const wikiSections=wiki.map(a=>{const sectionId='wiki-'+path.basename(a.source,'.md');return `<section class="guide documentation-article" id="${sectionId}"><h2>${escapeHtml(a.title)}</h2>${renderMarkdown(a.markdown,a.source,routes,'',images).replace(/id="([^"]+)"/g,(_,id)=>`id="${sectionId}-${id}"`).replace(/href="#([^"]+)"/g,(_,id)=>`href="#${sectionId}-${id}"`)}<a href="${a.url}">Open this wiki article</a></section>`;}).join('');
+ await fs.writeFile(path.join(output,'wiki.html'),pageShell(home,'Wiki',wikiPage(wiki.map(a=>({name:path.basename(a.source,'.md'),title:a.title})),{sourceCommit:catalog.wiki.sourceCommit,sections:wikiSections}),{bodyClass:'page-hub'}));
+ await fs.writeFile(path.join(output,'search-index.json'),buildSearchIndex(articles));
  await fs.writeFile(path.join(output,'documentation-inventory.json'),JSON.stringify({version:1,articles:articles.map(({markdown,...a})=>a),wiki:catalog.wiki,categories:catalog.categories},null,2));
  return articles;
 }

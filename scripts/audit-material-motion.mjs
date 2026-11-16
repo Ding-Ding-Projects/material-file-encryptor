@@ -22,7 +22,8 @@ export const NATIVE_CONTROL_ALLOWLIST = [
   { file: 'browser-extension/options.html', tag: 'input', match: /type="file"[^>]*\bhidden\b|\bhidden\b[^>]*type="file"/, reason: 'Hidden file input: it only backs the Material button that opens the system file picker.' },
   { file: 'browser-extension/options.html', tag: 'button', match: /class="home-card"/, reason: 'Home destination cards are tab buttons rendered as Material outlined cards with a hand-built state layer (hover, focus and press opacity transitions) because Material Web has no card-button component.' },
   { file: 'docs/site/index.html', tag: '*', runtimeUpgrade: true, match: /./, reason: 'Documentation home markup is the no-script baseline: site.js calls preparePublicDocumentControls, which replaces every native button, input, select and dialog with the registered Material controls before any listener is bound.' },
-  { file: 'docs/site/publication.mjs', tag: '*', runtimeUpgrade: true, match: /./, reason: 'Generated documentation pages carry the same no-script baseline markup and load site.js, which upgrades every native control to the registered Material controls at runtime.' }
+  { file: 'docs/site/publication.mjs', tag: '*', runtimeUpgrade: true, match: /./, reason: 'Generated documentation pages carry the same no-script baseline markup and load site.js, which upgrades every native control to the registered Material controls at runtime.' },
+  { file: 'docs/site/modern-pages.mjs', tag: '*', runtimeUpgrade: true, match: /./, reason: 'Task-led generated pages (features, settings, interactive examples) use the same no-script baseline markup as publication.mjs and load site.js, which upgrades every native control to the registered Material controls at runtime.' }
 ];
 
 // Pages in the allowlist marked runtimeUpgrade are only acceptable while the upgrade pipeline is intact.

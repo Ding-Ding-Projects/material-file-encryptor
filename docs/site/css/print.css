@@ -1,0 +1,17 @@
+/* Print: a clean reading copy. Navigation, search, tools and motion chrome are removed and links show their destination. */
+@media print{
+ :root{--surface:#fff;--on-surface:#000}
+ body{background:#fff;color:#000;font-size:11pt;line-height:1.5}
+ .site-header,.site-footer,.skip-link,.publication-nav,.site-search,.publication-search,.public-document-tools,.reading-aside,.reading-progress,.site-toasts,.drop-overlay,.copy-button,dialog,.wiki-sidebar,.next-steps,.heading-link{display:none!important}
+ .reading,.wiki-layout{display:block}
+ .reading-body,.reading-header{max-width:none}
+ .reading-body h1{display:block}
+ a{color:#000;text-decoration:underline}
+ .reading-body a[href^="http"]::after{content:" (" attr(href) ")";font-size:9pt;word-break:break-all}
+ pre,table,img{break-inside:avoid}
+ h2,h3{break-after:avoid}
+ details.provenance{display:block;border:0}
+ details.provenance>*{display:block!important}
+ *{animation:none!important;transition:none!important}
+ [data-reveal]{opacity:1!important;transform:none!important}
+}
