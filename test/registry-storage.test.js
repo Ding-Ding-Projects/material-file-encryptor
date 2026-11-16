@@ -7,8 +7,9 @@ import { DEFAULT_REGISTRY_SCHEDULE, validateRegistrySchedule, nextRegistryRun, r
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 const destination = { endpoint: 'http://127.0.0.1:15221', repository: 'test/roundtrip', testOnly: true };
 
-test('expected visibility is explicit, defaults to private and reaches each authorization', async () => {
-  assert.equal(registryDestination({ repository: 'test/vault' }).visibility, 'private');
+test('expected visibility is explicit, defaults to public and reaches each authorization', async () => {
+  assert.equal(registryDestination({ repository: 'test/vault' }).visibility, 'public');
+  assert.equal(registryDestination({ repository: 'test/vault', visibility: 'private' }).visibility, 'private', 'saved private destinations keep working');
   assert.equal(registryDestination({ repository: 'test/vault', visibility: 'public' }).visibility, 'public');
   for (const visibility of [null, 'unknown', false]) assert.throws(() => registryDestination({ repository: 'test/vault', visibility }));
   const calls = [];

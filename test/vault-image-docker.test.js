@@ -63,7 +63,7 @@ async function fixture(t, options = {}) {
   assert.equal((await fs.lstat(fixtureExecutable)).isFile(), true);
   const canonicalExecutable = await fs.realpath(fixtureExecutable);
   assert.equal(canonicalExecutable.toLowerCase(), path.resolve(fixtureExecutable).toLowerCase(), 'Synthetic executable must not be an alias.');
-  const transport = createDockerImageTransport({ platform: options.platform ?? 'win32', programFiles: root, configDirectory, run, fetcher, buildContext });
+  const transport = createDockerImageTransport({ platform: options.platform ?? 'win32', programFiles: root, localAppData: options.localAppData ?? path.join(root, 'no-local-app-data'), configDirectory, run, fetcher, buildContext });
   const expected = { imageId: ID, context: state.context, host: state.host };
   return { transport, snapshot, directory, configDirectory, root, bin, state, events, expected };
 }
@@ -88,9 +88,10 @@ test('registry authorization requires exact explicit visibility and authenticate
   }
 });
 
-test('registry authorization defaults to private and rejects absent or malformed metadata', async t => {
-  const privateFixture = await fixture(t); await privateFixture.transport.registryAuthorization(TARGET.repository);
-  privateFixture.state.metadata.is_private = false; await assert.rejects(privateFixture.transport.registryAuthorization(TARGET.repository));
+test('registry authorization defaults to public and rejects absent or malformed metadata', async t => {
+  const publicFixture = await fixture(t); publicFixture.state.metadata.is_private = false; await publicFixture.transport.registryAuthorization(TARGET.repository);
+  publicFixture.state.metadata.is_private = true; await assert.rejects(publicFixture.transport.registryAuthorization(TARGET.repository), /public Docker Hub repository/);
+  const explicitPrivate = await fixture(t); await explicitPrivate.transport.registryAuthorization(TARGET.repository, undefined, 'private');
   for (const patch of [{ is_private: undefined }, { is_private: 'false' }, { namespace: 'other' }, { name: 'other' }, { permissions: {} }]) {
     const f = await fixture(t); f.state.metadata = { ...f.state.metadata, is_private: false, ...patch };
     await assert.rejects(f.transport.registryAuthorization(TARGET.repository, undefined, 'public'));
@@ -99,7 +100,7 @@ test('registry authorization defaults to private and rejects absent or malformed
 
 test('guided sign-in checks protected storage and existing authentication without logging in', async t => {
   const f = await fixture(t, { run: (event, _state, fallback) => event.args[0] === 'list' ? JSON.stringify({ [CONFIG_KEY]: 'fixture-user' }) : fallback() });
-  assert.deepEqual(await f.transport.inspectRegistrySignIn(), { state: 'signed-in', reason: null });
+  assert.deepEqual(await f.transport.inspectRegistrySignIn(), { state: 'signed-in', reason: null, account: 'fixture-user' });
   assert.equal(commands(f).some(event => event.args.includes('login')), false);
   const command = await f.transport.registryLoginCommand(); assert.ok(command.executable.endsWith('docker.exe'));
   const missing = await fixture(t, { run: (event, _state, fallback) => event.args[0] === 'list' ? '{}' : fallback() });

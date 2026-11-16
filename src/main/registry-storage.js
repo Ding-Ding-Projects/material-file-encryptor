@@ -14,7 +14,7 @@ const exact = (value, fields) => value && typeof value === 'object' && !Array.is
 const fail = () => Error('Encrypted registry operation could not be verified. Local data is unchanged.');
 
 /** HTTP test endpoints are admitted only by an explicit main-process test capability. */
-export function registryDestination({ endpoint = 'https://registry-1.docker.io', repository, testOnly = false, visibility = 'private' }) {
+export function registryDestination({ endpoint = 'https://registry-1.docker.io', repository, testOnly = false, visibility = 'public' }) {
   if (!['private', 'public'].includes(visibility)) throw fail();
   const url = new URL(endpoint);
   const loopback = ['127.0.0.1', 'localhost', '[::1]'].includes(url.hostname);

@@ -4,7 +4,8 @@ const acceptState = state => { if (typeof state?.sessionId === 'string') selecte
 const invoke = (method, params = {}) => ipcRenderer.invoke('vault:request', method, params, selectedSessionId);
 const sessionRequest = (method, params) => invoke(method, params).then(acceptState);
 const api = {
-  registryLoginStatus: () => invoke('registryLoginStatus'), startRegistryLogin: () => invoke('startRegistryLogin'),
+  registryLoginStatus: () => invoke('registryLoginStatus'), recheckRegistryLogin: () => invoke('recheckRegistryLogin'), startRegistryLogin: () => invoke('startRegistryLogin'),
+  backupAllPlan: () => invoke('backupAllPlan'), backupAllStart: selection => invoke('backupAllStart', selection), backupAllStatus: () => invoke('backupAllStatus'), backupAllCancel: () => invoke('backupAllCancel'),
   cancelRegistryLogin: () => invoke('cancelRegistryLogin'), openRegistryLoginPage: () => invoke('openRegistryLoginPage'),
   registryStorageStatus: () => invoke('registryStorageStatus'), configureRegistryStorage: configuration => invoke('configureRegistryStorage', configuration),
   syncRegistryStorage: () => invoke('syncRegistryStorage'), listRegistrySnapshots: () => invoke('listRegistrySnapshots'),

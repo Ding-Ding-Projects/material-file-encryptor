@@ -15,7 +15,7 @@ test.afterEach(()=>{panels.splice(0).forEach(panel=>panel.destroy());});
 const state=(value,extra={})=>({state:value,deviceCode:null,canOpenPage:false,expiresAt:null,account:null,reason:null,...extra});
 const authorization=(now=Date.now())=>state('authorizing',{deviceCode:'TEST-CODE',canOpenPage:true,expiresAt:new Date(now+60000).toISOString()});
 async function fixture(overrides={},options={}){
- const calls=[],services={registryLoginStatus:async()=>state('idle'),startRegistryLogin:async()=>{calls.push('start');return authorization();},cancelRegistryLogin:async()=>{calls.push('cancel');return state('cancelled');},openRegistryLoginPage:async()=>{calls.push('open');return{opened:true};},...overrides};
+ const calls=[],services={registryLoginStatus:async()=>state('idle'),recheckRegistryLogin:async()=>state('idle'),startRegistryLogin:async()=>{calls.push('start');return authorization();},cancelRegistryLogin:async()=>{calls.push('cancel');return state('cancelled');},openRegistryLoginPage:async()=>{calls.push('open');return{opened:true};},...overrides};
  const panel=new RegistryLoginPanel({translate:key=>REGISTRY_COPY[key]?.[0]||key,clipboard:()=>({writeText:async value=>calls.push(['copy',value])}),...options});panels.push(panel);panel.configure(services);await tick();return{panel,calls};
 }
 
@@ -24,7 +24,7 @@ test('login view accepts only bounded active codes and clears terminal or expire
  for(const value of ['idle','checking','signed-in','verifying','cancelled','expired','failed','unavailable','stale'])assert.equal(registryLoginSnapshot(state(value,{deviceCode:'TEST-CODE'}),now).deviceCode,null);
  assert.equal(registryLoginSnapshot(authorization(now-60001),now).state,'expired');
  for(const patch of [{deviceCode:'<script>'},{deviceCode:'A'.repeat(33)},{expiresAt:'invalid'},{expiresAt:new Date(now+7200000).toISOString()}])assert.throws(()=>registryLoginSnapshot({...authorization(now),...patch},now));
- const view=registryLoginSnapshot({...authorization(now),account:{password:'synthetic-only'},extra:'discarded'},now);assert.deepEqual(Object.keys(view),['state','deviceCode','canOpenPage','expiresAt']);
+ const view=registryLoginSnapshot({...authorization(now),account:{password:'synthetic-only'},extra:'discarded'},now);assert.deepEqual(Object.keys(view),['state','deviceCode','canOpenPage','expiresAt','reason','account']);assert.equal(view.account,null);
 });
 
 test('guided start, explicit copy/open and verified completion use actual services without automatic sync',async()=>{
@@ -64,11 +64,11 @@ test('all sign-in and visibility copy has English and Cantonese with keyboard-fo
  panel.t=key=>REGISTRY_COPY[key]?.join(' · ')||key;panel.render();assert.match(panel.heading.textContent,/Sign in.*登入/);assert.equal(panel.code.textContent,'TEST-CODE');
 });
 
-test('the actual storage service namespace forwards all four no-argument sign-in methods',async()=>{
+test('the actual storage service namespace forwards every no-argument sign-in methods',async()=>{
  const source=await fs.readFile(new URL('../src/renderer/app.js',import.meta.url),'utf8');
  const storage=source.split('\n').find(line=>line.includes("mountFeature('storage'"));
  const expression=storage.match(/Object\.fromEntries\(\[[^\]]+\]\.filter\(name=>typeof api\[name\]==='function'\)\.map\(name=>\[name,\(\.\.\.args\)=>api\[name\]\(\.\.\.args\)\]\)\)/)?.[0];
- assert.ok(expression);const methods=['registryLoginStatus','startRegistryLogin','cancelRegistryLogin','openRegistryLoginPage'],calls=[];
+ assert.ok(expression);const methods=['registryLoginStatus','recheckRegistryLogin','startRegistryLogin','cancelRegistryLogin','openRegistryLoginPage'],calls=[];
  const api=Object.fromEntries(methods.map(name=>[name,(...args)=>{calls.push([name,args.length]);return name;}]));
  const services=vm.runInNewContext(expression,{api});assert.deepEqual(Object.keys(services).sort(),[...methods].sort());
  for(const name of methods)assert.equal(services[name](),name);assert.deepEqual(calls,methods.map(name=>[name,0]));
