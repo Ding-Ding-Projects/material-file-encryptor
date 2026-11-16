@@ -66,6 +66,8 @@ export function mountSurfaceFoundation({host,before=null,storage,language='en',p
   document.addEventListener('keydown',keydown);
   const api={model,shell,home:homeGrid,palette,notifications,context,openContextMenu,closeContextMenu,
     notify(input){const id=model.addNotification(input);if(model.getState().notificationAudio)audio.play();notifications.renderEntries();live.textContent=`${renderText(input.title)}: ${renderText(input.message||'')}`;clearTimeout(messageTimer);messageTimer=setTimeout(()=>{live.textContent='';},8000);const record=model.getState().notifications.find(row=>row.id===id);onNotification?.(record,{narrate:input.narration!==false});return id;},
+    /** Plays the short notification cue through the existing sound switch. Returns false when sound is off. */
+    playCue(){return model.getState().notificationAudio?audio.play():false;},
     updateNotification(id,patch){const changed=model.updateNotification(id,patch);if(changed){notifications.renderEntries();onNotification?.(model.getState().notifications.find(row=>row.id===id),{narrate:patch.narration!==false});}return changed;},
     setLanguage(value){const next=['en','yue','bilingual'].includes(value)?value:'en';if(next===activeLanguage)return;const roots=[shell,palette,notifications];const states=roots.map(captureSurfaceState);activeLanguage=next;configure();frame?.setLanguage(next);roots.forEach((root,index)=>restoreSurfaceState(root,states[index]));shell.renderTabs();palette.renderResults();notifications.renderEntries();for(const panel of panels.values())panel.setLanguage(next);},
     registerPanel,
