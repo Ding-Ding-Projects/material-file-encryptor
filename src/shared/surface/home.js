@@ -49,6 +49,10 @@ export const HOME_CATALOG = Object.freeze([
   ['documentation', text('Read the full documentation offline.', '離線閱讀完整文件。')],
   ['changelog', text('See what changed in each release.', '睇每個版本改咗啲乜。')],
   ['browser-pairing', text('Show a one-time code to link the browser extension to this drive.', '顯示一次性代碼，將瀏覽器擴充功能連結到呢個磁碟。')],
+  ['base64-tools', text('Encode and decode text and files as Base64, build data: URLs and inspect bytes.', '將文字同檔案編碼或解碼成 Base64，建立 data: URL 同檢視位元組。')],
+  ['live-charts', text('Watch drive used space and operation progress change as it happens.', '即時查看磁碟已用空間同操作進度嘅變化。')],
+  ['screen-recording', text('Record a screen or window to a local WebM file. Nothing is uploaded.', '將螢幕或視窗錄成本機 WebM 檔案，唔會上載。')],
+  ['drawing', text('Sketch and annotate, then export PNG or SVG or save into the unlocked drive.', '繪圖同註解，再匯出 PNG 或 SVG，或儲存到已解鎖磁碟。')],
   ['onboarding', text('Set up language, requirements, your drive and a paired browser, step by step.', '逐步設定語言、系統需要、你嘅磁碟同已配對嘅瀏覽器。')],
   ['connection', text('Pair the browser extension and check the link.', '配對瀏覽器擴充功能同檢查連線。')]
 ]);

@@ -24,6 +24,8 @@ export interface DriveBridge {
   selectSession(sessionId: string): Promise<DriveState>;
   removeSession(sessionId: string): Promise<DriveState>;
   featureRequest<T=unknown>(feature:'workflow',action:string,payload?:Record<string,unknown>):Promise<T>;
+  featureRequest<T=unknown>(feature:'toolbox',action:string,payload?:Record<string,unknown>):Promise<T>;
+  toolboxWrite(id:string,data:ArrayBuffer|ArrayBufferView):Promise<number>;
   storageDiagnostics(): Promise<StorageDiagnostics>;
   startPacking(options?: {path?: string; partSizeBytes?: number}): Promise<{operationId: string}>;
   status(): Promise<DriveState>; create(options: VaultOptions & { partSizeBytes: number }): Promise<DriveState>;
