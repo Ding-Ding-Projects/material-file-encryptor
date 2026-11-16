@@ -1,0 +1,25 @@
+/* Installation takeover surface. Animation timing comes from the takeover motion tokens; reduced motion and low
+   stimulation remove the animation in motion-tokens.css while keeping the message fully visible. */
+.install-takeover--success{background:color-mix(in srgb,var(--md-sys-color-scrim,#000) 55%,var(--md-sys-color-primary,#52643f) 18%)}
+.install-takeover--failure{background:color-mix(in srgb,var(--md-sys-color-scrim,#000) 72%,var(--md-sys-color-error,#b3261e) 14%)}
+.install-takeover__card{
+  box-sizing:border-box;inline-size:min(560px,100%);max-block-size:min(100%,640px);overflow:auto;display:flex;flex-direction:column;gap:12px;
+  padding:28px 28px 20px;border-radius:28px;background:var(--md-sys-color-surface-container-high,#fff);color:var(--md-sys-color-on-surface,#1a1c18);
+  box-shadow:0 24px 64px rgba(0,0,0,.35);
+  animation:motion-takeover-rise var(--motion-takeover-duration) var(--motion-takeover-easing) var(--motion-takeover-delay) both;
+}
+.install-takeover--failure .install-takeover__card{outline:2px solid var(--md-sys-color-error,#b3261e);animation:motion-takeover-rise var(--motion-takeover-duration) var(--motion-takeover-easing) both,motion-takeover-alarm calc(var(--motion-takeover-duration) * 3) var(--motion-takeover-easing) infinite}
+.install-takeover__badge{position:relative;inline-size:64px;block-size:64px;display:grid;place-items:center;border-radius:20px;background:var(--md-sys-color-primary,#52643f);color:var(--md-sys-color-on-primary,#fff)}
+.install-takeover--failure .install-takeover__badge{background:var(--md-sys-color-error,#b3261e);color:var(--md-sys-color-on-error,#fff)}
+.install-takeover__glyph{font-size:34px;font-weight:700;line-height:1}
+.install-takeover__ring{position:absolute;inset:0;border-radius:20px;background:inherit;animation:motion-takeover-ring calc(var(--motion-takeover-duration) * 1.4) var(--motion-takeover-easing) var(--motion-takeover-stagger) both}
+.install-takeover__title{margin:0;font-size:24px;font-weight:600}
+.install-takeover__facts{display:grid;gap:6px;margin:0}
+.install-takeover__fact{display:grid;grid-template-columns:7em minmax(0,1fr);gap:12px}
+.install-takeover__fact dt{color:var(--md-sys-color-on-surface-variant,#44483d)}
+.install-takeover__fact dd{margin:0;overflow-wrap:anywhere}
+.install-takeover__label{margin:8px 0 0;font-weight:600}
+.install-takeover__code{margin:0;padding:10px 12px;border-radius:12px;background:var(--md-sys-color-surface-container-highest,#e2e3d8);font:13px/1.45 ui-monospace,Consolas,monospace;white-space:pre-wrap;overflow-wrap:anywhere;max-block-size:180px;overflow:auto}
+.install-takeover__hint,.install-takeover__copy-status{margin:0;color:var(--md-sys-color-on-surface-variant,#44483d);font-size:13px}
+.install-takeover__actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;margin-block-start:4px}
+.install-takeover__actions .button{min-block-size:48px}
