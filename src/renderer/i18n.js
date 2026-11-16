@@ -133,6 +133,7 @@ export const cantonese = {
  'Tab catalog':'分頁目錄',
  'Pages':'頁面',
  'Tools':'工具',
+ 'Synchronization failed':'同步失敗',
  'Settings pages':'設定頁面',
  'Menu options':'選單選項',
  'Destinations':'目的地'

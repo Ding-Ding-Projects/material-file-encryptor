@@ -5,7 +5,7 @@ test('storage has a direct localized destination independent of the tools menu a
  const context=vm.createContext({});vm.runInContext(declarations,context);
  const rows=context.navigationDestinations(new Map([['storage',{en:'Docker Hub storage',yue:'Docker Hub 儲存'}]]));
  assert.equal(rows.length,1);assert.deepEqual(Array.from(rows[0]),['storage','Docker Hub storage','Docker Hub 儲存','storage']);
- const all=context.navigationDestinations(new Map([['storage',{}],['converter',{}]]));
+ const all=context.navigationDestinations(new Map([['storage',{}],['converter',{}],['tools',{}]]));
  assert.equal(all.filter(row=>row[0]==='storage').length,1);assert.ok(all.some(row=>row[0]==='tools'));
 });
 function fixture(){const all=[];class Node{constructor(tag='host'){this.tag=tag;this.children=[];this.attributes={};this.classList={add(){},remove(){},contains:()=>false,toggle:()=>false};this.ownerDocument=doc;}get title(){return this.attributes.title||'';}set title(value){this.attributes.title=String(value);}toString(){return this.tag==='span'?'[object HTMLSpanElement]':'[object HTMLElement]';}append(...nodes){this.children.push(...nodes);}replaceChildren(...nodes){this.children=nodes;}insertBefore(node){this.children.push(node);}setAttribute(key,value){this.attributes[key]=String(value);}removeAttribute(key){delete this.attributes[key];}remove(){}configure(){}setActive(){}querySelector(){return null;}}
