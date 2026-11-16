@@ -51,7 +51,7 @@ export function createSurfaceModel({ storage, storageKey = 'surface-state', tabs
   const sanitizeNotification = item => ({ progress: item.progress && Number.isFinite(Number(item.progress.value)) ? {value:Math.max(0,Math.min(100,Number(item.progress.value))),label:notificationText(item.progress.label,256)} : null, recovery: (Array.isArray(item.recovery)?item.recovery:[]).filter(action=>action&&/^[a-zA-Z0-9:_-]{1,128}$/.test(action.id)).slice(0,4).map(action=>({id:action.id,label:notificationText(action.label,256)})), id: item.id, title: notificationText(item.title, 256), message: notificationText(item.message, 4096), level: ['info', 'success', 'warning', 'error'].includes(item.level) ? item.level : 'info', read: item.read === true, createdAt: new Date(item.createdAt).toISOString() });
   const defaults = uniqueTabs(tabs);
   if (!defaults.length) defaults.push({ id: 'home', label: 'Home', group: '', pinned: false });
-  let state = { notificationFormat: 2, notificationAudio: false, droppedLegacyNotifications: 0, version: VERSION, tabs: defaults, activeTabId: defaults[0].id, closedTabs: [], closedTabIds: [], groups: [], notifications: [] };
+  let state = { notificationFormat: 2, notificationAudio: false, droppedLegacyNotifications: 0, version: VERSION, tabs: defaults, activeTabId: defaults[0].id, closedTabs: [], closedTabIds: [], offeredTabIds: [], groups: [], notifications: [] };
   try {
     const raw = storage?.getItem(storageKey);
     if (raw && raw.length <= 2097152) {
@@ -64,6 +64,8 @@ export function createSurfaceModel({ storage, storageKey = 'surface-state', tabs
           state.activeTabId = restored.some(tab => tab.id === saved.activeTabId) ? saved.activeTabId : restored[0].id;
           state.closedTabs = uniqueTabs(Array.isArray(saved.closedTabs) ? saved.closedTabs : []).filter(tab => !restored.some(open => open.id === tab.id)).slice(-20);
           state.closedTabIds = [...new Set([...(Array.isArray(saved.closedTabIds)?saved.closedTabIds:[]),...state.closedTabs.map(tab=>tab.id)])].filter(id=>validId(id)&&!restored.some(tab=>tab.id===id)).slice(-100);
+          // Destinations already offered to this person. A saved state from before this list existed offers everything again once.
+          state.offeredTabIds = [...new Set(Array.isArray(saved.offeredTabIds) ? saved.offeredTabIds : [])].filter(validId).slice(-500);
           const groupIds = new Set();
           state.groups = (Array.isArray(saved.groups) ? saved.groups : []).filter(group => group && validId(group.id) && !groupIds.has(group.id) && groupIds.add(group.id)).slice(0, 100).map(group => ({ id: group.id, label: text(group.label), collapsed: group.collapsed === true }));
           const notificationIds = new Set();
@@ -112,6 +114,13 @@ export function createSurfaceModel({ storage, storageKey = 'surface-state', tabs
       const canonical=text(label);canonicalTabs.set(id,canonical);
       for(const tab of [...state.tabs,...state.closedTabs])if(tab.id===id)tab.label=canonical;
       persist();return true;
+    },
+    /** Records destinations as offered, so a later load opens only destinations that are new. Returns the newly recorded ids. */
+    markTabsOffered(ids) {
+      const added = [...new Set(Array.isArray(ids) ? ids : [])].filter(id => validId(id) && !state.offeredTabIds.includes(id));
+      if (!added.length) return [];
+      state.offeredTabIds = [...state.offeredTabIds, ...added].slice(-500);
+      persist(); return added;
     },
     openTab(tab) {
       if (!tab || typeof tab.id !== 'string' || !tab.id || tab.id.length > 128) return null;

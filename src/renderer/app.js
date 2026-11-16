@@ -33,6 +33,7 @@ import {requestSuperConfirmation,confirmDestructiveAction} from '../shared/surfa
 import { createPrivateWordingView } from '../shared/surface/private-wording-view.js';
 import { operationNotification } from './operation-notifications.js';
 import { installWordingDrop, createCelebration } from './wording-drop.js';
+import { createActionSounds, ACTION_CUE_EVENT } from '../shared/surface/action-sounds.js';
 import {vaultSessionChoices,vaultSessionAvailability} from './vault-sessions.js';
 import { onPageDiscard } from './page-lifecycle.js';
 import {createRendererTiming,observeTaskPresentation} from './performance-timing.js';
@@ -45,6 +46,43 @@ const $ = id => document.getElementById(id);
 const api = window.drive;
 let preferences = loadSettings(localStorage);
 let vocabularyPersisted = true;
+// Short action cues. A cue that cannot play never changes what an action did, so every call is fire and forget.
+const reducedMotionQuery = typeof matchMedia === 'function' ? matchMedia('(prefers-reduced-motion: reduce)') : null;
+const sounds = createActionSounds({ settings: { enabled: preferences.soundEffects, volume: preferences.soundVolume }, prefersReducedSound: () => reducedMotionQuery?.matches === true });
+function playCue(name) { try { return sounds.play(name); } catch { return { played: false, reason: 'failed' }; } }
+const OPERATION_CUES = Object.freeze({ 'Locking drive…': 'lock', 'Mounting drive…': 'unlock', 'Importing files…': 'upload', 'Syncing encrypted files…': 'sync', 'Deleting files…': 'delete', 'Saving preference…': 'toggle' });
+document.addEventListener(ACTION_CUE_EVENT, event => playCue(String(event.detail?.cue ?? '')));
+// Cues ride on the existing result surfaces by wrapping them once, so none of those functions changes behaviour.
+let pendingOperationCue = null;
+const withCue = (fn, cue) => function (...args) { playCue(typeof cue === 'function' ? cue(...args) : cue); return fn.apply(this, args); };
+showError = withCue(showError, 'error');
+showTransientError = withCue(showTransientError, 'error');
+toast = withCue(toast, () => { const cue = pendingOperationCue || 'success'; pendingOperationCue = null; return cue; });
+run = (baseRun => async function (label, ...rest) { pendingOperationCue = OPERATION_CUES[label] || null; try { return await baseRun.call(this, label, ...rest); } finally { pendingOperationCue = null; } })(run);
+// A sync that finishes on its own (not one the person started and is waiting on) sounds once when it stops.
+acceptVaultState = (baseAccept => function (next) { const wasRunning = state?.sync?.running === true, sessionBefore = state?.sessionId; const result = baseAccept.call(this, next); if (wasRunning && !next?.sync?.running && !next?.sync?.error && !busy && sessionBefore === next?.sessionId) playCue('sync'); return result; })(acceptVaultState);
+// An operation that reaches a finished state sounds once, so reopening the page never replays an old result.
+const operationCueStates = new Map();
+renderOperations = (baseRender => function () {
+ const operations = state?.operations || [], rows = Array.isArray(operations) ? operations : Object.values(operations);
+ for (const operation of rows) {
+  const id = operation.operationId || operation.id, status = operation.state || operation.status, previous = operationCueStates.get(id);
+  operationCueStates.set(id, status);
+  if (previous === undefined || previous === status) continue;
+  if (status === 'completed') playCue(/import|upload/i.test(String(operation.type || operation.label || '')) ? 'upload' : 'success');
+  else if (status === 'failed') playCue('error');
+ }
+ for (const id of operationCueStates.keys()) if (!rows.some(row => (row.operationId || row.id) === id)) operationCueStates.delete(id);
+ return baseRender.call(this);
+})(renderOperations);
+// Settings controls for the cues follow every preference refresh, including a language change.
+applyPreferences = (baseApply => function (...args) { const result = baseApply.apply(this, args); applySoundSettings(); return result; })(applyPreferences);
+// Native validation messages are not page text, so they take the personal wording here, under the same rule as the page.
+updateDialog = (baseUpdate => function (...args) {
+ const result = baseUpdate.apply(this, args);
+ for (const id of ['drive-letter', 'drive-name']) { const field = $(id); if (field?.validity?.customError && field.validationMessage) field.setCustomValidity(displayWording(field.validationMessage)); }
+ return result;
+})(updateDialog);
 let vocabularyUploadVersion = 0;
 const fileSelection = createFileSelection();
 let state = null, selected = null, view = 'drive', busy = false, dialogMode = 'create', snackbarTimer;
@@ -116,7 +154,10 @@ const translateWorkspace=createTranslator(()=>({...effectiveLocalSettings,...pre
 function t(source,options) { return translateWorkspace(source,options); }
 /** Quits the whole application (not just the window). Ctrl+Q, the Help and Settings menus, the New tab menu and the command palette all use this. */
 function quitApplication() { return api.quit ? api.quit() : api.windowControl('close'); }
-const privateWordingView=createPrivateWordingView({root:document.body,replace:value=>replaceVocabulary(value,preferences.vocabulary),isActive:()=>featureMounts.get('access')?.authenticated===true&&!effectiveLocalSettings.school.enabled});
+const wordingActive=()=>featureMounts.get('access')?.authenticated===true&&!effectiveLocalSettings.school.enabled;
+const privateWordingView=createPrivateWordingView({root:document.body,replace:value=>replaceVocabulary(value,preferences.vocabulary),isActive:wordingActive});
+/** Personal wording for text that is not DOM text, such as native form validation messages. Same rule as the page projection. */
+function displayWording(value) { return wordingActive() ? replaceVocabulary(value, preferences.vocabulary) : value; }
 function setText(id, source) { $(id).textContent = t(source); }
 function savePreferences() { try { localStorage.setItem('material-drive.preferences.v1', JSON.stringify({...preferences, vocabulary: JSON.parse(serializeVocabulary(preferences.vocabulary))})); return true; } catch { showError('Your device could not save these preferences.'); return false; } }
 const clearFields = installClearFields(document.body, t);
@@ -622,6 +663,7 @@ const wordingDrop = installWordingDrop({
  doc: document, maxBytes: 256 * 1024,
  celebration: createCelebration({ doc: document, neutral: () => t('Personal wording applied', { message: true }), reducedMotion: () => matchMedia('(prefers-reduced-motion: reduce)').matches }),
  overlayText: () => t('Drop your wording file to apply it', { message: true }),
+ cues: { applied: () => playCue('celebration'), refused: () => playCue('error') },
  apply: source => {
   const version = ++vocabularyUploadVersion, next = parseVocabulary(source);
   preferences.vocabulary = next; vocabularyPersisted = savePreferences();
@@ -633,7 +675,21 @@ const wordingDrop = installWordingDrop({
  },
  refuse: (code, error) => showTransientError(code === 'invalid' ? error : ({ count: 'Drop one wording file at a time. Nothing was changed.', type: 'Only a .json wording file can be dropped. Nothing was changed.', size: 'Vocabulary JSON must be no larger than 256 KiB.', unreadable: 'The wording file could not be read. Nothing was changed.' })[code]),
 });
-function celebrateWording(name) { wordingDrop.celebration.show(name); }
+function celebrateWording(name) { wordingDrop.celebration.show(name); playCue('celebration'); }
+// Sound effects: a switch, a volume and a reset, saved with the other preferences.
+function applySoundSettings() {
+ sounds.configure({ enabled: preferences.soundEffects, volume: preferences.soundVolume });
+ const toggle = $('soundEffects-setting'), slider = $('soundVolume-setting');
+ if (toggle && toggle.selected !== preferences.soundEffects) toggle.selected = preferences.soundEffects;
+ if (slider) { slider.value = preferences.soundVolume; slider.disabled = !preferences.soundEffects; slider.style.setProperty('--range-progress', `${preferences.soundVolume}%`); }
+ if ($('soundVolume-output')) $('soundVolume-output').textContent = String(preferences.soundVolume);
+ $('sound-test')?.toggleAttribute('disabled', !preferences.soundEffects);
+}
+listen('soundEffects-setting', 'change', event => { preferences.soundEffects = event.target.selected === true || event.target.checked === true; localSettings.update({ soundEffects: preferences.soundEffects }, 'preference changed'); savePreferences(); applySoundSettings(); if (preferences.soundEffects) playCue('toggle'); });
+listen('soundVolume-setting', 'input', event => { preferences.soundVolume = Math.max(0, Math.min(100, Math.round(Number(event.target.value) || 0))); applySoundSettings(); });
+listen('soundVolume-setting', 'change', () => { savePreferences(); playCue('toggle'); });
+listen('sound-test', 'click', () => playCue('celebration'));
+listen('sound-reset', 'click', () => { preferences.soundEffects = true; preferences.soundVolume = 60; savePreferences(); applySoundSettings(); toast('Sound effects reset.', {}, 'toggle'); });
 // The setup guide applies a preference through the same path as the Settings controls above.
 function setPreference(key,value){preferences[key]=value;localSettings.update({[key]:value},'preference changed');savePreferences();applyPreferences();}
 let openSetupGuide=()=>{};
@@ -795,7 +851,7 @@ function refreshPaletteInventory() {
 function guardControl(control,action){const access=featureMounts.get('access');return access?access.guardControl(ensureLockId(control),control,action):action();}
 function ensureLockId(element){if(element.dataset.lockId)return element.dataset.lockId;const parts=[];for(let node=element;node&&node!==document.body;node=node.parentElement){parts.unshift(node.id?`id:${node.id}`:`${node.tagName.toLowerCase()}:${[...node.parentElement.children].indexOf(node)}`);if(node.id)break;}const id=parts.join('/').slice(0,180);element.dataset.lockId=id;return id;}
 function setupEnhancedWorkspace() {
- const main=document.querySelector('mfe-main-workspace');foundation=mountSurfaceFoundation({host:main,before:main.firstChild,storage:localStorage,language:preferences.language,tabs:[{id:'drive',label:'My drive',labelYue:'我嘅磁碟'},{id:'offline',label:'Available offline',labelYue:'可離線使用'},{id:'history',label:'History',labelYue:'歷史記錄'},{id:'recycle',label:'Recycle Bin',labelYue:'資源回收筒'},{id:'settings',label:'Settings',labelYue:'設定'},{id:'help',label:'How it works',labelYue:'使用方法'}],onActivate:changeView,commands:workspaceCommands(),onExport:exportText,renderText:t,onNotification:(record,options)=>narrationEvents.notify(record,options),onQuit:()=>quitApplication(),onNotificationAction:async action=>{if(action==='retry-files'){filePageRevision=null;return loadFilePage();}if(action.startsWith('cancel-operation:'))return api.cancelOperation(action.slice('cancel-operation:'.length));if(action==='open-operations'){foundation.shell.activate('drive');$('active-operations').scrollIntoView({block:'center'});return;}throw Error('This recovery action is no longer available.');}});
+ const main=document.querySelector('mfe-main-workspace');foundation=mountSurfaceFoundation({host:main,before:main.firstChild,storage:localStorage,sounds,language:preferences.language,tabs:[{id:'drive',label:'My drive',labelYue:'我嘅磁碟'},{id:'offline',label:'Available offline',labelYue:'可離線使用'},{id:'history',label:'History',labelYue:'歷史記錄'},{id:'recycle',label:'Recycle Bin',labelYue:'資源回收筒'},{id:'settings',label:'Settings',labelYue:'設定'},{id:'help',label:'How it works',labelYue:'使用方法'}],onActivate:changeView,commands:workspaceCommands(),onExport:exportText,renderText:t,onNotification:(record,options)=>narrationEvents.notify(record,options),onQuit:()=>quitApplication(),onNotificationAction:async action=>{if(action==='retry-files'){filePageRevision=null;return loadFilePage();}if(action.startsWith('cancel-operation:'))return api.cancelOperation(action.slice('cancel-operation:'.length));if(action==='open-operations'){foundation.shell.activate('drive');$('active-operations').scrollIntoView({block:'center'});return;}throw Error('This recovery action is no longer available.');}});
  // Offline filtering reuses the drive panel and its persisted layout.
  for(const id of ['drive','history','recycle','settings','help'])foundation.registerPanel(id,$(`view-${id}`));
  for(const [id,label]of Object.entries(canonicalViewLabels))foundation.model.registerCanonicalTab(id,label);

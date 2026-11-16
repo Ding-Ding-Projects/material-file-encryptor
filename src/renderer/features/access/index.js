@@ -1,4 +1,5 @@
 import {mountAccessHistory} from './history-view.js';
+import {requestCue} from '../../../shared/surface/action-sounds.js';
 import {destructiveAction,localizedPair} from '../../../shared/destructive-actions.js';
 import {control,connectSelectSearch,controlIcon} from '../../../shared/surface/controls.js';
 import {createAccessNavigation,createAccessSearch,anchorAccessPanel} from './surface.js';
@@ -123,7 +124,7 @@ export function mountAccess(container,services={}) {
   function renderEntries(){authList.replaceChildren();const rows=[];
     for(const [id,entry]of entries){const label=`${entry.issuer}: ${entry.account} ${entry.group||''}`;
       const row=document.createElement('div');row.className='access-record';row.dataset.entryId=id;selectBox(row,id,selectedEntries);const name=document.createElement('strong');name.textContent=label;const codeRegion=document.createElement('output');codeRegion.setAttribute('aria-live','polite');const next=document.createElement('span');next.dataset.next='';row.append(name,document.createTextNode(' '),codeRegion,document.createElement('small'),next);
-      button(t('access.copyCode','Copy code'),async()=>{try{await navigator.clipboard.writeText(await totp(entry));}catch(e){report(e);}},row);
+      button(t('access.copyCode','Copy code'),async()=>{try{await navigator.clipboard.writeText(await totp(entry));requestCue(document,'copy');}catch(e){report(e);}},row);
       button(t('access.edit','Edit'),()=>{registration.hidden=false;registrationToggle.setAttribute('aria-expanded','true');editingId=id;issuer.value=entry.issuer;account.value=entry.account;group.value=entry.group||'';algorithm.value=entry.algorithm;digits.value=entry.digits;period.value=entry.period;secret.value='';uri.value='';confirmation.value='';issuer.focus();},row);
       for(const [label,direction]of [[t('access.up','Move up'),-1],[t('access.down','Move down'),1]])button(label,async()=>{try{const list=[...entries];const at=list.findIndex(x=>x[0]===id),to=at+direction;if(to<0||to>=list.length)return;[list[at],list[to]]=[list[to],list[at]];entries.clear();list.forEach(([key,value])=>entries.set(key,value));await persistEntries();await history('authenticator-reordered',id);renderEntries();}catch(e){report(e);}},row);
       button(t('access.remove','Remove'),()=>{selectedEntries.clear();selectedEntries.add(id);removeAuthenticators();},row);

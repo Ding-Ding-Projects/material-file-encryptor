@@ -113,10 +113,14 @@ export function createNotice({ doc, ms = 5000, setTimer = setTimeout, clearTimer
  * Installs the window-wide drop handling.
  *   apply(text)  validates and stores the file, returning { name } to celebrate, or throwing to refuse;
  *   refuse(code, error)  tells the user nothing changed; code is count, type, size, unreadable or invalid;
- *   overlayText()  the localized drop-target label.
+ *   overlayText()  the localized drop-target label;
+ *   cues  optional { applied(), refused() } sound hooks: applied runs exactly once beside the celebration of a
+ *         valid drop, refused exactly once for a refused drop, and a hook that throws never changes the outcome.
  * Returns { dispose, celebration }.
  */
-export function installWordingDrop({ doc, win = doc.defaultView, maxBytes, apply, refuse, overlayText, celebration, readFile = file => file.text() }) {
+export function installWordingDrop({ doc, win = doc.defaultView, maxBytes, apply, refuse: refuseDrop, overlayText, celebration, cues, readFile = file => file.text() }) {
+  const cue = name => { try { cues?.[name]?.(); } catch { /* a sound is never required */ } };
+  const refuse = (code, error) => { cue('refused'); refuseDrop(code, error); };
   const overlay = doc.createElement('div');
   overlay.className = 'wording-drop-overlay';
   overlay.setAttribute('aria-hidden', 'true');
@@ -153,7 +157,7 @@ export function installWordingDrop({ doc, win = doc.defaultView, maxBytes, apply
     if (ticket !== latest) return;
     let result;
     try { result = await apply(String(text)); } catch (error) { if (ticket === latest) refuse('invalid', error); return; }
-    if (ticket === latest && result) celebration.show(result.name);
+    if (ticket === latest && result) { celebration.show(result.name); cue('applied'); }
   };
 
   const target = win || doc;

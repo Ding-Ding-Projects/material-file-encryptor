@@ -18,7 +18,7 @@ An icon never reads the live value of its control, never copies private text suc
 
 The inventories below cover the static markup of each page and the controls that the page code creates at start-up. A coverage check reads each page as text and fails when a capable control has neither an explanation nor a stated reason.
 
-- Desktop app (`src/renderer/index.html`): 65 explanations (1 for groups of related controls), 6 stated exemptions.
+- Desktop app (`src/renderer/index.html`): 69 explanations (1 for groups of related controls), 6 stated exemptions.
 - Website (`docs/site/index.html`): 22 explanations (0 for groups of related controls), 7 stated exemptions.
 - Browser extension popup (`browser-extension/popup.html`): 15 explanations (1 for groups of related controls), 0 stated exemptions.
 - Browser extension workspace (`browser-extension/options.html`): 140 explanations (3 for groups of related controls), 3 stated exemptions.
@@ -480,6 +480,46 @@ Source checks mount every icon on a document fixture and open it from the keyboa
 - Effects: Only the tone of Cantonese messages changes. Facts and numbers do not.
 - Default: The control’s starting value
 - Example: Example for "Cantonese playfulness": only the tone of Cantonese messages changes. Facts and numbers do not.
+
+### desktop-soundeffects-setting
+
+**Sound effects** — `#soundEffects-setting`
+
+- Kind: toggle
+- Purpose: Play short, quiet cues for actions such as unlocking, locking, copying, finished transfers and errors.
+- Effects: Sounds never replace the on-screen message, and a sound that cannot play never changes what an action does.
+- Default: Off
+- Example: Example for "Sound effects": sounds never replace the on-screen message, and a sound that cannot play never changes what an action does.
+
+### desktop-sound-volume
+
+**Sound volume** — `#soundVolume-setting`
+
+- Kind: number
+- Purpose: Set how loud the cues are, from 0 (silent) to 100.
+- Effects: Only the cues change. Your computer volume is never touched.
+- Default: The control’s starting value
+- Example: Example for "Sound volume": only the cues change. Your computer volume is never touched.
+
+### desktop-sound-test
+
+**Play sample** — `#sound-test`
+
+- Kind: button
+- Purpose: Play one sample cue at the current volume.
+- Effects: It stays silent when sound effects are switched off or the volume is 0.
+- Default: Not invoked
+- Example: Example for "Play sample": it stays silent when sound effects are switched off or the volume is 0.
+
+### desktop-sound-reset
+
+**Reset sounds** — `#sound-reset`
+
+- Kind: button
+- Purpose: Turn sound effects back on and return the volume to its default.
+- Effects: Nothing else in your settings changes.
+- Default: Not invoked
+- Example: Example for "Reset sounds": nothing else in your settings changes.
 
 ### desktop-vocabulary-label
 

@@ -29,6 +29,7 @@ export const surfaceRegistry = Object.freeze([
   { tag: 'mfe-notification-center', role: 'region', module: 'notification-center.js', primitives: ['md-outlined-button','md-text-button','md-switch'] },
   { tag: 'mfe-build-provenance', role: 'status', module: 'provenance.js', primitives: [] }
   ,{ tag: 'mfe-group-manager', role: 'dialog', module: 'group-manager.js', primitives: ['md-dialog','md-outlined-text-field','md-switch'] }
+  ,{ tag: 'mfe-new-tab-catalog', role: 'dialog', module: 'new-tab-catalog.js', primitives: ['md-dialog','md-list','md-list-item','md-text-button','mfe-search'] }
 ]);
 
 export function register(tag, constructor) {

@@ -1,4 +1,5 @@
 import {SurfaceElement,element,register,localized} from '../../../shared/surface/registry.js';
+import {requestCue} from '../../../shared/surface/action-sounds.js';
 
 const COPY={
  'preparing-restart':['Preparing application restart','正在準備重新啟動應用程式'],'manual-restart-required':['Manual application restart required','需要手動重新啟動應用程式'],recovery:['The application cannot accept more work. Exit the application manually, then reopen it to recover. Do not restart the computer.','應用程式暫時無法接受新工作。請手動退出應用程式，再重新開啟以復原，無需重新啟動電腦。'],preparing:['The application is preparing to exit. Wait for it to close before reopening it.','應用程式正在準備退出。請等候關閉後再重新開啟。'],installUnavailable:['Installation is not available in the current state.','目前狀態無法安裝。'],
@@ -25,7 +26,7 @@ export class UpdatesPanel extends SurfaceElement{
  }
  t(key){const [en,yue]=COPY[key]||[key,key],external=this.translateText(en);return external!==en?external:localized({en,yue},this.language);}
  configure({translate=value=>value,services={},language='en'}={}){this.translateText=translate;this.language=language;this.request=services.request;this.stop=services.subscribe?.(event=>this.update(event?.snapshot||event));this.render();if(this.request)void this.act('status');return this;}
- update(snapshot){if(this.disposed||!snapshot||typeof snapshot!=='object'||typeof snapshot.state!=='string')return;const prior=this.snapshot;this.snapshot={...snapshot};if(snapshot.state!=='ready'||prior.update?.version!==snapshot.update?.version)this.deferred=false;this.render();}
+ update(snapshot){if(this.disposed||!snapshot||typeof snapshot!=='object'||typeof snapshot.state!=='string')return;const prior=this.snapshot;this.snapshot={...snapshot};if(prior?.state!==snapshot.state){if(snapshot.state==='ready')requestCue(document,'installSuccess');else if(snapshot.state==='failed')requestCue(document,'installError');}if(snapshot.state!=='ready'||prior.update?.version!==snapshot.update?.version)this.deferred=false;this.render();}
  setLanguage(language){this.language=language;this.render();}
  refreshLabels(){this.render();}
  async act(action){if(this.pending||this.disposed||!this.request||!['status','check','download','install'].includes(action))return;if(action!=='status'&&(recoveryBlocked(this.snapshot)||this.buttons[action]?.disabled))return;const generation=++this.generation;this.pending=true;this.render();try{const result=await this.request(action,{});if(!this.disposed&&generation===this.generation)this.update(result);}catch(error){if(!this.disposed&&generation===this.generation)this.update({...this.snapshot,state:'failed',reason:String(error?.message||this.t('service'))});}finally{if(!this.disposed&&generation===this.generation){this.pending=false;this.render();}}}
