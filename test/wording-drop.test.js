@@ -262,3 +262,16 @@ test('guard: headlines never come from literals in the new source files', async 
     assert.doesNotMatch(source, /celebration\.show\(\s*['"`]/, `${path} passes a literal headline`);
   }
 });
+
+test('low stimulation replaces the full-window celebration with a small static notice that is still announced', () => {
+  const env = environment();
+  const celebration = createCelebration({ doc: env.doc, neutral: () => 'Personal wording applied', reducedMotion: () => false, calm: () => true, setTimer: env.setTimer, clearTimer: env.clearTimer });
+  celebration.show('Team words');
+  const node = env.body.children.find(item => item.className.includes('wording-celebration'));
+  assert.equal(node.className, 'wording-celebration wording-celebration--calm');
+  assert.equal(node.dataset.reduced, 'true');
+  assert.equal(node.dataset.phase, 'hold');
+  assert.equal(node.children[0].textContent, 'Team words');
+  env.advance(CELEBRATION.holdMs + 1);
+  assert.equal(celebration.active, false);
+});

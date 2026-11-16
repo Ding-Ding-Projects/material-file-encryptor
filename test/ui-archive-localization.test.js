@@ -26,7 +26,7 @@ function fixture() {
  const get = id => { if (!elements.has(id)) elements.set(id,element()); return elements.get(id); };
  const preferences={language:'en',theme:'light',vocabulary:{replacements:[]}};
  doc={documentElement:element(),activeElement:null,querySelectorAll:()=>[],createElement:()=>element(),createTextNode:text=>element(text)};
- const context=vm.createContext({control:(tag,props,children)=>createControl(tag,props,children,doc),setControlLanguage,createHistorySelection,historySelection:null,historyRetentionDraft:false,historyRetentionRevision:0,formatDate:String,formatBytes:String,fileDetails:null,narrationEvents:createNotificationNarration({getNarrator:()=>null,getSettings:()=>preferences,isScreenReaderActive:()=>true}),preferences,cantonese,dictionary:new Map(),$:get,
+ const context=vm.createContext({mountArchiveChrome(){},control:(tag,props,children)=>createControl(tag,props,children,doc),setControlLanguage,createHistorySelection,historySelection:null,historyRetentionDraft:false,historyRetentionRevision:0,formatDate:String,formatBytes:String,fileDetails:null,narrationEvents:createNotificationNarration({getNarrator:()=>null,getSettings:()=>preferences,isScreenReaderActive:()=>true}),preferences,cantonese,dictionary:new Map(),$:get,
   document:doc,
   state:null,view:'drive',busy:false,colorQuery:{matches:false},clearFields:{refresh(){}},
   historySearch:null,recycleSearch:null,createScopedSearch:()=>({refresh(){}}),api:{},

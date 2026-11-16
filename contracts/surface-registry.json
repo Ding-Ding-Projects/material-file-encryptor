@@ -131,7 +131,19 @@
         "uh-single-file-editions",
         "project-profile",
         "roblox-model-catalogue",
-        "roblox-visual-realism"
+        "roblox-visual-realism",
+        "job-experience-document-label",
+        "action-sound-effects",
+        "live-charts",
+        "extension-support",
+        "base64-tools",
+        "quicktype-studio",
+        "virtual-disk-manager",
+        "minecraft-world-generator",
+        "drawesome-drawing",
+        "animation-editor",
+        "paired-hosted-forms",
+        "three-delivery-forms"
       ]
     }
   },
@@ -10065,6 +10077,303 @@
       "route": "workspace.html",
       "owner": "docs/site/workspace.js",
       "selector": "view:status",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:document:docs/features/desktop/installed-icons",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/desktop/installed-icons",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:document:docs/features/desktop/installed-icons.zh-HK",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/desktop/installed-icons.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:document:docs/features/drive/encrypted-folder-images",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/drive/encrypted-folder-images",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:document:docs/features/drive/multiple-vaults",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/drive/multiple-vaults",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:document:docs/features/interface/current-presentation-images",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/interface/current-presentation-images",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:document:docs/features/interface/current-presentation-images.zh-HK",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/interface/current-presentation-images.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:document:docs/features/storage/registry-sync",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/storage/registry-sync",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:document:docs/features/storage/registry-sync.zh-HK",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/storage/registry-sync.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/desktop/installed-icons.md",
+      "family": "site",
+      "route": "articles/docs--features--desktop--installed-icons.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/desktop/installed-icons.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--desktop--installed-icons.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/desktop/installed-icons.zh-HK.md",
+      "family": "site",
+      "route": "articles/docs--features--desktop--installed-icons.zh-HK.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/desktop/installed-icons.zh-HK.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--desktop--installed-icons.zh-HK.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/drive/encrypted-folder-images.md",
+      "family": "site",
+      "route": "articles/docs--features--drive--encrypted-folder-images.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/drive/encrypted-folder-images.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--drive--encrypted-folder-images.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/drive/multiple-vaults.md",
+      "family": "site",
+      "route": "articles/docs--features--drive--multiple-vaults.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/drive/multiple-vaults.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--drive--multiple-vaults.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/interface/current-presentation-images.md",
+      "family": "site",
+      "route": "articles/docs--features--interface--current-presentation-images.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/interface/current-presentation-images.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--interface--current-presentation-images.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/interface/current-presentation-images.zh-HK.md",
+      "family": "site",
+      "route": "articles/docs--features--interface--current-presentation-images.zh-HK.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/interface/current-presentation-images.zh-HK.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--interface--current-presentation-images.zh-HK.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/storage/registry-sync.md",
+      "family": "site",
+      "route": "articles/docs--features--storage--registry-sync.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/storage/registry-sync.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--storage--registry-sync.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/storage/registry-sync.zh-HK.md",
+      "family": "site",
+      "route": "articles/docs--features--storage--registry-sync.zh-HK.html",
+      "owner": "docs/site/publication.mjs",
+      "selector": "",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:article:docs/features/storage/registry-sync.zh-HK.md:preferences",
+      "family": "site",
+      "route": "articles/docs--features--storage--registry-sync.zh-HK.html",
+      "owner": "docs/site/preferences.js",
+      "selector": "#preferences-dialog",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:document:docs/features/desktop/installed-icons",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/desktop/installed-icons",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:document:docs/features/desktop/installed-icons.zh-HK",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/desktop/installed-icons.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:document:docs/features/drive/encrypted-folder-images",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/drive/encrypted-folder-images",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:document:docs/features/drive/multiple-vaults",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/drive/multiple-vaults",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:document:docs/features/interface/current-presentation-images",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/interface/current-presentation-images",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:document:docs/features/interface/current-presentation-images.zh-HK",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/interface/current-presentation-images.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:document:docs/features/storage/registry-sync",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/storage/registry-sync",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "site:workspace:document:docs/features/storage/registry-sync.zh-HK",
+      "family": "site",
+      "route": "workspace.html",
+      "owner": "src/renderer/features/documentation/index.js",
+      "selector": "document:docs/features/storage/registry-sync.zh-HK",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
+      "id": "desktop:view-dimsum",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/app.js",
+      "selector": "#view-dimsum",
       "template": "required-families",
       "proofs": {}
     }

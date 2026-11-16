@@ -45,6 +45,7 @@ function validateDesktopWorkflow(action, payload) {
 export function validateFeatureRequest(feature, action, payload, { browser = false } = {}) {
   const actions = {
     ...(!browser?{surprise:['resolvePublishedDish']}:{}),
+    ...(!browser?{dimsum:['catalogue','photo']}:{}),
     converter: ['catalog','inspect','enqueue','list','control','pickSources','pickDestination','pickDestinationDirectory'],
     workflow: ['documents','pickDocument','pickProject','readDocument','saveDocument','createDocument','templates','editors','pickEditor','openEditor','openInCode','editorDownload','downloads','prepareDownload','startDownload','cancelDownload','accounts','prepareHandoff','exportHandoff','openHandoff',...(!browser?WORKFLOW_DESKTOP_ACTIONS:[])],
     updates: ['status','check','download',...(!browser?['install']:[])],
@@ -64,6 +65,12 @@ export function validateFeatureRequest(feature, action, payload, { browser = fal
   }
   if(Buffer.byteLength(JSON.stringify(payload))>limit)throw new Error('Unsupported feature request.');
   if ((feature==='surprise'||feature==='personalization'&&action==='accessibilityState') && (Object.getPrototypeOf(payload)!==Object.prototype&&Object.getPrototypeOf(payload)!==null||Reflect.ownKeys(payload).length!==0)) throw new Error('This read-only request accepts no payload.');
+  if (feature === 'dimsum') {
+    // The catalogue loads on request only: an optional refresh flag, or one published illustration name.
+    const schema = action === 'photo' ? {file: value => typeof value === 'string' && /^hk-dish-\d{4}-[a-z0-9-]+\.png$/.test(value)} : {force: value => value === undefined || typeof value === 'boolean'};
+    const prototype = Object.getPrototypeOf(payload);
+    if (prototype !== Object.prototype && prototype !== null || Reflect.ownKeys(payload).some(key => typeof key !== 'string' || !Object.hasOwn(schema, key)) || Object.entries(schema).some(([key, valid]) => !valid(payload[key]))) throw new Error('Unsupported dim sum request.');
+  }
   if (feature === 'workflow' && WORKFLOW_DESKTOP_ACTIONS.includes(action)) validateDesktopWorkflow(action,payload);
   if (feature === 'server-manager') {
     const uuid = value => typeof value === 'string' && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(value);

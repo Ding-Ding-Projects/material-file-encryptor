@@ -26,6 +26,7 @@ import {createBrowserServerAdapters} from './browser-server-adapters.js';
 import {createAccessIntegration,readExtensionElementLocks,setExtensionElementLock} from './access-integration.js';
 import {createAccessMutationHistory} from './access-mutation-history.js';
 import {createStartupPhotoService} from './startup-photo-service.js';
+import {createDimsumCatalogueService} from './dimsum-catalogue-service.js';
 import {createModelStartupReadiness} from './model-startup-readiness.js';
 const scrypt=promisify(scryptCallback);
 const executeFile=promisify(execFile);
@@ -90,7 +91,7 @@ export function sanitizeConverterDiagnostic(record){const safe={schema:1,compone
 
 export function converterUnavailableError(record){const safe=sanitizeConverterDiagnostic(record);const fields=['launcherExitCode','workerExitCode','nativeError','nativeHresult'].filter(key=>Object.hasOwn(safe,key)).map(key=>key+'='+safe[key]);return new Error(`Isolated image decoding unavailable: ${safe.component}/${safe.phase}/${safe.code}${fields.length?' ['+fields.join(', ')+']':''}.`);}
 
-const PASSIVE_READS=new Set(['surprise:resolvePublishedDish','converter:catalog','converter:list','workflow:documents','workflow:templates','workflow:editors','workflow:downloads','workflow:accounts','updates:status','ollama:status','ollama:catalog','ollama:models','ollama:hardware','ollama:cart','ollama:sessions','ollama:profiles','documentation:catalog','documentation:changelog','status:status','personalization:accessibilityState','personalization:sharedRead','personalization:listFonts','personalization:fontMetadata','server-manager:snapshot','server-manager:versions','server-manager:capabilities','server-manager:status','server-manager:targets','server-manager:servers','server-manager:flavorVersions','server-manager:serverStatus','server-manager:serverLogs','server-manager:serverSettings','server-manager:listExtensions','server-manager:searchExtensions','server-manager:runtimeStatus','access:credentialGet','access:credentialList','access:dataFolder']);
+const PASSIVE_READS=new Set(['surprise:resolvePublishedDish','dimsum:catalogue','dimsum:photo','converter:catalog','converter:list','workflow:documents','workflow:templates','workflow:editors','workflow:downloads','workflow:accounts','updates:status','ollama:status','ollama:catalog','ollama:models','ollama:hardware','ollama:cart','ollama:sessions','ollama:profiles','documentation:catalog','documentation:changelog','status:status','personalization:accessibilityState','personalization:sharedRead','personalization:listFonts','personalization:fontMetadata','server-manager:snapshot','server-manager:versions','server-manager:capabilities','server-manager:status','server-manager:targets','server-manager:servers','server-manager:flavorVersions','server-manager:serverStatus','server-manager:serverLogs','server-manager:serverSettings','server-manager:listExtensions','server-manager:searchExtensions','server-manager:runtimeStatus','access:credentialGet','access:credentialList','access:dataFolder']);
 export function createFeatureServices({dataDirectory,applicationRoot,isPackaged=false,nativeRequest,toolsDirectory=applicationRoot?.endsWith('.asar')?path.join(path.dirname(applicationRoot),'tools'):path.join(applicationRoot||'','out','tools'),sandboxDirectory,safeStorage,dialog,getWindow,getMainFrame,openPath,openExternal,emit=()=>{},sandboxProvider,reviewedForgeClient=null,onConverterDiagnostic=()=>{},accessibilityState=()=>({known:false,enabled:false,source:'runtime'}),nativeProfilePrompt,cancelNativeProfilePrompt=()=>{}}){
  const documentation=createDocumentationCatalogService({filename:path.join(applicationRoot,'src/shared/documentation-catalog.json'),immutable:isPackaged===true});
  const credentials=createCredentialStore({directory:dataDirectory,safeStorage});
@@ -108,6 +109,7 @@ export function createFeatureServices({dataDirectory,applicationRoot,isPackaged=
  const browserPublishAdapters={publishProgress:createPublishProgressAdapter({forge:forgeService})};
  const browserStatusAdapters={enrollStatusClient:report=>{ensureOpen();return extensionStatus.enroll(report);}};
  const startupPhotos=createStartupPhotoService({dataDirectory,toolsDirectory});
+ const dimsumCatalogue=createDimsumCatalogueService();
  const fontMetadataAdmission=createFontScanAdmission();const cancelFontMetadata=()=>fontMetadataAdmission.cancelAll();
  const grants=new Map();let converter,ollama,ollamaPromise,closed=false,exiting=false,sharedCredentialGranted=false,pendingRequests=0;
  const modelEvents=[];let modelSequence=0,modelEventBytes=0,activeOllamaRequests=0;
@@ -136,6 +138,7 @@ export function createFeatureServices({dataDirectory,applicationRoot,isPackaged=
   if(exiting&&!['status','catalog','models','cart','list','operations','cancel','control','downloads','cancelDownload'].includes(action))throw Error('The application is waiting for active work before quitting.');
   if(feature==='server-manager'){if(exiting)throw Error('Application is closing.');return servers.dispatch(action,payload);}
   if(feature==='surprise'&&action==='resolvePublishedDish'){if(exiting||Reflect.ownKeys(payload).length)throw Error('Unsupported startup photo request.');return startupPhotos.resolvePublishedDish();}
+  if(feature==='dimsum'){if(exiting)throw Error('The application is closing.');return dimsumCatalogue[action](payload);}
   if(feature==='workflow')return workflows.dispatch(action,payload);
   if(feature==='access'&&access.supports(action))return access.request(context?.senderFrame,action,payload);
   if(feature==='converter'){

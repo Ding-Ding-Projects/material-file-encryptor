@@ -36,7 +36,7 @@ export function mountSurfaceFoundation({host,before=null,storage,language='en',p
   views.set(HOME_ID,{id:HOME_ID,root:homeRoot,label:HOME_LABEL,layout:false});labels.set(HOME_ID,HOME_LABEL);model.registerCanonicalTab(HOME_ID,'Home');
   const renderHome=()=>{homeRoot.setAttribute('aria-label',localized(HOME_LABEL,activeLanguage));homeGrid.configure({entries:homeEntries(labels,model.getState()),language:activeLanguage,onOpen:entry=>shell.activate(entry.id)});};
   let frame;
-  const audio=createNotificationAudio();
+  const audio=createNotificationAudio({calm:()=>document.documentElement.dataset.lowStimulation==='true'});
   let messageTimer;
   const live=element('mfe-live-notification',{role:'status','aria-live':'polite'});
   if(!customElements.get('mfe-surface-actions'))customElements.define('mfe-surface-actions',class extends HTMLElement{constructor(){super();this.attachShadow({mode:'open'});}});

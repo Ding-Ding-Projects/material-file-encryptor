@@ -57,7 +57,7 @@ export function headlineFrom(name) {
  * The full-window celebration. `show(name)` animates the headline in, holds it, animates it out and removes it.
  * Phases are exposed as data-phase so the stylesheet owns the motion; timers only move between phases.
  */
-export function createCelebration({ doc, neutral, reducedMotion = () => false, setTimer = setTimeout, clearTimer = clearTimeout }) {
+export function createCelebration({ doc, neutral, reducedMotion = () => false, calm = () => false, setTimer = setTimeout, clearTimer = clearTimeout }) {
   let root = null, timers = [];
   const stop = () => { for (const id of timers) clearTimer(id); timers = []; root?.remove(); root = null; };
   const phase = value => { if (root) root.dataset.phase = value; };
@@ -67,11 +67,12 @@ export function createCelebration({ doc, neutral, reducedMotion = () => false, s
       stop();
       const headline = headlineFrom(name) || (typeof neutral === 'function' ? neutral() : String(neutral));
       root = doc.createElement('div');
-      root.className = 'wording-celebration';
+      // Low stimulation keeps the announcement but drops the full-window celebration: a small static notice instead.
+      root.className = calm() === true ? 'wording-celebration wording-celebration--calm' : 'wording-celebration';
       root.setAttribute('role', 'status');
       root.setAttribute('aria-live', 'polite');
       root.setAttribute('aria-atomic', 'true');
-      const reduced = reducedMotion() === true;
+      const reduced = reducedMotion() === true || calm() === true;
       root.dataset.reduced = String(reduced);
       root.dataset.phase = reduced ? 'hold' : 'in';
       doc.body.append(root);
