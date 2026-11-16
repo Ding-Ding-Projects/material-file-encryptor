@@ -2678,6 +2678,15 @@
       "proofs": {}
     },
     {
+      "id": "desktop:view-tools",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/app.js",
+      "selector": "#view-tools",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
       "id": "desktop:view-updates",
       "family": "desktop",
       "route": "src/renderer/index.html",
