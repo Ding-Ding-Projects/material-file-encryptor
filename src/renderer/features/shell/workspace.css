@@ -1,0 +1,269 @@
+/* Workspace shell: drive tabs in the title bar, three panes, command bar, inspector and status bar.
+   Loaded after modern.css so it can reshape the earlier card-style layout into a dense file tool. */
+
+:root{--row-height:34px;--fs:calc(13px*var(--mfe-text-scale,1));--fs-small:calc(12px*var(--mfe-text-scale,1));--fs-label:calc(11px*var(--mfe-text-scale,1));--accent-warning:#8a5300;--status-height:26px;--bar-height:40px}
+:root[data-theme=dark]{--accent-warning:#e9b25c}
+:root[data-density=comfortable]{--row-height:48px}
+html{font-size:14px}
+body{display:flex;flex-direction:column;height:100dvh}
+/* Text size: the three layout rows scale as one, so the file list, panes and toolbars grow together. */
+body>mfe-titlebar,body>.app-shell,body>.status-bar{zoom:var(--mfe-text-scale,1)}
+
+/* ---------- title bar with drive tabs ---------- */
+mfe-titlebar.titlebar{flex:0 0 var(--bar-height);height:var(--bar-height);background:var(--container-high)}
+mfe-titlebar .window-brand .brand-name{white-space:nowrap}
+.window-controls md-icon-button{height:var(--bar-height)}
+.drive-tabs-host{display:flex;align-items:flex-end;align-self:stretch;flex:1 1 auto;min-width:0;gap:2px;padding-inline:8px 4px}
+.drive-tabs{display:flex;align-items:flex-end;gap:2px;min-width:0;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
+.drive-tabs::-webkit-scrollbar{display:none}
+.drive-tab{display:flex;align-items:center;gap:8px;flex:0 1 auto;min-width:0;max-width:220px;height:34px;padding:0 14px;border-radius:10px 10px 0 0;font-size:var(--fs);color:var(--text);cursor:pointer;white-space:nowrap;-webkit-app-region:no-drag;user-select:none}
+.drive-tab:hover{background:color-mix(in srgb,var(--surface) 55%,transparent)}
+.drive-tab[aria-selected=true]{background:var(--surface)}
+.drive-tab:focus-visible{outline:2px solid var(--primary);outline-offset:-2px}
+.drive-tab-name{overflow:hidden;text-overflow:ellipsis}
+.drive-tab-dot{flex:none;width:8px;height:8px;border-radius:50%;box-sizing:border-box;border:2px solid var(--outline);background:transparent}
+.drive-tab[data-state=mounted] .drive-tab-dot{background:var(--primary);border-color:var(--primary)}
+.drive-tab[data-state=unlocked] .drive-tab-dot{background:var(--accent-warning);border-color:var(--accent-warning)}
+.drive-tab[data-state=busy] .drive-tab-dot{border-style:dotted;border-color:var(--primary)}
+.drive-tab[data-state=recovery] .drive-tab-dot{background:var(--error);border-color:var(--error);border-radius:2px}
+.drive-tab-add,.drive-tab-remove{align-self:center;flex:none;width:32px;height:32px;-webkit-app-region:no-drag;--md-icon-button-icon-size:18px}
+.drive-tab-add .icon,.drive-tab-remove .icon{width:18px;height:18px}
+
+/* ---------- panes ---------- */
+body>.app-shell{display:grid;grid-template-columns:232px minmax(0,1fr);flex:1 1 0;height:auto;min-height:0;padding:0;gap:1px;background:var(--line)}
+.app-shell>.sidebar{display:flex;flex-direction:column;background:var(--container);padding:0;gap:0;overflow:hidden}
+.app-shell mfe-main-workspace{border:0;border-radius:0;background:var(--surface)}
+.sidebar mfe-navigation-rail{flex:0 0 auto;height:auto;min-height:0}
+.folder-pane{display:flex;flex-direction:column;flex:1 1 45%;min-height:96px;padding-top:10px;overflow:hidden}
+.pane-label{margin:0 14px 6px;font-size:var(--fs-label);font-weight:700;letter-spacing:.06em;color:var(--muted);text-transform:uppercase}
+.folder-tree{flex:1;min-height:0;overflow:auto;padding:0 6px 6px}
+.tree-note{margin:4px 8px;font-size:var(--fs-small);line-height:1.5}
+.tree-row{display:flex;align-items:center;gap:6px;height:30px;padding-inline:calc(8px + var(--tree-depth,0)*14px) 8px;border-radius:8px;font-size:var(--fs);cursor:pointer;color:var(--text)}
+.tree-row:hover{background:var(--container-high)}
+.tree-row[aria-selected=true]{background:var(--primary-container);color:var(--on-primary-container);font-weight:600}
+.tree-row:focus-visible{outline:2px solid var(--primary);outline-offset:-2px}
+.tree-caret{flex:none;width:14px;text-align:center;color:var(--muted)}
+.tree-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tree-count{flex:none;font-size:var(--fs-label);color:var(--muted)}
+.sidebar mfe-build-provenance{padding:6px 14px 8px;border-top:1px solid var(--line)}
+
+mfe-top-bar{--md-outlined-button-container-height:32px;--md-outlined-button-container-shape:8px}
+mfe-workspace-shell{--md-primary-tab-container-height:36px;min-height:38px!important}
+
+/* ---------- views other than the drive: dense, no hero headings ---------- */
+.view:not(#view-drive){padding:14px clamp(12px,2vw,24px)}
+.view .page-header{margin-bottom:10px}
+.view .page-header h1{font-size:calc(18px*var(--mfe-text-scale,1));font-weight:600;letter-spacing:0;margin:0}
+.settings-section{padding:12px 0}
+.settings-section h2{font-size:calc(15px*var(--mfe-text-scale,1))}
+.setting-row{padding:10px 0}
+.help-content h2{font-size:calc(18px*var(--mfe-text-scale,1))}
+.help-content .help-icon{display:none}
+
+/* ---------- drive view ---------- */
+#view-drive{padding:0;overflow:hidden;display:flex;flex-direction:column}
+#view-drive::part(content){display:flex;flex-direction:column;flex:1 1 0;min-height:0}
+#view-drive>.notice,#view-drive>.operation,#view-drive>#vault-storage-status{margin:8px 12px 0;flex:none}
+#vault-storage-status{font-size:var(--fs-small)}
+.drive-layout{display:flex;flex:1 1 0;min-height:0;min-width:0}
+.drive-center{display:flex;flex-direction:column;flex:1 1 0;min-width:0;min-height:0}
+.drive-layout[hidden]{display:none}
+
+/* command bar */
+#command-bar{display:flex;border:0;border-bottom:1px solid var(--line);border-radius:0;background:var(--surface);padding:3px 8px;flex:none}
+#command-bar::part(actions){flex-wrap:nowrap;gap:6px;min-width:0}
+#command-bar .file-actions{display:flex;flex-wrap:nowrap;gap:2px;min-width:0;flex:1 1 0;align-items:center;overflow:hidden}
+#command-bar .file-actions>:is(md-text-button,md-outlined-button,md-filled-button){flex:none;min-height:34px;--md-text-button-container-height:34px;--md-outlined-button-container-height:34px;--md-text-button-container-shape:8px;--md-text-button-label-text-size:var(--fs);--md-text-button-icon-size:18px;--md-text-button-leading-space:8px;--md-text-button-trailing-space:8px;--md-text-button-with-leading-icon-leading-space:8px;white-space:nowrap}
+#command-bar .file-actions [data-icon]{display:inline-flex;margin-inline-end:6px}
+#command-bar .file-actions .icon{width:16px;height:16px}
+#command-bar .file-actions>[data-overflow=true]{display:none!important}
+#command-bar .file-actions>mfe-control-guidance{flex:none;--md-icon-button-icon-size:16px;--md-icon-button-state-layer-height:24px;--md-icon-button-state-layer-width:24px;--md-icon-button-state-layer-size:24px;margin-inline-end:-6px;zoom:.78}
+#selection-label{order:2;flex:0 1 auto;max-width:30%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--fs-small)}
+#delete-button{--md-text-button-label-text-color:var(--error);--md-text-button-icon-color:var(--error)}
+#backup-now-button{background:var(--primary-container);border-radius:8px;--md-text-button-label-text-color:var(--on-primary-container)}
+
+/* path bar */
+.path-bar{display:flex;align-items:center;gap:8px;min-height:42px;padding:0 12px;border-bottom:1px solid var(--line);flex:none}
+.breadcrumb{display:flex;align-items:center;gap:4px;flex:1 1 auto;min-width:0;overflow:hidden;white-space:nowrap;font-size:var(--fs)}
+.breadcrumb .crumb{color:var(--text);text-decoration:none;overflow:hidden;text-overflow:ellipsis;border-radius:4px;padding:2px 2px}
+.breadcrumb a.crumb:hover{text-decoration:underline}
+.breadcrumb .crumb-sep{color:var(--muted)}
+#file-count{font-size:var(--fs-small)}
+.path-bar .toolbar-actions{flex:0 1 auto;width:auto;min-width:0;flex-wrap:nowrap}
+.path-bar mfe-search{width:clamp(160px,24vw,300px);min-width:0}
+#filter-button[data-active]{background:var(--primary-container);border-radius:8px}
+#filter-button,#inspector-toggle{min-height:34px;--md-text-button-container-height:34px;--md-text-button-container-shape:8px}
+.inspector-toggle{display:none}
+
+/* file table */
+.table-region{display:flex;flex-direction:column;flex:1 1 0;min-height:0;min-width:0}
+#view-drive mfe-data-table{flex:1 1 0;min-width:0;min-height:0;border:0;border-radius:0}
+#view-drive mfe-data-table::part(scroll){max-height:none;height:100%;min-height:0}
+#view-drive .table-scroll table{min-width:0;width:100%;table-layout:fixed}
+#view-drive th:nth-child(1),#view-drive td:nth-child(1){width:48px}
+#view-drive th:nth-child(3),#view-drive td:nth-child(3){width:160px}
+#view-drive th:nth-child(4),#view-drive td:nth-child(4){width:92px}
+#view-drive th:nth-child(5),#view-drive td:nth-child(5){width:132px}
+#view-drive th:nth-child(6),#view-drive td:nth-child(6){width:64px}
+#view-drive td.modified{white-space:nowrap}
+#view-drive th{height:30px;padding-block:0;font-size:var(--fs-label);font-weight:700;letter-spacing:.04em;color:var(--muted);position:sticky;top:0;z-index:1;background:var(--container)}
+#view-drive th[data-sort]{cursor:pointer;user-select:none;white-space:nowrap}
+#view-drive th[data-sort]:hover{color:var(--text)}
+#view-drive th[data-sort]:focus-visible{outline:2px solid var(--primary);outline-offset:-2px}
+#view-drive th[aria-sort=ascending]::after{content:' \25B4'}
+#view-drive th[aria-sort=descending]::after{content:' \25BE'}
+#view-drive th.parts,#view-drive td.parts{text-align:end;width:72px;font-variant-numeric:tabular-nums;font-size:var(--fs-small);color:var(--muted)}
+#file-list>tr>td{height:var(--row-height);padding-block:0;font-size:var(--fs)}
+#file-list>tr.selected{background:var(--primary-container);color:var(--on-primary-container)}
+#file-list>tr:hover:not(.selected){background:var(--container)}
+#file-list md-checkbox{--md-checkbox-state-layer-size:32px;--md-checkbox-container-size:18px}
+:root[data-density=comfortable] #file-list md-checkbox{--md-checkbox-state-layer-size:40px}
+#file-list .file-name{gap:8px}
+#file-list .file-name .icon{width:18px;height:18px}
+#empty-files{padding:24px 16px}
+.file-page-actions{flex:none;padding:0 12px;margin:0}
+#retry-files{display:none}
+
+/* transfers strip */
+.transfers-strip{flex:none;max-height:140px;overflow:auto;border-top:1px solid var(--line);background:var(--container);padding:6px 12px}
+.transfers-head{display:flex;align-items:center;gap:10px;min-height:22px}
+.transfers-head .pane-label{margin:0}
+#sync-detail{font-size:var(--fs-small);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#active-operations{font-size:var(--fs-small)}
+#active-operations .active-operation{margin-block:2px}
+
+/* inspector */
+.inspector{flex:0 0 300px;min-width:0;overflow:auto;border-inline-start:1px solid var(--line);background:var(--container)}
+.inspector-section{position:relative;padding:12px 16px;border-bottom:1px solid var(--line);min-width:0}
+.inspector-section .pane-label{margin:0 0 6px}
+.inspector-name{margin:0;font-size:calc(15px*var(--mfe-text-scale,1));font-weight:600;overflow-wrap:anywhere}
+.inspector-section .muted,.inspector-section p{font-size:var(--fs-small)}
+.inspector-actions,.inspector-links{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.inspector-action{--md-outlined-button-container-height:32px;min-height:32px;--md-outlined-button-container-shape:8px}
+.inspector-close{display:none;position:absolute;inset-block-start:4px;inset-inline-end:4px}
+.parts-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:3px}
+.part-cell{height:14px;border-radius:3px;background:var(--primary)}
+.version-list{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+.version-item{display:grid;grid-template-columns:12px minmax(0,1fr);gap:10px;align-items:start;font-size:var(--fs-small)}
+.version-dot{width:10px;height:10px;margin-top:4px;border-radius:50%;background:var(--outline)}
+.version-item[data-current=true] .version-dot{background:var(--primary)}
+.version-id{font-family:ui-monospace,Consolas,monospace;font-size:var(--fs-label);color:var(--muted)}
+.backup-status{margin:0;overflow-wrap:anywhere}
+.drive-location{display:block;padding:12px 16px}
+.drive-location strong{display:block;font-size:var(--fs)}
+.drive-location .path-details{margin:10px 0 0;padding:0;border:0;display:grid;gap:6px}
+.drive-location .path-details dt{font-size:var(--fs-label);color:var(--muted)}
+.drive-location .path-details dd{margin:0;font-size:var(--fs-small)}
+
+/* unlock card, shown inside the locked drive's own tab */
+#locked-state.locked-state{flex:1 1 0;min-height:0;display:grid;place-items:center;margin:0;padding:16px;border:0;border-radius:0;background:var(--surface);overflow:auto}
+.unlock-card{display:flex;flex-direction:column;gap:12px;width:min(420px,100%);padding:20px;border:1px solid var(--line);border-radius:16px;background:var(--surface);box-shadow:var(--shadow)}
+.unlock-card[data-state=failed]{border-color:var(--error)}
+.unlock-head{display:flex;align-items:center;gap:14px}
+.unlock-head h2{margin:0;font-size:calc(17px*var(--mfe-text-scale,1));font-weight:600;line-height:1.3}
+.unlock-head p{margin:2px 0 0;font-size:var(--fs)}
+.unlock-badge{flex:none;display:grid;place-items:center;width:48px;height:48px;border-radius:14px;background:var(--primary);color:var(--on-primary)}
+.unlock-badge .icon{width:26px;height:26px}
+.unlock-credentials{display:flex;flex-direction:column;gap:10px}
+.unlock-modes{display:flex;gap:6px;margin:0;padding:0;border:0}
+.unlock-modes legend{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.unlock-modes label{display:flex;align-items:center;gap:4px;padding:2px 12px 2px 2px;border-radius:8px;font-size:var(--fs)}
+.unlock-modes label:has(md-radio[checked]){background:var(--primary-container)}
+.unlock-credentials md-outlined-text-field{width:100%}
+.unlock-auto{display:flex;align-items:center;gap:8px;font-size:var(--fs);color:var(--muted)}
+.unlock-actions{display:flex;justify-content:flex-end}
+.unlock-secondary{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.unlock-note{margin:0;font-size:var(--fs-small)}
+#unlock-error{margin:0}
+
+/* status bar */
+.status-bar{flex:0 0 var(--status-height);display:flex;align-items:center;gap:16px;min-width:0;padding:0 12px;background:var(--primary);color:var(--on-primary);font-size:var(--fs-small);white-space:nowrap;overflow:hidden}
+.status-bar>span{overflow:hidden;text-overflow:ellipsis}
+.status-bar .status-spacer{flex:1}
+.status-bar .badge{background:transparent;color:inherit;padding:0;font-size:inherit;gap:6px;white-space:nowrap}
+.status-bar .badge:before{background:currentColor;box-shadow:0 0 0 1px currentColor}
+.status-bar .badge[data-state=locked]:before{background:transparent;border:1px solid currentColor}
+
+/* ---------- narrow windows: nothing is removed, it moves ---------- */
+@media(max-width:1100px){
+  .brand-name{display:none}
+  .app-shell{grid-template-columns:200px minmax(0,1fr)}
+  .inspector{flex-basis:260px}
+}
+@media(max-width:960px){
+  #selection-label{display:none}
+}
+@media(max-width:839px){
+  body>.app-shell{grid-template-columns:minmax(0,1fr);padding:0}
+  /* The navigation drawer from the shell frame sits under the title bar. */
+  .sidebar{inset:var(--bar-height) auto 0 0!important;height:auto!important}
+  .navigation-backdrop{inset:var(--bar-height) 0 0!important}
+  .toolbar-actions .inspector-toggle{display:inline-flex}
+  .inspector{position:fixed;inset:auto 0 var(--status-height) 0;z-index:45;flex:none;width:auto;max-height:72dvh;border:1px solid var(--line);border-radius:16px 16px 0 0;box-shadow:var(--shadow);background:var(--surface);transform:translateY(105%);visibility:hidden;transition:transform 200ms var(--ease),visibility 0s linear 200ms}
+  .inspector[data-open]{transform:none;visibility:visible;transition:transform 200ms var(--ease)}
+  .inspector-close{display:inline-flex}
+  .drive-layout:has(.inspector[data-open]) .transfers-strip{visibility:hidden}
+  .inspector-section:first-child{padding-inline-end:48px}
+  .path-bar{flex-wrap:wrap;padding-block:4px}
+  .breadcrumb{flex-basis:100%;order:-1}
+  .path-bar .toolbar-actions{flex:1 1 100%}
+  .path-bar mfe-search{flex:1 1 120px;width:auto}
+  /* Touch sized command and row targets. */
+  #command-bar .file-actions>:is(md-text-button,md-outlined-button,md-filled-button){min-height:44px;--md-text-button-container-height:44px}
+  #filter-button,#inspector-toggle{min-height:44px;--md-text-button-container-height:44px}
+}
+@media(max-width:560px){
+  .path-bar .toolbar-actions{flex-wrap:wrap}
+  .path-bar mfe-search{flex:1 1 100%;width:100%}
+  #file-list>tr>td.modified{white-space:normal}
+  .drive-tab{padding:0 10px;max-width:150px}
+  .status-bar{gap:10px;padding:0 8px}
+  #status-cipher,#status-language{display:none}
+  /* The table becomes a list of cards; every column keeps its label. */
+  #view-drive thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  #view-drive table,#view-drive tbody{display:block;min-width:0}
+  #file-list>tr{display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:2px 8px;align-items:center;padding:6px 8px;border-bottom:1px solid var(--line)}
+  #file-list>tr>td{display:block;height:auto;min-height:0;padding:0;border:0;min-width:0;width:auto}
+  #file-list>tr>td:first-child{grid-row:1/span 3;grid-column:1;min-width:48px;width:48px}
+  #file-list>tr>td:nth-child(2){grid-column:2/span 2;font-weight:600}
+  #file-list>tr>td.availability{grid-column:2}
+  #file-list>tr>td.numeric{grid-column:3;text-align:end}
+  #file-list>tr>td.modified{display:block!important;grid-column:2}
+  #file-list>tr>td.parts{grid-column:3;width:auto}
+  #file-list>tr>td:not(:first-child):not(:nth-child(2))::before{content:attr(data-label) ': ';color:var(--muted);font-size:var(--fs-label)}
+  #view-drive th.parts{display:none}
+}
+@media(max-width:400px){
+  .brand-name,.window-brand{display:none}
+  .drive-tabs-host{padding-inline-start:4px}
+}
+
+/* ---------- high contrast: in-app switch, Windows contrast themes and the contrast preference ---------- */
+:root[data-contrast=high]{--text:#000;--surface:#fff;--frame:#fff;--container:#f2f2f2;--container-high:#e2e2e2;--muted:#1b1b1b;--line:#000;--outline:#000;--primary:#003a8c;--on-primary:#fff;--primary-container:#cfe3ff;--on-primary-container:#000;--error:#8c0000;--accent-warning:#5c3600}
+:root[data-theme=dark][data-contrast=high]{--text:#fff;--surface:#000;--frame:#000;--container:#0b0b0b;--container-high:#1c1c1c;--muted:#f2f2f2;--line:#fff;--outline:#fff;--primary:#9cc4ff;--on-primary:#000;--primary-container:#00316b;--on-primary-container:#fff;--error:#ff9c9c;--accent-warning:#ffd27d}
+@media(prefers-contrast:more){
+  :root[data-contrast]{--text:#000;--surface:#fff;--frame:#fff;--container:#f2f2f2;--container-high:#e2e2e2;--muted:#1b1b1b;--line:#000;--outline:#000;--primary:#003a8c;--on-primary:#fff;--primary-container:#cfe3ff;--on-primary-container:#000;--error:#8c0000}
+  :root[data-theme=dark][data-contrast]{--text:#fff;--surface:#000;--frame:#000;--container:#0b0b0b;--container-high:#1c1c1c;--muted:#f2f2f2;--line:#fff;--outline:#fff;--primary:#9cc4ff;--on-primary:#000;--primary-container:#00316b;--on-primary-container:#fff;--error:#ff9c9c}
+}
+:root[data-contrast=high] :focus-visible{outline:3px solid var(--primary);outline-offset:2px}
+:root[data-contrast=high] .drive-tab[aria-selected=true]{box-shadow:inset 0 0 0 2px var(--text)}
+:root[data-contrast=high] #file-list>tr>td{border-bottom:1px solid var(--line)}
+:root[data-contrast=high] .tree-row[aria-selected=true],:root[data-contrast=high] #file-list>tr.selected{outline:2px solid var(--text);outline-offset:-2px}
+:root[data-contrast=high] .inspector-section{border-bottom-width:2px}
+@media(forced-colors:active){
+  mfe-titlebar.titlebar{border-bottom:1px solid CanvasText}
+  .drive-tab{border:1px solid ButtonText;border-bottom:0}
+  .drive-tab[aria-selected=true]{outline:2px solid Highlight;outline-offset:-2px;background:Canvas}
+  .drive-tab-dot{border-color:CanvasText;background:transparent}
+  .drive-tab[data-state=mounted] .drive-tab-dot{background:CanvasText}
+  .tree-row[aria-selected=true],#file-list>tr.selected{background:Highlight;color:HighlightText;forced-color-adjust:none}
+  .tree-row:focus-visible,.drive-tab:focus-visible,#view-drive th[data-sort]:focus-visible{outline:2px solid Highlight}
+  .status-bar{background:Canvas;color:CanvasText;border-top:1px solid CanvasText}
+  .part-cell{background:CanvasText}
+  .unlock-card,.inspector{border:1px solid CanvasText}
+  .unlock-badge{background:Canvas;border:1px solid CanvasText;color:CanvasText}
+}
+
+/* ---------- motion: the sheet slides only when motion is allowed ---------- */
+@media(prefers-reduced-motion:reduce){.inspector,.inspector[data-open]{transition:none}}
+[data-low-stimulation=true] .inspector,[data-motion=reduced] .inspector{transition:none!important}
