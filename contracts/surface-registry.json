@@ -2621,6 +2621,15 @@
       "proofs": {}
     },
     {
+      "id": "desktop:view-quicktype",
+      "family": "desktop",
+      "route": "src/renderer/index.html",
+      "owner": "src/renderer/app.js",
+      "selector": "#view-quicktype",
+      "template": "required-families",
+      "proofs": {}
+    },
+    {
       "id": "desktop:view-recycle",
       "family": "desktop",
       "route": "src/renderer/index.html",
