@@ -184,7 +184,7 @@ h2{margin:0 0 16px;font:500 22px/28px var(--mfe-font,system-ui)}
 @media(prefers-reduced-motion:reduce){.card{animation:none;transition:none}.card::before{transition:none}}
 .lead{margin:0 0 16px;color:var(--md-sys-color-on-surface-variant,#44474f)}
 .flagship{grid-template-columns:repeat(auto-fill,minmax(min(100%,21rem),1fr))}
-.card.big{min-block-size:156px;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"icon name" "desc desc" "foot foot";gap:8px 12px;padding:18px;border-radius:20px;animation-delay:calc(var(--i,0)*55ms)}
+.card.big{min-block-size:156px;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"icon name" "desc desc" "foot foot";grid-template-rows:auto 1fr auto;gap:8px 12px;padding:18px;border-radius:20px;animation-delay:calc(var(--i,0)*55ms)}
 .card.big .icon{margin:0;inline-size:44px;block-size:44px;border-radius:14px}
 .card.big .name{align-self:center;font-size:17px}
 .foot{grid-area:foot;align-self:end;display:flex;align-items:center;gap:8px;min-inline-size:0;margin-block-start:auto;padding-block-start:10px;border-block-start:1px solid var(--md-sys-color-outline-variant,#c4c6d0)}
