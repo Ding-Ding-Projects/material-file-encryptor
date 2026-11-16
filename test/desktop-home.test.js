@@ -129,30 +129,58 @@ test('Home opens or focuses its tab from the Home button', () => {
   assert.equal(model.getState().tabs.filter(tab => tab.id === 'home').length, 1, 'a second press focuses rather than duplicating');
 });
 
-test('the new-tab menu is a searchable mini home anchored to the New tab button', () => {
+test('the New tab control opens a catalog dialog of every destination, tool, settings page and menu option', () => {
   const {model, shell} = shellFixture();
+  let request;
+  shell.catalog = {open(value) { request = value; }, configure() {}};
+  shell.getCommands = () => [
+    {id: 'vault:create', label: {en: 'Create a drive', yue: '建立磁碟'}, description: {en: 'Make a new encrypted drive.', yue: '建立新嘅加密磁碟。'}},
+    {id: 'settings:theme', label: {en: 'Appearance', yue: '外觀'}, control: {type: 'select'}},
+    {id: 'view:drive', label: {en: 'Duplicate of a destination', yue: '重複'}},
+  ];
   shell.openNewTab();
-  const menu = shell.opened;
-  assert.equal(menu.anchor, shell.newButton, 'the menu anchors to the button so closing restores focus there');
-  assert.equal(menu.target, shell);
-  const names = menu.items.map(item => item.label.en);
+  const names = request.entries.map(entry => entry.label.en);
   assert.deepEqual(names.slice(0, 6), ['Home', 'My drive', 'Converter', 'Server preparation', 'Settings', 'Custom tool']);
-  assert.ok(menu.items.slice(0, 6).every(item => item.description?.en && item.description?.yue));
+  assert.ok(request.entries.slice(0, 6).every(entry => entry.description?.en && entry.description?.yue));
+  const kinds = Object.fromEntries(request.entries.map(entry => [entry.label.en, entry.kind]));
+  assert.equal(kinds['My drive'], 'page');
+  assert.equal(kinds.Converter, 'tool');
+  assert.equal(kinds.Settings, 'setting');
+  assert.equal(kinds['Create a drive'], 'menu');
+  assert.equal(kinds.Appearance, 'setting');
+  assert.ok(!names.includes('Duplicate of a destination'), 'shortcuts to destinations are not listed twice');
   assert.ok(names.includes('Restore closed tab') && names.includes('Manage groups'), 'the former All tabs management stays reachable');
-  menu.items.find(item => item.label.en === 'Converter').run();
+  request.onChoose(request.entries.find(entry => entry.label.en === 'Converter'));
   assert.equal(model.getState().activeTabId, 'converter');
   assert.equal(model.getState().tabs.some(tab => tab.id === 'converter'), true);
 });
 
-test('the new-tab menu opens Home from its first entry and reopens closed work', () => {
+test('the catalog opens Home from its first entry, reopens closed work and runs menu options', () => {
   const {model, shell} = shellFixture();
-  shell.openNewTab(); shell.opened.items[0].run();
+  let request, ran = 0;
+  shell.catalog = {open(value) { request = value; }, configure() {}};
+  shell.getCommands = () => [{id: 'vault:sync', label: {en: 'Sync now', yue: '立即同步'}, run: () => { ran++; }}];
+  shell.openNewTab(); request.onChoose(request.entries[0]);
   assert.equal(model.getState().activeTabId, 'home');
   model.closeTab('home');
-  shell.openNewTab('anchor', 'event');
-  assert.equal(shell.opened.anchor, 'anchor');
-  assert.equal(shell.opened.event, 'event');
-  assert.equal(shell.opened.items.find(item => item.label.en === 'Restore closed tab').disabled, false);
+  shell.openNewTab();
+  assert.equal(request.entries.find(entry => entry.label.en === 'Restore closed tab').disabled, false);
+  request.onChoose(request.entries.find(entry => entry.label.en === 'Sync now'));
+  assert.equal(ran, 1);
+});
+
+test('a menu option that throws is reported and never breaks the catalog', async () => {
+  const {shell} = shellFixture();
+  let request;
+  const errors = [];
+  shell.catalog = {open(value) { request = value; }, configure() {}};
+  shell.onCommandError = error => errors.push(error.message);
+  shell.getCommands = () => [{id: 'file:open', label: {en: 'Open', yue: '開啟'}, run: () => { throw new Error('boom'); }}, {id: 'file:export', label: {en: 'Export', yue: '匯出'}, run: () => Promise.reject(new Error('later'))}];
+  shell.openNewTab();
+  request.onChoose(request.entries.find(entry => entry.label.en === 'Open'));
+  request.onChoose(request.entries.find(entry => entry.label.en === 'Export'));
+  await new Promise(resolve => setTimeout(resolve, 0));
+  assert.deepEqual(errors, ['boom', 'later']);
 });
 
 test('Control or Command T opens the mini home; Shift keeps restoring a closed tab', () => {
@@ -185,7 +213,7 @@ test('the tab strip drops All tabs for Home and New tab, and hides scroll arrows
   assert.match(source, /class:'new-tab'/);
   assert.match(source, /class:'home-button'/);
   assert.match(source, /this\.previous\.hidden=!overflowing/);
-  assert.match(source, /'aria-haspopup':'menu','aria-keyshortcuts':'Control\+T'/);
+  assert.match(source, /'aria-haspopup':'dialog','aria-keyshortcuts':'Control\+T'/);
   const {shell} = shellFixture();
   const edge = {scrollWidth: 300, clientWidth: 300, scrollLeft: 0};
   shell.tabsHost = edge; shell.previous = {}; shell.next = {};
@@ -204,19 +232,21 @@ test('Home and the mini home honour reduced motion in the renderer styles', asyn
   assert.match(css, /@media\(prefers-reduced-motion:reduce\)\{\.home-view:not\(\[hidden\]\)\{animation:none\}\}/);
 });
 
-test('the new-tab menu offers an explicit Quit action in both languages when the shell is given one', () => {
+test('the catalog offers an explicit Quit action in both languages when the shell is given one', () => {
   const {shell} = shellFixture();
+  let request;
+  shell.catalog = {open(value) { request = value; }, configure() {}};
   shell.openNewTab();
-  assert.ok(!shell.opened.items.some(item => item.label.en === 'Quit Material File Encryptor'), 'no Quit without an owner callback');
+  assert.ok(!request.entries.some(entry => entry.label.en === 'Quit Material File Encryptor'), 'no Quit without an owner callback');
   let quits = 0;
   shell.onQuit = () => { quits++; };
   shell.openNewTab();
-  const quit = shell.opened.items.find(item => item.label.en === 'Quit Material File Encryptor');
-  assert.ok(quit, 'the mini home lists Quit');
+  const quit = request.entries.find(entry => entry.label.en === 'Quit Material File Encryptor');
+  assert.ok(quit, 'the catalog lists Quit');
   assert.match(quit.label.yue, /結束/);
   assert.equal(quit.shortcut, 'Ctrl+Q');
   assert.ok(quit.description.en && quit.description.yue);
-  quit.run();
+  request.onChoose(quit);
   assert.equal(quits, 1);
 });
 

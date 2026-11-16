@@ -14,7 +14,7 @@ export function displayPartSize(bytes) {
   }
   return { value: String(bytes / UNITS.KB), unit: 'KB' };
 }
-export const DEFAULT_SETTINGS = Object.freeze({ theme: 'system', language: 'en', emoji: false, funnyEnglish: 5, funnyCantonese: 5, vocabulary: { version: 1, replacements: [] } });
+export const DEFAULT_SETTINGS = Object.freeze({ theme: 'system', language: 'en', emoji: false, funnyEnglish: 5, funnyCantonese: 5, soundEffects: true, soundVolume: 60, vocabulary: { version: 1, replacements: [] } });
 export function loadSettings(storage) {
   const result = { ...DEFAULT_SETTINGS };
   try {
@@ -24,6 +24,8 @@ export function loadSettings(storage) {
     if (['system', 'light', 'dark'].includes(saved.theme)) result.theme = saved.theme;
     if (['en', 'yue', 'bilingual'].includes(saved.language)) result.language = saved.language;
     if (typeof saved.emoji === 'boolean') result.emoji = saved.emoji;
+    if (typeof saved.soundEffects === 'boolean') result.soundEffects = saved.soundEffects;
+    if (Number.isInteger(saved.soundVolume) && saved.soundVolume >= 0 && saved.soundVolume <= 100) result.soundVolume = saved.soundVolume;
     for (const key of ['funnyEnglish', 'funnyCantonese']) if (Number.isInteger(saved[key]) && saved[key] >= 1 && saved[key] <= 5) result[key] = saved[key];
     if (saved.vocabulary) result.vocabulary = parseVocabulary(JSON.stringify(saved.vocabulary));
   } catch { /* Invalid local preferences safely return to defaults. */ }

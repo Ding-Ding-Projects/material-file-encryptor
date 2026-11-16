@@ -14,12 +14,12 @@ import '../../../shared/surface/notification-center.js';
 import {createNotificationAudio} from '../../../shared/surface/notification-audio.js';
 import {mountPanelLayout} from '../../../shared/surface/panel-layout.js';
 import {captureSurfaceState,restoreSurfaceState} from '../../../shared/surface/transient-state.js';
-import {shouldOpenRegisteredView} from '../../../shared/surface/view-registration.js';
+import {offerRegisteredViews} from '../../../shared/surface/view-registration.js';
 
 if(typeof document!=='undefined')installShadowReducedMotion(document);
 
 /** Mounts reusable chrome without mutating host content or acquiring host capabilities. */
-export function mountSurfaceFoundation({host,before=null,storage,language='en',provenance,tabs=[],onActivate=()=>{},commands=[],onExport,renderText=value=>value,onNotificationAction,onNotification,onQuit,navigationHost}={}) {
+export function mountSurfaceFoundation({host,before=null,storage,language='en',provenance,tabs=[],onActivate=()=>{},commands=[],onExport,renderText=value=>value,onNotificationAction,onNotification,onQuit,navigationHost,sounds}={}) {
   if(!(host instanceof HTMLElement))throw new TypeError('A host element is required');
   tabs=[...tabs];
   const model=createSurfaceModel({storage,storageKey:'mfe.surface.tabs.v1',tabs:tabs.slice(0,1).map(tab=>({...tab,label:localized(tab.label,'en')}))});
@@ -35,6 +35,10 @@ export function mountSurfaceFoundation({host,before=null,storage,language='en',p
   const homeRoot=element('section',{class:'home-view',hidden:true});const homeGrid=element('mfe-home-grid');homeRoot.append(homeGrid);
   views.set(HOME_ID,{id:HOME_ID,root:homeRoot,label:HOME_LABEL,layout:false});labels.set(HOME_ID,HOME_LABEL);model.registerCanonicalTab(HOME_ID,'Home');
   const renderHome=()=>{homeRoot.setAttribute('aria-label',localized(HOME_LABEL,activeLanguage));homeGrid.configure({entries:homeEntries(labels,model.getState()),language:activeLanguage,onOpen:entry=>shell.activate(entry.id)});};
+  // Every destination opens by default the first time it is offered. A tab the person closed stays closed, and a
+  // destination added by a later update opens once. Offered ids are remembered so this never repeats.
+  const offerViews=list=>offerRegisteredViews(model,list,view=>localized(labels.get(view.id)||view.label,'en'));
+  offerViews(tabs);
   let frame;
   const audio=createNotificationAudio();
   let messageTimer;
@@ -46,8 +50,10 @@ export function mountSurfaceFoundation({host,before=null,storage,language='en',p
   const showView=id=>{closeContextMenu('navigation',{restoreFocus:false});frame?.setActive(id);if(id===HOME_ID)renderHome();for(const [key,view]of views){view.root.hidden=key!==id;}onActivate(id);if(id===HOME_ID)homeGrid.focusFirst?.();};
   // Guidance lifetimes change commands without replacing the surrounding UI.
   const refreshCommands=()=>palette.setCommands([{id:'view:home',label:HOME_LABEL,run:()=>shell.openHome()},{id:'tab:new',label:text('New tab','新分頁'),shortcut:'Control+t',run:()=>shell.openNewTab()},...tabs.map(tab=>({id:`view:${tab.id}`,label:labels.get(tab.id),run:()=>{model.openTab({id:tab.id,label:localized(labels.get(tab.id),'en')});shell.activate(tab.id);}})),...hostCommands]);
+  const getCommands=()=>hostCommands;
+  const reportCommandError=error=>api.notify({title:localized(text('Command failed','指令未能完成'),activeLanguage),message:error.message,level:'error'});
   const configure=()=>{
-    shell.configure({model,language:activeLanguage,labels,onActivate:showView,onContext:openContextMenu,onQuit});
+    shell.configure({model,language:activeLanguage,labels,onActivate:showView,onContext:openContextMenu,getCommands,onCommandError:reportCommandError,onQuit});
     build.language=activeLanguage;build.value=provenance;
     palette.language=activeLanguage;palette.render();renderHome();refreshCommands();
     notifications.configure({model,language:activeLanguage,onExport,renderText,onAction:onNotificationAction,onAudio:enabled=>audio.enable(enabled)});
@@ -65,7 +71,7 @@ export function mountSurfaceFoundation({host,before=null,storage,language='en',p
   };
   document.addEventListener('keydown',keydown);
   const api={model,shell,home:homeGrid,palette,notifications,context,openContextMenu,closeContextMenu,
-    notify(input){const id=model.addNotification(input);if(model.getState().notificationAudio)audio.play();notifications.renderEntries();live.textContent=`${renderText(input.title)}: ${renderText(input.message||'')}`;clearTimeout(messageTimer);messageTimer=setTimeout(()=>{live.textContent='';},8000);const record=model.getState().notifications.find(row=>row.id===id);onNotification?.(record,{narrate:input.narration!==false});return id;},
+    notify(input){const id=model.addNotification(input);if(model.getState().notificationAudio){if(sounds)sounds.play({error:'error',warning:'warning',success:'success'}[input.level]||'toggle');else audio.play();}notifications.renderEntries();live.textContent=`${renderText(input.title)}: ${renderText(input.message||'')}`;clearTimeout(messageTimer);messageTimer=setTimeout(()=>{live.textContent='';},8000);const record=model.getState().notifications.find(row=>row.id===id);onNotification?.(record,{narrate:input.narration!==false});return id;},
     updateNotification(id,patch){const changed=model.updateNotification(id,patch);if(changed){notifications.renderEntries();onNotification?.(model.getState().notifications.find(row=>row.id===id),{narrate:patch.narration!==false});}return changed;},
     setLanguage(value){const next=['en','yue','bilingual'].includes(value)?value:'en';if(next===activeLanguage)return;const roots=[shell,palette,notifications];const states=roots.map(captureSurfaceState);activeLanguage=next;configure();frame?.setLanguage(next);roots.forEach((root,index)=>restoreSurfaceState(root,states[index]));shell.renderTabs();palette.renderResults();notifications.renderEntries();for(const panel of panels.values())panel.setLanguage(next);},
     registerPanel,
@@ -73,7 +79,7 @@ export function mountSurfaceFoundation({host,before=null,storage,language='en',p
     setOfflineCount(value){frame?.setOfflineCount(value);},
     setProvenance(value){provenance=value;build.value=value;},
     registerCommands(value){return registerOwnedCommands({get:()=>hostCommands,set:value=>{hostCommands=value;},refresh:refreshCommands},value);},
-    registerViews(value){const active=model.getState().activeTabId;for(const view of value){if(!view.id||!(view.root instanceof HTMLElement))throw new TypeError('A view id and root are required');views.set(view.id,view);if(view.layout!==false)registerPanel(view.id,view.root);if(!tabs.some(t=>t.id===view.id))tabs.push(view);labels.set(view.id,view.label);model.registerCanonicalTab(view.id,localized(view.label,'en'));if(shouldOpenRegisteredView(model.getState(),view.id))model.openTab({id:view.id,label:localized(view.label,'en')});}model.activateTab(active);configure();frame?.refreshNavigation();showView(model.getState().activeTabId);},
+    registerViews(value){const active=model.getState().activeTabId;for(const view of value){if(!view.id||!(view.root instanceof HTMLElement))throw new TypeError('A view id and root are required');views.set(view.id,view);if(view.layout!==false)registerPanel(view.id,view.root);if(!tabs.some(t=>t.id===view.id))tabs.push(view);labels.set(view.id,view.label);model.registerCanonicalTab(view.id,localized(view.label,'en'));}offerViews(value);model.activateTab(active);configure();frame?.refreshNavigation();showView(model.getState().activeTabId);},
     destroy(){frame?.destroy();getContextOverlay(host.ownerDocument).destroy();audio.destroy();for(const panel of panels.values())panel.destroy();panels.clear();clearTimeout(messageTimer);document.removeEventListener('keydown',keydown);for(const node of[homeRoot,shell,build,toolbar,notifications,live,palette,context])node.remove();}
   };
   context.addEventListener('context-action-error',event=>api.notify({title:localized(text('Action unavailable','操作無法使用'),activeLanguage),message:event.detail.error.message,level:'warning'}));
