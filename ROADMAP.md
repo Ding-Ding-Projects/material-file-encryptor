@@ -1,3 +1,26 @@
+## November 2026 redesign and required features, 2026-11-16
+
+Design canvas: `design/redesign-2026-11/`. Integration branch `ai/feature/20261116-redesign-integration`, pull request #20. Ticks below mean implemented in source with focused tests passing; nothing here is yet proven in the packaged or installed app.
+
+- [x] Check in the design canvas (ten boards on six category pages, each with accent and motion tweaks and a sticky note), rendered frames and the review.
+- [x] Dense three-pane workspace shell: drive tabs in the title bar, command bar, folder tree, sortable table, inspector with part map, versions and backup status, transfers strip, status bar, unlock inside the drive tab.
+- [x] Narrow window parity: minimum width 360 px with a parity check that fails if a wide-screen action is unreachable at 360 px.
+- [x] High contrast, text size 90 to 200 percent and row density settings.
+- [x] Token-driven motion layer, the animation and transition editor (profiles, speed, master switch, per-kind controls, easing editor, JSON import and export) and installation success and failure takeovers.
+- [x] One-click public Docker Hub backup of current drives (ciphertext objects only, repository created as public when missing, hourly sync with 15 minute retry) and the guided sign-in fixes.
+- [x] Sound effects with a Settings switch and volume, wording drop outcome cues, and the New tab catalog with its own search and regex builder.
+- [x] Regex builder modes (Create, Analyze, Test, Replace, Split, Grep, Debug, Library, Use, flavours) with a topic coverage inventory.
+- [x] Base64 toolkit, live charts, screen recording, sketch board, type generator, virtual disk manager and Minecraft world generator.
+- [x] Refreshed required-feature inventory, low stimulation, monetization disclosure, dim sum catalogue, late info icons, collapsible filters, bulk actions and Settings palette coverage.
+- [x] Documentation site: task-led home and library, article reading layout, cross-article search with regex, motion with reduced-motion fallbacks, public motion editor, features page, interactive examples, sound cues, wording drop, sitemap and print styles.
+- [ ] Packaged and installed app proof of every item above, with current screenshots replacing the README captures.
+- [ ] Live Docker Hub sign-in, public repository creation and first sync against a real account.
+- [ ] Background sync while the app is closed (needs a decision: it would register a Windows scheduled task).
+- [ ] Real virtual disk operations (need administrator consent) and a real Minecraft data generator run (needs Java).
+- [ ] Type generator inputs beyond JSON and JSON Schema; drawing contract items beyond the eight tools; regex builder topics marked partial or unsupported in its coverage file.
+- [ ] Split the legacy site.css into the new css/ files and update the tests and contract that read it.
+- [ ] Deployed documentation site verification and a normal release built from this branch.
+
 ## Feature inventory refresh and comfort features, 2026-11-16
 
 - [x] Extend the required feature inventory with twelve entries (action sounds, live charts, extension support, Base64 tools, type generator, virtual disk manager, world generator, drawing, animation editor, paired hosted forms, three delivery forms, job document wording). Each row is unverified, partial or missing and none is marked implemented.

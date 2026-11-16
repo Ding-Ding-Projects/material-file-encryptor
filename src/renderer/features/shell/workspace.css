@@ -34,7 +34,7 @@ body>.app-shell{display:grid;grid-template-columns:232px minmax(0,1fr);flex:1 1 
 .app-shell>.sidebar{display:flex;flex-direction:column;background:var(--container);padding:0;gap:0;overflow:hidden}
 .app-shell mfe-main-workspace{border:0;border-radius:0;background:var(--surface)}
 .sidebar mfe-navigation-rail{flex:0 0 auto;height:auto;min-height:0}
-.folder-pane{display:flex;flex-direction:column;flex:1 1 45%;min-height:96px;padding-top:10px;overflow:hidden}
+.folder-pane{display:flex;flex-direction:column;flex:1 1 0;min-height:96px;padding-top:10px;overflow:hidden}
 .pane-label{margin:0 14px 6px;font-size:var(--fs-label);font-weight:700;letter-spacing:.06em;color:var(--muted);text-transform:uppercase}
 .folder-tree{flex:1;min-height:0;overflow:auto;padding:0 6px 6px}
 .tree-note{margin:4px 8px;font-size:var(--fs-small);line-height:1.5}
