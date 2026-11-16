@@ -5,6 +5,7 @@ import {DEFAULTS} from '../src/shared/local-ux/store.js';
 import {COPY, SETTING_LABELS} from '../src/shared/local-ux/language.js';
 import {FIELD_HELP} from '../src/shared/local-ux/settings-field-help.js';
 import {cantonese} from '../src/renderer/i18n.js';
+import {SHELL_COPY} from '../src/renderer/features/shell/copy.js';
 import {CONTROL_SELECTOR} from '../src/shared/surface/controls.js';
 import {PERSONALIZATION_SETTINGS, PERSONALIZATION_TABS, personalizationSettingCommands} from '../src/renderer/features/personalization/settings-index.js';
 
@@ -27,7 +28,13 @@ const SETTINGS_VIEW = [
   ['md-switch', 'soundEffects-setting', 'Sound effects'],
   ['md-slider', 'soundVolume-setting', 'Sound volume'],
   ['md-outlined-button', 'sound-test', 'Play sample'],
-  ['md-text-button', 'sound-reset', 'Reset sounds']
+  ['md-text-button', 'sound-reset', 'Reset sounds'],
+  ['md-outlined-text-field', 'split-value', 'Part size'],
+  ['md-outlined-select', 'split-unit', 'Part size unit'],
+  ['md-filled-tonal-button', 'split-apply', 'Apply'],
+  ['md-outlined-select', 'density-setting', 'Row density'],
+  ['md-slider', 'text-scale-setting', 'Text size'],
+  ['md-switch', 'high-contrast-setting', 'High contrast']
 ];
 
 // Stored defaults that are deliberately not one editable field in the index, each with the reason.
@@ -39,7 +46,7 @@ const NOT_A_FIELD = {
   schedules: 'rule editing is the Schedules tab, indexed as a tab'
 };
 
-const hasCantonese = (label, app) => Boolean(cantonese[label] || COPY[label] || app.includes(`'${label}':'`));
+const hasCantonese = (label, app) => Boolean(cantonese[label] || COPY[label] || SHELL_COPY[label] || app.includes(`'${label}':'`));
 
 function viewSettings(html) { return html.match(/<mfe-content-panel id="view-settings"[\s\S]*?<\/mfe-content-panel>/)?.[0] ?? ''; }
 

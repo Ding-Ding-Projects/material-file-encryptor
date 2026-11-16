@@ -20,6 +20,10 @@ const paths = {
  release: ['M5 3h14v18l-7-4-7 4z','M9 10h6'],
  delete: ['M4 7h16','M9 7V4h6v3','M6 7l1 14h10l1-14','M10 11v6M14 11v6'],
  sync: ['M20 8a8 8 0 0 0-14-3L3 8','M3 3v5h5','M4 16a8 8 0 0 0 14 3l3-3','M21 21v-5h-5'],
+ menu: ['M4 6h16M4 12h16M4 18h16'],
+ upload: ['M12 15V3m-4 4 4-4 4 4','M5 15v6h14v-6'],
+ copy: ['M9 9h11v11H9z','M5 15V4h11'],
+ panel: ['M3 5h18v14H3z','M15 5v14'],
  minimize: ['M5 12h14'], maximize: ['M5 5h14v14H5z'], close: ['m6 6 12 12M18 6 6 18']
 };
 export function icon(name) {

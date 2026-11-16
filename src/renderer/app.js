@@ -42,6 +42,10 @@ import {vaultSessionChoices,vaultSessionAvailability} from './vault-sessions.js'
 import { onPageDiscard } from './page-lifecycle.js';
 import { TOOLBOX_DESTINATIONS, TOOLBOX_VIEW_LABELS } from '../shared/surface/toolbox-destinations.js';
 import {createRendererTiming,observeTaskPresentation} from './performance-timing.js';
+import {mountWorkspaceChrome} from './features/shell/workspace-chrome.js';
+import {mountUnlockCard} from './features/shell/unlock-card.js';
+import {SHELL_COPY} from './features/shell/copy.js';
+import {loadShellPreferences,saveShellPreferences,applyShellPreferences,normalizeShellPreferences} from './features/shell/shell-preferences.js';
 const rendererTiming=createRendererTiming(),timingLifetime=new AbortController();
 rendererTiming.finish(rendererTiming.begin('renderer-entry'),'settled');
 Object.defineProperty(window,'mfePerformance',{value:Object.freeze({snapshot:()=>rendererTiming.snapshot()}),writable:false,configurable:false});
@@ -112,6 +116,7 @@ function reportDriverInstalled(){if(!driverInstall||state?.driver?.available!==t
 render = (baseRender => function (...args) { if (state) reportDriverInstalled(); return baseRender.apply(this, args); })(render);
 const getInstallTakeover=()=>installTakeover??=createInstallationTakeover({doc:document,translate:(source,options)=>t(source,options),preference:takeoverPreference,notify:input=>foundation?.notify(input),playCue:kind=>foundation?.playCue?.(kind)});
 const sinceMs=started=>started>0?Math.max(0,Date.now()-started):undefined;
+let chrome=null,unlockCard=null,shellPreferences=loadShellPreferences(localStorage),shellPersisted=true;
 let foundation=null,fileDetails=null,fileSearch=null,renderedFilesKey='',pagedFiles=null,fileNextCursor=null,filePageRevision=null,filePageRequest=0;
 const featureMounts=new Map(),featureRoots=new Map(),workspaceDisposers=[];
 const operationNotifications=new Map();
@@ -161,7 +166,7 @@ document.addEventListener('scroll', event => {
  scrollTimers.set(surface, setTimeout(() => { surface.classList.remove('is-scrolling'); scrollTimers.delete(surface); }, 900));
 }, {capture:true,passive:true});
 $('view-drive').prepend($('operation'));
-const translateWorkspace=createTranslator(()=>({...effectiveLocalSettings,...preferences,school:effectiveLocalSettings.school}),{dictionary:{...GUIDANCE_COPY,...INFO_ICON_COPY,...COLLAPSE_COPY,...BULK_COPY,...DIMSUM_COPY,...ONBOARDING_COPY,...cantonese,...enhancedLabels}});
+const translateWorkspace=createTranslator(()=>({...effectiveLocalSettings,...preferences,school:effectiveLocalSettings.school}),{dictionary:{...SHELL_COPY,...GUIDANCE_COPY,...INFO_ICON_COPY,...COLLAPSE_COPY,...BULK_COPY,...DIMSUM_COPY,...ONBOARDING_COPY,...cantonese,...enhancedLabels}});
 function t(source,options) { return translateWorkspace(source,options); }
 /** Quits the whole application (not just the window). Ctrl+Q, the Help and Settings menus, the New tab menu and the command palette all use this. */
 function quitApplication() { return api.quit ? api.quit() : api.windowControl('close'); }
@@ -181,6 +186,26 @@ function notifyLanguageListeners() { for (const listener of [...languageListener
 function applyThemeOnly() {
  document.documentElement.dataset.theme = preferences.theme === 'system' ? colorQuery.matches ? 'dark' : 'light' : preferences.theme;
  if ($('theme-setting').value !== preferences.theme) $('theme-setting').value = preferences.theme;
+}
+/** Shell presentation controls: row density, text size and high contrast. They are device-local and never part of vault data. */
+function syncShellControls() {
+ const density=$('density-setting'),scale=$('text-scale-setting'),contrast=$('high-contrast-setting');
+ if(density&&density.value!==shellPreferences.density)density.value=shellPreferences.density;
+ if(scale){if(Number(scale.value)!==shellPreferences.textScale)scale.value=shellPreferences.textScale;$('text-scale-output').textContent=shellPreferences.textScale+'%';scale.style.setProperty('--range-progress',((shellPreferences.textScale-90)/110*100)+'%');}
+ if(contrast&&contrast.checked!==shellPreferences.highContrast)contrast.checked=shellPreferences.highContrast;
+}
+function setShellPreference(key,value) {
+ shellPreferences=normalizeShellPreferences({...shellPreferences,[key]:value});
+ shellPersisted=saveShellPreferences(localStorage,shellPreferences);
+ applyShellPreferences(document.documentElement,shellPreferences);syncShellControls();
+ if(!shellPersisted)toast('Active for this session only. Saving failed.');
+ renderedFilesKey='';if(state)renderFiles();
+}
+function updateChrome() {
+ if(!chrome||!state)return;
+ const files=currentFiles();
+ chrome.update({state,files,selected:files.find(file=>file.id===selected)||null,busy,hasMore:Boolean(fileNextCursor)});
+ unlockCard?.update(state);
 }
 let shellInfoIcons=null;
 function applyPreferences() {
@@ -305,7 +330,7 @@ function renderAvailability() {
  const unlocked = state && !state.locked, mounted = unlocked && state.mounted;
  const file = currentFiles().find(file => file.id === selected);
  for (const id of ['create-button','unlock-button']) $(id).disabled = busy || !api || !state;
- $('lock-button').disabled = busy; $('backup-button').disabled = !api; $('mount-button').disabled = busy || !unlocked || state?.driver?.available === false; $('explorer-button').disabled = busy || !mounted;
+ $('lock-button').disabled = busy; $('mount-button').disabled = busy || !unlocked || state?.driver?.available === false; $('explorer-button').disabled = busy || !mounted;
  if($('force-lock-button')){ $('force-lock-button').hidden=!unlocked; $('force-lock-button').disabled=busy||!api?.forceLock; $('force-lock-button').textContent=t('Force lock'); }
  for (const id of ['import-button','empty-import-button','sync-button','split-apply','resplit-button']) $(id).disabled = busy || !unlocked;
  const can = bulkAvailability(selectedFiles(),{busy,unlocked:Boolean(unlocked),mounted:Boolean(mounted)});
@@ -314,6 +339,7 @@ function renderAvailability() {
  $('offline-button').disabled = !can.keepOffline;
  $('release-button').disabled = !can.releaseOffline;
  $('delete-button').disabled = !can.delete;
+ $('copy-path-button').disabled = !file;$('backup-now-button').disabled = busy || !unlocked;$('new-button').disabled = busy || !api || !state;
  $('startup-setting').disabled = busy || !state;
  $('auto-unlock-setting').disabled = busy || !unlocked || Boolean(state?.sessionId && state.sessionId!=='main');
  $('forget-credential').disabled = busy || !state || Boolean(state?.sessionId && state.sessionId!=='main');
@@ -366,16 +392,17 @@ function render() {
  if ($('vault-dialog').open) updateDriveLetters();
  if(!state.locked&&api.listFiles&&filePageRevision!==(state.filesRevision??state.revision??'initial'))void loadFilePage();
  foundation?.setProvenance(state.build||state.provenance||{});
- renderOperations();renderFiles(); renderAvailability();
+ renderOperations();renderFiles(); renderAvailability();foundation?.updateChrome?.();
 }
 function formatDate(date) { const d = new Date(date); return Number.isNaN(d.getTime()) ? '' : new Intl.DateTimeFormat(preferences.language === 'yue' ? 'zh-HK' : 'en', { month:'short',day:'numeric',hour:'2-digit',minute:'2-digit' }).format(d); }
 function formatBytes(bytes) { if (!Number.isFinite(bytes)) return ''; if (bytes < 1024) return `${bytes} B`; for (const [unit, size] of [['GB',1024**3],['MB',1024**2],['KB',1024]]) if (bytes >= size) return `${new Intl.NumberFormat('en',{maximumFractionDigits:1}).format(bytes/size)} ${unit}`; }
 async function renderFiles() {
  const files = currentFiles(), query = $('file-search').value.toLocaleLowerCase();
- const key=JSON.stringify([state?.sessionId,filePageRevision,view,query,fileSearch?.regex,fileSearch?.flags,preferences.language,files.map(f=>[f.id,f.path,f.size,f.offline,f.modified])]);
+ const shellScope=foundation?.chrome||null;
+ const key=JSON.stringify([state?.sessionId,filePageRevision,view,query,shellScope?.scopeKey(),fileSearch?.regex,fileSearch?.flags,preferences.language,files.map(f=>[f.id,f.path,f.size,f.offline,f.modified])]);
  if(key===renderedFilesKey){updateSelectedFileRows();return;}
  renderedFilesKey=key;
- const candidates=files.filter(file=>view!=='offline'||file.offline);const searched=fileSearch?await fileSearch.filter(candidates.map(file=>({id:file.id,text:String(file.path)})),{reportOutcome:true}):null;
+ const candidates=(shellScope?shellScope.sortFiles(shellScope.scopeFiles(files)):files).filter(file=>view!=='offline'||file.offline);const searched=fileSearch?await fileSearch.filter(candidates.map(file=>({id:file.id,text:String(file.path)})),{reportOutcome:true}):null;
  const searchFailed=searched!==null&&(searched.outcome==='failed'||searched.outcome==='unavailable');
  const rows=fileSearch?(searched.outcome==='superseded'?null:searched.rows):candidates.filter(file=>String(file.path).toLocaleLowerCase().includes(query)).map(file=>({id:file.id}));
  if(rows===null||key!==renderedFilesKey)return;
@@ -388,10 +415,12 @@ async function renderFiles() {
   const select = control('input',{type:'checkbox'}); select.type = 'checkbox'; select.className = 'file-selection'; select.checked = fileSelection.has(file.id); select.setAttribute('aria-label',`${t('Select')} ${file.path}`);
   select.addEventListener('click',event => { if (event.shiftKey) { event.preventDefault(); fileSelection.range(visibleFileIds(),file.id,{additive:event.ctrlKey||event.metaKey}); syncSelection(); } });
   select.addEventListener('change',() => { fileSelection.toggle(file.id,select.checked); syncSelection(); }); cell().append(select);
-  const name = document.createElement('div'); name.className = 'file-name'; const filename = document.createElement('span'); filename.textContent = file.path; name.append(icon('file'),filename); const nameCell = cell(); nameCell.append(name); nameCell.title = file.path;
+  const name = document.createElement('div'); name.className = 'file-name'; const filename = document.createElement('span'); filename.textContent = shellScope?shellScope.nameFor(file):file.path; name.append(icon('file'),filename); const nameCell = cell(); nameCell.append(name); nameCell.title = file.path;
   const availability = cell(); availability.className = 'availability'; const av = document.createElement('span'); av.className = 'availability-content'; const label = document.createElement('span'); label.textContent = t(file.offline ? 'Available offline' : 'Encrypted storage only'); av.append(icon(file.offline ? 'offline' : 'shield'),label); availability.append(av);
   const sizeCell = cell(); sizeCell.className = 'numeric'; sizeCell.textContent = formatBytes(file.size); sizeCell.title = `${file.partCount ?? '?'} encrypted parts · ${formatBytes(file.partSizeBytes || state.partSizeBytes)} maximum`;
   const dateCell = cell(); dateCell.className = 'modified'; dateCell.textContent = formatDate(file.modified);
+  const partsCell = cell(); partsCell.className = 'parts'; partsCell.textContent = Number.isFinite(file.partCount) ? String(file.partCount) : '';
+  [...row.cells].forEach((td,index) => { td.dataset.label = ['','Name','Availability','Size','Modified','Parts'][index] ? t(['','Name','Availability','Size','Modified','Parts'][index]) : ''; });
   row.addEventListener('click',event => { if (event.target === select || event.composedPath().includes(select)) return; if (event.shiftKey) fileSelection.range(visibleFileIds(),file.id,{additive:event.ctrlKey||event.metaKey}); else if (event.ctrlKey||event.metaKey) fileSelection.toggle(file.id); else fileSelection.only(file.id); syncSelection(); });
   row.addEventListener('dblclick',() => { if (!busy && state.mounted) openSelected(); });
   select.addEventListener('keydown',event => { if (event.key === 'Enter') { event.preventDefault(); openSelected(); } });
@@ -413,16 +442,16 @@ function updateSelectedFileRows(){
  $('selection-label').textContent=chosen.length>1?t('{count} files selected',{message:true,values:{count:chosen.length}}):chosen.length===1?chosen[0].path:t('Select a file');
 }
 /** Applies the selection model to the rows, the action buttons and the details panel. */
-function syncSelection(){selected=fileSelection.primary;updateSelectedFileRows();renderAvailability();fileDetails?.selectEntry(currentFiles().find(file=>file.id===selected)||null);}
+function syncSelection(){selected=fileSelection.primary;updateSelectedFileRows();renderAvailability();foundation?.updateChrome?.();fileDetails?.selectEntry(currentFiles().find(file=>file.id===selected)||null);}
 function selectFile(file){fileSelection.only(file.id);syncSelection();}
-async function loadFilePage(append=false){if(!api?.listFiles||state?.locked)return;const revision=state.filesRevision??state.revision??'initial';if(!append&&filePageRevision===revision)return;const request=++filePageRequest;filePageRevision=revision;if(!append){pagedFiles=[];selected=null;fileSelection.clear();fileDetails?.selectEntry(null);renderedFilesKey='';renderFiles();}try{const page=await api.listFiles({cursor:append?fileNextCursor:null,limit:100,revision:revision==='initial'?undefined:revision});if(request!==filePageRequest||state?.locked)return;const items=Array.isArray(page)?page:page.items||page.files||[];pagedFiles=append?[...(pagedFiles||[]),...items]:items;fileNextCursor=page.nextCursor??null;const more=$('load-more-files');if(more)more.hidden=!fileNextCursor;renderedFilesKey='';renderFiles();}catch(error){if(request===filePageRequest)showError(error);}}
+async function loadFilePage(append=false){if(!api?.listFiles||state?.locked)return;const revision=state.filesRevision??state.revision??'initial';if(!append&&filePageRevision===revision)return;const request=++filePageRequest;filePageRevision=revision;if(!append){pagedFiles=[];selected=null;fileSelection.clear();fileDetails?.selectEntry(null);renderedFilesKey='';renderFiles();}try{const page=await api.listFiles({cursor:append?fileNextCursor:null,limit:100,revision:revision==='initial'?undefined:revision});if(request!==filePageRequest||state?.locked)return;const items=Array.isArray(page)?page:page.items||page.files||[];pagedFiles=append?[...(pagedFiles||[]),...items]:items;fileNextCursor=page.nextCursor??null;const more=$('load-more-files');if(more)more.hidden=!fileNextCursor;renderedFilesKey='';renderFiles();foundation?.updateChrome?.();}catch(error){if(request===filePageRequest)showError(error);}}
 function changeView(next) {
  try{navigationTiming=rendererTiming.begin('navigation',next);}catch{navigationTiming=null;}
  foundation?.closeContextMenu('navigation',{restoreFocus:false});
  view = next; clearMainError();
  document.querySelectorAll('.view').forEach(el => { el.hidden = el.id !== `view-${next === 'offline' ? 'drive' : next}`; });
  document.querySelectorAll('[data-view]').forEach(el => { const active = el.dataset.view === next; el.classList.toggle('active',active); active ? el.setAttribute('aria-current','page') : el.removeAttribute('aria-current'); });
- setText('drive-heading',next === 'offline' ? 'Available offline' : 'My drive'); setText('files-heading',next === 'offline' ? 'Available offline' : 'All files');
+ setText('files-heading',next === 'offline' ? 'Available offline' : 'All files');
  if (state) { renderFiles(); renderAvailability(); }
  if (['history','recycle'].includes(next)) loadArchive(next);
  else if(next==='drive'&&state?.locked)void observeViewReady(next);
@@ -506,14 +535,30 @@ function updateDriveLetters(preserveSelection = true) {
  list.setAttribute('aria-busy',String(checking)); markDriveOption();
 }
 
-function openVaultDialog(mode) {
+function prepareVaultForm(mode) {
  dialogMode = mode; driveLetterEdited = false; closeDrivePicker(); $('vault-form').reset(); $('dialog-error').hidden = true;
  $('storage-input').value = mode === 'upgrade' ? '' : state?.storageDir || ''; $('cache-input').value = mode === 'upgrade' ? '' : state?.cacheDir || state?.defaults?.cacheDir || '';
  $('transport-mode').value=state?.transport?.mode || 'folder'; $('remote-repository').value=state?.transport?.remoteRepository || ''; $('private-git-fields').hidden=$('transport-mode').value!=='privateGit';
  $('password-input').type = 'password'; $('show-password').setAttribute('aria-pressed','false'); setText('show-password','Show');
  updateDriveLetters(false);
  $('drive-name').value = normalizeDriveName(state?.driveName) || normalizeDriveName(state?.defaults?.driveName) || DEFAULT_DRIVE_NAME;
- updateDialog(); renderAvailability(); $('vault-dialog').showModal(); $('storage-input').focus();
+ updateDialog(); renderAvailability();
+}
+function openVaultDialog(mode) { prepareVaultForm(mode); $('vault-dialog').showModal(); $('storage-input').focus(); }
+/** Unlocks from the in-tab card: the saved folders and letter fill the same form the dialog uses, so both paths send identical requests. */
+async function unlockInline({mode,password,keyFilePath,autoUnlock}) {
+ if (busy || !state || !api) return {ok:false,error:''};
+ prepareVaultForm('unlock');
+ const letter = normalizedDriveLetter($('drive-letter').value), driveName = normalizeDriveName($('drive-name').value);
+ const options = {transport:$('transport-mode').value,storageDir:$('storage-input').value,cacheDir:$('cache-input').value,driveLetter:`${letter}:`};
+ if (!options.storageDir || !options.cacheDir || !letter || driveName === null) return {ok:false,error:'Choose the encrypted storage and a drive letter first.'};
+ options.driveName = driveName;
+ if (options.transport === 'privateGit') { options.remoteRepository = $('remote-repository').value.trim(); if (!/^[A-Za-z0-9][A-Za-z0-9-]{0,38}\/[A-Za-z0-9_.-]{1,100}$/.test(options.remoteRepository)) return {ok:false,error:'Enter owner/repository.'}; }
+ if (mode === 'keyFile') options.keyFilePath = keyFilePath; else options.password = password;
+ const result = await run('Mounting drive…',() => api.unlock(options),'Drive unlocked.',true);
+ const failure = $('dialog-error'), error = failure.hidden ? '' : failure.textContent; failure.hidden = true; failure.textContent = '';
+ if (result?.ok && autoUnlock) { const auto = $('auto-unlock-setting'); if (!auto.disabled) { auto.checked = true; auto.dispatchEvent(new Event('change')); } }
+ return {ok:Boolean(result?.ok),error};
 }
 function closeVaultDialog() { if (busy) return; closeDrivePicker(); $('vault-dialog').close(); $('password-input').value = ''; $('confirm-password').value = ''; $('key-path').value = ''; }
 let confirmationGeneration=0;
@@ -589,7 +634,7 @@ listen('vault-form','submit',async event => {
  else if (result && unlocking) unlockMotion.play('failure');
 });
 listen('lock-button','click',() => run('Locking drive…',() => api.lock(),'Drive locked.'));
-listen('backup-button','click',() => { if(!foundation)return; const title=canonicalViewLabels.storage||'Docker Hub storage'; foundation.model.openTab({id:'storage',label:title}); foundation.shell.activate('storage'); requestAnimationFrame(()=>featureMounts.get('storage')?.focusBackup?.(false)); });
+window.addEventListener('mfe:open-cloud-backup',() => { if(!foundation)return; const title=canonicalViewLabels.storage||'Docker Hub storage'; foundation.model.openTab({id:'storage',label:title}); foundation.shell.activate('storage'); requestAnimationFrame(()=>featureMounts.get('storage')?.focusBackup?.(false)); });
 listen('mount-button','click',() => run('Mounting drive…',() => api.mount({driveLetter:state.driveLetter || state.defaults?.driveLetter,...(normalizeDriveName(state.driveName) ? {driveName:normalizeDriveName(state.driveName)} : {})}),'Drive unlocked.'));
 listen('project-website-link','click',() => api.openExternal('https://ding-ding-projects.github.io/material-file-encryptor/'));
 listen('winfsp-link','click',() => api.openExternal('https://winfsp.dev/'));
@@ -669,6 +714,9 @@ for (const key of ['theme','language','emoji','funnyEnglish','funnyCantonese']) 
  localSettings.update({[key]:preferences[key]},'preference changed');
  savePreferences(); applyPreferences();
 });
+listen('density-setting','change',event => setShellPreference('density',event.target.value));
+listen('text-scale-setting','input',event => setShellPreference('textScale',Number(event.target.value)));
+listen('high-contrast-setting','change',event => setShellPreference('highContrast',Boolean(event.target.checked)));
 // Dropping a wording file anywhere on the window takes the same path as the Settings upload, then celebrates.
 const wordingDrop = installWordingDrop({
  doc: document, maxBytes: 256 * 1024,
@@ -952,10 +1000,25 @@ function setupEnhancedWorkspace() {
  const stopAuthenticatorFocus=api?.onFeatureEvent?.('access',event=>{if(event?.type!=='focusAuthenticator')return;foundation.model.openTab({id:'access',label:canonicalViewLabels.access});foundation.shell.activate('access');featureMounts.get('access')?.showAuthenticator?.();});if(stopAuthenticatorFocus)workspaceDisposers.push(stopAuthenticatorFocus);
  const stopAccessibility=api?.onFeatureEvent?.('personalization',event=>{if(event.type==='accessibilityState')acceptAccessibility(event.state);});if(stopAccessibility)workspaceDisposers.push(stopAccessibility);
  const openPalette=foundation.palette.open.bind(foundation.palette);foundation.palette.open=()=>{refreshPaletteInventory();openPalette();};const originalChangeButtons=[...document.querySelectorAll('[data-view]')];for(const button of originalChangeButtons)button.addEventListener('click',()=>{foundation.model.openTab({id:button.dataset.view,label:canonicalViewLabels[button.dataset.view]||button.dataset.view});foundation.shell.activate(button.dataset.view);});
+ chrome=mountWorkspaceChrome({doc:document,translate:t,getLanguage:()=>preferences.language,hooks:{
+  selectSession:id=>{const picker=$('vault-session');picker.value=id;picker.dispatchEvent(new Event('change'));},
+  addSession:()=>changeVaultSession('add'),removeSession:()=>changeVaultSession('remove',state?.sessionId),
+  onScopeChange:()=>{renderedFilesKey='';renderFiles();renderAvailability();},
+  copyText:value=>navigator.clipboard.writeText(value),toast:message=>toast(message),
+  openView:id=>{foundation.model.openTab({id,label:canonicalViewLabels[id]||id});foundation.shell.activate(id);},
+  listVersions:id=>api?.listVersions?api.listVersions(id):Promise.resolve([]),
+  backupStatus:()=>api?.registryStorageStatus?api.registryStorageStatus():Promise.resolve(null),
+  formatBytes
+ }});
+ unlockCard=mountUnlockCard({doc:document,translate:t,hooks:{isBusy:()=>busy,chooseKeyFile:()=>api.chooseKeyFile(),unlock:unlockInline}});
+ foundation.chrome=chrome;foundation.updateChrome=updateChrome;foundation.refreshChrome=()=>{unlockCard?.update(state);chrome?.refreshOverflow();};
+ workspaceDisposers.push(subscribeLanguage(()=>{updateChrome();syncShellControls();}));
+ applyShellPreferences(document.documentElement,shellPreferences);syncShellControls();
+ workspaceDisposers.push(()=>{chrome?.destroy();unlockCard?.destroy();});
  const forceLockButton=document.createElement('md-outlined-button');forceLockButton.id='force-lock-button';forceLockButton.textContent=t('Force lock');forceLockButton.onclick=async()=>{if(await superConfirm('desktop.force-lock'))return run('Locking drive…',()=>api.forceLock(forceLockOptions()));};$('lock-button').after(forceLockButton);
- const fileHost=document.createElement('mfe-search');fileHost.setAttribute('label',t('Search files'));fileHost.setAttribute('scope','drive-files');fileHost.language=preferences.language;const old=$('file-search');old.closest('.search-box').hidden=true;old.closest('.search-box').after(fileHost);fileSearch=fileHost;fileHost.addEventListener('search-change',()=>{old.value=fileHost.query;renderFiles();});
+ const fileHost=document.createElement('mfe-search');fileHost.setAttribute('data-compact','');fileHost.setAttribute('label',t('Search files'));fileHost.setAttribute('scope','drive-files');fileHost.language=preferences.language;const old=$('file-search');old.closest('.search-box').hidden=true;old.closest('.search-box').after(fileHost);fileSearch=fileHost;fileHost.addEventListener('search-change',()=>{old.value=fileHost.query;renderFiles();});
  const pager=document.createElement('div');pager.className='file-page-actions';const more=document.createElement('md-outlined-button');more.id='load-more-files';more.textContent=t('Load more files');more.hidden=true;more.onclick=()=>loadFilePage(true);const retry=document.createElement('md-text-button');retry.id='retry-files';retry.textContent=t('Retry loading files');retry.onclick=()=>{filePageRevision=null;loadFilePage();};pager.append(more,retry);$('file-list').closest('.table-scroll').after(pager);
- const operations=document.createElement('section');operations.id='active-operations';operations.setAttribute('aria-label',t('Operations'));operations.setAttribute('aria-live','polite');$('view-drive').prepend(operations);
+ const operations=$('active-operations')||document.createElement('section');operations.id='active-operations';operations.setAttribute('aria-label',t('Operations'));operations.setAttribute('aria-live','polite');if(!operations.isConnected)$('view-drive').prepend(operations);
  const details=addFeatureRoot('details','File details','檔案詳情');const detailContent=document.createElement('div');details.append(detailContent);fileDetails=mountFileDetails(detailContent,{translate:t,language:preferences.language,services:{listVersions:id=>api.listVersions?api.listVersions(id):api.history({entryId:id}),listActivity:query=>api.listActivity?api.listActivity(query):Promise.reject(new Error('File activity bridge is unavailable.')),previewVersion:id=>api.previewVersion(id),labelVersion:(id,label)=>api.labelVersion(id,label),exportVersion:id=>api.exportVersion(id),restoreVersion:async id=>{if(await superConfirm('desktop.restore-version'))return api.restoreVersion(id);}}});
  const detailsButton=document.createElement('md-text-button');detailsButton.id='file-details-button';detailsButton.textContent=t('File details');detailsButton.onclick=()=>{const file=currentFiles().find(f=>f.id===selected);if(file)fileDetails.selectEntry(file);foundation.model.openTab({id:'details',label:'File details'});foundation.shell.activate('details');};document.querySelector('.file-actions').append(detailsButton);
  const settingsSearch=control('input');settingsSearch.type='search';settingsSearch.id='settings-local-search';settingsSearch.setAttribute('aria-label',t('Search settings'));$('view-settings').children[0].after(settingsSearch);workspaceDisposers.push(attachEnhancedSearch(settingsSearch,$('view-settings')));
