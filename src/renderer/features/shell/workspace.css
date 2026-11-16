@@ -10,7 +10,7 @@ body{display:flex;flex-direction:column;height:100dvh}
 body>mfe-titlebar,body>.app-shell,body>.status-bar{zoom:var(--mfe-text-scale,1)}
 
 /* ---------- title bar with drive tabs ---------- */
-mfe-titlebar.titlebar{flex:0 0 var(--bar-height);height:var(--bar-height);background:var(--container-high)}
+mfe-titlebar.titlebar{flex:0 0 var(--bar-height);height:var(--bar-height);background:var(--container-high);overflow:hidden}
 mfe-titlebar .window-brand .brand-name{white-space:nowrap}
 .window-controls md-icon-button{height:var(--bar-height)}
 .drive-tabs-host{display:flex;align-items:flex-end;align-self:stretch;flex:1 1 auto;min-width:0;gap:2px;padding-inline:8px 4px}
@@ -93,7 +93,7 @@ mfe-workspace-shell{--md-primary-tab-container-height:36px;min-height:38px!impor
 .path-bar mfe-search{width:clamp(160px,24vw,300px);min-width:0}
 #filter-button[data-active]{background:var(--primary-container);border-radius:8px}
 #filter-button,#inspector-toggle{min-height:34px;--md-text-button-container-height:34px;--md-text-button-container-shape:8px}
-.inspector-toggle{display:none}
+.inspector-toggle,.sort-button{display:none}
 
 /* file table */
 .table-region{display:flex;flex-direction:column;flex:1 1 0;min-height:0;min-width:0}
@@ -185,58 +185,62 @@ mfe-workspace-shell{--md-primary-tab-container-height:36px;min-height:38px!impor
 .status-bar .badge[data-state=locked]:before{background:transparent;border:1px solid currentColor}
 
 /* ---------- narrow windows: nothing is removed, it moves ---------- */
-@media(max-width:1100px){
-  .brand-name{display:none}
-  .app-shell{grid-template-columns:200px minmax(0,1fr)}
-  .inspector{flex-basis:260px}
-}
-@media(max-width:960px){
-  #selection-label{display:none}
-}
-@media(max-width:839px){
-  body>.app-shell{grid-template-columns:minmax(0,1fr);padding:0}
-  /* The navigation drawer from the shell frame sits under the title bar. */
-  .sidebar{inset:var(--bar-height) auto 0 0!important;height:auto!important}
-  .navigation-backdrop{inset:var(--bar-height) 0 0!important}
-  .toolbar-actions .inspector-toggle{display:inline-flex}
-  .inspector{position:fixed;inset:auto 0 var(--status-height) 0;z-index:45;flex:none;width:auto;max-height:72dvh;border:1px solid var(--line);border-radius:16px 16px 0 0;box-shadow:var(--shadow);background:var(--surface);transform:translateY(105%);visibility:hidden;transition:transform 200ms var(--ease),visibility 0s linear 200ms}
-  .inspector[data-open]{transform:none;visibility:visible;transition:transform 200ms var(--ease)}
-  .inspector-close{display:inline-flex}
-  .drive-layout:has(.inspector[data-open]) .transfers-strip{visibility:hidden}
-  .inspector-section:first-child{padding-inline-end:48px}
-  .path-bar{flex-wrap:wrap;padding-block:4px}
-  .breadcrumb{flex-basis:100%;order:-1}
-  .path-bar .toolbar-actions{flex:1 1 100%}
-  .path-bar mfe-search{flex:1 1 120px;width:auto}
-  /* Touch sized command and row targets. */
-  #command-bar .file-actions>:is(md-text-button,md-outlined-button,md-filled-button){min-height:44px;--md-text-button-container-height:44px}
-  #filter-button,#inspector-toggle{min-height:44px;--md-text-button-container-height:44px}
-}
-@media(max-width:560px){
-  .path-bar .toolbar-actions{flex-wrap:wrap}
-  .path-bar mfe-search{flex:1 1 100%;width:100%}
-  #file-list>tr>td.modified{white-space:normal}
-  .drive-tab{padding:0 10px;max-width:150px}
-  .status-bar{gap:10px;padding:0 8px}
-  #status-cipher,#status-language{display:none}
-  /* The table becomes a list of cards; every column keeps its label. */
-  #view-drive thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
-  #view-drive table,#view-drive tbody{display:block;min-width:0}
-  #file-list>tr{display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:2px 8px;align-items:center;padding:6px 8px;border-bottom:1px solid var(--line)}
-  #file-list>tr>td{display:block;height:auto;min-height:0;padding:0;border:0;min-width:0;width:auto}
-  #file-list>tr>td:first-child{grid-row:1/span 3;grid-column:1;min-width:48px;width:48px}
-  #file-list>tr>td:nth-child(2){grid-column:2/span 2;font-weight:600}
-  #file-list>tr>td.availability{grid-column:2}
-  #file-list>tr>td.numeric{grid-column:3;text-align:end}
-  #file-list>tr>td.modified{display:block!important;grid-column:2}
-  #file-list>tr>td.parts{grid-column:3;width:auto}
-  #file-list>tr>td:not(:first-child):not(:nth-child(2))::before{content:attr(data-label) ': ';color:var(--muted);font-size:var(--fs-label)}
-  #view-drive th.parts{display:none}
-}
-@media(max-width:400px){
-  .brand-name,.window-brand{display:none}
-  .drive-tabs-host{padding-inline-start:4px}
-}
+:root[data-max1100] .brand-name{display:none}
+:root[data-max1100] .app-shell{grid-template-columns:200px minmax(0,1fr)}
+:root[data-max1100] .inspector{flex-basis:260px}
+
+:root[data-max960] #selection-label{display:none}
+
+:root[data-max839] .sidebar{position:fixed;width:min(280px,calc(100vw - 48px));background:var(--frame);z-index:50;transform:translateX(-105%);transition:transform 180ms var(--ease);visibility:hidden}
+:root[data-max839] .navigation-open .sidebar{transform:none;visibility:visible}
+:root[data-max839] .navigation-backdrop{position:fixed;inset:var(--bar-height) 0 0;display:block!important;z-index:40;background:#0006;border-radius:0}
+:root[data-max839] .navigation-backdrop[hidden]{display:none!important}
+:root[data-max839] body>.app-shell{grid-template-columns:minmax(0,1fr);padding:0}
+/* The navigation drawer from the shell frame sits under the title bar. */
+:root[data-max839] .sidebar{inset:var(--bar-height) auto 0 0!important;height:auto!important}
+:root[data-max839] .navigation-backdrop{inset:var(--bar-height) 0 0!important}
+:root[data-max839] .toolbar-actions .inspector-toggle{display:inline-flex}
+:root[data-max839] .inspector{position:fixed;inset:auto 0 var(--status-height) 0;z-index:45;flex:none;width:auto;max-height:72dvh;border:1px solid var(--line);border-radius:16px 16px 0 0;box-shadow:var(--shadow);background:var(--surface);transform:translateY(105%);visibility:hidden;transition:transform 200ms var(--ease),visibility 0s linear 200ms}
+:root[data-max839] .inspector[data-open]{transform:none;visibility:visible;transition:transform 200ms var(--ease)}
+:root[data-max839] .inspector-close{display:inline-flex}
+:root[data-max839] .drive-layout:has(.inspector[data-open]) .transfers-strip{visibility:hidden}
+:root[data-max839] .inspector-section:first-child{padding-inline-end:48px}
+:root[data-max839] .path-bar{flex-wrap:wrap;padding-block:4px}
+:root[data-max839] .breadcrumb{flex-basis:100%;order:-1}
+:root[data-max839] .path-bar .toolbar-actions{flex:1 1 100%}
+:root[data-max839] .path-bar mfe-search{flex:1 1 120px;width:auto}
+/* Touch sized command and row targets. */
+:root[data-max839] #command-bar .file-actions>:is(md-text-button,md-outlined-button,md-filled-button){min-height:48px;--md-text-button-container-height:48px}
+:root[data-max839] #filter-button,:root[data-max839] #inspector-toggle,:root[data-max839] #sort-button{min-height:48px;--md-text-button-container-height:48px}
+:root[data-max839] .inspector-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+:root[data-max839] .inspector-action{min-height:48px;--md-outlined-button-container-height:48px;--md-outlined-button-container-shape:12px}
+:root[data-max839] .inspector-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+:root[data-max839] #unlock-card md-filled-button,:root[data-max839] #unlock-card md-outlined-button{min-height:48px}
+
+:root[data-max560] .path-bar .toolbar-actions{flex-wrap:wrap}
+:root[data-max560] .path-bar mfe-search{flex:1 1 100%;width:100%}
+:root[data-max560] .toolbar-actions .sort-button{display:inline-flex}
+:root[data-max560] #file-list>tr>td.modified{white-space:normal}
+:root[data-max560] .drive-tab{padding:0 10px;max-width:150px}
+:root[data-max560] .status-bar{gap:10px;padding:0 8px}
+:root[data-max560] #status-cipher,:root[data-max560] #status-language{display:none}
+/* The table becomes a list of cards; every column keeps its label. */
+:root[data-max560] #view-drive thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+:root[data-max560] #view-drive table,:root[data-max560] #view-drive tbody{display:block;min-width:0}
+:root[data-max560] #file-list>tr{display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:2px 8px;align-items:center;padding:6px 8px;border-bottom:1px solid var(--line)}
+:root[data-max560] #file-list>tr>td{display:block;height:auto;min-height:0;padding:0;border:0;min-width:0;width:auto}
+:root[data-max560] #file-list>tr>td:first-child{grid-row:1/span 3;grid-column:1;min-width:48px;width:48px}
+:root[data-max560] #file-list>tr>td:nth-child(2){grid-column:2/span 2;font-weight:600}
+:root[data-max560] #file-list>tr>td.availability{grid-column:2}
+:root[data-max560] #file-list>tr>td.numeric{grid-column:3;text-align:end}
+:root[data-max560] #file-list>tr>td.modified{display:block!important;grid-column:2}
+:root[data-max560] #file-list>tr>td.parts{grid-column:3;width:auto}
+:root[data-max560] #file-list>tr>td:not(:first-child):not(:nth-child(2))::before{content:attr(data-label) ': ';color:var(--muted);font-size:var(--fs-label)}
+:root[data-max560] #view-drive th.parts{display:none}
+
+:root[data-max400] .brand-name,:root[data-max400] .window-brand{display:none}
+:root[data-max400] .drive-tabs-host{padding-inline-start:4px}
+
 
 /* ---------- high contrast: in-app switch, Windows contrast themes and the contrast preference ---------- */
 :root[data-contrast=high]{--text:#000;--surface:#fff;--frame:#fff;--container:#f2f2f2;--container-high:#e2e2e2;--muted:#1b1b1b;--line:#000;--outline:#000;--primary:#003a8c;--on-primary:#fff;--primary-container:#cfe3ff;--on-primary-container:#000;--error:#8c0000;--accent-warning:#5c3600}
@@ -265,7 +269,7 @@ mfe-workspace-shell{--md-primary-tab-container-height:36px;min-height:38px!impor
 }
 
 /* ---------- motion: the sheet slides only when motion is allowed ---------- */
-@media(prefers-reduced-motion:reduce){.inspector,.inspector[data-open]{transition:none}}
+@media(prefers-reduced-motion:reduce){.inspector,.inspector[data-open],.sidebar{transition:none!important}}
 [data-low-stimulation=true] .inspector,[data-motion=reduced] .inspector{transition:none!important}
 
 /* State changes ease in with the shared motion tokens; reduced motion and low stimulation turn them off. */

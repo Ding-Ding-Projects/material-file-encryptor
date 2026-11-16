@@ -10,6 +10,8 @@ export const SHELL_COPY = Object.freeze({
   'More': '更多',
   'More commands': '更多指令',
   'Filter': '篩選',
+  'Sort': '排序',
+  'Sort: {name}': '排序：{name}',
   'Filter: {name}': '篩選：{name}',
   'All files': '所有檔案',
   'Encrypted storage only': '只存於加密儲存',

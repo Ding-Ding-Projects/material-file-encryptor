@@ -197,7 +197,7 @@ function syncShellControls() {
 function setShellPreference(key,value) {
  shellPreferences=normalizeShellPreferences({...shellPreferences,[key]:value});
  shellPersisted=saveShellPreferences(localStorage,shellPreferences);
- applyShellPreferences(document.documentElement,shellPreferences);syncShellControls();
+ applyShellPreferences(document.documentElement,shellPreferences);syncShellControls();chrome?.refreshViewport();
  if(!shellPersisted)toast('Active for this session only. Saving failed.');
  renderedFilesKey='';if(state)renderFiles();
 }
@@ -832,7 +832,8 @@ function mountArchiveChrome(){
 
 /** Ids of the checkboxes a list shows right now, in display order. */
 function bulkOrderedIds(kind){return [...(kind==='vault'?document.querySelector('.vault-bulk-list'):$(kind+'-list'))?.querySelectorAll('input[data-bulk]')||[]].map(input=>input.value);}
-const bulkSelectionFor=kind=>kind==='history'?historyBulk:kind==='recycle'?recycleBulk:vaultBulk;
+// A hoisted declaration: initializeArchive() runs before this point in the file.
+function bulkSelectionFor(kind){return kind==='history'?historyBulk:kind==='recycle'?recycleBulk:vaultBulk;}
 function syncBulkChecks(kind){const selection=bulkSelectionFor(kind);for(const input of (kind==='vault'?document.querySelector('.vault-bulk-list'):$(kind+'-list'))?.querySelectorAll('input[data-bulk]')||[])input.checked=selection.has(input.value);}
 /** One checkbox for a bulk list: click toggles it, Shift+click selects the range from the last one, and the toolbar count follows. */
 function bindBulkCheckbox(input,kind){
@@ -1008,12 +1009,12 @@ function setupEnhancedWorkspace() {
   openView:id=>{foundation.model.openTab({id,label:canonicalViewLabels[id]||id});foundation.shell.activate(id);},
   listVersions:id=>api?.listVersions?api.listVersions(id):Promise.resolve([]),
   backupStatus:()=>api?.registryStorageStatus?api.registryStorageStatus():Promise.resolve(null),
-  formatBytes
+  formatBytes,getTextScale:()=>shellPreferences.textScale/100
  }});
  unlockCard=mountUnlockCard({doc:document,translate:t,hooks:{isBusy:()=>busy,chooseKeyFile:()=>api.chooseKeyFile(),unlock:unlockInline}});
  foundation.chrome=chrome;foundation.updateChrome=updateChrome;foundation.refreshChrome=()=>{unlockCard?.update(state);chrome?.refreshOverflow();};
  workspaceDisposers.push(subscribeLanguage(()=>{updateChrome();syncShellControls();}));
- applyShellPreferences(document.documentElement,shellPreferences);syncShellControls();
+ applyShellPreferences(document.documentElement,shellPreferences);syncShellControls();chrome.refreshViewport();
  workspaceDisposers.push(()=>{chrome?.destroy();unlockCard?.destroy();});
  const forceLockButton=document.createElement('md-outlined-button');forceLockButton.id='force-lock-button';forceLockButton.textContent=t('Force lock');forceLockButton.onclick=async()=>{if(await superConfirm('desktop.force-lock'))return run('Locking drive…',()=>api.forceLock(forceLockOptions()));};$('lock-button').after(forceLockButton);
  const fileHost=document.createElement('mfe-search');fileHost.setAttribute('data-compact','');fileHost.setAttribute('label',t('Search files'));fileHost.setAttribute('scope','drive-files');fileHost.language=preferences.language;const old=$('file-search');old.closest('.search-box').hidden=true;old.closest('.search-box').after(fileHost);fileSearch=fileHost;fileHost.addEventListener('search-change',()=>{old.value=fileHost.query;renderFiles();});

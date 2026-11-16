@@ -3,10 +3,12 @@ import {text} from '../../../shared/surface/registry.js';
 import {control} from '../../../shared/surface/controls.js';
 import {icon} from '../../icons.js';
 import {SHELL_COPY} from './copy.js';
+import {applyViewportClasses, effectiveWidth} from './viewport.js';
 import {buildFolderTree, flattenFolderTree, ancestorFolders, fileInFolder, relativeName, breadcrumbs, sortFiles, SORT_KEYS} from './folder-tree.js';
 
 const PART_CELL_LIMIT = 96;
 const VERSION_LIMIT = 5;
+const SORT_LABELS = {name: ['Name', '名稱'], availability: ['Availability', '可用狀態'], size: ['Size', '大小'], modified: ['Modified', '修改時間'], parts: ['Parts', '部份']};
 const AVAILABILITY_FILTERS = [['all', 'All files'], ['offline', 'Available offline'], ['storage', 'Encrypted storage only']];
 
 /** "M:" for a stored drive letter such as "M:\\" or "M". */
@@ -52,7 +54,7 @@ export function mountWorkspaceChrome({doc = document, translate, getLanguage, ho
 
   const menu = (anchor, event, entries) => openContextMenu({
     anchor, event, target: anchor, language: getLanguage(),
-    items: entries.map(entry => ({id: entry.id, label: text(entry.label, copyFor(entry.label)), disabled: entry.disabled, run: entry.run}))
+    items: entries.map(entry => ({id: entry.id, label: text(entry.label, entry.yue ?? copyFor(entry.label)), disabled: entry.disabled, run: entry.run}))
   });
   const scopeChanged = () => { renderBreadcrumb(); renderFilterLabel(); renderSortHeaders(); renderTreeSelection(); hooks.onScopeChange(); };
 
@@ -251,6 +253,10 @@ export function mountWorkspaceChrome({doc = document, translate, getLanguage, ho
     scope.sort = scope.sort.key === key ? {key, direction: scope.sort.direction === 'asc' ? 'desc' : 'asc'} : {key, direction: key === 'modified' || key === 'size' ? 'desc' : 'asc'};
     scopeChanged();
   }
+  // Narrow windows hide the column headers, so the same sort choices live in a menu.
+  listen($('sort-button'), 'click', event => menu($('sort-button'), event, SORT_KEYS.map(key => ({
+    id: key, label: SORT_LABELS[key][0], yue: SORT_LABELS[key][1], run: () => sortBy(key)
+  }))));
   const headerRow = doc.querySelector('#view-drive thead tr');
   listen(headerRow, 'click', event => { const header = event.target.closest?.('th[data-sort]'); if (header) sortBy(header.dataset.sort); });
   listen(headerRow, 'keydown', event => { const header = event.target.closest?.('th[data-sort]'); if (header && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); sortBy(header.dataset.sort); } });
@@ -440,9 +446,17 @@ export function mountWorkspaceChrome({doc = document, translate, getLanguage, ho
     set('status-language', t('Language: {language}', {language: language === 'yue' ? '廣東話' : language === 'bilingual' ? 'English + 廣東話' : 'English'}));
   }
 
+  /** Width classes follow the zoomed layout width, not just the window. */
+  function refreshViewport() {
+    applyViewportClasses(doc.documentElement, effectiveWidth(doc.defaultView.innerWidth, hooks.getTextScale?.() ?? 1), [doc.querySelector('mfe-top-bar')]);
+    renderOverflow();
+  }
+  listen(doc.defaultView, 'resize', refreshViewport);
+  refreshViewport();
   mountTree();
 
   return {
+    refreshViewport,
     /** Feeds the chrome the latest vault state, the loaded files and the primary selection. */
     update(next) {
       snapshot = {...snapshot, ...next};
