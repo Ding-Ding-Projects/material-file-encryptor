@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Home: flagship features</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..800&amp;family=Roboto+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+@keyframes cardIn{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes blip{0%,100%{opacity:1}50%{opacity:.35}}
+.card{transition:transform 200ms cubic-bezier(.2,0,0,1),box-shadow 200ms cubic-bezier(.2,0,0,1)}
+.card:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(30,32,70,.12)}
+[data-motion=off] *{animation:none!important;transition:none!important}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</helmet>
+<div data-motion="{{motion}}" style="--accent:{{accent}};width:1440px;height:900px;font-family:'Roboto Flex',system-ui,sans-serif;font-size:13px;color:#1A1B24;background:#E9EBF2;display:flex;flex-direction:column">
+<div style="display:flex;align-items:flex-end;gap:2px;height:40px;padding-left:10px;background:#DADDE8">
+<span style="display:flex;align-items:center;gap:8px;height:34px;padding:0 14px;border-radius:10px 10px 0 0;background:#FFFFFF"><b>Home</b></span>
+<span style="display:flex;align-items:center;gap:8px;height:34px;padding:0 14px"><span style="width:7px;height:7px;border-radius:4px;background:#0B6B57"></span><b>M:</b> Work vault</span>
+</div>
+<div style="flex:1;display:flex;gap:1px;background:#DCDEE8;min-height:0">
+<nav aria-label="Main navigation" style="flex:0 0 232px;box-sizing:border-box;background:#F7F8FB;padding:10px 6px;display:flex;flex-direction:column;gap:2px">
+<sc-for list="{{rail}}" as="r" hint-placeholder-count="9"><a href="#" style="{{r.s}}">{{r.n}}<span style="margin-left:auto;font-size:11px;color:#4A4C5C">{{r.c}}</span></a></sc-for>
+</nav>
+<main style="flex:1;min-width:0;background:#FFFFFF;padding:18px 22px;display:flex;flex-direction:column;gap:14px;overflow:auto">
+<header style="display:flex;align-items:baseline;gap:12px"><h1 style="margin:0;font-size:20px;font-weight:600">Home</h1><span style="color:#4A4C5C">Your encrypted drive at a glance</span></header>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px">
+<sc-for list="{{cards}}" as="c" hint-placeholder-count="6">
+<a href="#" class="card" style="{{c.s}}">
+<span style="display:flex;align-items:center;gap:10px"><span style="{{c.icon}}">{{c.g}}</span><b style="font-size:16px">{{c.t}}</b></span>
+<span style="color:#3A3C4C;line-height:1.45">{{c.d}}</span>
+<span style="margin-top:auto;display:flex;align-items:center;gap:8px;padding-top:6px;border-top:1px solid #F1F2F6"><span style="{{c.dot}}"></span><span style="font-weight:600">{{c.st}}</span><span style="margin-left:auto;color:var(--accent);font-weight:600">{{c.a}} →</span></span>
+</a>
+</sc-for>
+</div>
+<a href="LocalTools.dc.html" class="card" style="display:flex;align-items:center;gap:14px;padding:14px 18px;border:1px solid #DCDEE8;border-radius:14px;text-decoration:none;color:#1A1B24;background:#F7F8FB;animation:cardIn 380ms 420ms cubic-bezier(.05,.7,.1,1) both">
+<span style="width:40px;height:40px;border-radius:12px;background:#ECEDF6;color:var(--accent);display:grid;place-items:center;font-family:'Roboto Mono',monospace;font-weight:700">⊞</span>
+<span style="flex:1"><b style="font-size:15px">Local tools</b><br><span style="color:#4A4C5C">Converter, local models, type generator, virtual disks, Base64, recording, drawing and 7 more</span></span>
+<span style="color:var(--accent);font-weight:600">Open →</span>
+</a>
+<section aria-label="Recent activity" style="border:1px solid #DCDEE8;border-radius:14px;overflow:hidden;animation:cardIn 380ms 480ms cubic-bezier(.05,.7,.1,1) both">
+<p style="margin:0;padding:10px 16px;font-size:11px;font-weight:700;letter-spacing:.06em;color:#4A4C5C;background:#F7F8FB;border-bottom:1px solid #ECEDF3">RECENT ACTIVITY</p>
+<sc-for list="{{recent}}" as="r" hint-placeholder-count="5"><div style="display:grid;grid-template-columns:110px minmax(0,1fr) 140px;gap:12px;align-items:center;height:38px;padding:0 16px;border-bottom:1px solid #F1F2F6"><span style="color:#4A4C5C;font-variant-numeric:tabular-nums">{{r.t}}</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{r.w}}</span><span style="color:#4A4C5C;text-align:right">{{r.k}}</span></div></sc-for>
+</section>
+</main>
+</div>
+<footer role="status" style="display:flex;align-items:center;gap:16px;height:26px;padding:0 12px;background:var(--accent);color:#FFFFFF;font-size:12px"><span>● M: mounted</span><span>18.4 GB used</span><span>Backup due 15:00</span></footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#4B57C9","options":["#4B57C9","#00696B","#8B4A00","#A23B72"],"section":"Look"},"motion":{"editor":"boolean","default":true,"section":"Look"},"stage":{"editor":"enum","options":["unlocked","locked"],"default":"unlocked","section":"Stage"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals(){
+    const locked=(this.props.stage??'unlocked')==='locked';
+    const tone={ok:'#0B6B57',warn:'#8A5300',off:'#767680'};
+    const cards=[
+      ['▣','My drive','Work in File Explorer while every file stays encrypted on disk.',locked?'Locked':'M: mounted · 2,104 files',locked?'off':'ok',locked?'Unlock':'Open'],
+      ['⇩','Available offline','Folders you pinned open without a connection.','12 items · 1.4 GB','ok','Manage'],
+      ['⟲','History','Every save is a version you can open or restore.','1,284 versions · last 13:42','ok','Browse'],
+      ['⌫','Recycle Bin','Deleted files wait here until you remove them for good.','4 items','warn','Review'],
+      ['☁','Docker Hub backup','Public, encrypted copies of every drive, synced hourly.',locked?'Paused while locked':'Last 14:08 · next 15:00',locked?'off':'ok',locked?'Unlock first':'Back up now'],
+      ['🔒︎','Local access','Who can open this drive, auto unlock and lock rules.','Password · auto unlock off','ok','Review']
+    ];
+    return {accent:this.props.accent??'#4B57C9',motion:this.props.motion===false?'off':'on',
+      recent:[['Today 14:08','Backed up M: Work vault to Docker Hub','Cloud backup'],['Today 13:42','Saved Quarterly report Q3.pdf','New version'],['Today 11:05','Uploaded Budget forecast.xlsx','Encrypted, 1 part'],['Yesterday','Restored Supplier contract.docx','From Recycle Bin'],['12 Nov','Pinned Contracts for offline use','Available offline']].map(([t,w,k])=>({t,w,k})),
+      rail:[['Home',''],['Drive',''],['Offline','12'],['History',''],['Recycle Bin','4'],['Docker Hub storage',''],['Local tools','14'],['Settings',''],['Help','']].map(([n,c],i)=>({n,c,s:'display:flex;align-items:center;height:34px;padding:0 12px;border-radius:8px;text-decoration:none;color:#1A1B24;'+(i===0?'background:#E6E8FF;color:#26318F;font-weight:600':'')})),
+      cards:cards.map(([g,t,d,st,k,a],i)=>({g,t,d,st,a,s:'display:flex;flex-direction:column;gap:8px;min-height:150px;padding:16px;border:1px solid #DCDEE8;border-radius:14px;text-decoration:none;color:#1A1B24;background:#FFFFFF;animation:cardIn 360ms '+(i*55)+'ms cubic-bezier(.05,.7,.1,1) both',
+        icon:'width:36px;height:36px;border-radius:10px;background:#ECEDF6;color:var(--accent);display:grid;place-items:center;font-size:16px',
+        dot:'width:8px;height:8px;border-radius:4px;background:'+tone[k]+(k==='ok'&&i===4?';animation:blip 2s ease-in-out infinite':'')}))};
+  }
+}
+</script>
+</body>
+</html>

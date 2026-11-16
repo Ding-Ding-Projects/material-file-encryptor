@@ -7,9 +7,13 @@
  "title": "Material File Encryptor Redesign",
  "launch": {
   "view": "canvas",
-  "page": "workspace"
+  "page": "home"
  },
  "pages": [
+  {
+   "id": "home",
+   "name": "Home and required features"
+  },
   {
    "id": "workspace",
    "name": "app workspace"
@@ -36,6 +40,23 @@
   }
  ],
  "boards": {
+  "Home.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 900,
+   "page": "home",
+   "title": "app Home: flagship features only"
+  },
+  "LocalTools.dc.html": {
+   "x": 1880,
+   "y": 0,
+   "w": 1440,
+   "h": 900,
+   "page": "home",
+   "title": "required features page (ships as Local tools)",
+   "is_interactive": true
+  },
   "Main.dc.html": {
    "x": 0,
    "y": 0,
@@ -126,6 +147,8 @@
   }
  },
  "order": [
+  "Home.dc.html",
+  "LocalTools.dc.html",
   "Main.dc.html",
   "Unlock.dc.html",
   "Backup.dc.html",
@@ -138,6 +161,30 @@
   "Site.dc.html"
  ],
  "notes": {
+  "th": {
+   "x": 0,
+   "y": -300,
+   "text": "Home and required features",
+   "kind": "title1",
+   "maxW": 3640,
+   "page": "home"
+  },
+  "nHome": {
+   "x": 1480,
+   "y": 0,
+   "w": 320,
+   "page": "home",
+   "fill": "blue",
+   "text": "Home shows only the app's flagship features: My drive, Available offline, History, Recycle Bin, Docker Hub backup and Local access, each with a live status and one action. One card opens the required features page. Tweaks: accent, motion, stage (unlocked / locked). Being built by the Home and Local Tools implementation lane."
+  },
+  "nTools": {
+   "x": 3360,
+   "y": 0,
+   "w": 320,
+   "page": "settings",
+   "fill": "teal",
+   "text": "New tab catalog: every drive, view, tool and settings page with its open/closed state, own search with regex, Open every tab. Beside it the full regex builder with Create, Analyze, Test, Replace, Split, Grep, Debug, Library, Use. Try: mode tabs. Unbuilt modes say so. Tweaks: accent, motion."
+  },
   "tw": {
    "x": 0,
    "y": -300,
@@ -241,14 +288,6 @@
    "page": "settings",
    "fill": "teal",
    "text": "Settings with real groups, search and the adjacent regex builder strip, sound and comfort controls, high contrast and text size, and an honest required features coverage readout. Try: group list and the Regex button. Tweaks: accent, motion, regexOpen. Coverage numbers are a design placeholder until the inventory implementation lane lands real counts."
-  },
-  "nTools": {
-   "x": 3360,
-   "y": 0,
-   "w": 320,
-   "page": "settings",
-   "fill": "teal",
-   "text": "New tab catalog: every drive, view, tool and settings page with its open/closed state, own search with regex, Open every tab. Beside it the full regex builder with Create, Analyze, Test, Replace, Split, Grep, Debug, Library, Use. Try: mode tabs. Unbuilt modes say so. Tweaks: accent, motion."
   },
   "nMobile": {
    "x": 430,
