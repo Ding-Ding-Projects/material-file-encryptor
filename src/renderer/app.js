@@ -100,6 +100,8 @@ let installTakeover=null;
 let driverInstall=null;
 // A WinFsp install started here is reported as finished once the driver is actually available.
 function reportDriverInstalled(){if(!driverInstall||state?.driver?.available!==true)return;const done=driverInstall;driverInstall=null;getInstallTakeover().success({what:'WinFsp driver',where:t('Windows driver service'),durationMs:sinceMs(done.startedAt)});}
+// Every render first checks whether a driver install started in this session has finished.
+render = (baseRender => function (...args) { if (state) reportDriverInstalled(); return baseRender.apply(this, args); })(render);
 const getInstallTakeover=()=>installTakeover??=createInstallationTakeover({doc:document,translate:(source,options)=>t(source,options),preference:takeoverPreference,notify:input=>foundation?.notify(input),playCue:kind=>foundation?.playCue?.(kind)});
 const sinceMs=started=>started>0?Math.max(0,Date.now()-started):undefined;
 let foundation=null,fileDetails=null,fileSearch=null,renderedFilesKey='',pagedFiles=null,fileNextCursor=null,filePageRevision=null,filePageRequest=0;
@@ -325,7 +327,6 @@ function renderAvailability() {
 function currentFiles(){return pagedFiles??state?.files??[];}
 function render() {
  if (!state) return;
- reportDriverInstalled();
  if(state.locked) {historySelection?.clear();filePageRequest++;pagedFiles=null;filePageRevision=null;selected=null;fileSelection.clear();fileDetails?.selectEntry(null);for(const kind of ['history','recycle']) {archiveRequests[kind]++;archiveRenders[kind]++;archiveRows[kind]=[];$(kind+'-list').replaceChildren();setArchiveMessage(kind,'Unlock a drive to view its history and recycle bin.');}recycledSelection.clear();}
  const status = mountState(); setText('vault-badge',status); $('vault-badge').dataset.state = state.mounted ? 'mounted' : 'locked';
  $('locked-state').hidden = !state.locked; $('drive-content').hidden = state.locked; $('lock-button').hidden = state.locked;

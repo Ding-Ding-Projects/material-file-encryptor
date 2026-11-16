@@ -23,7 +23,7 @@
 .toolbox-card img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:8px;background:#000}
 .toolbox-card[aria-checked=true]{outline:3px solid var(--md-sys-color-primary,#4355a5)}
 .toolbox-timer{font:600 1.6rem ui-monospace,Consolas,monospace}
-.toolbox-rec-dot{display:inline-block;width:12px;height:12px;border-radius:50%;background:#d32f2f;margin-inline-end:8px;animation:toolbox-blink 1.2s ease-in-out infinite}
+.toolbox-rec-dot{display:inline-block;width:12px;height:12px;border-radius:50%;background:#d32f2f;margin-inline-end:8px;animation:toolbox-blink 1.2s var(--md-sys-motion-easing-standard,cubic-bezier(.2,0,0,1)) infinite}
 @keyframes toolbox-blink{50%{opacity:.25}}
 :root[data-motion="reduced"] .toolbox-rec-dot,:root[data-low-stimulation="true"] .toolbox-rec-dot{animation:none}
 @media(prefers-reduced-motion:reduce){.toolbox-rec-dot{animation:none}}
@@ -38,7 +38,7 @@
 .live-chart-tick{fill:var(--md-sys-color-on-surface-variant,#49454f);font-size:10px}
 .live-chart-cross{stroke:var(--md-sys-color-on-surface-variant,#49454f);stroke-width:1;stroke-dasharray:3 3}
 .live-chart-halo{opacity:.35}
-.live-chart-halo.pulsing{transform-box:fill-box;transform-origin:center;animation:live-chart-pulse 1.6s ease-out infinite}
+.live-chart-halo.pulsing{transform-box:fill-box;transform-origin:center;animation:live-chart-pulse 1.6s var(--md-sys-motion-easing-emphasized-decelerate,cubic-bezier(.05,.7,.1,1)) infinite}
 @keyframes live-chart-pulse{0%{transform:scale(1);opacity:.5}100%{transform:scale(3.2);opacity:0}}
 .live-chart-badge{position:absolute;right:4px;transform:translateY(-50%);padding:2px 8px;border-radius:10px;background:var(--md-sys-color-primary,#4355a5);color:var(--md-sys-color-on-primary,#fff);font-size:12px;pointer-events:none}
 .live-chart-tip{position:absolute;top:6px;padding:2px 8px;border-radius:8px;background:var(--md-sys-color-inverse-surface,#313033);color:var(--md-sys-color-inverse-on-surface,#f4eff4);font-size:12px;pointer-events:none;white-space:nowrap}
@@ -50,3 +50,7 @@
 @media(prefers-reduced-motion:reduce){.live-chart-halo{animation:none!important}}
 .toolbox-canvas{width:100%;max-width:960px;height:auto;aspect-ratio:8/5;background:#fff;border:1px solid var(--md-sys-color-outline,#79747e);border-radius:8px;touch-action:none;cursor:crosshair;display:block}
 .toolbox-canvas:focus-visible{outline:3px solid var(--md-sys-color-primary,#4355a5);outline-offset:2px}
+/* State changes ease in with the shared motion tokens; reduced motion and low stimulation turn them off. */
+.toolbox-view,.toolbox-button,.toolbox-canvas,.live-chart svg{transition:background-color var(--md-sys-motion-duration-short4,200ms) var(--md-sys-motion-easing-standard,cubic-bezier(.2,0,0,1)),border-color var(--md-sys-motion-duration-short4,200ms) var(--md-sys-motion-easing-standard,cubic-bezier(.2,0,0,1)),outline-color var(--md-sys-motion-duration-short4,200ms) var(--md-sys-motion-easing-standard,cubic-bezier(.2,0,0,1)),box-shadow var(--md-sys-motion-duration-short4,200ms) var(--md-sys-motion-easing-standard,cubic-bezier(.2,0,0,1))}
+:root[data-motion="reduced"] :is(.toolbox-view,.toolbox-button,.toolbox-canvas,.live-chart svg),:root[data-low-stimulation="true"] :is(.toolbox-view,.toolbox-button,.toolbox-canvas,.live-chart svg){transition:none}
+@media(prefers-reduced-motion:reduce){.toolbox-view,.toolbox-button,.toolbox-canvas,.live-chart svg{transition:none}}
