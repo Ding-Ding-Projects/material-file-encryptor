@@ -23,6 +23,8 @@ export const HOME_ICONS = Object.freeze({
   updates: 'M21 10.12h-6.78l2.74-2.82c-2.73-2.7-7.15-2.8-9.88-.1-2.73 2.71-2.73 7.08 0 9.79s7.15 2.71 9.88 0C18.32 15.65 19 14.08 19 12.1h2c0 1.98-.88 4.55-2.64 6.29-3.51 3.48-9.21 3.48-12.72 0-3.5-3.47-3.53-9.11-.02-12.58s9.14-3.47 12.65 0L21 3v7.12z',
   storage: 'M2 20h20v-4H2v4zm2-3h2v2H4v-2zM2 4v4h20V4H2zm4 3H4V5h2v2zm-4 7h20v-4H2v4zm2-3h2v2H4v-2z',
   'server-manager': 'M20 13H4c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h16c.55 0 1-.45 1-1v-6c0-.55-.45-1-1-1zM7 19c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM20 3H4c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h16c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1zM7 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z',
+  quicktype: 'M9.4 16.6 4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0 4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z',
+  'virtual-disks': 'M6 2h12a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm0 2v16h12V4H6zm6 11a2 2 0 1 0 0 4 2 2 0 0 0 0-4z',
   connection: 'M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z',
   add: 'M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z',
   apps: 'M4 4h7v7H4zm9 0h7v7h-7zM4 13h7v7H4zm9 0h7v7h-7z'
@@ -38,6 +40,8 @@ export const HOME_CATALOG = Object.freeze([
   ['workflow', text('Choose where documents and downloads are kept.', '揀選文件同下載內容存放嘅位置。')],
   ['ollama', text('Use language models that run on this computer.', '使用喺呢部電腦上面行嘅語言模型。')],
   ['server-manager', text('Prepare and manage game servers on this or another computer.', '喺本機或者其他電腦準備同管理遊戲伺服器。')],
+  ['quicktype', text('Turn JSON samples or a JSON Schema into typed code in many languages.', '將 JSON 樣本或者 JSON Schema 轉成多種語言嘅有型別程式碼。')],
+  ['virtual-disks', text('Create, attach, resize and mount VHD, VHDX and ISO files.', '建立、連接、調整同掛載 VHD、VHDX 同 ISO 檔案。')],
   ['storage', text('Sign in to Docker Hub, choose encrypted backup storage, synchronize and restore.', '登入 Docker Hub、選擇加密備份儲存、同步同還原。')],
   ['status', text('Version, build details and feature coverage.', '版本、建置資料同功能覆蓋。')],
   ['dimsum', text('Browse the public dim sum catalogue, load only when you ask.', '瀏覽公開點心目錄，只會喺你要求時先載入。')],

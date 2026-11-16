@@ -4,6 +4,7 @@ import {surfaceRegistry} from '../../../shared/surface/registry.js';
 import {mountControlGuidance} from '../../../shared/surface/control-guidance.js';
 import {PREPARATION_GUIDANCE,preparationTranslator} from './copy.js';
 import {mountServerTargets} from './targets-panel.js';
+import {mountWorldGenerator} from './world-generator-panel.js';
 
 export function registerServerPreparation(view,registry=surfaceRegistry){
  const row=registry.find(row=>row.tag==='mfe-server-preparation');
@@ -64,7 +65,8 @@ export function mountServerPreparation(host,services={}){
  }
  // Flavors, containers, SSH, settings and plugins live in their own panel below the verified-download preparation above.
  const targetsModule=mountServerTargets(host,services);
- if(services.subscribeLanguage){const off=services.subscribeLanguage(()=>{if(available()){render();targetsModule.setLanguage();}});if(typeof off==='function')life.push(off);}
- render();if(services.subscribe){const off=services.subscribe(()=>{void refreshState();void targetsModule.refresh();});if(typeof off==='function')life.push(off);}void refreshState();
- return{refresh:refreshState,setLanguage(){render();targetsModule.setLanguage();},destroy(){if(!alive)return;alive=false;targetsModule.destroy();queryGeneration++;mounted.splice(0).forEach(dispose=>dispose());life.splice(0).forEach(dispose=>dispose());root.remove();}};
+ const worldModule=mountWorldGenerator(host,services);
+ if(services.subscribeLanguage){const off=services.subscribeLanguage(()=>{if(available()){render();targetsModule.setLanguage();worldModule.setLanguage();}});if(typeof off==='function')life.push(off);}
+ render();if(services.subscribe){const off=services.subscribe(()=>{void refreshState();void targetsModule.refresh();void worldModule.refresh();});if(typeof off==='function')life.push(off);}void refreshState();
+ return{refresh:refreshState,setLanguage(){render();targetsModule.setLanguage();worldModule.setLanguage();},destroy(){if(!alive)return;alive=false;targetsModule.destroy();worldModule.destroy();queryGeneration++;mounted.splice(0).forEach(dispose=>dispose());life.splice(0).forEach(dispose=>dispose());root.remove();}};
 }

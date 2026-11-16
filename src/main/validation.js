@@ -43,6 +43,25 @@ function validateDesktopWorkflow(action, payload) {
   if ((prototype!==Object.prototype&&prototype!==null)||Reflect.ownKeys(payload).some(key=>typeof key!=='string'||!Object.hasOwn(schema,key))||Object.entries(schema).some(([key,valid])=>!valid(payload[key]))||(action==='preparePublication'&&payload.route==='fork'&&!payload.upstream)||Object.hasOwn(schema,'sourceKind')&&(payload.sourceKind==='gh-keyring'&&payload.credentialRevision!==null||payload.sourceKind==='protected-product'&&!uuid(payload.credentialRevision))) throw new Error('Unsupported account or publication payload.');
 }
 import { TOOLBOX_ACTIONS } from './toolbox-host.js';
+/** Shape checks for the world generator. The detailed rules (area, tweaks, typed game rules) are enforced again by the generator itself. */
+function worldGeneratorSchemas(uuid) {
+  const optional = check => value => value === undefined || check(value);
+  const text = max => value => typeof value === 'string' && value.length <= max;
+  const int = value => Number.isSafeInteger(value);
+  const flag = value => typeof value === 'boolean';
+  const record = value => value !== null && typeof value === 'object' && !Array.isArray(value);
+  return {
+    worldOptions: {versionId: value => typeof value === 'string' && /^[A-Za-z0-9._ -]{1,64}$/.test(value)},
+    pickWorldDestination: {kind: value => value === 'folder' || value === 'zip'},
+    startWorldGeneration: {
+      versionId: value => typeof value === 'string' && /^[A-Za-z0-9._ -]{1,64}$/.test(value), seed: optional(text(64)), levelName: optional(text(60)), worldType: optional(text(64)),
+      widthChunks: optional(int), depthChunks: optional(int), centerChunkX: optional(int), centerChunkZ: optional(int), difficulty: optional(text(16)), gamemode: optional(text(16)),
+      hardcore: optional(flag), generateStructures: optional(flag), borderFollowsArea: optional(flag), eulaAccepted: optional(flag), gamerules: optional(record), tweaks: optional(record),
+      output: value => record(value) && ['folder', 'zip'].includes(value.kind) && uuid(value.destinationId)
+    },
+    worldGenerationStatus: {}, abortWorldGeneration: {}
+  };
+}
 export function validateFeatureRequest(feature, action, payload, { browser = false } = {}) {
   const actions = {
     ...(!browser?{surprise:['resolvePublishedDish']}:{}),
@@ -53,9 +72,10 @@ export function validateFeatureRequest(feature, action, payload, { browser = fal
     ollama: [...(!browser?['configureRuntime','runtimeInstall','runtimeInstallCancel','runtimeStop']:[]),'status','catalog','refreshCatalog','models','show','deleteModel','copyModel','generate','hardware','cart','addToCart','removeFromCart','retryPull','startPulls','cancel','sessions','session','renameSession','deleteSession','exportSession','chat','profiles','preflight','launch','snapshots','restore','events','runtimeInstallStatus','runtimeStart','chooseRuntimeExecutable','registerProfile'],
     documentation: ['catalog','changelog'], status: ['status'],
     ...(!browser?{toolbox:TOOLBOX_ACTIONS}:{}),
+    ...(!browser?{quicktype:['languages','generate'],'virtual-disks':['capabilities','list','inspect','pickDisk','pickNewDisk','create','attach','detach','mountIso','resize','compact','convert','script']}:{}),
     ...(!browser?{'browser-pairing':['issue','clear']}:{}),
     personalization: [...(!browser?['accessibilityState']:[]),'sharedRead','sharedWrite','verifySharedCredential','setSharedCredential','fetchScheduleSource','listFonts',...(!browser?['setScheduleCredential','clearScheduleCredential','normalizeImage','fontMetadata','cancelFontMetadata']:[])],
-    ...(!browser ? { 'server-manager': ['snapshot','refreshCatalogue','versions','resolveVersion','prepare','cancel','reviewLicense','capabilities','acceptLicense','start','status','stop','runtimeCandidate','prepareRuntime','runtimeStatus','cancelRuntime',...MANAGED_SERVER_ACTIONS] } : {}),
+    ...(!browser ? { 'server-manager': ['snapshot','refreshCatalogue','versions','resolveVersion','prepare','cancel','reviewLicense','capabilities','acceptLicense','start','status','stop','runtimeCandidate','prepareRuntime','runtimeStatus','cancelRuntime','worldOptions','pickWorldDestination','startWorldGeneration','worldGenerationStatus','abortWorldGeneration',...MANAGED_SERVER_ACTIONS] } : {}),
     ...(!browser ? { access: ['credentialGet','credentialSet','credentialDelete','credentialList','openDataFolder','dataFolder',...ACCESS_HOST_ACTIONS] } : {}),
   };
   const limit=!browser&&feature==='personalization'&&action==='normalizeImage'?Math.ceil(4*1024*1024*4/3)+256:262144;
@@ -85,6 +105,7 @@ export function validateFeatureRequest(feature, action, payload, { browser = fal
       reviewLicense: { serverId: value => typeof value === 'string' && value.startsWith('server-') && uuid(value.slice(7)) },
       ...Object.fromEntries(['acceptLicense','start','status','stop','runtimeCandidate','prepareRuntime','runtimeStatus'].map(action=>[action,{serverId:value=>typeof value==='string'&&value.startsWith('server-')&&uuid(value.slice(7))}])),
       cancelRuntime:{operationId:uuid},
+      ...worldGeneratorSchemas(uuid),
       ...managedServerSchemas(),
     };
     const schema = schemas[action];
