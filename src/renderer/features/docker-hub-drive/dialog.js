@@ -39,6 +39,9 @@ md-list-item.choice[aria-checked=true]{border-color:var(--md-sys-color-primary,#
 .snaps{display:grid;gap:6px;margin:0;padding:0;list-style:none}
 md-list-item.snap{border:2px solid var(--md-sys-color-outline-variant,#c6c8d8);border-radius:10px;min-height:48px}
 md-list-item.snap[aria-pressed=true]{border-color:var(--md-sys-color-primary,#4b57c9);background:var(--md-sys-color-secondary-container,#f0f1ff)}
+.with-info{display:flex;align-items:flex-start;gap:8px;min-width:0}
+.with-info>:not(mfe-control-guidance){flex:1;min-width:0}
+.body>md-outlined-button,.body>md-filled-button{justify-self:start}
 .actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;padding-top:6px}
 .error{color:var(--md-sys-color-error,#b3261e)}
 details{border:1px solid var(--md-sys-color-outline-variant,#c6c8d8);border-radius:12px;padding:10px 12px}
@@ -86,8 +89,13 @@ export class HubDriveDialog extends SurfaceElement {
     this.picker.configure({ services: this.api, mode, translate: this.translateText, language: this.language });
     this.loginPanel.configure(this.api);
     const letters = this.letters(); this.draft = { driveName: 'Drive', driveLetter: letters[0] ?? 'M', credentialMode: 'password', password: '', confirmPassword: '', keyFilePath: '' };
-    this.render(); this.dialog.showModal?.();
+    this.render(); const shown = this.dialog.showModal?.(); Promise.resolve(shown).then(() => this.focusFirst(), () => {});
     if (mode === 'open') this.enterRepositoryStep();
+  }
+  /** The dialog would otherwise focus an information icon and pop its tooltip. Focus the first real control instead. */
+  focusFirst() {
+    const first = this.shadowRoot.querySelector?.('.body md-list-item, .body md-outlined-text-field, .body md-filled-button, .body md-outlined-button, .body input');
+    first?.focus?.();
   }
   letters() {
     const state = this.getVaultState() || {};
@@ -125,7 +133,7 @@ export class HubDriveDialog extends SurfaceElement {
     const order = this.steps().map(item => item[0]); const alias = { done: 'creating', failed: 'creating', mounted: 'unlock' };
     return Math.max(0, order.indexOf(alias[this.stage] ?? this.stage));
   }
-  field(id, label, value, onInput, props = {}) { const node = element('input', { id, label, value, ...props }); node.addEventListener('input', () => onInput(node.value)); return node; }
+  field(id, label, value, onInput, props = {}) { const node = element('input', { id, label, value, ...props }); node.addEventListener('input', () => onInput(node.value)); return element('div', { class: 'with-info' }, [node]); }
   button(text, onClick, { filled = false, disabled = false } = {}) { const node = element(filled ? 'md-filled-button' : 'md-outlined-button', { text }); node.disabled = disabled; node.addEventListener('click', () => { if (!node.disabled) onClick(); }); return node; }
   render() {
     const items = this.steps(), at = this.stageIndex();
@@ -134,7 +142,7 @@ export class HubDriveDialog extends SurfaceElement {
     const head = element('div', { class: 'head' }, [element('h2', { id: 'hub-drive-title', text: title }), element('span', { class: 'pill', text: this.t('stepCount', { n: at + 1, total: items.length }) }), close]);
     const list = element('ol', { class: 'steps', 'aria-label': title }, items.map(([key, label], index) => element('li', { 'aria-current': index === at ? 'step' : 'false', 'data-done': String(index < at), text: `${index + 1} ${this.t(label)}` })));
     const body = element('div', { class: 'body' }, this[`stage_${this.stage}`]?.() ?? []);
-    this.dialog.replaceChildren(element('div', { slot: 'content' }, [head, element('div', { class: 'frame' }, [list, body])]));
+    this.dialog.replaceChildren(element('div', {}, [head, element('div', { class: 'frame' }, [list, body])]));
   }
   stage_choose() {
     const card = (key, hint, action, on, pick) => { const node = element('md-list-item', { type: 'button', class: 'choice', role: 'radio', 'aria-checked': String(on) }, [element('div', { slot: 'headline', text: this.t(key) }), element('div', { slot: 'supporting-text', text: this.t(hint) }), element('div', { slot: 'trailing-supporting-text', text: this.t(action) })]); node.addEventListener('click', pick); return node; };
@@ -178,7 +186,7 @@ export class HubDriveDialog extends SurfaceElement {
   }
   letterField() {
     const select = element('select', { id: 'hub-drive-letter', label: this.t('driveLetter'), value: `${this.draft.driveLetter}:` }, this.letters().map(letter => element('option', { value: `${letter}:`, text: `${letter}:`, selected: letter === this.draft.driveLetter })));
-    select.addEventListener('change', () => { this.draft.driveLetter = String(select.value)[0]; }); return select;
+    select.addEventListener('change', () => { this.draft.driveLetter = String(select.value)[0]; }); return element('div', { class: 'with-info' }, [select]);
   }
   stage_details() {
     const suggestion = suggestedRepository(this.account ?? 'you', this.picker.snapshot?.repositories ?? []);
@@ -230,7 +238,7 @@ export class HubDriveDialog extends SurfaceElement {
     advanced.id = 'hub-advanced';
     const failure = this.restoreError ? [element('p', { class: 'error', role: 'alert', text: this.t(this.restoreError) })] : [];
     return [...failure,element('h3', { text: this.t('openSnapshotsTitle', { name: drive.name ?? this.t('unnamedDrive'), id: drive.shortId }) }), element('ul', { class: 'snaps' }, buttons.map(node => element('li', {}, [node]))), element('p', { class: 'meta', text: this.t('snapshotHelp') }),
-      element('div', { class: 'note' }, [element('b', { text: this.t('restoreInto') }), element('p', { text: this.t('restoreIntoNote') })]), letterRow, advanced,
+      element('div', { class: 'note' }, [element('b', { text: this.t('restoreInto') }), element('p', { text: this.t('restoreIntoNote') })]), letterRow, element('div', { class: 'with-info' }, [advanced]),
       this.actions([this.button(this.t('back'), () => { this.stage = 'repository'; this.render(); }), this.button(this.t('restore'), () => { this.draft.location = 'automatic'; void this.restore(); }, { filled: true, disabled: !this.draft.digest })])];
   }
   stage_restoring() {
