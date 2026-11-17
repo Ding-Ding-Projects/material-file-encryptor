@@ -171,6 +171,21 @@ test('a failed restore returns to the snapshot step with a plain message', async
   assert.equal(dialog.stage, 'snapshot'); assert.ok(textOf(dialog.dialog).includes('could not be restored'));
 });
 
+test('the content goes in the dialog default slot, because a named slot the wrapper lacks renders nothing', () => {
+  const { dialog } = fixture(); dialog.open('create');
+  assert.equal(all(dialog.dialog, node => node.attributes?.slot === 'content').length, 0);
+  assert.ok(dialog.dialog.children.length > 0 && textOf(dialog.dialog).includes('Create a drive'));
+});
+
+test('each field sits in a row with its information icon, and the first real control takes focus', () => {
+  const { dialog } = fixture(); dialog.open('create');
+  dialog.stage = 'details'; dialog.draft.repository = 'pat/x1'; dialog.render();
+  const rows = all(dialog.dialog, node => node.className === 'with-info');
+  assert.ok(rows.length >= 4, 'name, letter, password and confirm are wrapped');
+  let focused = null; dialog.shadowRoot.querySelector = () => ({ focus() { focused = 'first'; } });
+  dialog.focusFirst(); assert.equal(focused, 'first');
+});
+
 test('Cantonese and bilingual wording reach the dialog', async () => {
   const { dialog } = fixture(); dialog.open('create');
   dialog.setLanguage('yue'); assert.ok(textOf(dialog.dialog).includes('喺呢部電腦'));
