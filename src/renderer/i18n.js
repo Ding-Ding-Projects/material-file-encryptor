@@ -1,5 +1,10 @@
 export const cantonese = {
 "Automatic unlock is available only for the first vault. Reopen additional vaults after restarting the app.":"只有第一個保險庫可以自動解鎖。重新啟動程式後，請再次開啟其他保險庫。",
+"New Docker Hub drive":"新增 Docker Hub 磁碟",
+"Open a drive from Docker Hub":"由 Docker Hub 開啟磁碟",
+"Use Docker Hub, no folders":"用 Docker Hub，唔使揀資料夾",
+"Open from Docker Hub":"由 Docker Hub 開啟",
+"Docker Hub drives need the Windows desktop app.":"Docker Hub 磁碟需要 Windows 桌面版程式。",
 "Vault sessions":"保險庫工作階段",
 "Selected vault":"已選保險庫",
 "Vault":"保險庫",

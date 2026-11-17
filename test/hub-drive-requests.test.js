@@ -121,3 +121,14 @@ test('the repository is created public through the existing service and only for
   await assert.rejects(requests('hubEnsureRepository', { repository: 'Pat/Bad Name' }), { code: 'INVALID_NAME' });
   assert.equal(HUB_DRIVE_METHODS.has('hubRestoreSnapshot'), true);
 });
+
+test('Show folder opens only a folder this session allocated or restored', async t => {
+  const { catalog, locations, base } = await world(t);
+  const opened = [];
+  const requests = createHubDriveRequests({ locations, catalog, docker: { registryPullAuthorization: async () => ({}) }, workRoot: path.join(base, 'work'), chooseParent: async () => null, openFolder: async folder => { opened.push(folder); } });
+  const folders = await requests('hubDriveFolders');
+  assert.deepEqual(await requests('hubShowFolder', { driveId: folders.driveId }), { shown: true });
+  assert.deepEqual(opened, [folders.storageDir]);
+  await assert.rejects(requests('hubShowFolder', { driveId: 'ffffffffffffffff' }), { code: 'NOT_FOUND' });
+  await assert.rejects(requests('hubShowFolder', { driveId: '../escape' }), { code: 'INVALID_NAME' });
+});

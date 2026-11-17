@@ -139,7 +139,7 @@ const hubCatalog = createHubCatalog({
   hub: { get: (pathname, signal) => registryDocker.hubGet(pathname, signal) },
   reader: createHubRegistryReader({ authorize: (repository, signal) => registryDocker.registryPullAuthorization(repository, signal) }),
   account: async signal => { const inspection = await registryDocker.inspectRegistrySignIn(signal); if (inspection?.state === 'signed-in' && inspection.account) return inspection.account; const error = Error('Sign in to Docker Hub first.'); error.code = ['missing', 'stale'].includes(inspection?.state) ? 'SIGN_IN_REQUIRED' : 'PROVIDER_UNAVAILABLE'; throw error; } });
-const hubDrive = createHubDriveRequests({ locations: driveLocations, catalog: hubCatalog, docker: registryDocker, workRoot: path.join(registryRoot, 'hub-restore'), chooseParent: () => chooseRestoreParent() });
+const hubDrive = createHubDriveRequests({ locations: driveLocations, catalog: hubCatalog, docker: registryDocker, workRoot: path.join(registryRoot, 'hub-restore'), chooseParent: () => chooseRestoreParent(), openFolder: folder => openPath(folder) });
 const registryBackupAll = createRegistryBackupAll({ docker: registryDocker, sync: registrySync,
   drives: () => [...vaultSessions.rows].map(([sessionId, { state: row, preferences: saved }]) => ({ sessionId, locked: row.locked !== false,
     name: (row.locked !== false ? saved.driveName || row.driveName : row.driveName || saved.driveName) || '', letter: (row.locked !== false ? saved.driveLetter || row.driveLetter : row.driveLetter) || '',
@@ -324,7 +324,7 @@ async function dispatchRequest(method, params, context) {
   }
   if (HUB_DRIVE_METHODS.has(method)) {
     if (!helper || (verificationMode || testMode) && !registryTestDestination) throw Error('Docker Hub drives require the native vault helper.');
-    if (!['hubCatalogStatus', 'hubCatalogCancel', 'hubRestoreStatus', 'hubRestoreCancel'].includes(method) && (quitPending || shuttingDown || updateInstallLease)) throw Error('The application is preparing to close.');
+    if (!['hubCatalogStatus', 'hubCatalogCancel', 'hubRestoreStatus', 'hubRestoreCancel', 'hubShowFolder'].includes(method) && (quitPending || shuttingDown || updateInstallLease)) throw Error('The application is preparing to close.');
     return hubDrive(method, params);
   }
   if (REGISTRY_METHODS.has(method)) {

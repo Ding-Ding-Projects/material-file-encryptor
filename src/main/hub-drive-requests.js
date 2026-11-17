@@ -3,7 +3,7 @@ import path from 'node:path';
 import { createRegistryStorage } from './registry-storage.js';
 import { restoreSnapshotToFolder, restoreFolderName } from './registry-restore.js';
 
-export const HUB_DRIVE_METHODS = new Set(['hubDriveFolders', 'hubDriveFoldersDiscard', 'hubCatalogStart', 'hubCatalogStatus', 'hubCatalogCancel', 'hubEnsureRepository', 'hubRestoreSnapshot', 'hubRestoreStatus', 'hubRestoreCancel']);
+export const HUB_DRIVE_METHODS = new Set(['hubDriveFolders', 'hubDriveFoldersDiscard', 'hubCatalogStart', 'hubCatalogStatus', 'hubCatalogCancel', 'hubEnsureRepository', 'hubRestoreSnapshot', 'hubRestoreStatus', 'hubRestoreCancel', 'hubShowFolder']);
 const REPOSITORY = /^[a-z0-9][a-z0-9_-]{1,38}\/[a-z0-9]+(?:(?:[._]|__|-+)[a-z0-9]+)*$/;
 const DIGEST = /^sha256:[a-f0-9]{64}$/;
 const fail = (code, message) => { const error = Error(message); error.code = code; return error; };
@@ -15,7 +15,8 @@ const SAFE = new Set(['SIGN_IN_REQUIRED', 'REPOSITORY_CREATE_DENIED', 'REPOSITOR
  * has itself found it in a repository the signed-in account can read.
  *   chooseParent()  the existing native folder chooser (already validated), or null when cancelled.
  */
-export function createHubDriveRequests({ locations, catalog, docker, workRoot, chooseParent, createStorage = createRegistryStorage }) {
+export function createHubDriveRequests({ locations, catalog, docker, workRoot, chooseParent, openFolder = async () => {}, createStorage = createRegistryStorage }) {
+  const known = new Map();
   let restore = null;
   const restoreStatus = () => ({ state: restore?.state ?? 'idle', completedFiles: restore?.completedFiles ?? 0, completedBytes: restore?.completedBytes ?? 0, result: restore?.result ?? null, error: restore?.error ?? null });
 
@@ -41,8 +42,8 @@ export function createHubDriveRequests({ locations, catalog, docker, workRoot, c
       const outcome = await restoreSnapshotToFolder({ client, digest: job.digest, storageDir, workRoot, signal: job.controller.signal,
         onProgress: progress => Object.assign(job, progress) });
       if (outcome.vaultId !== drive.id) throw fail('MISMATCH', 'The restored snapshot does not belong to the drive you chose.');
-      job.state = 'done';
-      job.result = { driveId: allocation.driveId, storageDir, cacheDir: allocation.cacheDir, vaultId: outcome.vaultId, driveName: outcome.driveName ?? drive.name ?? null, repository: repository.id, visibility: repository.visibility, ownerOnly: allocation.ownerOnly };
+      job.state = 'done'; known.set(allocation.driveId, storageDir);
+      job.result ={ driveId: allocation.driveId, storageDir, cacheDir: allocation.cacheDir, vaultId: outcome.vaultId, driveName: outcome.driveName ?? drive.name ?? null, repository: repository.id, visibility: repository.visibility, ownerOnly: allocation.ownerOnly };
     } catch (error) {
       job.state = job.controller.signal.aborted ? 'cancelled' : 'failed';
       job.error = { code: SAFE.has(error?.code) || error?.code === 'NOT_FOUND' || error?.code === 'MISMATCH' ? error.code : 'RESTORE_FAILED' };
@@ -53,7 +54,13 @@ export function createHubDriveRequests({ locations, catalog, docker, workRoot, c
   }
 
   return async function hubDriveRequest(method, params = {}) {
-    if (method === 'hubDriveFolders') { const folders = await locations.allocate(); return { driveId: folders.driveId, storageDir: folders.storageDir, cacheDir: folders.cacheDir, ownerOnly: folders.ownerOnly }; }
+    if (method === 'hubShowFolder') {
+      if (!/^[a-f0-9]{16}$/.test(String(params.driveId))) throw fail('INVALID_NAME', 'Invalid drive folder.');
+      const folder = known.get(params.driveId);
+      if (!folder) throw fail('NOT_FOUND', 'That drive folder is not known to this session.');
+      await openFolder(folder); return { shown: true };
+    }
+    if (method === 'hubDriveFolders') { const folders = await locations.allocate(); known.set(folders.driveId, folders.storageDir); return { driveId: folders.driveId, storageDir: folders.storageDir, cacheDir: folders.cacheDir, ownerOnly: folders.ownerOnly }; }
     if (method === 'hubDriveFoldersDiscard') return { discarded: await locations.discardEmpty(params.driveId) };
     if (method === 'hubCatalogStart') return catalog.start({ force: params.force === true });
     if (method === 'hubCatalogStatus') return catalog.snapshot();

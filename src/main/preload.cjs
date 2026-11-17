@@ -10,7 +10,7 @@ const api = {
   hubDriveFolders: () => invoke('hubDriveFolders'), hubDriveFoldersDiscard: driveId => invoke('hubDriveFoldersDiscard', { driveId }),
   hubCatalogStart: (options = {}) => invoke('hubCatalogStart', options), hubCatalogStatus: () => invoke('hubCatalogStatus'), hubCatalogCancel: () => invoke('hubCatalogCancel'),
   hubEnsureRepository: repository => invoke('hubEnsureRepository', { repository }), hubRestoreSnapshot: selection => invoke('hubRestoreSnapshot', selection),
-  hubRestoreStatus: () => invoke('hubRestoreStatus'), hubRestoreCancel: () => invoke('hubRestoreCancel'),
+  hubRestoreStatus: () => invoke('hubRestoreStatus'), hubRestoreCancel: () => invoke('hubRestoreCancel'), hubShowFolder: driveId => invoke('hubShowFolder', { driveId }),
   registryStorageStatus: () => invoke('registryStorageStatus'), configureRegistryStorage: configuration => invoke('configureRegistryStorage', configuration),
   syncRegistryStorage: () => invoke('syncRegistryStorage'), listRegistrySnapshots: () => invoke('listRegistrySnapshots'),
   restoreRegistrySnapshot: selection => invoke('restoreRegistrySnapshot', selection), cancelRegistryStorage: () => invoke('cancelRegistryStorage'),

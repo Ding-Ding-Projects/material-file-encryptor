@@ -480,6 +480,7 @@ function updateDialog() {
  $('password-fields').hidden = isKey; $('key-fields').hidden = !isKey;
  $('password-input').required = !isKey; $('confirm-password').required = creating && !isKey; $('key-path').required = isKey;
  $('password-input').autocomplete = creating ? 'new-password' : 'current-password';
+ const hubRoute = $('vault-use-hub'); hubRoute.hidden = upgrading || !api?.hubDriveFolders; setText('vault-use-hub', creating ? 'Use Docker Hub, no folders' : 'Open from Docker Hub');
 }
 const DRIVE_NAME_ERROR = 'Use 1 to 32 characters. Slashes, colons, asterisks, question marks, quotes, angle brackets, vertical bars and control characters are not allowed.';
 const normalizedDriveLetter = value => /^[A-Z]:?$/i.test(String(value || '')) ? String(value)[0].toUpperCase() : '';
@@ -543,6 +544,18 @@ function prepareVaultForm(mode) {
  updateDriveLetters(false);
  $('drive-name').value = normalizeDriveName(state?.driveName) || normalizeDriveName(state?.defaults?.driveName) || DEFAULT_DRIVE_NAME;
  updateDialog(); renderAvailability();
+}
+let hubDriveView = null;
+/** The Docker Hub drive dialog is loaded the first time it is needed. It owns no folder choice: the host allocates the folders. */
+async function openHubDrive(mode) {
+ if (!api?.hubDriveFolders) { showError(t('Docker Hub drives need the Windows desktop app.'),true); return; }
+ if (!hubDriveView) {
+  const module = await import('./features/docker-hub-drive/index.js');
+  hubDriveView = module.mountHubDriveDialog(document.body, { api, translate: t, language: preferences.language, getVaultState: () => state });
+  hubDriveView.onUseThisComputer(() => openVaultDialog('create'));
+  workspaceDisposers.push(subscribeLanguage(() => hubDriveView?.setLanguage(preferences.language)), () => { hubDriveView?.destroy(); hubDriveView = null; });
+ }
+ if (mode === 'open') hubDriveView.openExisting(); else hubDriveView.openCreate();
 }
 function openVaultDialog(mode) { prepareVaultForm(mode); $('vault-dialog').showModal(); $('storage-input').focus(); }
 /** Unlocks from the in-tab card: the saved folders and letter fill the same form the dialog uses, so both paths send identical requests. */
@@ -633,6 +646,7 @@ listen('vault-form','submit',async event => {
  if (result?.ok) { closeVaultDialog(); if(unlocking)unlockMotion.play('success'); }
  else if (result && unlocking) unlockMotion.play('failure');
 });
+listen('vault-use-hub','click',() => { const unlocking = dialogMode === 'unlock'; closeVaultDialog(); void openHubDrive(unlocking ? 'open' : 'create'); });
 listen('lock-button','click',() => run('Locking drive…',() => api.lock(),'Drive locked.'));
 window.addEventListener('mfe:open-split-storage',() => { if(!foundation)return; foundation.model.openTab({id:'split-storage',label:canonicalViewLabels['split-storage']}); foundation.shell.activate('split-storage'); });
 window.addEventListener('mfe:open-cloud-backup',() => { if(!foundation)return; const title=canonicalViewLabels.storage||'Docker Hub storage'; foundation.model.openTab({id:'storage',label:title}); foundation.shell.activate('storage'); requestAnimationFrame(()=>featureMounts.get('storage')?.focusBackup?.(false)); });
@@ -962,7 +976,7 @@ function renderOperations() {
 }
 function workspaceCommands() {
  const command=(id,label,run)=>({id,label:{en:label,yue:cantonese[label]||enhancedLabels[label]||label},run});
- const commands=[command('vault:create','Create a drive',()=>openVaultDialog('create')),command('vault:unlock','Unlock existing drive',()=>openVaultDialog('unlock')),command('vault:lock','Lock drive',()=>$('lock-button').click()),command('vault:import','Import files',importFiles),command('vault:sync','Sync now',()=>$('sync-button').click()),command('file:open','Open',openSelected),command('file:export','Export copy',()=>$('export-button').click()),command('file:offline','Keep offline',()=>$('offline-button').click()),command('file:release','Remove offline copy',()=>$('release-button').click()),command('history:save','Save version now',()=>$('save-version').click()),command('settings:vocabulary','Your vocabulary',()=>{foundation.shell.activate('settings');$('vocabulary-label').focus();})];
+ const commands=[command('vault:create','Create a drive',()=>openVaultDialog('create')),command('vault:unlock','Unlock existing drive',()=>openVaultDialog('unlock')),command('vault:hub-create','New Docker Hub drive',()=>void openHubDrive('create')),command('vault:hub-open','Open a drive from Docker Hub',()=>void openHubDrive('open')),command('vault:lock','Lock drive',()=>$('lock-button').click()),command('vault:import','Import files',importFiles),command('vault:sync','Sync now',()=>$('sync-button').click()),command('file:open','Open',openSelected),command('file:export','Export copy',()=>$('export-button').click()),command('file:offline','Keep offline',()=>$('offline-button').click()),command('file:release','Remove offline copy',()=>$('release-button').click()),command('history:save','Save version now',()=>$('save-version').click()),command('settings:vocabulary','Your vocabulary',()=>{foundation.shell.activate('settings');$('vocabulary-label').focus();})];
  for(const key of ['theme','language','emoji','funnyEnglish','funnyCantonese']){const field=$(`${key}-setting`);const label=field.getAttribute('aria-label')||key;commands.push({id:`settings:${key}`,label:{en:label,yue:cantonese[label]||label},description:{en:'Application preferences',yue:'程式偏好設定'},group:{en:'Settings',yue:'設定'},control:{type:controlKind(field)==='select'?'select':['switch','checkbox'].includes(controlKind(field))?'switch':'range',min:Number(field.min)||0,max:Number(field.max)||100,options:controlKind(field)==='select'?[...field.options].map(option=>({value:option.value,label:{en:option.textContent,yue:cantonese[option.textContent]||option.textContent}})):undefined,get:()=>preferences[key],set:value=>{preferences[key]=value;savePreferences();applyPreferences();}},reveal:()=>{foundation.shell.activate('settings');field.scrollIntoView({block:'center'});field.focus();}});}
  // Every personalization setting is reachable from the palette, whichever Personalization tab is showing.
  commands.push(...personalizationSettingCommands({translate:text=>translateWorkspace(text,{language:'yue'}),open:(tab,label)=>{foundation.model.openTab({id:'personalization',label:canonicalViewLabels.personalization});foundation.shell.activate('personalization');const mounted=featureMounts.get('personalization');mounted?.open?.(tab);queueMicrotask(()=>{const root=document.getElementById('view-personalization');const wanted=t(label);const target=[...root?.querySelectorAll(CONTROL_SELECTOR+',input,select')||[]].find(node=>[node.getAttribute('aria-label'),node.label].includes(wanted)||[node.getAttribute('aria-label'),node.label].includes(label));target?.scrollIntoView?.({block:'center'});target?.focus?.();});}}));
