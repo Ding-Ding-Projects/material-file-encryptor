@@ -9,6 +9,7 @@ import { validateRegistrySchedule, nextRegistryRun, registryOccurrence } from '.
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 const identity = stat => `${stat.dev}:${stat.ino}`;
 const ERROR = 'Registry synchronization is incomplete. Local encrypted data was retained. Review the destination and retry.';
+const SAFE_REASONS = new Set(['The destination contains a different vault.', 'Snapshot catalogue exceeds this client limit. Narrow the repository before retrying.', 'Snapshot catalogue exceeds the metadata limit.', 'Native synchronization did not settle.', 'Native synchronization needs attention.']);
 async function physical(root) {
   if (typeof root !== 'string' || !path.isAbsolute(root)) throw Error('Choose an absolute local storage folder.');
   for (let cursor = path.resolve(root); ; cursor = path.dirname(cursor)) {
@@ -92,7 +93,12 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
     controller.signal.addEventListener('abort', cancelNative, { once: true });
     row.lastError = null; row.interrupted = true; row.progress = null;
     try { await save(); return await action(current, row, controller.signal); }
-    catch { row.state = controller.signal.aborted ? 'cancelled' : 'incomplete'; row.lastError = ERROR; throw Error(ERROR); }
+    catch (error) {
+      row.state = controller.signal.aborted ? 'cancelled' : 'incomplete';
+      // Plain reasons written by this service are shown; anything else keeps the generic message.
+      const reason = !controller.signal.aborted && SAFE_REASONS.has(error?.message) ? ' ' + error.message : '';
+      row.lastError = ERROR + reason; throw Error(ERROR + reason);
+    }
     finally {
       clearTimeout(timer); controller.signal.removeEventListener('abort', cancelNative); row.interrupted = active.leases.size > 0;
       active.settled = true;
@@ -181,7 +187,9 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
     sync(id) {
       return exclusive(id, async (current, row, signal) => {
         const client = storage(row); row.state = 'discovering'; let downloaded = 0;
-        const revisions = await client.list(signal);
+        const ownVaultId = JSON.parse(await fs.readFile(path.join(current.storageDir, 'vault.json'), 'utf8')).VaultId;
+        // Other drives may share this repository; only this drive's snapshots take part in its synchronization.
+        const revisions = await client.list(signal, { vaultId: ownVaultId });
         row.progress = { phase: 'downloading', completedFiles: 0, completedBytes: 0, totalFiles: revisions.reduce((n, revision) => n + revision.snapshot.fileCount, 0) };
         // Native admission proves this session owns the selected root before any source write.
         const admission = await acquire(id, current.storageDir);

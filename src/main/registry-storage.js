@@ -185,7 +185,10 @@ export function createRegistryStorage({ destination, authorize, fetcher = fetch,
       if (sha(await bounded(check, 32 * 1024 ** 2, signal)) !== digest) throw fail();
       return { digest, tag, repository: target.repository, verified: true };
     },
-    async list(signal) {
+    // With a vault id, only that drive's snapshots are read, so one repository can hold several drives.
+    async list(signal, { vaultId } = {}) {
+      if (vaultId !== undefined && !/^[a-f0-9]{32}$/.test(vaultId)) throw fail();
+      const prefix = vaultId ? `mfe-${vaultId}-` : 'mfe-';
       signal = signal ? AbortSignal.any([signal, AbortSignal.timeout(3600000)]) : AbortSignal.timeout(3600000);
       await authorization(signal, true);
       const tags = new Set(); let url = `${base}/tags/list?n=100`; const pages = new Set();
@@ -196,7 +199,7 @@ export function createRegistryStorage({ destination, authorize, fetcher = fetch,
         const link = response.headers.get('link');
         let body; try { body = JSON.parse(await bounded(response, 1024 ** 2, signal)); } catch { throw fail(); }
         if (body.name !== target.repository || (body.tags !== null && !Array.isArray(body.tags))) throw fail();
-        for (const tag of body.tags || []) { if (TAG.test(tag)) tags.add(tag); }
+        for (const tag of body.tags || []) { if (TAG.test(tag) && tag.startsWith(prefix)) tags.add(tag); }
         if (tags.size > 1000) throw Error('Snapshot catalogue exceeds this client limit. Narrow the repository before retrying.');
         if (link && !/^<[^>]+>;\s*rel="next"$/.test(link)) throw fail();
         url = link ? new URL(link.match(/^<([^>]+)>/)[1], target.endpoint).href : null;
@@ -208,6 +211,7 @@ export function createRegistryStorage({ destination, authorize, fetcher = fetch,
         const revision = await readRevision(sha(raw), signal);
         metadataBytes += Buffer.byteLength(JSON.stringify(revision.snapshot)) + raw.length;
         if (metadataBytes > 64 * 1024 ** 2) throw Error('Snapshot catalogue exceeds the metadata limit.');
+        if (vaultId && revision.snapshot.vaultId !== vaultId) continue;
         const { files, ...summary } = revision.snapshot;
         revisions.push({ digest: revision.digest, snapshot: { ...summary, fileCount: files.length }, tag });
       }

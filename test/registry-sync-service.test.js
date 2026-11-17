@@ -145,3 +145,21 @@ test('calendar retry consumes the original repeated local occurrence',async t=>{
   clock=Date.parse('2026-11-01T05:30:00Z');await f.service.tick();assert.equal((await f.service.status('main')).nextDue,Date.parse('2026-11-01T05:40:00Z'));
   clock=Date.parse('2026-11-01T05:40:00Z');await f.service.tick();assert.equal((await f.service.status('main')).nextDue,Date.parse('2026-11-08T06:30:00Z'));
 });
+
+test('synchronization asks the registry only for this drive, so one repository can hold several drives', async t => {
+  const seen = [];
+  const f = await fixture(t, { storageFactory: () => ({ list: async (_signal, options) => { seen.push(options); throw Error('offline'); } }) });
+  await f.service.configure('main', configuration());
+  await assert.rejects(f.service.sync('main'));
+  assert.deepEqual(seen, [{ vaultId: 'a'.repeat(32) }]);
+});
+test('a known plain reason is shown with the generic message and other failures stay generic', async t => {
+  const other = { digest: 'sha256:' + 'b'.repeat(64), snapshot: { vaultId: 'c'.repeat(32), fileCount: 1 }, tag: 'mfe-' + 'c'.repeat(32) + '-' + 'd'.repeat(32) };
+  const f = await fixture(t, { storageFactory: () => ({ list: async () => [other] }) });
+  await f.service.configure('main', configuration());
+  await assert.rejects(f.service.sync('main'), /different vault/);
+  assert.match((await f.service.status('main')).lastError, /incomplete.*different vault/);
+  const g = await fixture(t, { storageFactory: () => ({ list: async () => { throw Error('C:\private\path secret detail'); } }) });
+  await g.service.configure('main', configuration());
+  await assert.rejects(g.service.sync('main'), error => !/private|secret/.test(error.message));
+});

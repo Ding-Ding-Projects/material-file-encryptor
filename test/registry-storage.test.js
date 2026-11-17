@@ -104,3 +104,19 @@ test('real registry preserves concurrent heads and verifies downloads', { skip: 
   assert.equal(received.get('vault.json'), 'synthetic-merged');
   assert.deepEqual((await storage.readRevision(c.digest)).snapshot.parents, [a.digest, b.digest]);
 });
+
+test('listing for one drive skips every other drive in the same repository', async () => {
+  const { createRegistryStorage: create } = await import('../src/main/registry-storage.js');
+  const mine = 'a'.repeat(32), theirs = '0'.repeat(32), requested = [];
+  const tags = [`mfe-${theirs}-${'1'.repeat(32)}`, `mfe-${mine}-${'2'.repeat(32)}`];
+  const fetcher = async url => { const u = new URL(url); requested.push(u.pathname);
+    if (u.pathname.endsWith('/tags/list')) return new Response(JSON.stringify({ name: 'test/vault', tags }), { status: 200 });
+    return new Response('', { status: 500 }); };
+  const storage = create({ destination: { endpoint: 'http://127.0.0.1:15221', repository: 'test/vault', testOnly: true }, fetcher });
+  await assert.rejects(storage.list(undefined, { vaultId: mine }));
+  assert.equal(requested.some(p => p.includes(theirs)), false, 'another drive\'s snapshots are never fetched');
+  assert.equal(requested.some(p => p.includes(mine)), true);
+  requested.length = 0;
+  await assert.rejects(storage.list(undefined, { vaultId: 'not-a-vault-id' }));
+  assert.equal(requested.length, 0, 'an invalid drive id is refused before any request');
+});
