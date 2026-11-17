@@ -12,9 +12,9 @@
 
 **Desktop icon resources:** [installed icon packaging](docs/features/desktop/installed-icons.md) documents the folder-and-lock mark, executable and shortcut resources, installer branding, and the distinction between source checks and installed verification.
 
-![Local packaged 0.2.0 setup guide in English and light theme](docs/images/captures/installed-icons-ca91b020/setup-guide-light-en.png)
+![Home with a mounted drive, light, English](docs/images/captures/redesign-dc166dc9/home-mounted-light-en.png)
 
-Local packaged 0.2.0 at source `ca91b0209c3aa0bf0f378f62a60cefc778ef869a`, captured on 2026-10-17 at 03:45:42.410 UTC. This is the initial setup welcome screen at 1180 × 850, English, light theme, renderer scale 1. Native window icon handles were checked separately; this image does not establish an installed copy, rendered tray or taskbar icons, setup completion, or full workflows. [Capture inventory](docs/evidence/installed-icons-ca91b020-inventory.json). Earlier captures retain their original provenance.
+Home in the current build, source `dc166dc9`. More captures, with a receipt for each, are in [Current captures](#current-captures); earlier captures are in the [screenshot archive](docs/screenshots-archive.md).
 
 **Ordinary installed 1.823.1 verification:** Version 1.823.1 is verified in the ordinary user installation from release source `14d6e07636a1f1d62e6dd345273a0c6866664562`. All 910 payload files matched; four opened-file handles resolved to ordinary installation paths. Independent queries through the existing Explorer desktop confirmed the installation folder and Desktop/Start menu shortcut targets. The installer operation returned 0. Its original continuous observer failed, so operation exit and recorded-process absence were recovered separately and remain separate verdicts. The detailed original receipts remain preserved privately. The installed English/light initial setup screen and five native window icon handles were observed with an isolated verification profile. Both ordinary-shell shortcut icon images were separately inspected and show the green folder-lock mark with the shortcut arrow; this is extracted shell-icon evidence, not a rendered Explorer/taskbar/tray screenshot. The runtime observer failed its Python-wrapper identity handshake; separate recovery found every recorded identity absent and the hidden desktop unavailable, while replacement processes were left untouched. Console observation covers only the capture interval, not startup history. Rendered taskbar/tray icons, full workflows and a disposable fresh-machine installation remain unverified. Independent recovery is now recorded separately. Canonical capture promotion remains pending because release source 14d6e07636a1f1d62e6dd345273a0c6866664562 differs from verifier checkout edf13cba77968c81a3c7eca392fdc1f740126868. The genuine capture remains private and unpromoted; no tool-context image is presented as ordinary-installed proof.
 
@@ -134,7 +134,7 @@ Package inspection also validates each ASAR file's declared SHA-256 and block ha
 
 The inventory contains **109 required feature identifiers and 218 desktop/website rows**. It does not count completed features. The [goal](GOAL.md), [roadmap](ROADMAP.md) and [interface design](DESIGN.md) retain the outstanding controls, guidance, accessibility, language/theme/scale states and full visual matrix.
 
-Two inspected source-bound documentation screenshots now appear below. Current native-product replacements and the full visual matrix remain pending.
+Inspected captures of the rebuilt desktop app appear in [Current captures](#current-captures), with their receipt. The full visual matrix across every language, theme and scale remains pending.
 
 ### Verified preview captures
 
@@ -186,334 +186,132 @@ Material Design 3 applies to the desktop, documentation website, extension and n
 
 ### Current captures
 
-Every image below is a genuine capture of a real build; none is a mock, design preview or edited image. Each group is collapsed: choose its heading to open it. Capture times are unavailable because no validated timestamp was recorded, and earlier captures were withdrawn when these replaced them. They remain unchanged in Git history and are listed with their hashes in [the gallery review](docs/site/gallery-review.json).
+Every image below is a genuine capture of the packaged app built from source `dc166dc9` (version 0.2.0). Each was taken in its own isolated profile with neutral test files, inspected by eye, and left unedited. The [capture manifest](docs/images/captures/redesign-dc166dc9/manifest.json) records every image's hash, size, viewport, theme, language and capture method, and lists what could not be captured. Captures of earlier builds are kept in the [screenshot archive](docs/screenshots-archive.md).
 
-#### Release 1.779.1: setup, destructive confirmation, wording, element locks and settings
+#### Home and navigation
 
-Fifteen captures of the extracted full release package for version 1.779.1, built from source `b83449e`. This was a release package run, not an installed copy. Each frame was taken by window handle on a task-owned hidden desktop with an isolated profile and a throwaway vault holding neutral test files. The information icons in these frames are the compact 28 pixel controls. Machine-readable details are in [the capture manifest](docs/images/captures/reproof-1.779.1/manifest.json) and [the proof record](docs/evidence/installed-proof-1.779.1.json). Captures these replaced are listed in [the archive](design/superseded-captures.md).
+The Home page opens on a card for each part of the app. The New tab catalog and the navigation menus each carry their own search box and Regex builder.
 
-| Setup guide, Look and language | Setup guide, Look and language, bilingual | Setup guide, Requirements |
+<details>
+<summary>Home, New tab catalog and Settings menu (6)</summary>
+
+| Home, drive locked | Home, drive mounted | Home, dark |
 |---|---|---|
-| ![Setup guide, Look and language step with the choice search icon beside each select](docs/images/captures/reproof-1.779.1/desktop/setup-guide-look-light-en.png) | ![Setup guide, Look and language step in English and Cantonese](docs/images/captures/reproof-1.779.1/desktop/setup-guide-look-light-bilingual.png) | ![Setup guide, Requirements step with Back, Skip this step, Next and Skip setup](docs/images/captures/reproof-1.779.1/desktop/setup-guide-requirements-light-en.png) |
+| ![Home with flagship cards for the drive, offline files, history, Recycle Bin, Docker Hub storage, local access and Local tools, drive locked, light, English](docs/images/captures/redesign-dc166dc9/home-locked-light-en.png) | ![Home with a mounted drive, card status lines and recent activity, light, English](docs/images/captures/redesign-dc166dc9/home-mounted-light-en.png) | ![Home with a mounted drive, dark, English](docs/images/captures/redesign-dc166dc9/home-mounted-dark-en.png) |
 
-| Setup guide, Finish, dark | Drive, two files selected, dark | Delete confirmation with two keys and a slider, dark |
+| Home, English and Cantonese | New tab catalog | Settings menu |
 |---|---|---|
-| ![Setup guide, Finish step with the saved summary, dark](docs/images/captures/reproof-1.779.1/desktop/setup-guide-finish-dark-en.png) | ![Drive, two files selected for a bulk action, dark](docs/images/captures/reproof-1.779.1/desktop/drive-bulk-selection-dark-en.png) | ![Confirm destructive action for deleting two selected files, dark](docs/images/captures/reproof-1.779.1/desktop/confirm-bulk-delete-dark-en.png) |
+| ![Home with a mounted drive, light, English and Cantonese together](docs/images/captures/redesign-dc166dc9/home-mounted-light-bilingual.png) | ![New tab catalog listing every page, tool and setting with its own search box and Regex builder button](docs/images/captures/redesign-dc166dc9/new-tab-catalog-light-en.png) | ![Settings menu opened from the navigation rail with a scoped filter, a Regex builder button and the settings destinations](docs/images/captures/redesign-dc166dc9/settings-menu-light-en.png) |
 
-| Force Lock confirmation, dark | Personal wording applied, full-window announcement, dark | Invalid wording file, transient notice |
+</details>
+
+#### Drive, history and recovery
+
+A mounted drive shows the folder tree, command bar, file list and a details panel with the encrypted part map and versions.
+
+<details>
+<summary>Locked drive, creating a drive, files, details, History and Recycle Bin (10)</summary>
+
+| Drive, locked | Create a drive | Drive, files |
 |---|---|---|
-| ![Confirm destructive action for Force Lock, dark](docs/images/captures/reproof-1.779.1/desktop/confirm-force-lock-dark-en.png) | ![Personal wording applied from a dropped file, with the full-window announcement and a saved notice, dark](docs/images/captures/reproof-1.779.1/desktop/wording-applied-celebration-dark-en.png) | ![Invalid personal wording file refused with a transient notice and no banner](docs/images/captures/reproof-1.779.1/desktop/invalid-wording-notice-light-en.png) |
+| ![Drive page with the locked card offering Unlock existing drive and Create a drive, light, English](docs/images/captures/redesign-dc166dc9/drive-locked-light-en.png) | ![Create a drive dialog with the encrypted storage folder, cache folder and drive letter filled in with neutral folders](docs/images/captures/redesign-dc166dc9/create-drive-dialog-light-en.png) | ![Mounted drive with a folder tree, command bar, file list, details panel and mounted drive panel, light, English](docs/images/captures/redesign-dc166dc9/drive-files-light-en.png) |
 
-| Lock an element dialog with Create lock visible | Settings, Appearance and language, dark |
+| Drive, one file selected | Command bar overflow menu | Drive, files, dark |
+|---|---|---|
+| ![Mounted drive with one file selected, showing the encrypted part map, its versions and cloud backup status in the details panel](docs/images/captures/redesign-dc166dc9/drive-file-selected-light-en.png) | ![Drive command bar overflow menu with a filter box, a Regex builder button and the actions that do not fit on the bar](docs/images/captures/redesign-dc166dc9/drive-command-bar-overflow-light-en.png) | ![Mounted drive file list, dark, English](docs/images/captures/redesign-dc166dc9/drive-files-dark-en.png) |
+
+| Drive, dark, bilingual | History | Recycle Bin |
+|---|---|---|
+| ![Mounted drive file list, dark, English and Cantonese together](docs/images/captures/redesign-dc166dc9/drive-files-dark-bilingual.png) | ![History page listing saved versions with Restore as new version actions](docs/images/captures/redesign-dc166dc9/history-light-en.png) | ![Recycle Bin page with its actions, search box and an empty table](docs/images/captures/redesign-dc166dc9/recycle-bin-light-en.png) |
+
+| Available offline |
+|---|
+| ![Available offline page with its empty state and the same details panel](docs/images/captures/redesign-dc166dc9/available-offline-light-en.png) |
+
+</details>
+
+#### Local tools
+
+Thirteen tools sit behind one launcher with its own search and Regex builder.
+
+<details>
+<summary>Tool launcher, regex builder, Base64, type generator, virtual disks, charts, sketch board and world generator (14)</summary>
+
+| Local tools | Local tools, dark | Local tools, dark, bilingual |
+|---|---|---|
+| ![Local tools page with a search box, a Regex builder button, category filters and tool tiles](docs/images/captures/redesign-dc166dc9/local-tools-light-en.png) | ![Local tools page, dark, English](docs/images/captures/redesign-dc166dc9/local-tools-dark-en.png) | ![Local tools page, dark, English and Cantonese together](docs/images/captures/redesign-dc166dc9/local-tools-dark-bilingual.png) |
+
+| Regex builder | Regex builder, expression | Base64 toolkit |
+|---|---|---|
+| ![Regex builder panel beside the Local tools search box with the regular expression switch off](docs/images/captures/redesign-dc166dc9/regex-builder-closed-light-en.png) | ![Regex builder with the regular expression switch on, an expression, a valid verdict and test text; the tool list is filtered to three matches](docs/images/captures/redesign-dc166dc9/regex-builder-expression-light-en.png) | ![Base64 toolkit with options, input and output areas and file actions](docs/images/captures/redesign-dc166dc9/tool-base64-light-en.png) |
+
+| Type generator | Virtual disks | Live charts |
+|---|---|---|
+| ![Type generator with a JSON sample, target language and inference options](docs/images/captures/redesign-dc166dc9/tool-type-generator-light-en.png) | ![Virtual disks page with attached disks, selected file and a create form](docs/images/captures/redesign-dc166dc9/tool-virtual-disks-light-en.png) | ![Live charts page with the drive used space chart for a mounted drive](docs/images/captures/redesign-dc166dc9/tool-live-charts-mounted-light-en.png) |
+
+| Sketch board | Server preparation | World generator, options |
+|---|---|---|
+| ![Sketch board with pen, shape and text tools above an empty canvas](docs/images/captures/redesign-dc166dc9/tool-sketch-board-light-en.png) | ![Server preparation page with the four server targets and the create server form](docs/images/captures/redesign-dc166dc9/tool-server-preparation-light-en.png) | ![World generator form with version loading, seed, difficulty and game mode](docs/images/captures/redesign-dc166dc9/world-generator-options-light-en.png) |
+
+| World generator, area | World generator, output |
 |---|---|
-| ![Lock an element dialog with the Create lock button visible at the default window size](docs/images/captures/reproof-1.779.1/desktop/lock-element-dialog-light-en.png) | ![Settings, Appearance and language, dark, with compact information icons](docs/images/captures/reproof-1.779.1/desktop/settings-appearance-dark-en.png) |
-
-#### Release 1.782.1: drive frames
-
-Six captures of the extracted full release package for version 1.782.1, built from source `4a49919`. This was a release package run, not an installed copy. Each frame was taken by window handle on a task-owned hidden desktop with an isolated profile and a throwaway vault holding neutral test files. They replace the older drive frames, which were taken before the compact information icons existed. Machine-readable details are in [the capture manifest](docs/images/captures/reproof-1.782.1/manifest.json) and [the proof record](docs/evidence/installed-proof-1.782.1.json).
-
-| Drive, locked | Drive, locked, bilingual | Drive, file list |
-|---|---|---|
-| ![Drive, locked, with an information icon beside Create a drive and Unlock existing drive](docs/images/captures/reproof-1.782.1/desktop/drive-locked-light-en.png) | ![Drive, locked, bilingual](docs/images/captures/reproof-1.782.1/desktop/drive-locked-light-bilingual.png) | ![Drive, file list with a compact information icon beside each file action](docs/images/captures/reproof-1.782.1/desktop/drive-files-light-en.png) |
-
-| Drive, one file selected | Drive, file list, bilingual | Drive, file list, dark, bilingual |
-|---|---|---|
-| ![Drive, one file selected, with Open, Export copy, Keep offline and Delete enabled](docs/images/captures/reproof-1.782.1/desktop/drive-file-selected-light-en.png) | ![Drive, file list, bilingual, Availability text wrapping beside its icon](docs/images/captures/reproof-1.782.1/desktop/drive-files-light-bilingual.png) | ![Drive, file list, dark, bilingual](docs/images/captures/reproof-1.782.1/desktop/drive-files-dark-bilingual.png) |
-
-#### Desktop application
-
-92 captures of the installed desktop application, version 1.702.1, built from source `9394b35`. Each was taken by window handle on a task-owned hidden desktop at 150 percent display scale (a 1280 by 800 window, saved at 1920 by 1200 pixels) with an isolated profile and a throwaway vault that holds test files only and uses neutral folder names. The capture host reported no frame showing a private path. The run captured 312 frames in all, covering 52 screens in light and dark themes and in English, Cantonese and bilingual modes; these are the ones published. A tabbed screen's own frame shows the tab named in its caption, and a few dark and bilingual frames show the last tab visited. Home is the first group. The drive, Pair a browser and server frames were retaken from a later installed release, listed with its own manifest below. The six drive frames were retaken again from the 1.782.1 release package, shown in the release 1.782.1 section above. The [capture manifest](docs/images/captures/refresh-b4cbf0e/desktop-capture-manifest.json) records every frame's hash.
-
-<details>
-<summary>Home and navigation (7)</summary>
-
-| Home | Home, dark | Home, Cantonese |
-|---|---|---|
-| ![Home](docs/images/captures/refresh-b4cbf0e/desktop/home-light-en.png) | ![Home, dark](docs/images/captures/refresh-b4cbf0e/desktop/home-dark-en.png) | ![Home, Cantonese](docs/images/captures/refresh-b4cbf0e/desktop/home-light-yue.png) |
-
-| Home, bilingual | New tab popover | New tab popover, dark |
-|---|---|---|
-| ![Home, bilingual](docs/images/captures/refresh-b4cbf0e/desktop/home-light-bilingual.png) | ![New tab popover](docs/images/captures/refresh-b4cbf0e/desktop/newtab-popover-light-en.png) | ![New tab popover, dark](docs/images/captures/refresh-b4cbf0e/desktop/newtab-popover-dark-en.png) |
-
-| New tab popover, bilingual |
-|---|
-| ![New tab popover, bilingual](docs/images/captures/refresh-b4cbf0e/desktop/newtab-popover-light-bilingual.png) |
+| ![World generator area picker with its chunk grid and size summary](docs/images/captures/redesign-dc166dc9/world-generator-area-light-en.png) | ![World generator output options with the licence checkbox and Generate the world button](docs/images/captures/redesign-dc166dc9/world-generator-output-light-en.png) |
 
 </details>
 
+#### Narrow layout at 390 by 844
+
+At 390 pixels wide the navigation moves into a drawer, cards stack and the file table becomes a list of cards.
+
 <details>
-<summary>Drive, offline and dialogs (18)</summary>
+<summary>Home, navigation drawer, tools and drive on a narrow window (6)</summary>
 
-| Drive, locked | Drive, locked, bilingual | Drive, unlocked, top of the page |
+| Home | Navigation drawer | Local tools |
 |---|---|---|
-| ![Drive, locked](docs/images/captures/reproof-1.782.1/desktop/drive-locked-light-en.png) | ![Drive, locked, bilingual](docs/images/captures/reproof-1.782.1/desktop/drive-locked-light-bilingual.png) | ![Drive, unlocked, top of the page](docs/images/captures/reproof-1.779.1/desktop/drive-toolbar-light-en.png) |
+| ![Home at 390 by 844 pixels with the cards stacked in one column](docs/images/captures/redesign-dc166dc9/home-390x844-light-en.png) | ![Navigation drawer at 390 by 844 pixels opened from the menu button](docs/images/captures/redesign-dc166dc9/navigation-drawer-390x844-light-en.png) | ![Local tools at 390 by 844 pixels with category chips and tool tiles](docs/images/captures/redesign-dc166dc9/local-tools-390x844-light-en.png) |
 
-| Drive, file list | Drive, file list, dark | Drive, one file selected |
+| Drive | Command bar overflow | Home, dark, bilingual |
 |---|---|---|
-| ![Drive, file list](docs/images/captures/reproof-1.782.1/desktop/drive-files-light-en.png) | ![Drive, file list, dark](docs/images/captures/reproof-1.779.1/desktop/drive-toolbar-dark-en.png) | ![Drive, one file selected](docs/images/captures/reproof-1.782.1/desktop/drive-file-selected-light-en.png) |
-
-| Drive, file list, bilingual, Availability text wrapping beside its icon | Drive, file list, dark, bilingual | Available offline |
-|---|---|---|
-| ![Drive, file list, bilingual, Availability text wrapping beside its icon](docs/images/captures/reproof-1.782.1/desktop/drive-files-light-bilingual.png) | ![Drive, file list, dark, bilingual](docs/images/captures/reproof-1.782.1/desktop/drive-files-dark-bilingual.png) | ![Available offline](docs/images/captures/refresh-b4cbf0e/desktop/offline-light-en.png) |
-
-| Available offline, Cantonese | Create a drive dialog | Create a drive dialog, dark |
-|---|---|---|
-| ![Available offline, Cantonese](docs/images/captures/refresh-b4cbf0e/desktop/offline-light-yue.png) | ![Create a drive dialog](docs/images/captures/refresh-b4cbf0e/desktop/create-drive-dialog-light-en.png) | ![Create a drive dialog, dark](docs/images/captures/refresh-b4cbf0e/desktop/create-drive-dialog-dark-en.png) |
-
-| Create a drive dialog, Cantonese | Unlock a drive dialog | Unlock a drive dialog, bilingual |
-|---|---|---|
-| ![Create a drive dialog, Cantonese](docs/images/captures/refresh-b4cbf0e/desktop/create-drive-dialog-light-yue.png) | ![Unlock a drive dialog](docs/images/captures/refresh-b4cbf0e/desktop/unlock-drive-dialog-light-en.png) | ![Unlock a drive dialog, bilingual](docs/images/captures/refresh-b4cbf0e/desktop/unlock-drive-dialog-light-bilingual.png) |
-
-| Lock message when a program still has files open | Force Lock confirmation | Force Lock confirmation, dark |
-|---|---|---|
-| ![Lock message when a program still has files open](docs/images/captures/refresh-b4cbf0e/desktop/lock-holder-message-light-en.png) | ![Force Lock confirmation](docs/images/captures/refresh-b4cbf0e/desktop/force-lock-confirm-light-en.png) | ![Force Lock confirmation, dark](docs/images/captures/reproof-1.779.1/desktop/confirm-force-lock-dark-en.png) |
+| ![Mounted drive file list at 390 by 844 pixels as cards](docs/images/captures/redesign-dc166dc9/drive-files-390x844-light-en.png) | ![Drive command bar overflow menu at 390 by 844 pixels](docs/images/captures/redesign-dc166dc9/drive-command-bar-overflow-390x844-light-en.png) | ![Home at 390 by 844 pixels, dark, English and Cantonese together](docs/images/captures/redesign-dc166dc9/home-390x844-dark-bilingual.png) |
 
 </details>
 
+#### Settings, personalization and local access
+
+Appearance, language, text size, high contrast, sound and animation controls, in light and dark themes and in English, Cantonese or both.
+
 <details>
-<summary>History and Recycle Bin (5)</summary>
+<summary>Settings, high contrast and text size, languages, personalization and animation editor (9)</summary>
 
-| History | History, dark | History, Cantonese |
+| Settings, startup and storage | Settings, appearance and language | High contrast and 130 percent text |
 |---|---|---|
-| ![History](docs/images/captures/refresh-b4cbf0e/desktop/history-light-en.png) | ![History, dark](docs/images/captures/refresh-b4cbf0e/desktop/history-dark-en.png) | ![History, Cantonese](docs/images/captures/refresh-b4cbf0e/desktop/history-light-yue.png) |
+| ![Settings page with its search box, startup and unlocking switches and encrypted part size](docs/images/captures/redesign-dc166dc9/settings-startup-storage-light-en.png) | ![Settings appearance and language section with theme, row density, text size, high contrast and language](docs/images/captures/redesign-dc166dc9/settings-appearance-light-en.png) | ![Settings with high contrast on and text size at 130 percent, which enlarges the whole interface](docs/images/captures/redesign-dc166dc9/settings-high-contrast-text-130-light-en.png) |
 
-| Recycle Bin | Recycle Bin, bilingual |
+| Settings, bilingual | Settings, dark, bilingual | Personalization, language and voice |
+|---|---|---|
+| ![Settings appearance section, light, English and Cantonese together](docs/images/captures/redesign-dc166dc9/settings-appearance-light-bilingual.png) | ![Settings appearance section, dark, English and Cantonese together](docs/images/captures/redesign-dc166dc9/settings-appearance-dark-bilingual.png) | ![Personalization page, Language and voice tab, with its search box and Regex builder](docs/images/captures/redesign-dc166dc9/personalization-language-light-en.png) |
+
+| Personalization, appearance | Animation and transitions | Local access |
+|---|---|---|
+| ![Personalization page, Appearance tab, with theme, density and accent colour](docs/images/captures/redesign-dc166dc9/personalization-appearance-light-en.png) | ![Animation and transitions editor with the Calm, Standard, Expressive and Playful profiles](docs/images/captures/redesign-dc166dc9/motion-editor-profiles-light-en.png) | ![Local access page, Local profile tab, with its search box and Regex builder](docs/images/captures/redesign-dc166dc9/local-access-light-en.png) |
+
+</details>
+
+#### Docker Hub backup
+
+No account was signed in for these captures. They show the page as the app renders it with no saved account, and after the guided sign-in could not reach the service.
+
+<details>
+<summary>Docker Hub storage before sign-in and after an unfinished sign-in (2)</summary>
+
+| Docker Hub, before sign-in | Docker Hub, sign-in did not finish |
 |---|---|
-| ![Recycle Bin](docs/images/captures/refresh-b4cbf0e/desktop/recycle-bin-light-en.png) | ![Recycle Bin, bilingual](docs/images/captures/refresh-b4cbf0e/desktop/recycle-bin-light-bilingual.png) |
+| ![Docker Hub storage page before any sign-in, with the guided sign-in steps and the drive list empty](docs/images/captures/redesign-dc166dc9/docker-hub-initial-light-en.png) | ![Docker Hub storage page after Start guided sign-in on a computer with no connection, offering Retry guided sign-in](docs/images/captures/redesign-dc166dc9/docker-hub-sign-in-unfinished-light-en.png) |
 
 </details>
 
-<details>
-<summary>Tools: converter, documents and storage (11)</summary>
+Earlier builds' captures, with their original dates and provenance, are in the [screenshot archive](docs/screenshots-archive.md).
 
-| Converter, Source files | Converter, Formats | Converter, Options |
-|---|---|---|
-| ![Converter, Source files](docs/images/captures/refresh-b4cbf0e/desktop/tools-converter-light-en.png) | ![Converter, Formats](docs/images/captures/refresh-b4cbf0e/desktop/tools-converter-tab2-light-en.png) | ![Converter, Options](docs/images/captures/refresh-b4cbf0e/desktop/tools-converter-tab3-light-en.png) |
-
-| Converter, Queue and result history | Converter, Queue and result history, dark | Documents and downloads |
-|---|---|---|
-| ![Converter, Queue and result history](docs/images/captures/refresh-b4cbf0e/desktop/tools-converter-tab4-light-en.png) | ![Converter, Queue and result history, dark](docs/images/captures/refresh-b4cbf0e/desktop/tools-converter-dark-en.png) | ![Documents and downloads](docs/images/captures/refresh-b4cbf0e/desktop/tools-documents-light-en.png) |
-
-| Storage maintenance | Status | Status, dark |
-|---|---|---|
-| ![Storage maintenance](docs/images/captures/refresh-b4cbf0e/desktop/tools-storage-maintenance-light-en.png) | ![Status](docs/images/captures/refresh-b4cbf0e/desktop/tools-status-light-en.png) | ![Status, dark](docs/images/captures/refresh-b4cbf0e/desktop/tools-status-dark-en.png) |
-
-| Status, bilingual | File details |
-|---|---|
-| ![Status, bilingual](docs/images/captures/refresh-b4cbf0e/desktop/tools-status-light-bilingual.png) | ![File details](docs/images/captures/refresh-b4cbf0e/desktop/tools-file-details-light-en.png) |
-
-</details>
-
-<details>
-<summary>Tools: local models (7)</summary>
-
-| Local models, Model Store | Local models, Pull cart | Local models, Local chat |
-|---|---|---|
-| ![Local models, Model Store](docs/images/captures/refresh-b4cbf0e/desktop/tools-local-models-light-en.png) | ![Local models, Pull cart](docs/images/captures/refresh-b4cbf0e/desktop/tools-local-models-tab2-light-en.png) | ![Local models, Local chat](docs/images/captures/refresh-b4cbf0e/desktop/tools-local-models-tab3-light-en.png) |
-
-| Local models, Profiles | Local models, Help | Local models, Help, dark |
-|---|---|---|
-| ![Local models, Profiles](docs/images/captures/refresh-b4cbf0e/desktop/tools-local-models-tab4-light-en.png) | ![Local models, Help](docs/images/captures/refresh-b4cbf0e/desktop/tools-local-models-tab5-light-en.png) | ![Local models, Help, dark](docs/images/captures/refresh-b4cbf0e/desktop/tools-local-models-dark-en.png) |
-
-| Local models, Help, bilingual |
-|---|
-| ![Local models, Help, bilingual](docs/images/captures/refresh-b4cbf0e/desktop/tools-local-models-light-bilingual.png) |
-
-</details>
-
-<details>
-<summary>Tools: server targets and server card (7)</summary>
-
-| Server preparation, create a server on any target | Server preparation, scrolled to the server card, dark | Server preparation, Cantonese |
-|---|---|---|
-| ![Server preparation, create a server on any target](docs/images/captures/refresh-b4cbf0e/desktop/tools-server-targets-panel-light-en.png) | ![Server preparation, scrolled to the server card, dark](docs/images/captures/refresh-b4cbf0e/desktop/tools-server-targets-panel-dark-en.png) | ![Server preparation, Cantonese](docs/images/captures/refresh-b4cbf0e/desktop/tools-server-preparation-light-yue.png) |
-
-| Server card, Overview | Server card, Logs | Server card, Settings |
-|---|---|---|
-| ![Server card, Overview](docs/images/captures/refresh-b4cbf0e/desktop/tools-server-card-tab1-light-en.png) | ![Server card, Logs](docs/images/captures/refresh-b4cbf0e/desktop/tools-server-card-tab2-light-en.png) | ![Server card, Settings](docs/images/captures/refresh-b4cbf0e/desktop/tools-server-card-tab3-light-en.png) |
-
-| Server card, Plugins and mods |
-|---|
-| ![Server card, Plugins and mods](docs/images/captures/refresh-b4cbf0e/desktop/tools-server-card-tab4-light-en.png) |
-
-</details>
-
-<details>
-<summary>Settings, personalization and local access (16)</summary>
-
-| Settings | Settings, Cantonese | Personalization, Language and voice |
-|---|---|---|
-| ![Settings](docs/images/captures/reproof-1.779.1/desktop/settings-light-en.png) | ![Settings, Cantonese](docs/images/captures/refresh-b4cbf0e/desktop/settings-light-yue.png) | ![Personalization, Language and voice](docs/images/captures/refresh-b4cbf0e/desktop/settings-personalization-light-en.png) |
-
-| Personalization, Appearance | Personalization, Schedules | Personalization, Attention |
-|---|---|---|
-| ![Personalization, Appearance](docs/images/captures/refresh-b4cbf0e/desktop/settings-personalization-tab2-light-en.png) | ![Personalization, Schedules](docs/images/captures/refresh-b4cbf0e/desktop/settings-personalization-tab3-light-en.png) | ![Personalization, Attention](docs/images/captures/refresh-b4cbf0e/desktop/settings-personalization-tab4-light-en.png) |
-
-| Personalization, Private local history | Personalization, Private local history, dark | Local access, Local profile |
-|---|---|---|
-| ![Personalization, Private local history](docs/images/captures/refresh-b4cbf0e/desktop/settings-personalization-tab5-light-en.png) | ![Personalization, Private local history, dark](docs/images/captures/refresh-b4cbf0e/desktop/settings-personalization-dark-en.png) | ![Local access, Local profile](docs/images/captures/refresh-b4cbf0e/desktop/settings-local-access-light-en.png) |
-
-| Local access, Element locks | Local access, Authenticator | Local access, Support Tickets |
-|---|---|---|
-| ![Local access, Element locks](docs/images/captures/reproof-1.779.1/desktop/element-lock-created-light-en.png) | ![Local access, Authenticator](docs/images/captures/refresh-b4cbf0e/desktop/settings-local-access-tab3-light-en.png) | ![Local access, Support Tickets](docs/images/captures/refresh-b4cbf0e/desktop/settings-local-access-tab4-light-en.png) |
-
-| Local access, Access history | Local access, Access history, bilingual | Updates |
-|---|---|---|
-| ![Local access, Access history](docs/images/captures/refresh-b4cbf0e/desktop/settings-local-access-tab5-light-en.png) | ![Local access, Access history, bilingual](docs/images/captures/refresh-b4cbf0e/desktop/settings-local-access-light-bilingual.png) | ![Updates](docs/images/captures/refresh-b4cbf0e/desktop/update-page-light-en.png) |
-
-| Updates, dark |
-|---|
-| ![Updates, dark](docs/images/captures/refresh-b4cbf0e/desktop/update-page-dark-en.png) |
-
-</details>
-
-<details>
-<summary>Pair a browser (4)</summary>
-
-| Pair a browser | Pair a browser, dark | Pair a browser, Cantonese |
-|---|---|---|
-| ![Pair a browser](docs/images/captures/refresh-5db936f/desktop/pair-a-browser-light-en.png) | ![Pair a browser, dark](docs/images/captures/refresh-5db936f/desktop/pair-a-browser-dark-en.png) | ![Pair a browser, Cantonese](docs/images/captures/refresh-5db936f/desktop/pair-a-browser-light-yue.png) |
-
-| Pair a browser, bilingual |
-|---|
-| ![Pair a browser, bilingual](docs/images/captures/refresh-5db936f/desktop/pair-a-browser-light-bilingual.png) |
-
-</details>
-
-<details>
-<summary>Quitting the app (2)</summary>
-
-| Help menu with Quit Material File Encryptor | Command palette searching for Quit |
-|---|---|
-| ![Help menu with Quit Material File Encryptor](docs/images/captures/refresh-5db936f/desktop/quit-help-menu-light-en.png) | ![Command palette searching for Quit](docs/images/captures/refresh-5db936f/desktop/quit-palette-query-light-en.png) |
-
-</details>
-
-<details>
-<summary>Server cards and server lifecycle (10)</summary>
-
-| Server card, running | Server card, running, dark | Server card, failed: Ended unexpectedly, exit code -1 |
-|---|---|---|
-| ![Server card, running](docs/images/captures/refresh-6ef15e8/desktop/server-card-running-light-en.png) | ![Server card, running, dark](docs/images/captures/refresh-6ef15e8/desktop/server-card-running-dark-en.png) | ![Server card, failed: Ended unexpectedly, exit code -1](docs/images/captures/refresh-5db936f/desktop/server-card-failed-light-en.png) |
-
-| Server card, failed: Ended unexpectedly, exit code -1, dark | Server card, failed, scrolled to the last log lines | Server card needing Java 25 after the Java check, dark, bilingual |
-|---|---|---|
-| ![Server card, failed: Ended unexpectedly, exit code -1, dark](docs/images/captures/refresh-5db936f/desktop/server-card-failed-dark-en.png) | ![Server card, failed, scrolled to the last log lines](docs/images/captures/refresh-5db936f/desktop/server-card-failed-logtail-light-en.png) | ![Server card needing Java 25 after the Java check, dark, bilingual](docs/images/captures/refresh-6ef15e8/desktop/server-java25-needed-dark-bilingual.png) |
-
-| Java-check refusal message, dark, bilingual | Server running, dark, bilingual | Server logs ending with the Done line, dark, bilingual |
-|---|---|---|
-| ![Java-check refusal message, dark, bilingual](docs/images/captures/refresh-6ef15e8/desktop/server-java-check-refusal-dark-bilingual.png) | ![Server running, dark, bilingual](docs/images/captures/refresh-6ef15e8/desktop/server-running-card-dark-bilingual.png) | ![Server logs ending with the Done line, dark, bilingual](docs/images/captures/refresh-6ef15e8/desktop/server-running-logs-dark-bilingual.png) |
-
-| Close dialog while a server runs: keep in the tray, stop and quit, or cancel |
-|---|
-| ![Close dialog while a server runs: keep in the tray, stop and quit, or cancel](docs/images/captures/refresh-6ef15e8/desktop/close-dialog-server-running-dark-bilingual.png) |
-
-</details>
-
-<details>
-<summary>Help (5)</summary>
-
-| Help, How it works | Help, How it works, dark | Help, How it works, Cantonese |
-|---|---|---|
-| ![Help, How it works](docs/images/captures/refresh-b4cbf0e/desktop/help-how-it-works-light-en.png) | ![Help, How it works, dark](docs/images/captures/refresh-b4cbf0e/desktop/help-how-it-works-dark-en.png) | ![Help, How it works, Cantonese](docs/images/captures/refresh-b4cbf0e/desktop/help-how-it-works-light-yue.png) |
-
-| Help, Documentation | Help, Changelog |
-|---|---|
-| ![Help, Documentation](docs/images/captures/refresh-b4cbf0e/desktop/help-documentation-light-en.png) | ![Help, Changelog](docs/images/captures/refresh-b4cbf0e/desktop/help-changelog-light-en.png) |
-
-</details>
-
-#### Browser extension
-
-Headless Microsoft Edge with the staged extension from source `b4cbf0e`, loaded unpacked into a disposable profile. No desktop was paired, so connection states read as unavailable; the Models captures use a fake local model server and the Status captures read the live published releases.
-
-<details>
-<summary>Home and popup (7)</summary>
-
-| Workspace Home | Workspace Home, dark | Workspace Home, Cantonese |
-|---|---|---|
-| ![Workspace Home](docs/images/captures/refresh-b4cbf0e/extension/home-1280x900-light-en.png) | ![Workspace Home, dark](docs/images/captures/refresh-b4cbf0e/extension/home-1280x900-dark-en.png) | ![Workspace Home, Cantonese](docs/images/captures/refresh-b4cbf0e/extension/home-1280x900-light-yue.png) |
-
-| Workspace Home at 360 pixels, dark, bilingual | Popup with the section launcher | Popup, dark, bilingual |
-|---|---|---|
-| ![Workspace Home at 360 pixels, dark, bilingual](docs/images/captures/refresh-b4cbf0e/extension/home-360x780-dark-bilingual.png) | ![Popup with the section launcher](docs/images/captures/refresh-b4cbf0e/extension/popup-380-light-en.png) | ![Popup, dark, bilingual](docs/images/captures/refresh-b4cbf0e/extension/popup-380-dark-bilingual.png) |
-
-| Popup, Cantonese |
-|---|
-| ![Popup, Cantonese](docs/images/captures/refresh-b4cbf0e/extension/popup-380-light-yue.png) |
-
-</details>
-
-<details>
-<summary>Sections (12)</summary>
-
-| Connection | Personalization | Personalization at 360 pixels, dark, bilingual |
-|---|---|---|
-| ![Connection](docs/images/captures/refresh-b4cbf0e/extension/section-connection-1280x900-light-en.png) | ![Personalization](docs/images/captures/refresh-b4cbf0e/extension/section-personalization-1280x900-light-en.png) | ![Personalization at 360 pixels, dark, bilingual](docs/images/captures/refresh-b4cbf0e/extension/section-personalization-360x780-dark-bilingual.png) |
-
-| Changelog | Notes | Documentation |
-|---|---|---|
-| ![Changelog](docs/images/captures/refresh-b4cbf0e/extension/section-changelog-1280x900-light-en.png) | ![Notes](docs/images/captures/refresh-b4cbf0e/extension/section-notes-1280x900-light-en.png) | ![Documentation](docs/images/captures/refresh-b4cbf0e/extension/section-documentation-1280x900-light-en.png) |
-
-| Documentation search while offline | Support | Dim sum |
-|---|---|---|
-| ![Documentation search while offline](docs/images/captures/refresh-b4cbf0e/extension/offline-documentation-search-light-en.png) | ![Support](docs/images/captures/refresh-b4cbf0e/extension/section-support-1280x900-light-en.png) | ![Dim sum](docs/images/captures/refresh-b4cbf0e/extension/section-dimsum-1280x900-light-en.png) |
-
-| Progress and publication | Servers | Servers, dark, bilingual |
-|---|---|---|
-| ![Progress and publication](docs/images/captures/refresh-b4cbf0e/extension/section-publishing-1280x900-light-en.png) | ![Servers](docs/images/captures/refresh-b4cbf0e/extension/section-servers-1280x900-light-en.png) | ![Servers, dark, bilingual](docs/images/captures/refresh-b4cbf0e/extension/section-servers-1280x900-dark-bilingual.png) |
-
-</details>
-
-<details>
-<summary>Models (2)</summary>
-
-| Models connected to a local server | Models chat with a streamed reply |
-|---|---|
-| ![Models connected to a local server](docs/images/captures/refresh-b4cbf0e/extension/models-connected-light-en.png) | ![Models chat with a streamed reply](docs/images/captures/refresh-b4cbf0e/extension/models-chat-light-en.png) |
-
-</details>
-
-<details>
-<summary>Status (4)</summary>
-
-| Status with the published release | Status with the installer link | Status coverage list at 360 pixels |
-|---|---|---|
-| ![Status with the published release](docs/images/captures/refresh-b4cbf0e/extension/status-release-light-en.png) | ![Status with the installer link](docs/images/captures/refresh-b4cbf0e/extension/status-installer-link-light-en.png) | ![Status coverage list at 360 pixels](docs/images/captures/refresh-b4cbf0e/extension/status-coverage-narrow-light-en.png) |
-
-| Status without a paired desktop |
-|---|
-| ![Status without a paired desktop](docs/images/captures/refresh-b4cbf0e/extension/status-desktop-unpaired-light-en.png) |
-
-</details>
-
-<details>
-<summary>Layout tuples (3)</summary>
-
-| Connection at the 360 pixel minimum, Cantonese | Models at the 360 pixel minimum, 2x, dark, bilingual | Popup at 360 by 640, 2x, dark, bilingual |
-|---|---|---|
-| ![Connection at the 360 pixel minimum, Cantonese](docs/images/captures/refresh-b4cbf0e/extension/matrix-options-connection_minimum_1x_light_yue.png) | ![Models at the 360 pixel minimum, 2x, dark, bilingual](docs/images/captures/refresh-b4cbf0e/extension/matrix-options-models_minimum_2x_dark_bilingual.png) | ![Popup at 360 by 640, 2x, dark, bilingual](docs/images/captures/refresh-b4cbf0e/extension/matrix-popup_minimum_2x_dark_bilingual.png) |
-
-</details>
-
-#### Documentation site
-
-Captures of the documentation site staged from source `048cfbd` and served from loopback in a disposable headless Microsoft Edge profile, light theme, English. They show public pages only, not native-product or installed acceptance. The workspace page was not captured because its article list renders unstyled.
-
-<details>
-<summary>Documentation site (6)</summary>
-
-| Home page | Home page at 320 pixels, DPR 2 | Documentation library |
-|---|---|---|
-| ![Home page](docs/images/captures/refresh-b4cbf0e/site/home-1280x900-light-en.png) | ![Home page at 320 pixels, DPR 2](docs/images/captures/refresh-b4cbf0e/site/home-320x800-dpr2-light-en.png) | ![Documentation library](docs/images/captures/refresh-b4cbf0e/site/library-1280x900-light-en.png) |
-
-| Wiki | Capture gallery | Browser extension local models article at 360 pixels |
-|---|---|---|
-| ![Wiki](docs/images/captures/refresh-b4cbf0e/site/wiki-1280x900-light-en.png) | ![Capture gallery](docs/images/captures/refresh-b4cbf0e/site/gallery-1280x900-light-en.png) | ![Browser extension local models article at 360 pixels](docs/images/captures/refresh-b4cbf0e/site/article-local-models-360x800-light-en.png) |
-
-</details>
-
-The refresh folder holds a [manifest](docs/images/captures/refresh-b4cbf0e/manifest.json) with each image's hash, size, viewport and source commit; the later installed round has its own [manifest](docs/images/captures/refresh-6ef15e8/manifest.json). `node scripts/refresh-screenshots.mjs capture` and `node scripts/refresh-screenshots.mjs desktop` regenerate it, and `node scripts/apply-screenshot-refresh.mjs` rewrites every reference. The earlier original captures, including the history-guidance and packaged Windows images, were removed from the current tree and remain in Git history; their records stay in the [preview inventory](docs/images/captures/preview/inventory.json), [preview verification summary](docs/images/captures/preview/verification-summary.json), [Linux capture provenance](docs/images/captures/provenance.json) and [Windows capture provenance](docs/images/captures/windows/provenance.json). The diagrams here explain behavior; they are not screenshots or runtime evidence.
 
 ## Build, package and verify
 
@@ -567,22 +365,22 @@ The verification diagram is a path, not a claim that every step passed. Releases
 
 ## Project size and human-time estimate
 
-**Estimate, not a measurement:** writing this project by hand would plausibly take one person about **85.3 to 170.7 person-months** (1,707 to 3,414 working days). Nobody built it that way; this gives a sense of scale and is not a claim about effort, quality or value.
+**Estimate, not a measurement:** writing this project by hand would plausibly take one person about **115.4 to 230.8 person-months** (2,308 to 4,616 working days). Nobody built it that way; this gives a sense of scale and is not a claim about effort, quality or value.
 
 | Hand-written code | Files | Non-blank lines | Multiplier | Weighted lines |
 |---|---:|---:|---:|---:|
-| Application source (JavaScript) | 359 | 29,631 | 1 | 29,631 |
-| Native engine and drive adapter (C#) | 51 | 7,533 | 1.5 | 11,300 |
-| Styles and markup (CSS, HTML) | 24 | 1,125 | 1 | 1,125 |
-| Tests | 414 | 29,781 | 1 | 29,781 |
-| Build, release and tooling scripts | 134 | 13,509 | 1 | 13,509 |
-| **Total** | | **81,579** | | **85,346** |
+| Application source (JavaScript) | 488 | 43,415 | 1 | 43,415 |
+| Native engine and drive adapter (C#) | 60 | 8,573 | 1.5 | 12,860 |
+| Styles and markup (CSS, HTML) | 35 | 1,951 | 1 | 1,951 |
+| Tests | 507 | 40,641 | 1 | 40,641 |
+| Build, release and tooling scripts | 159 | 16,535 | 1 | 16,535 |
+| **Total** | | **111,115** | | **115,402** |
 
-**Arithmetic:** 85,346 weighted lines ÷ 50 lines per day = 1,707 days, and 85,346 ÷ 25 = 3,414 days; at 20 working days per month that is 85.3 to 170.7 person-months.
+**Arithmetic:** 115,402 weighted lines ÷ 50 lines per day = 2,308 days, and 115,402 ÷ 25 = 4,616 days; at 20 working days per month that is 115.4 to 230.8 person-months.
 
 **Assumptions:** 25 (conservative) to 50 (optimistic) non-blank lines per 8-hour day of finished, reviewed, debugged code, a common industry rule of thumb rather than a measurement of this team. The native engine counts at 1.5 times because encrypted storage and a filesystem adapter are harder than their size suggests. Part of the application source is written as long lines, so line counts understate it. Design, research and review time beyond the test code are not included.
 
-**Left out, exactly as the line count leaves them out:** Markdown prose (counted separately, not estimated) (263 files); images, JSON data and catalogues, and other non-code files (229 files); design reference prototypes (51 files); vendored, bundled or build-output trees (16 files); lockfiles (1 files). Markdown prose (16,896 non-blank lines in 263 files) is not estimated.
+**Left out, exactly as the line count leaves them out:** images, JSON data and catalogues, and other non-code files (329 files); Markdown prose (counted separately, not estimated) (274 files); design reference prototypes (104 files); vendored, bundled or build-output trees (16 files); lockfiles (1 files). Markdown prose (17,607 non-blank lines in 274 files) is not estimated.
 
 Reproduce it with `node scripts/human-time-estimate.mjs` (prints the same table from `git ls-files`) and refresh this block with `node scripts/human-time-estimate.mjs --write`. The block may lag the tree by up to 10 percent before `--check` and the test fail.
 

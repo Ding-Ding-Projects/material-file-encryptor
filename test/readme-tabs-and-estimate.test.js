@@ -42,7 +42,7 @@ test('the README opens with a compact index and keeps first-reader content visib
 test('long reference sections are collapsed behind findable summaries', () => {
   const opens = (readme.match(/^<details>$/gm) || []).length, closes = (readme.match(/^<\/details>$/gm) || []).length;
   assert.equal(opens, closes);
-  assert.ok(opens >= 20, 'the long reference sections and the screenshot groups are all collapsed');
+  assert.ok(opens >= 15, 'the long reference sections and the screenshot groups are all collapsed');
   const summaries = [...readme.matchAll(/^<details>\n<summary>([^<>\n]+)<\/summary>$/gm)].map(match => match[1]);
   assert.equal(summaries.length, opens, 'every collapsible block opens with a plain-text summary');
   assert.ok(summaries.every(summary => summary.length >= 8), 'summaries are descriptive enough to find');
