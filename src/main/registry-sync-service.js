@@ -35,7 +35,7 @@ export async function createFile(root, relative, bytes) {
 }
 
 /** Main-process orchestration. No registry endpoint or filesystem path is accepted from a renderer. */
-export function createRegistrySyncService({ root, contexts, nativeRequest, authorize, chooseRestore, backgroundRegistration = async () => {}, storageFactory = createRegistryStorage, testDestination = null, now = Date.now, leaseRetryMs = 60000 }) {
+export function createRegistrySyncService({ root, contexts, nativeRequest, authorize, chooseRestore, backgroundRegistration = async () => {}, storageFactory = createRegistryStorage, testDestination = null, now = Date.now, leaseRetryMs = 60000, onChanged = () => {} }) {
   let rows = {}, loaded = false, loading = null, configuring = false, ticking = false, saving = Promise.resolve(), active = null;
   const file = path.join(root, 'registry-sync.json');
   async function readState() {
@@ -311,5 +311,8 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
     get pending() { return Boolean(active) || configuring || ticking; },
     close() { if (active || configuring || ticking) throw Error('Registry synchronization or native snapshot release is still pending.'); },
   };
+  // A finished synchronization may have published a snapshot, so listeners (the repository catalogue) learn about it.
+  const rawSync = service.sync;
+  service.sync = id => rawSync(id).finally(() => { try { onChanged(); } catch { /* A listener must never break synchronization. */ } });
   return service;
 }

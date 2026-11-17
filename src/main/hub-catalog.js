@@ -24,7 +24,7 @@ const size = value => Number.isSafeInteger(value) && value >= 0 ? value : null;
 export function createHubCatalog({ hub, reader, account, now = Date.now, limits = {}, setTimer = setTimeout, clearTimer = clearTimeout } = {}) {
   if (typeof hub?.get !== 'function' || typeof reader?.snapshotInfo !== 'function' || typeof account !== 'function') throw Error('Invalid Docker Hub catalog service.');
   const bounds = { ...HUB_CATALOG_LIMITS, ...limits };
-  let state = blank(), run = null;
+  let state = blank(), run = null, stale = false;
   function blank() { return { phase: 'idle', reason: null, account: null, namespaces: [], organizationsUnavailable: false, repositories: [], progress: { total: 0, done: 0 }, truncated: false, startedAt: null, finishedAt: null }; }
   const snapshot = () => structuredClone(state);
 
@@ -143,8 +143,8 @@ export function createHubCatalog({ hub, reader, account, now = Date.now, limits 
     /** Starts a scan unless one is running or a finished result is cached. Progress is read with snapshot(). */
     start({ force = false } = {}) {
       if (run) return snapshot();
-      if (!force && state.phase === 'done') return snapshot();
-      state = blank(); state.phase = 'listing'; state.startedAt = new Date(now()).toISOString();
+      if (!force && !stale && state.phase === 'done') return snapshot();
+      stale = false; state = blank(); state.phase = 'listing'; state.startedAt = new Date(now()).toISOString();
       const controller = new AbortController();
       run = { controller, timedOut: false };
       run.timer = setTimer(() => { run.timedOut = true; controller.abort(); }, bounds.totalTimeoutMs); run.timer.unref?.();
@@ -155,5 +155,7 @@ export function createHubCatalog({ hub, reader, account, now = Date.now, limits 
     /** Resolves when the running scan settles. */
     async settled() { await run?.done; return snapshot(); },
     forget() { if (!run) state = blank(); },
+    /** Something was published or a repository was created, so a cached scan may be missing a drive. The next start() scans again. */
+    invalidate() { stale = true; },
   };
 }

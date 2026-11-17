@@ -22,6 +22,15 @@ async function fixture(t, extra = {}) {
 }
 const configuration = (schedule = DEFAULT_REGISTRY_SCHEDULE) => ({ repository: 'test/vault', visibility: 'private', schedule });
 
+test('a finished synchronization, even a failed one, tells listeners that a repository may have changed', async t => {
+  let changes = 0;
+  const f = await fixture(t, { onChanged: () => { changes++; } });
+  await assert.rejects(f.service.sync('main'));
+  assert.equal(changes, 1);
+  const broken = await fixture(t, { onChanged: () => { throw Error('listener failure'); } });
+  await assert.rejects(broken.service.sync('main'), /Registry synchronization is incomplete|Save a registry destination/);
+});
+
 test('legacy saved visibility remains private and explicit public survives reload', async t => {
   const f = await fixture(t); const legacy = configuration(); delete legacy.visibility;
   assert.equal(validateRequest('configureRegistryStorage', legacy).visibility, undefined);

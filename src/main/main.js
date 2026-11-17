@@ -126,7 +126,7 @@ const imageRequest = createVaultImageRequests({ service: vaultImages, confirm: o
 const registryRoot = path.join(app.getPath('userData'), 'RegistrySync');
 const registryDocker = createDockerImageTransport();
 const registryLogin = createRegistryLogin({ transport: registryDocker, openPage: url => shell.openExternal(url), packaged: app.isPackaged, resourcesPath: process.resourcesPath });
-const registrySync = createRegistrySyncService({ root: registryRoot,
+const registrySync = createRegistrySyncService({ root: registryRoot, onChanged: () => hubCatalog.invalidate(),
   testDestination: registryTestDestination,
   contexts: id => id === undefined ? [...vaultSessions.rows] : (() => { const row = vaultSessions.rows.get(id); return row && { storageDir: row.state.storageDir || row.preferences.storageDir, transport: row.preferences.transport || 'folder', driveName: row.state.driveName || row.preferences.driveName }; })(),
   nativeRequest: (method, params, id) => vaultSessions.request(method, params, id),
