@@ -225,9 +225,10 @@ public sealed partial class VaultEngine : IDisposable
         try { plain=ReadRecord(EnsurePart(record.Part),record,e.ChunkSize); }
         catch(Exception ex) when(ex is IOException or CryptographicException or InvalidDataException)
         {
-            var remote=ObjectPath(source,"parts",record.Part); if(!Directory.Exists(source)||!File.Exists(remote))throw;
+            var remote=ObjectPath(source,"parts",record.Part);
             // Verify the complete immutable object before replacing an unhealthy local cache copy.
-            VerifyPart(remote,record.Part,record.Encoding); using(var input=File.OpenRead(remote))CopyAtomic(input,ObjectPath(cache,"parts",record.Part));
+            if(Directory.Exists(source)&&File.Exists(remote)){VerifyPart(remote,record.Part,record.Encoding); using(var input=File.OpenRead(remote))CopyAtomic(input,ObjectPath(cache,"parts",record.Part));}
+            else if(!TryHydratePlacedFolder(record.Part))throw;
             plain=ReadRecord(ObjectPath(cache,"parts",record.Part),record,e.ChunkSize);
         }
         try { if(plain.Length!=record.PlainLength) throw new InvalidDataException("Record length does not match metadata."); plain.CopyTo(output,0); } finally { CryptographicOperations.ZeroMemory(plain); }
@@ -265,8 +266,9 @@ public sealed partial class VaultEngine : IDisposable
         try{CngLegacyRecord.Read(EnsurePart(record.Part),key,domain,encoding==2?record.Part:null,record.PlainLength,offset,destination[..count],cancellationToken,recordOffset:record.Offset);}
         catch(Exception error) when(error is IOException or CryptographicException or InvalidDataException)
         {
-            var remote=ObjectPath(source,"parts",record.Part);if(!File.Exists(remote))throw;
-            VerifyPart(remote,record.Part,encoding,cancellationToken);using(var input=File.OpenRead(remote))CopyAtomic(input,ObjectPath(cache,"parts",record.Part));
+            var remote=ObjectPath(source,"parts",record.Part);
+            if(File.Exists(remote)){VerifyPart(remote,record.Part,encoding,cancellationToken);using(var input=File.OpenRead(remote))CopyAtomic(input,ObjectPath(cache,"parts",record.Part));}
+            else if(!TryHydratePlacedFolder(record.Part,cancellationToken))throw;
             CngLegacyRecord.Read(ObjectPath(cache,"parts",record.Part),key,domain,encoding==2?record.Part:null,record.PlainLength,offset,destination[..count],cancellationToken,recordOffset:record.Offset);
         }
     }
@@ -300,7 +302,7 @@ public sealed partial class VaultEngine : IDisposable
     private string EnsurePart(string id)
     {
         var local=ObjectPath(cache,"parts",id); if(File.Exists(local)) return local;
-        var remote=ObjectPath(source,"parts",id); if(!File.Exists(remote)&&HydrateEncryptedFileAsync!=null)throw new VaultHydrationRequiredException(new[]{"parts/"+id+".mfe"}); if(!sourceAvailable || !File.Exists(remote)) throw new IOException("Encrypted content is unavailable offline.");
+        var remote=ObjectPath(source,"parts",id); if(!File.Exists(remote)&&EnsurePlacedPart(id) is {} placed)return placed; if(!File.Exists(remote)&&HydrateEncryptedFileAsync!=null)throw new VaultHydrationRequiredException(new[]{"parts/"+id+".mfe"}); if(!sourceAvailable || !File.Exists(remote)) throw new IOException("Encrypted content is unavailable offline.");
         using var input=File.OpenRead(remote); if(input.Length>1073741824 || input.Length<VaultCrypto.Overhead) throw new InvalidDataException("Invalid part size.");
         CopyAtomic(input,local); return local;
     }
@@ -525,6 +527,8 @@ public sealed partial class VaultEngine : IDisposable
                         // contract. Authenticate materialized source bytes, without
                         // downloading every unchanged object to publish metadata.
                         if(!File.Exists(target)&&IsEncryptedFileAvailable?.Invoke("parts/"+part+".mfe")==true)continue;
+                        // A part moved to a split storage location stays there; publication never copies it back.
+                        if(!File.Exists(target)&&PlacementOrNull()?.IsPlaced(part)==true)continue;
                         if(File.Exists(target))
                         {
                             try{VerifyPart(target,part,encodings[part],token);validSource=true;}
@@ -533,8 +537,8 @@ public sealed partial class VaultEngine : IDisposable
                         if(!validSource)
                         {
                             var cached=ObjectPath(cache,"parts",part);
-                            if(!File.Exists(cached)&&!File.Exists(target)&&HydrateEncryptedFileAsync!=null)
-                                HydrateEncryptedFileAsync("parts/"+part+".mfe",token).GetAwaiter().GetResult();
+                            if(!File.Exists(cached)&&!File.Exists(target)&&CanHydrate)
+                                HydratePartAsync("parts/"+part+".mfe",token).GetAwaiter().GetResult();
                             // A corrupt source is replaced only by authenticated local
                             // ciphertext. Failure retains the durable pending commit.
                             var localPart=EnsurePart(part);VerifyPart(localPart,part,encodings[part],token);
@@ -740,8 +744,10 @@ public sealed partial class VaultEngine : IDisposable
                 foreach(var id in candidates.Order(StringComparer.Ordinal))
                 {
                     var local=ObjectPath(cache,"parts",id); var remote=ObjectPath(source,"parts",id);
-                    if(!File.Exists(local)||!File.Exists(remote))continue;
-                    VerifyPart(remote,id); eligible.Add((local,new FileInfo(local).Length));
+                    if(!File.Exists(local))continue;
+                    // Evict only when another authenticated copy exists: main, or a connected split location.
+                    if(File.Exists(remote))VerifyPart(remote,id); else if(VerifiedFolderCopy(id) is null)continue;
+                    eligible.Add((local,new FileInfo(local).Length));
                 }
             }
             catch(Exception ex) when(ex is IOException or UnauthorizedAccessException)
@@ -766,7 +772,7 @@ public sealed partial class VaultEngine : IDisposable
             protectedParts.UnionWith(publicationParts);
             foreach(var snapshot in encryptedSnapshotParts.Values)protectedParts.UnionWith(snapshot);
             foreach(var id in pending)protectedParts.UnionWith(Parts(ReadMetadata<Commit>(ObjectPath(cache,"commits",id),"commit",id)));
-            VaultCrypto.ValidatePhysicalPath(Path.Combine(cache,"parts")); long removed=0; foreach(var path in Directory.EnumerateFiles(Path.Combine(cache,"parts"),"*.mfe")) { if(removed>=desiredBytes)break; var id=Path.GetFileNameWithoutExtension(path); if(protectedParts.Contains(id)||!sourceAvailable||!File.Exists(ObjectPath(source,"parts",id)))continue; VerifyPart(ObjectPath(source,"parts",id),id); var size=new FileInfo(path).Length;File.Delete(path);removed+=size; } return removed;
+            VaultCrypto.ValidatePhysicalPath(Path.Combine(cache,"parts")); long removed=0; foreach(var path in Directory.EnumerateFiles(Path.Combine(cache,"parts"),"*.mfe")) { if(removed>=desiredBytes)break; var id=Path.GetFileNameWithoutExtension(path); if(protectedParts.Contains(id)||!sourceAvailable)continue; if(File.Exists(ObjectPath(source,"parts",id)))VerifyPart(ObjectPath(source,"parts",id),id); else if(VerifiedFolderCopy(id) is null)continue; var size=new FileInfo(path).Length;File.Delete(path);removed+=size; } return removed;
         }
     }
     public void Dispose() { lock(gate) { if(disposed)return; try { FlushLocal(); } finally { disposed=true;CancelBackground(); if(activeStorageOperations==0)CryptographicOperations.ZeroMemory(key); } } }

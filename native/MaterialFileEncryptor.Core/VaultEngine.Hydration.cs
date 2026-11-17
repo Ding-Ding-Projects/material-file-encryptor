@@ -11,9 +11,12 @@ public sealed partial class VaultEngine
     private bool HasPhysicalPart(string id) => File.Exists(ObjectPath(cache,"parts",id))||File.Exists(ObjectPath(source,"parts",id));
     private void RequireAvailable(IEnumerable<RecordRef> records)
     {
-        var missing=records.Select(r=>r.Part).Distinct(StringComparer.Ordinal).Where(id=>!HasPhysicalPart(id)).Select(id=>"parts/"+id+".mfe").ToArray();
-        if(missing.Length==0)return;
-        if(HydrateEncryptedFileAsync!=null)throw new VaultHydrationRequiredException(missing);
+        // Connected split storage folders are local disks, so they are copied in place like the main folder.
+        var missingIds=records.Select(r=>r.Part).Distinct(StringComparer.Ordinal).Where(id=>!HasPhysicalPart(id)&&!TryHydratePlacedFolder(id)).ToArray();
+        if(missingIds.Length==0)return;
+        var missing=missingIds.Select(id=>"parts/"+id+".mfe").ToArray();
+        if(HydrateEncryptedFileAsync!=null||FetchPlacedPartAsync!=null&&missingIds.Any(PlacedElsewhere))throw new VaultHydrationRequiredException(missing);
+        if(CurrentPlacement() is {} placed&&missingIds.FirstOrDefault(PlacedElsewhere) is {} away)throw PlacedUnavailable(placed,away);
         throw new IOException("Encrypted content is unavailable offline.");
     }
     private static IEnumerable<RecordRef> RangeRecords(Entry e,long offset,long length)
@@ -45,7 +48,7 @@ public sealed partial class VaultEngine
             lock(gate)
             {
                 Check();token.ThrowIfCancellationRequested();selected=snapshot().Select(x=>(x.Identity,Clone(x.Entry),(IEnumerable<RecordRef>)x.Records.ToArray())).ToArray();
-                missing=selected.SelectMany(x=>x.Records).Select(r=>r.Part).Distinct(StringComparer.Ordinal).Where(id=>!HasPhysicalPart(id)).ToArray();hydrate=HydrateEncryptedFileAsync;
+                missing=selected.SelectMany(x=>x.Records).Select(r=>r.Part).Distinct(StringComparer.Ordinal).Where(id=>!HasPhysicalPart(id)).ToArray();hydrate=CanHydrate?HydratePartAsync:null;
             }
             foreach(var id in missing)
             {

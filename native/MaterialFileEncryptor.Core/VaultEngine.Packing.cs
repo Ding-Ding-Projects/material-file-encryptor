@@ -172,8 +172,7 @@ public sealed partial class VaultEngine
                 token.ThrowIfCancellationRequested();
                 if(!HasPhysicalPart(part))
                 {
-                    var hydrate=HydrateEncryptedFileAsync??throw new IOException("Encrypted content is unavailable offline.");
-                    await hydrate("parts/"+part+".mfe",token).ConfigureAwait(false);
+                    await HydratePartAsync("parts/"+part+".mfe",token).ConfigureAwait(false);
                 }
             }
             var replacement=Clone(original);
@@ -203,7 +202,7 @@ public sealed partial class VaultEngine
         lock(gate){Check();current=entries.Values.SelectMany(AllRecords).Select(r=>r.Part).ToHashSet(StringComparer.Ordinal);history=pendingVersions.SelectMany(v=>AllRecords(v.Value)).Select(r=>r.Part).ToHashSet(StringComparer.Ordinal);commits=known.ToArray();status=PackingStatus;}
         foreach(var id in commits)history.UnionWith(Parts(ReadMetadata<Commit>(ObjectPath(cache,"commits",id),"commit",id)));
         history.ExceptWith(current);
-        long Size(string id){var local=ObjectPath(cache,"parts",id);var remote=ObjectPath(source,"parts",id);try{return File.Exists(local)?new FileInfo(local).Length:File.Exists(remote)?new FileInfo(remote).Length:0;}catch(IOException){return 0;}}
+        long Size(string id){var local=ObjectPath(cache,"parts",id);var remote=ObjectPath(source,"parts",id);try{return File.Exists(local)?new FileInfo(local).Length:File.Exists(remote)?new FileInfo(remote).Length:PlacementOrNull()?.RecordedSize(id)??0;}catch(IOException){return 0;}}
         var temporary=Directory.EnumerateFiles(Path.Combine(cache,"parts"),"*.tmp").Select(p=>new FileInfo(p)).ToArray();
         return new(status.TargetPartSizeBytes,status.PendingFiles,status.ActiveWriters,status.Running,status.LastError,current.Count,current.Sum(Size),history.Count,history.Sum(Size),temporary.Length,temporary.Sum(p=>p.Exists?p.Length:0),status.Paused);
     }

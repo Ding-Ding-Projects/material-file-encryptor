@@ -11,7 +11,7 @@ public sealed partial class VaultEngine
     public int PendingVersionCount { get { lock(gate)return versionDue.Count; } }
     public int StorageFormat => config.Format;
     public Func<string,bool>? IsEncryptedFileAvailable { get; set; }
-    private bool PartAvailable(string id) => File.Exists(ObjectPath(cache,"parts",id))||File.Exists(ObjectPath(source,"parts",id))||IsEncryptedFileAvailable?.Invoke("parts/"+id+".mfe")==true;
+    private bool PartAvailable(string id) => File.Exists(ObjectPath(cache,"parts",id))||File.Exists(ObjectPath(source,"parts",id))||IsEncryptedFileAvailable?.Invoke("parts/"+id+".mfe")==true||PlacedAvailable(id);
     public Func<string,CancellationToken,Task>? HydrateEncryptedFileAsync { get; set; }
     public IReadOnlyList<string> GetEncryptedSnapshotPaths()
     {

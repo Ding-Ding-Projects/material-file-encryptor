@@ -79,8 +79,8 @@ public sealed partial class VaultEngine
                 cancellationToken.ThrowIfCancellationRequested();
                 string local = ObjectPath(cache, "parts", part);
                 string remote = ObjectPath(source, "parts", part);
-                if (!File.Exists(local) && !File.Exists(remote) && HydrateEncryptedFileAsync is not null)
-                    await HydrateEncryptedFileAsync("parts/" + part + ".mfe", cancellationToken).ConfigureAwait(false);
+                if (!File.Exists(local) && !File.Exists(remote) && CanHydrate)
+                    await HydratePartAsync("parts/" + part + ".mfe", cancellationToken).ConfigureAwait(false);
                 string inputPath = File.Exists(local) ? local : remote;
                 VaultCrypto.ValidatePhysicalPath(inputPath);
                 VerifyPart(inputPath, part, cancellationToken:cancellationToken);
