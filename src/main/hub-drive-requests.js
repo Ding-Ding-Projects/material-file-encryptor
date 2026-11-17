@@ -67,7 +67,7 @@ export function createHubDriveRequests({ locations, catalog, docker, workRoot, c
     if (method === 'hubCatalogCancel') return catalog.cancel();
     if (method === 'hubEnsureRepository') {
       if (!REPOSITORY.test(params.repository)) throw fail('INVALID_NAME', 'Repository names use lowercase letters, digits, dashes, dots and underscores.');
-      try { return await docker.ensurePublicRepository(params.repository); }
+      try { const created = await docker.ensurePublicRepository(params.repository); catalog.invalidate?.(); return created; }
       catch (error) { throw fail(SAFE.has(error?.code) ? error.code : 'PROVIDER_UNAVAILABLE', SAFE.has(error?.code) ? error.message : 'Docker Hub could not prepare the repository. Check the connection and try again.'); }
     }
     if (method === 'hubRestoreStatus') return restoreStatus();

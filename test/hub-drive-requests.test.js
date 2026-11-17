@@ -122,6 +122,29 @@ test('the repository is created public through the existing service and only for
   assert.equal(HUB_DRIVE_METHODS.has('hubRestoreSnapshot'), true);
 });
 
+test('a drive backed up in this session appears in the next listing without a forced refresh', async t => {
+  const { requests, catalog, registry } = await world(t);
+  assert.equal((await requests('hubCatalogStart', {})).repositories[0].drives.length, 2, 'the finished scan is served from the cache');
+  const storage = createRegistryStorage({ destination: registry.destination, fetcher: registry.fetcher });
+  const bytes = vaultJson('c'.repeat(32));
+  await storage.publish({ vaultId: 'c'.repeat(32), deviceId: '3'.repeat(32), driveName: 'Brand new', files: [{ path: 'vault.json', bytes: bytes.length, sha256: sha(bytes) }], readFile: async () => bytes });
+  assert.equal((await requests('hubCatalogStart', {})).repositories[0].drives.length, 2, 'still cached until something says it changed');
+  catalog.invalidate();
+  await requests('hubCatalogStart', {}); const rescanned = await catalog.settled();
+  assert.equal(rescanned.repositories[0].drives.length, 3);
+  assert.ok(rescanned.repositories[0].drives.some(drive => drive.name === 'Brand new'));
+});
+
+test('creating a repository also invalidates the cached listing', async t => {
+  const { requests } = await world(t);
+  await requests('hubCatalogStart', {});
+  const before = (await requests('hubCatalogStatus', {})).startedAt;
+  await requests('hubEnsureRepository', { repository: 'pat/material-file-encryptor-storage' });
+  await new Promise(resolve => setTimeout(resolve, 5));
+  await requests('hubCatalogStart', {});
+  assert.notEqual((await requests('hubCatalogStatus', {})).startedAt, before, 'a new scan started');
+});
+
 test('Show folder opens only a folder this session allocated or restored', async t => {
   const { catalog, locations, base } = await world(t);
   const opened = [];
