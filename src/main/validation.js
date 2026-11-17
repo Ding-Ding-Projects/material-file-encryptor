@@ -137,6 +137,8 @@ export function validateRequest(method, value = {}) {
   }
   const schemas = {
     registryLoginStatus: {}, recheckRegistryLogin: {}, startRegistryLogin: {}, cancelRegistryLogin: {}, openRegistryLoginPage: {}, backupAllPlan: {}, backupAllStatus: {}, backupAllCancel: {},
+    hubDriveFolders: {}, hubDriveFoldersDiscard: { driveId: 'driveid' }, hubCatalogStart: { force: 'boolean?' }, hubCatalogStatus: {}, hubCatalogCancel: {},
+    hubEnsureRepository: { repository: 'repository' }, hubRestoreSnapshot: { repository: 'repository', digest: 'digest', location: 'hublocation' }, hubRestoreStatus: {}, hubRestoreCancel: {},
     registryStorageStatus: {}, syncRegistryStorage: {}, listRegistrySnapshots: {}, restoreRegistrySnapshot: { digest: 'digest' }, cancelRegistryStorage: {},
     vaultImageStatus: {}, prepareVaultImage: { reference: 'short' }, buildVaultImage: { previewId: 'session' }, uploadVaultImage: { previewId: 'session' }, discardVaultImage: {}, cancelVaultImage: {},
     addSession: {}, selectSession: { sessionId: 'session' }, removeSession: { sessionId: 'session' }, getState: {}, buildMetadata: {}, browserPairing: {}, mount: { driveLetter: 'drive?', driveName: 'driveName?' }, unmount: {}, chooseFiles: {}, chooseExport: { name: 'path' }, chooseExportFolder: {}, importSelected: { paths: 'paths' }, startImport: { paths: 'paths' }, operations: {}, storageDiagnostics: {}, startPacking: { path: 'relative?', partSizeBytes: 'size?' }, cancelOperation: { operationId: 'path' }, forceLock: { language: 'language?' }, quit: {}, listFiles: { cursor: 'nonnegative?', limit: 'page?', revision: 'nonnegative?' }, listVersionLabels: { entryId: 'path' }, listActivity: { entryId: 'path?', cursor: 'path?', limit: 'page?', action: 'short?', from: 'short?', to: 'short?', fromUtc:'short?',toUtc:'short?',pattern:'short?' }, previewVersion: { versionId: 'path' }, labelVersion: { versionId: 'path', label: 'short' }, exportVersion: { versionId: 'path' }, exportText: { name: 'filename', mime: 'mime', content: 'text' }, fileAction: { id: 'path', action: 'fileAction', destination: 'path?' }, resplitAll: {}, createVault: { storageDir: 'path', cacheDir: 'path', driveLetter: 'drive', password: 'password?', keyFilePath: 'path?', partSizeBytes: 'size', transport: 'transport?', remoteRepository: 'repository?', autoUnlock: 'boolean?', driveName: 'driveName?' },
@@ -156,6 +158,8 @@ export function validateRequest(method, value = {}) {
     if ((item === undefined || item === null) && optional) continue;
     let valid = false;
     if (type === 'digest') valid = typeof item === 'string' && /^sha256:[a-f0-9]{64}$/.test(item);
+    else if (type === 'driveid') valid = typeof item === 'string' && /^[a-f0-9]{16}$/.test(item);
+    else if (type === 'hublocation') valid = ['automatic', 'choose'].includes(item);
     else if (type === 'language') valid = ['en','yue','bilingual'].includes(item);
     else if (type === 'days') valid = item === null || Number.isSafeInteger(item) && item >= 1 && item <= 36500;
     else if (type === 'nonnegative') valid = Number.isSafeInteger(item) && item >= 0;

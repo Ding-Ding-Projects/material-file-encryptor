@@ -10,7 +10,7 @@ const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 const identity = stat => `${stat.dev}:${stat.ino}`;
 const ERROR = 'Registry synchronization is incomplete. Local encrypted data was retained. Review the destination and retry.';
 const SAFE_REASONS = new Set(['The destination contains a different vault.', 'Snapshot catalogue exceeds this client limit. Narrow the repository before retrying.', 'Snapshot catalogue exceeds the metadata limit.', 'Native synchronization did not settle.', 'Native synchronization needs attention.']);
-async function physical(root) {
+export async function physical(root) {
   if (typeof root !== 'string' || !path.isAbsolute(root)) throw Error('Choose an absolute local storage folder.');
   for (let cursor = path.resolve(root); ; cursor = path.dirname(cursor)) {
     const stat = await fs.lstat(cursor);
@@ -19,7 +19,7 @@ async function physical(root) {
   }
   return path.resolve(root);
 }
-async function createFile(root, relative, bytes) {
+export async function createFile(root, relative, bytes) {
   if (!/^(?:vault\.json|(?:parts|commits|activity)\/(?:[a-f0-9]{32}|[a-f0-9]{64})\.mfe)$/.test(relative)) throw Error('Invalid encrypted object path.');
   await physical(root);
   const filename = path.join(root, relative);
