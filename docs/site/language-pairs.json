@@ -635,6 +635,12 @@
       "translationSha256": "1d5520509780d94e85df04931f60d5e0d18ca1682619796f739de0a4776978aa"
     },
     {
+      "source": "docs/features/storage/split-storage.md",
+      "translation": "docs/features/storage/split-storage.zh-HK.md",
+      "sourceSha256": "e86c5bc6e0e7064c078e6da730dd49c54c7f88b5336e4ca511a74f8a2b1e4a80",
+      "translationSha256": "8876c440bed8aff9b8b3839f2f54817531569e0599fb6c0c160132d765a9767a"
+    },
+    {
       "source": "docs/features/surface-foundation/coverage.md",
       "translation": "docs/features/surface-foundation/coverage.zh-HK.md",
       "sourceSha256": "4814224dcb2395dd56784c17783e074291f17239e27e65efec1b05d3e8b79e93",

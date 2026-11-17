@@ -9,10 +9,12 @@ import {fileURLToPath, pathToFileURL} from 'node:url';
 import {DESKTOP_INFO_ICON_INVENTORY} from '../src/shared/local-ux/info-icon-desktop.js';
 import {SITE_INFO_ICON_INVENTORY} from '../src/shared/local-ux/info-icon-site.js';
 import {EXTENSION_POPUP_INFO_ICON_INVENTORY, EXTENSION_OPTIONS_INFO_ICON_INVENTORY} from '../src/shared/local-ux/info-icon-extension.js';
+import {SPLIT_STORAGE_INFO_ICON_INVENTORY} from '../src/shared/local-ux/info-icon-split-storage.js';
 import {INFO_ICON_COPY, INFO_ICON_KINDS} from '../src/shared/local-ux/info-icon-inventory.js';
 
 const SURFACES = [
   {inventory: DESKTOP_INFO_ICON_INVENTORY, title: ['Desktop app', '桌面程式'], page: 'src/renderer/index.html'},
+  {inventory: SPLIT_STORAGE_INFO_ICON_INVENTORY, title: ['Split storage page', '分散存放頁面'], page: 'src/renderer/features/split-storage/panel.js'},
   {inventory: SITE_INFO_ICON_INVENTORY, title: ['Website', '網站'], page: 'docs/site/index.html'},
   {inventory: EXTENSION_POPUP_INFO_ICON_INVENTORY, title: ['Browser extension popup', '瀏覽器擴充功能彈出視窗'], page: 'browser-extension/popup.html'},
   {inventory: EXTENSION_OPTIONS_INFO_ICON_INVENTORY, title: ['Browser extension workspace', '瀏覽器擴充功能工作區'], page: 'browser-extension/options.html'}

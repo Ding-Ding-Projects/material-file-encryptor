@@ -29,6 +29,7 @@ its own editorial look so the two never resemble each other.
 | App workspace | `Main.dc.html` | Dense drive workspace; click tabs and rows | accent, motion, density |
 | App workspace | `Unlock.dc.html` | Unlock inside the locked drive's tab, with ring, burst, shackle lift, hand-off and failure shake | accent, motion, stage |
 | Docker Hub and sign-in | `Backup.dc.html` | One-click public backup of current drives as a side sheet | accent, motion, stage (ready, signing in, uploading, done, failure) |
+| Docker Hub and sign-in | `SplitStorage.dc.html` | Split storage with locations, shares, copies, rules, plan preview, job phases, Safety backup (confirm to turn off, held state) and Mirrors | accent, motion, stage (setup, running, held, done), sameDisk, mirrorStale |
 | Docker Hub and sign-in | `SignIn.dc.html` | Every guided sign-in state with one next step, and the seven sign-in fixes | accent, motion |
 | Motion and installation | `Motion.dc.html` | Animation and transition editor: master switch, speed, profiles, 15 element kinds, per-kind controls, easing, JSON import and export | accent, motion |
 | Motion and installation | `Install.dc.html` | Full-window installation success and failure takeovers with real facts | accent, motion, stage |

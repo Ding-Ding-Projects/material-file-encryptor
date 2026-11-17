@@ -21,3 +21,5 @@
 
 - [加密儲存庫備份、還原及同步](registry-sync.zh-HK.md)
 - [Encrypted registry backup, restore and synchronization](registry-sync.md)
+- [分散存放、安全備份及鏡像備份](split-storage.zh-HK.md)
+- [Split storage, Safety backup and mirrors](split-storage.md)

@@ -4,7 +4,7 @@ const ICON_PATHS={storage:['M3 4h18v5H3zM3 15h18v5H3z','M6 6.5h.01M6 17.5h.01','
 function glyphIcon(name){const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('viewBox','0 0 24 24');svg.setAttribute('class','glyph');svg.setAttribute('aria-hidden','true');for(const d of ICON_PATHS[name]||ICON_PATHS.tools){const path=document.createElementNS(svg.namespaceURI,'path');path.setAttribute('d',d);svg.append(path);}return svg;}
 const PRIMARY=[['drive','Drive','磁碟','▣'],['offline','Offline','離線','↓'],['history','History','歷史','◷'],['recycle','Recycle Bin','資源回收筒','♲'],['storage','Docker Hub storage','Docker Hub 儲存','storage'],['tools','Local tools','本機工具','◇']];
 // Local tools is a destination of its own; these destinations keep its rail entry highlighted while they are open.
-const TOOL_MEMBERS=new Set(['converter','workflow','ollama','server-manager','quicktype','virtual-disks','status','details','base64-tools','live-charts','screen-recording','drawing','dimsum','browser-pairing']);
+const TOOL_MEMBERS=new Set(['converter','workflow','ollama','server-manager','quicktype','virtual-disks','status','details','base64-tools','live-charts','split-storage','screen-recording','drawing','dimsum','browser-pairing']);
 const GROUPS={settings:['settings','personalization','access','updates'],help:['help','documentation','changelog']};
 export function navigationDestinations(labels){const rows=[...PRIMARY,['settings','Settings','設定','settings'],['help','Help','說明','help']];if(labels.has('connection'))rows.unshift(['connection','Connection','連線','connection']);return rows.filter(([id])=>GROUPS[id]?GROUPS[id].some(key=>labels.has(key)):labels.has(id));}
 export class NavigationRail extends SurfaceElement {

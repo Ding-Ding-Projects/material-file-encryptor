@@ -19,6 +19,7 @@ An icon never reads the live value of its control, never copies private text suc
 The inventories below cover the static markup of each page and the controls that the page code creates at start-up. A coverage check reads each page as text and fails when a capable control has neither an explanation nor a stated reason.
 
 - Desktop app (`src/renderer/index.html`): 87 explanations (1 for groups of related controls), 9 stated exemptions.
+- Split storage page (`src/renderer/features/split-storage/panel.js`): 2 explanations (0 for groups of related controls), 0 stated exemptions.
 - Website (`docs/site/index.html`): 22 explanations (0 for groups of related controls), 7 stated exemptions.
 - Browser extension popup (`browser-extension/popup.html`): 15 explanations (1 for groups of related controls), 0 stated exemptions.
 - Browser extension workspace (`browser-extension/options.html`): 140 explanations (3 for groups of related controls), 3 stated exemptions.
@@ -992,6 +993,28 @@ Source checks mount every icon on a document fixture and open it from the keyboa
 - `#export-vocabulary`: Removed at start-up: the app does not offer to export the personal vocabulary.
 - `#file-search`: Hidden at start-up and replaced by the search component, which carries the explanation.
 - `mfe-file-picker#vocabulary-file`: A hidden file input. The visible Import vocabulary JSON button opens it and carries the explanation.
+
+## Split storage page
+
+### split-storage-split-safety
+
+**Safety backup** — `#split-safety`
+
+- Kind: toggle
+- Purpose: Keep every part on the main disk until each new copy has been copied and verified. Only then is space on the main disk released.
+- Effects: On, a failed copy or an unplugged USB drive leaves all your files on the main disk. Turning it off asks you to confirm because the main disk then stops holding a full copy during the split.
+- Default: On
+- Example: Example for "Safety backup": on, a failed copy or an unplugged USB drive leaves all your files on the main disk. Turning it off asks you to confirm because the main disk then stops holding a full copy during the split.
+
+### split-storage-split-copies
+
+**Copies of each part** — `#split-copies`
+
+- Kind: number
+- Purpose: Choose how many different locations hold each encrypted part. One means split only; two or more adds redundancy.
+- Effects: With one copy, every location that holds a share is needed to open the files stored on it. More copies need more space.
+- Default: 1
+- Example: Example for "Copies of each part": with one copy, every location that holds a share is needed to open the files stored on it. More copies need more space.
 
 ## Website
 
