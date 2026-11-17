@@ -611,10 +611,16 @@
       "translationSha256": "ccbd1f13fe7067122e75ed1076c2bbc64a617d090c128ceb27be5adc44bfb33a"
     },
     {
+      "source": "docs/features/storage/split-storage-internals.md",
+      "translation": "docs/features/storage/split-storage-internals.zh-HK.md",
+      "sourceSha256": "31bae15c71fba83c7cbf7d14efc4500fdf528826f68de5ce979db69daf4e38b4",
+      "translationSha256": "13793f92e2c6b0c3b84b7a7917e7fe9afb8146edca8a018a44b9f79725cf01ff"
+    },
+    {
       "source": "docs/features/storage/README.md",
       "translation": "docs/features/storage/README.zh-HK.md",
-      "sourceSha256": "f787b24d4706691e2e9d19354338a9387f8b06cbea9edac18fed57dcaac5da64",
-      "translationSha256": "7067411abf9c4ac1c317be88885eeb69539b81e728dcc6552e5093e00b7f7ed9"
+      "sourceSha256": "7ffd3027146fd0a2e8451c43c4efe6e6ff9da5b4c479dd8638f49f7f0252dc83",
+      "translationSha256": "e2ac20e4ae3af3a95360951ba922a0dddb3aaf8a4b9c1dab23ff5f4025620d1d"
     },
     {
       "source": "docs/features/storage/transfer-lifecycle.md",

@@ -12,6 +12,8 @@
 - [受管傳輸、日誌及安全生命週期（廣東話）](transfer-lifecycle.zh-HK.md)
 - [Physical encrypted-part packing](physical-packing.md)
 - [加密分段實體打包（廣東話）](physical-packing.zh-HK.md)
+- [Split storage internals](split-storage-internals.md)
+- [分散存放內部運作（廣東話）](split-storage-internals.zh-HK.md)
 
 目前來源支援格式 3，並保留格式 1 同格式 2 讀取。來源協定測試同歷史執行證據，唔可以代替目前套件或者安裝驗收。
 

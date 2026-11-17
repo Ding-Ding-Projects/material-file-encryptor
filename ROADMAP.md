@@ -1,3 +1,17 @@
+## Split storage and mirrors, 2026-11-17
+
+Branch `ai/feature/20261117-split-storage-core` (engine, host, desktop process). Ticks mean implemented with focused tests passing.
+
+- [x] Native read path: placement.json, folder shares and folder mirrors copied into the cache and authenticated, registry parts fetched through the `hydratePart` pipe event, a clear message naming an unplugged location.
+- [x] Placed parts count as present for history, publication, snapshots, packing sizes and cache eviction.
+- [x] Planner (weighted rendezvous hashing, copies, caps, path-rule pins), mover (verify-then-delete, resumable, cancellable), Safety backup on by default, Bring everything back.
+- [x] Folder and registry locations, folder and registry mirrors, desktop IPC and the locked-folder lease.
+- [ ] Packaged app proof: apply, hold, retry and bring back on a real drive, and reading a moved file through the mounted drive.
+- [ ] Live Docker Hub: registry share upload, read-back and hydration, registry mirror publish.
+- [ ] Native drive-type query for removable drives (currently a heuristic).
+- [ ] Moves while the drive is unlocked (currently refused; the drive must be locked).
+- [ ] Locked-folder images and registry backups of a split drive (currently refused while parts live elsewhere).
+
 ## November 2026 redesign and required features, 2026-11-16
 
 Design canvas: `design/redesign-2026-11/`. Integration branch `ai/feature/20261116-redesign-integration`, pull request #20. Ticks below mean implemented in source with focused tests passing; nothing here is yet proven in the packaged or installed app.

@@ -57,6 +57,24 @@ function boundedResponses() {
   });
 }
 
+const REQUEST_ID = /^[0-9a-f]{32}$/;
+const PART_ID = /^(?:[0-9a-f]{32}|[0-9a-f]{64})$/;
+const LOCATION_ID = /^[a-z0-9-]{1,64}$/;
+const absolutePath = value => typeof value === 'string' && value.length > 2 && value.length <= 32767 && !/[\x00-\x1f]/.test(value) && /^(?:[A-Za-z]:[\\/]|\\\\)/.test(value);
+/**
+ * The host asks for a registry-held encrypted part with hydratePart and withdraws the request with
+ * hydratePartCancel. Both are validated field by field; anything else closes the connection.
+ */
+export function hydrationEvent(message) {
+  if (message.event === 'hydratePartCancel')
+    return Object.keys(message).length === 2 && REQUEST_ID.test(message.requestId) ? { requestId: message.requestId } : null;
+  const fields = ['event', 'requestId', 'part', 'location', 'storageDir', 'destination'];
+  if (Object.keys(message).length !== fields.length || fields.some(field => !Object.hasOwn(message, field))) return null;
+  if (!REQUEST_ID.test(message.requestId) || !PART_ID.test(message.part) || !LOCATION_ID.test(message.location) ||
+      !absolutePath(message.storageDir) || !absolutePath(message.destination)) return null;
+  return { requestId: message.requestId, part: message.part, location: message.location, storageDir: message.storageDir, destination: message.destination };
+}
+
 /** Private child-process pipe. Credentials are never put in arguments, environment or logs. */
 export class NativeClient extends EventEmitter {
   constructor(executable, { spawnProcess = spawn, slowAfterMs = 120000, managedDataRoot = null } = {}) {
@@ -99,6 +117,11 @@ export class NativeClient extends EventEmitter {
       try { message = JSON.parse(line); } catch { failed(invalidResponse()); return; }
       if (!message || typeof message !== 'object' || Array.isArray(message)) { failed(invalidResponse()); return; }
       if (Object.hasOwn(message, 'event')) {
+        if (message.event === 'hydratePart' || message.event === 'hydratePartCancel') {
+          const request = hydrationEvent(message);
+          if (!request) { failed(invalidResponse()); return; }
+          this.emit(message.event, request); return;
+        }
         if (message.event !== 'status' || !Object.hasOwn(message, 'data') && !Object.hasOwn(message, 'status')) { failed(invalidResponse()); return; }
         this.emit('status', message.data ?? message.status, message.sessionId ?? 'main'); return;
       }

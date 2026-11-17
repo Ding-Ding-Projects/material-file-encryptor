@@ -2,6 +2,7 @@ import { validateRegistrySchedule } from './registry-schedule.js';
 import { REGISTRY_CONFLICT_METHODS, validateRegistryConflictRequest } from './registry-conflict-requests.js';
 import {ACCESS_HOST_ACTIONS,validateAccessHostRequest} from './access-host.js';
 import {normalizeDriveName} from '../shared/drive-name.js';
+import { SPLIT_STORAGE_METHODS, validateSplitStorageRequest } from './split-storage/ipc.js';
 
 // Managed-server (flavor, container and SSH target) requests. Only fixed identifiers and bounded plain values are accepted: no
 // path, URL, command, key path or password can be expressed here. File and key choosers run in the main process.
@@ -116,6 +117,7 @@ export function validateFeatureRequest(feature, action, payload, { browser = fal
 }
 export function validateRequest(method, value = {}) {
   if (!object(value)) throw new Error('Invalid request.');
+  if (SPLIT_STORAGE_METHODS.has(method)) return validateSplitStorageRequest(method, value);
   if (REGISTRY_CONFLICT_METHODS.has(method)) return validateRegistryConflictRequest(method, value);
   if (method === 'configureRegistryStorage') {
     if (!Object.hasOwn(value, 'repository') || !Object.hasOwn(value, 'schedule') || Object.keys(value).some(key => !['repository', 'visibility', 'schedule'].includes(key)) || !['private', 'public'].includes(value.visibility === undefined ? 'public' : value.visibility) || typeof value.repository !== 'string' || !/^[a-z0-9][a-z0-9_-]{1,38}\/[a-z0-9]+(?:(?:[._]|__|-+)[a-z0-9]+)*$/.test(value.repository) || value.repository.length > 220) throw Error('Invalid registry destination.');

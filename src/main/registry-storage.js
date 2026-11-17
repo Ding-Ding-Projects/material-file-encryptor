@@ -214,6 +214,15 @@ export function createRegistryStorage({ destination, authorize, fetcher = fetch,
       return revisions;
     },
     readRevision,
+    /** Reads one encrypted object of a snapshot, verified against its layer digest and size. */
+    async readObject(digest, objectPath, signal) {
+      if (!OBJECT.test(objectPath)) throw fail();
+      signal = signal ? AbortSignal.any([signal, AbortSignal.timeout(3600000)]) : AbortSignal.timeout(3600000);
+      const revision = await readRevision(digest, signal);
+      const file = revision.snapshot.files.find(item => item.path === objectPath);
+      if (!file) throw fail();
+      return getBlob(file, LAYER, signal);
+    },
     async download(digest, writeFile, signal) {
       signal = signal ? AbortSignal.any([signal, AbortSignal.timeout(3600000)]) : AbortSignal.timeout(3600000);
       await authorization(signal, true);

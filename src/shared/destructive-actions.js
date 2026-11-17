@@ -121,6 +121,7 @@ export const EXEMPT_ACTIONS = Object.freeze({
   cancelServer: 'Cancels a preparation that has not become a server. Prepared files are retained for recovery.',
   cancelRuntime: 'Cancels a runtime preparation. Retained files are kept for explicit recovery.',
   cancelFontMetadata: 'Cancels a font scan. Nothing stored is removed.',
+  cancelSplitStorage: 'Stops a split storage job after the current part. Every part keeps a verified copy and the main copies stay while Safety backup holds the job.',
   cancelled: 'A state name, not an action.',
   canceled: 'A state name, not an action.',
   cancelling: 'A state name, not an action.',

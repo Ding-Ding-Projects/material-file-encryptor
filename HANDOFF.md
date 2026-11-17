@@ -1,3 +1,11 @@
+## Split storage core, 2026-11-17
+
+Branch `ai/feature/20261117-split-storage-core`. Native: `SplitPlacement.cs`, `VaultEngine.Placement.cs`, `PartHydrationBridge.cs`, `VaultController.SplitStorage.cs`. Desktop: `src/main/split-storage/`. Developer note: `docs/features/storage/split-storage-internals.md`.
+
+Decisions: moves require a locked drive and the locked-folder snapshot lease; recorded share copies keep files visible while a location is unplugged (reads then name the location); registry shares upload new parts as incremental snapshots; locked-folder images of a split drive are refused.
+
+Verification: native core tests 65/65 (8 new split storage cases), focused desktop tests for planner, mover, mirrors, pipe and service. Open: packaged and live registry proof, see ROADMAP.md.
+
 ## November 2026 redesign, 2026-11-16
 
 Work lives on `ai/feature/20261116-redesign-integration` (pull request #20, draft), merged from nine lanes: workspace shell, motion system, Docker Hub backup and sign-in, sounds and new tab catalog, regex builder, toolbox, studio tools, inventory and comfort, documentation site. The design canvas is in `design/redesign-2026-11/` with its handoff and review notes.
