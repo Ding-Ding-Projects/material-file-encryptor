@@ -9,6 +9,7 @@ import { validateRegistrySchedule, nextRegistryRun, registryOccurrence } from '.
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 const identity = stat => `${stat.dev}:${stat.ino}`;
 const ERROR = 'Registry synchronization is incomplete. Local encrypted data was retained. Review the destination and retry.';
+const PHASES = { discovering: 'checking the destination', downloading: 'downloading snapshots from other devices', preparing: 'preparing the encrypted snapshot', uploading: 'uploading', restoring: 'restoring' };
 const SAFE_REASONS = new Set(['The destination contains a different vault.', 'Snapshot catalogue exceeds this client limit. Narrow the repository before retrying.', 'Snapshot catalogue exceeds the metadata limit.', 'Native synchronization did not settle.', 'Native synchronization needs attention.']);
 async function physical(root) {
   if (typeof root !== 'string' || !path.isAbsolute(root)) throw Error('Choose an absolute local storage folder.');
@@ -94,10 +95,13 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
     row.lastError = null; row.interrupted = true; row.progress = null;
     try { await save(); return await action(current, row, controller.signal); }
     catch (error) {
+      const failedStep = PHASES[row.state];
       row.state = controller.signal.aborted ? 'cancelled' : 'incomplete';
       // Plain reasons written by this service are shown; anything else keeps the generic message.
       const reason = !controller.signal.aborted && SAFE_REASONS.has(error?.message) ? ' ' + error.message : '';
-      row.lastError = ERROR + reason; throw Error(ERROR + reason);
+      // The step name says where it stopped without exposing paths, account details or registry responses.
+      const where = !controller.signal.aborted && failedStep ? ` (stopped while ${failedStep})` : '';
+      row.lastError = ERROR + reason + where; throw Error(ERROR + reason + where);
     }
     finally {
       clearTimeout(timer); controller.signal.removeEventListener('abort', cancelNative); row.interrupted = active.leases.size > 0;

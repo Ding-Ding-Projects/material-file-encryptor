@@ -163,3 +163,9 @@ test('a known plain reason is shown with the generic message and other failures 
   await g.service.configure('main', configuration());
   await assert.rejects(g.service.sync('main'), error => !/private|secret/.test(error.message));
 });
+
+test('the error names the step where synchronization stopped, without private detail', async t => {
+  const f = await fixture(t, { storageFactory: () => ({ list: async () => [], publish: async () => { throw Error('C:\private\detail 401'); } }) });
+  await f.service.configure('main', configuration());
+  await assert.rejects(f.service.sync('main'), error => /stopped while (uploading|preparing the encrypted snapshot)/.test(error.message) && !/private|401/.test(error.message));
+});
