@@ -1,0 +1,183 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "a2581b24",
+  "sourceNote": "The abbreviated commit of the packaged build these frames were taken from. The picker and dialogs were polished afterwards (left-aligned repository names, top-aligned list, repositories with drives first), so the current look differs slightly.",
+  "appVersion": "0.2.0",
+  "builtAt": null,
+  "executable": {
+    "path": "out/material-file-encryptor-win32-x64/MaterialFileEncryptor.exe",
+    "sha256": null,
+    "note": "The build was made and driven by another session; its hash was not recorded here."
+  },
+  "captureMethod": "Playwright _electron launch of the packaged executable in an isolated throwaway profile, driven through the real user interface: Create a drive, Docker Hub, repository picker, create, first sync, lock, delete the local copy, Open from Docker Hub, restore and unlock. Window screenshots at device scale factor 1.",
+  "captureHost": "Windows 11 x64, 1440 by 900 window, signed in to a real Docker Hub account. The account name shown is the public repository namespace.",
+  "privacy": "Every frame was inspected by eye before inclusion. Frames that showed the local profile path (a user name) or the names of other repositories were left out, and no pixels were edited.",
+  "notIncluded": [
+    "12-click-create-drive and 13-drive-created-first-sync: the details panel shows the local profile path with a user name. Not edited, so not included.",
+    "30-restored-drive-shows-file: the details panel shows the local profile path. Not included.",
+    "22-choose-docker-hub and 23-press-refresh-in-picker: the repository list shows the names of other repositories of the account, including a private one. Not included."
+  ],
+  "captures": [
+    {
+      "name": "create-where-light-en",
+      "file": "create-where-light-en.png",
+      "sha256": "428d89887d3684c240f40251ad45d72430ff1be08884d0e4b5f82a8344869b4d",
+      "bytes": 67474,
+      "width": 1440,
+      "height": 900,
+      "surface": "create-drive",
+      "theme": "light",
+      "language": "en",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "deviceScaleFactor": 1,
+      "textScale": 100,
+      "highContrast": false,
+      "captureRun": "hub11",
+      "captureDate": "2026-11-17",
+      "originalName": "05-choose-docker-hub-no-folders.png",
+      "alt": "Create a drive dialog, step 1 Where, with two choice cards: On this computer (choose a folder) and Docker Hub (no folder to choose)",
+      "inspected": true
+    },
+    {
+      "name": "create-repository-picker-light-en",
+      "file": "create-repository-picker-light-en.png",
+      "sha256": "1a02bc5bd14afbeadfbb731b6fd7fd0874ec56a09a5fdfb93a1f8655b43aa83c",
+      "bytes": 98228,
+      "width": 1440,
+      "height": 900,
+      "surface": "create-drive",
+      "theme": "light",
+      "language": "en",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "deviceScaleFactor": 1,
+      "textScale": 100,
+      "highContrast": false,
+      "captureRun": "hub11",
+      "captureDate": "2026-11-17",
+      "originalName": "07-signed-in-and-repositories-listed.png",
+      "alt": "Create a drive dialog, step 3 Repository, showing the signed-in account, the search box with Regex builder and Refresh, the filter chips and repository rows with drive cards",
+      "inspected": true
+    },
+    {
+      "name": "create-details-light-en",
+      "file": "create-details-light-en.png",
+      "sha256": "fab7f700c2ddce6cd11bbada0b01f4743cbadfd9d829936a53e202c0ca3d6371",
+      "bytes": 81580,
+      "width": 1440,
+      "height": 900,
+      "surface": "create-drive",
+      "theme": "light",
+      "language": "en",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "deviceScaleFactor": 1,
+      "textScale": 100,
+      "highContrast": false,
+      "captureRun": "hub11",
+      "captureDate": "2026-11-17",
+      "originalName": "08-pick-repository.png",
+      "alt": "Create a drive dialog, step 4 Details, with the chosen repository, name, letter, password fields, the public warning and where the local copy lives",
+      "inspected": true
+    },
+    {
+      "name": "docker-hub-storage-after-backup-light-en",
+      "file": "docker-hub-storage-after-backup-light-en.png",
+      "sha256": "9427e92c8bca5e2802f55cb6e0646cbbf28b64f12d2bc2c526a4f73de894534d",
+      "bytes": 95808,
+      "width": 1440,
+      "height": 900,
+      "surface": "docker-hub-storage",
+      "theme": "light",
+      "language": "en",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "deviceScaleFactor": 1,
+      "textScale": 100,
+      "highContrast": false,
+      "captureRun": "hub11",
+      "captureDate": "2026-11-17",
+      "originalName": "17-backup-with-file-finished.png",
+      "alt": "Docker Hub storage page with the saved destination, public visibility, last verified digest and the snapshot controls",
+      "inspected": true
+    },
+    {
+      "name": "open-picker-drive-cards-light-en",
+      "file": "open-picker-drive-cards-light-en.png",
+      "sha256": "1061d59e0914cac60a35d34d062a6b1db2fcb099b490af54560ac98baf72df60",
+      "bytes": 95427,
+      "width": 1440,
+      "height": 900,
+      "surface": "open-drive",
+      "theme": "light",
+      "language": "en",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "deviceScaleFactor": 1,
+      "textScale": 100,
+      "highContrast": false,
+      "captureRun": "hub11",
+      "captureDate": "2026-11-17",
+      "originalName": "24-drive-detected-in-repository.png",
+      "alt": "Open a drive from Docker Hub dialog, step 1 Drive, with filter chips and a repository holding nine detected drives as cards",
+      "inspected": true
+    },
+    {
+      "name": "open-snapshots-light-en",
+      "file": "open-snapshots-light-en.png",
+      "sha256": "83edb1466536384cbb1bb40be077e9dd4cf60b52d6514a6364746a71313fa650",
+      "bytes": 77125,
+      "width": 1440,
+      "height": 900,
+      "surface": "open-drive",
+      "theme": "light",
+      "language": "en",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "deviceScaleFactor": 1,
+      "textScale": 100,
+      "highContrast": false,
+      "captureRun": "hub11",
+      "captureDate": "2026-11-17",
+      "originalName": "25-pick-the-drive-card.png",
+      "alt": "Open a drive from Docker Hub dialog, step 2 Snapshot, with the latest snapshot selected, restore into the app's own folder, drive letter and Advanced: choose folder",
+      "inspected": true
+    },
+    {
+      "name": "open-unlock-light-en",
+      "file": "open-unlock-light-en.png",
+      "sha256": "77c80594e0cb0043f122454b122343a71c46c6db2b1aae3e40d05f57a710fba6",
+      "bytes": 67842,
+      "width": 1440,
+      "height": 900,
+      "surface": "open-drive",
+      "theme": "light",
+      "language": "en",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "deviceScaleFactor": 1,
+      "textScale": 100,
+      "highContrast": false,
+      "captureRun": "hub11",
+      "captureDate": "2026-11-17",
+      "originalName": "27-restored-asking-password.png",
+      "alt": "Open a drive from Docker Hub dialog, step 4 Unlock, after the snapshot was restored and verified",
+      "inspected": true
+    }
+  ]
+}
