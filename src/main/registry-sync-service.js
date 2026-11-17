@@ -98,7 +98,7 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
       const failedStep = PHASES[row.state];
       row.state = controller.signal.aborted ? 'cancelled' : 'incomplete';
       // Plain reasons written by this service are shown; anything else keeps the generic message.
-      const reason = !controller.signal.aborted && SAFE_REASONS.has(error?.message) ? ' ' + error.message : '';
+      const reason = !controller.signal.aborted && (SAFE_REASONS.has(error?.message) || error?.nativeReason === true) ? ' ' + error.message : '';
       // The step name says where it stopped without exposing paths, account details or registry responses.
       const where = !controller.signal.aborted && failedStep ? ` (stopped while ${failedStep})` : '';
       row.lastError = ERROR + reason + where; throw Error(ERROR + reason + where);
@@ -113,7 +113,10 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
   }
   async function acquire(id, source) {
     active.controller.signal.throwIfAborted();
-    const lease = await nativeRequest('beginSnapshot', { storageDir: source }, id);
+    let lease;
+    // Native refusals here are plain sentences meant for people, so they may be shown; anything path-like stays hidden.
+    try { lease = await nativeRequest('beginSnapshot', { storageDir: source }, id); }
+    catch (error) { const shown = Error(String(error?.message || '')); const m = shown.message; if (m && m.length <= 200 && !m.includes('/') && !m.includes('\\') && !/[A-Za-z]:/.test(m)) shown.nativeReason = true; throw shown; }
     if (typeof lease?.leaseId !== 'string' || !lease.leaseId || typeof lease.storageDir !== 'string') throw Error('Invalid native snapshot lease.');
     active.leases.add(lease.leaseId); return lease;
   }

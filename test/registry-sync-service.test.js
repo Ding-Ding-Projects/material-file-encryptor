@@ -169,3 +169,17 @@ test('the error names the step where synchronization stopped, without private de
   await f.service.configure('main', configuration());
   await assert.rejects(f.service.sync('main'), error => /stopped while (uploading|preparing the encrypted snapshot)/.test(error.message) && !/private|401/.test(error.message));
 });
+
+test('a plain native refusal of the storage lease is shown, but a path-like one is not', async t => {
+  const cases = [
+    ['Lock the vault and wait for synchronization to stop before preparing an image.', true],
+    ['Cannot open C:\\Users\\someone\\vault', false],
+    ['Share \\\\server\\vault is busy', false],
+    ['Folder /home/someone/vault is busy', false],
+  ];
+  for (const [message, shown] of cases) {
+    const f = await fixture(t, { storageFactory: () => ({ list: async () => [] }), nativeRequest: async method => { if (method === 'beginSnapshot') throw Error(message); return {}; } });
+    await f.service.configure('main', configuration());
+    await assert.rejects(f.service.sync('main'), error => error.message.includes(message) === shown && !/someone|server/.test(error.message));
+  }
+});
