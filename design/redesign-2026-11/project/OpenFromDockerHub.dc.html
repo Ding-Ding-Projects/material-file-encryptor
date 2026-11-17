@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Open a drive from Docker Hub</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..800&amp;family=Roboto+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+@keyframes rise{from{transform:translateY(10px);opacity:0}to{transform:none;opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pop{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.1);opacity:1}100%{transform:none}}
+[data-motion=off] *{animation:none!important;transition:none!important}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+button,select,input{font:inherit;color:inherit}
+</style>
+</helmet>
+<div data-motion="{{motion}}" style="--accent:{{accent}};width:1440px;height:960px;position:relative;font-family:'Roboto Flex',system-ui,sans-serif;font-size:13px;color:#1A1B24;background:#E9EBF2;overflow:hidden;display:flex;flex-direction:column">
+<div aria-hidden="true" style="height:40px;background:#DADDE8;flex:none"></div>
+<div aria-hidden="true" style="height:44px;background:#FFFFFF;border-bottom:1px solid #DCDEE8;flex:none"></div>
+<div aria-hidden="true" style="flex:1;display:flex;gap:1px;background:#DCDEE8"><div style="flex:0 0 232px;background:#F7F8FB"></div><div style="flex:1;background:#FFFFFF"></div></div>
+<div aria-hidden="true" style="position:absolute;inset:0;background:rgba(26,27,36,.42)"></div>
+<section role="dialog" aria-modal="true" aria-labelledby="ttl" style="position:absolute;left:170px;top:60px;width:1100px;height:840px;border-radius:20px;background:#FFFFFF;box-shadow:0 12px 40px rgba(0,0,0,.28);display:flex;flex-direction:column;overflow:hidden;animation:rise 320ms cubic-bezier(.05,.7,.1,1) both">
+<header style="display:flex;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid #ECEDF3"><h1 id="ttl" style="margin:0;font-size:18px;font-weight:600;flex:1">Open a drive from Docker Hub</h1><span style="{{pill}}">{{pillText}}</span><button type="button" aria-label="Close" style="width:36px;height:36px;border:0;border-radius:18px;background:transparent;font-size:18px">×</button></header>
+<div style="flex:1;display:grid;grid-template-columns:220px minmax(0,1fr);min-height:0">
+<ol aria-label="Steps" style="margin:0;padding:16px 12px;list-style:none;background:#F7F8FB;display:flex;flex-direction:column;gap:4px"><sc-for list="{{steps}}" as="s" hint-placeholder-count="4"><li style="{{s.style}}">{{s.n}} {{s.t}}</li></sc-for></ol>
+<div style="padding:18px 22px;overflow:auto;display:flex;flex-direction:column;gap:14px">
+
+<div style="{{showRepo}}">
+<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;background:#CDEFE3;color:#063D31;font-weight:600">Signed in to Docker Hub as yourname · also reading the organization namespaces acme-team and studio</div>
+<div style="display:flex;gap:8px;align-items:center">
+<input type="search" aria-label="Search repositories" placeholder="Search repositories and drives" value="{{q}}" onInput="{{setQ}}" style="flex:1;height:46px;border:2px solid var(--accent);border-radius:23px;padding:0 18px;font-size:14px">
+<button type="button" aria-pressed="{{rxOn}}" aria-label="Open the regex builder for this search" onClick="{{toggleRx}}" style="{{rxBtn}}">.*  Regex</button>
+<button type="button" style="height:44px;padding:0 16px;border:1px solid #C6C8D8;border-radius:22px;background:#FFFFFF">Refresh</button>
+<button type="button" aria-label="More about this list" style="width:32px;height:32px;border:1px solid #3A46B5;border-radius:16px;background:transparent;color:#3A46B5;font-weight:700">i</button>
+</div>
+<div style="{{rxStyle}}"><input value="{{q}}" aria-label="Pattern" style="flex:1;height:36px;border:1px solid #C6C8D8;border-radius:8px;padding:0 10px;font-family:'Roboto Mono',monospace"><input value="i" aria-label="Flags" style="width:56px;height:36px;border:1px solid #C6C8D8;border-radius:8px;padding:0 10px;font-family:'Roboto Mono',monospace"><span style="{{rxMsgStyle}}">{{rxMsg}}</span></div>
+<div role="group" aria-label="Filter" style="display:flex;gap:6px;flex-wrap:wrap"><sc-for list="{{chips}}" as="c" hint-placeholder-count="5"><button type="button" aria-pressed="{{c.on}}" onClick="{{c.pick}}" style="{{c.style}}">{{c.t}}</button></sc-for></div>
+<div style="display:flex;align-items:center;gap:10px;color:#4A4C5C"><span aria-hidden="true" style="{{scanDot}}"></span><span aria-live="polite">{{scanText}}</span></div>
+<div role="listbox" aria-label="Repositories" style="display:grid;gap:8px">
+<sc-for list="{{repos}}" as="r" hint-placeholder-count="4">
+<div style="{{r.box}}">
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b style="font-family:'Roboto Mono',monospace;flex:1;min-width:200px">{{r.name}}</b><span style="{{r.visStyle}}">{{r.vis}}</span><span style="color:#4A4C5C">{{r.pushed}}</span><span style="color:#4A4C5C">{{r.size}}</span><span style="{{r.countStyle}}">{{r.count}}</span></div>
+<div style="{{r.errStyle}}">{{r.err}}</div>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">
+<sc-for list="{{r.drives}}" as="d" hint-placeholder-count="2"><button type="button" onClick="{{d.pick}}" style="{{d.style}}"><b>{{d.name}}</b><span style="font-family:'Roboto Mono',monospace;font-size:11px;color:#4A4C5C">Drive {{d.id}}</span><span style="color:#4A4C5C">Last backup {{d.last}} · {{d.snaps}} snapshots · {{d.size}}</span><span style="font-weight:600;color:#3A46B5">Open latest snapshot</span></button></sc-for>
+</div>
+</div>
+</sc-for>
+</div>
+<p style="margin:0;font-size:12px;color:#4A4C5C">Drive names are optional labels stored in the repository. Anyone who can read a public repository can read them, so do not put anything private in a name.</p>
+</div>
+
+<div style="{{showSnaps}}">
+<p style="margin:0;font-size:12px;font-weight:700;letter-spacing:.06em;color:#4A4C5C">SNAPSHOTS OF Work files (a1b2c3) IN yourname/material-file-encryptor-storage</p>
+<div role="listbox" aria-label="Snapshots" style="display:grid;gap:6px"><sc-for list="{{snaps}}" as="s" hint-placeholder-count="4"><div role="option" aria-selected="{{s.sel}}" style="{{s.style}}"><span style="font-weight:700;min-width:120px">{{s.when}}</span><span style="flex:1;color:#4A4C5C">{{s.what}}</span><span style="{{s.badge}}">{{s.tag}}</span></div></sc-for></div>
+<p style="margin:0;font-size:12px;color:#4A4C5C">The latest snapshot is selected for you. Restoring never changes Docker Hub.</p>
+</div>
+<div style="{{showWhere}}">
+<div style="padding:12px 14px;border-radius:12px;background:#F1F2F8;line-height:1.5"><b>Restore into the app's own folder</b><br><span style="font-family:'Roboto Mono',monospace;font-size:12px">C:\Users\you\AppData\Local\MaterialFileEncryptor\Drives\c3d4\storage</span><br>Created for you, readable only by your account. <a href="#" style="color:#3A46B5;font-weight:600">Show folder</a></div>
+<details style="border:1px solid #DCDEE8;border-radius:12px;padding:10px 12px"><summary style="font-weight:600;cursor:pointer">Advanced: choose folder</summary><p style="margin:8px 0;color:#4A4C5C">Pick a parent folder yourself. The restored storage folder is created inside it.</p><button type="button" style="height:36px;padding:0 14px;border:1px solid #C6C8D8;border-radius:8px;background:#FFFFFF">Choose folder…</button></details>
+</div>
+<div style="{{showProgress}}">
+<p style="margin:0;font-size:12px;font-weight:700;letter-spacing:.06em;color:#4A4C5C">RESTORING</p>
+<div style="height:10px;border-radius:5px;background:#E4E6F0;overflow:hidden"><div style="height:100%;border-radius:5px;background:var(--accent);width:66%"></div></div>
+<span style="font-variant-numeric:tabular-nums">2 of 3 parts · 8 MiB / 12 MiB · verifying each part as it arrives</span>
+<button type="button" style="height:36px;padding:0 14px;border:1px solid #C6C8D8;border-radius:8px;background:#FFFFFF;align-self:flex-start">Cancel restore</button>
+</div>
+<div style="{{showUnlock}}">
+<div style="padding:12px 14px;border-radius:12px;background:#CDEFE3;color:#063D31"><b>Restored and verified.</b> Now unlock it with its password.</div>
+<label style="display:flex;flex-direction:column;gap:3px;font-size:12px;font-weight:600;color:#4A4C5C">Password<input type="password" value="correct horse" style="height:38px;border:1px solid #C6C8D8;border-radius:8px;padding:0 10px"></label>
+<label style="display:flex;flex-direction:column;gap:3px;font-size:12px;font-weight:600;color:#4A4C5C">Drive letter<select style="height:38px;border:1px solid #C6C8D8;border-radius:8px;background:#FFFFFF"><option>M:</option><option>N:</option></select></label>
+</div>
+<div style="{{showDone}}">
+<div style="padding:18px;border-radius:16px;background:#CDEFE3;color:#063D31;display:grid;gap:6px;animation:pop 420ms cubic-bezier(.05,.7,.1,1) both"><b style="font-size:18px">Mounted as M:</b><span>Restored from the 2026-11-17 09:12 snapshot. Automatic sync is off until you turn it on.</span></div>
+<div style="display:flex;gap:8px"><button type="button" style="height:40px;padding:0 18px;border:0;border-radius:8px;background:var(--accent);color:#FFFFFF;font-weight:600">Open drive</button><button type="button" style="height:40px;padding:0 16px;border:1px solid #C6C8D8;border-radius:8px;background:#FFFFFF">Show folder</button></div>
+</div>
+</div></div>
+<footer style="display:flex;gap:8px;justify-content:flex-end;padding:12px 20px;border-top:1px solid #ECEDF3"><button type="button" style="height:40px;padding:0 16px;border:1px solid #C6C8D8;border-radius:8px;background:#FFFFFF">Back</button><button type="button" style="height:40px;padding:0 20px;border:0;border-radius:8px;background:var(--accent);color:#FFFFFF;font-weight:600">{{primary}}</button></footer>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#4B57C9","options":["#4B57C9","#00696B","#8B4A00","#A23B72"],"section":"Look"},"motion":{"editor":"boolean","default":true,"section":"Look"},"stage":{"editor":"enum","options":["repository","scanning","repoError","snapshots","location","restoring","unlock","mounted"],"default":"repository","section":"Stage"},"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  constructor(p){super(p);this.state={f:'all',q:'',rx:false,pick:''};}
+  flow(stage,show){
+    const order=['repository','snapshots','location','restoring','unlock','mounted'];
+    const eff=['scanning','repoError'].includes(stage)?'repository':stage;
+    const grp=[0,1,2,2,3,3][order.indexOf(eff)];
+    const steps=['Drive','Snapshot','Restore','Unlock'].map((t,i)=>({n:i+1,t,style:'padding:8px 12px;border-radius:8px;'+(i===grp?'background:#E6E8FF;color:#26318F;font-weight:600':i<grp?'color:#063D31':'color:#4A4C5C')}));
+    const data=[['2026-11-17 09:12','3 parts, 12 MiB','Latest'],['2026-11-16 18:40','3 parts, 11 MiB',''],['2026-11-10 08:05','2 parts, 9 MiB','']];
+    const snaps=data.map((d,i)=>({when:d[0],what:d[1],tag:d[2]||'Older',sel:String(i===0),
+      style:'display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;border:2px solid '+(i===0?'var(--accent)':'#DCDEE8')+';background:'+(i===0?'#F0F1FF':'#FFFFFF'),
+      badge:'padding:3px 8px;border-radius:8px;font-size:11px;font-weight:700;'+(d[2]?'background:#CDEFE3;color:#063D31':'background:#F1F2F8;color:#3A3C4C')}));
+    return {steps,snaps,
+      pillText:{repository:'Step 1 of 4',scanning:'Scanning',repoError:'One repository failed',snapshots:'Step 2 of 4',location:'Step 3 of 4',restoring:'Restoring',unlock:'Step 4 of 4',mounted:'Mounted'}[stage],
+      pill:'padding:4px 10px;border-radius:10px;font-weight:700;font-size:12px;'+(stage==='repoError'?'background:#FFDAD6;color:#410002':stage==='mounted'?'background:#CDEFE3;color:#063D31':'background:#E6E8FF;color:#26318F'),
+      primary:{repository:'Open latest snapshot of the selected drive',scanning:'Open latest snapshot of the selected drive',repoError:'Open latest snapshot of the selected drive',snapshots:'Next',location:'Restore',restoring:'Restoring…',unlock:'Unlock and mount',mounted:'Close'}[stage]};
+  }
+  repoData(stage){
+    const err=stage==='repoError';
+    return [
+      {name:'yourname/material-file-encryptor-storage',vis:'Public',pushed:'2026-11-17 09:12',size:'12 MiB',drives:[{id:'a1b2c3',name:'Work files',last:'2026-11-17 09:12',snaps:6,size:'12 MiB'},{id:'d4e5f6',name:'Photos',last:'2026-11-12 20:01',snaps:3,size:'4.1 GiB'}]},
+      {name:'yourname/old-notes',vis:'Private',pushed:'2025-03-02 10:00',size:'1.2 MiB',drives:[]},
+      {name:'acme-team/shared-backup',vis:'Public',pushed:'2026-10-30 21:30',size:'820 MiB',drives:[{id:'778899',name:'(no name)',last:'2026-10-30 21:30',snaps:2,size:'820 MiB'}]},
+      {name:'studio/assets',vis:'Public',pushed:'2026-09-01 08:00',size:'3.4 GiB',drives:[],err:err?'Could not read tags: Docker Hub answered 429 too many requests. Retry this row.':''}
+    ];
+  }
+  renderVals(){
+    const stage=this.props.stage??'repository';
+    const st=this.state;
+    const show=x=>'display:'+(x?'flex':'none')+';flex-direction:column;gap:14px';
+    let rx=null,rxMsg='Plain text search',bad=false;
+    if(st.rx){try{rx=new RegExp(st.q,'i');rxMsg='Valid pattern';}catch(e){bad=true;rxMsg='Invalid pattern: '+e.message;}}
+    const all=this.repoData(stage);
+    const f=st.f;
+    const keep=r=>(f==='all'||(f==='drives'&&r.drives.length)||(f==='empty'&&!r.drives.length)||(f==='public'&&r.vis==='Public')||(f==='private'&&r.vis==='Private'))
+      &&(!st.q||(rx?rx.test(r.name+' '+r.drives.map(d=>d.name).join(' ')):(r.name+' '+r.drives.map(d=>d.name).join(' ')).toLowerCase().includes(st.q.toLowerCase())));
+    const repos=all.filter(keep).map(r=>({name:r.name,vis:r.vis,pushed:r.pushed,size:r.size,
+      count:r.drives.length?r.drives.length+' drives found':'No drives',
+      countStyle:'padding:3px 8px;border-radius:8px;font-size:11px;font-weight:700;'+(r.drives.length?'background:#CDEFE3;color:#063D31':'background:#F1F2F8;color:#3A3C4C'),
+      visStyle:'padding:3px 8px;border-radius:8px;font-size:11px;font-weight:700;'+(r.vis==='Public'?'background:#FFF1DE;color:#4A2C00':'background:#E6E8FF;color:#26318F'),
+      box:'border:1px solid '+(r.err?'#B3261E':'#DCDEE8')+';border-radius:12px;padding:10px 12px;display:grid;gap:8px;animation:rise 320ms cubic-bezier(.05,.7,.1,1) both',
+      err:r.err||'',errStyle:r.err?'padding:8px 10px;border-radius:8px;background:#FFDAD6;color:#410002':'display:none',
+      drives:r.drives.map(d=>({...d,pick:()=>this.setState({pick:d.id}),
+        style:'text-align:left;display:flex;flex-direction:column;gap:3px;padding:10px 12px;border-radius:12px;cursor:pointer;background:'+(st.pick===d.id?'#F0F1FF':'#FFFFFF')+';border:2px solid '+(st.pick===d.id?'var(--accent)':'#DCDEE8')}))}));
+    const chips=[['all','All'],['drives','Has drives'],['empty','Empty'],['public','Public'],['private','Private']].map(([k,t])=>({t,on:String(f===k),pick:()=>this.setState({f:k}),
+      style:'height:34px;padding:0 14px;border-radius:17px;cursor:pointer;border:1px solid '+(f===k?'var(--accent)':'#C6C8D8')+';background:'+(f===k?'#E6E8FF':'#FFFFFF')+';font-weight:'+(f===k?700:400)}));
+    const scanning=stage==='scanning';
+    return {accent:this.props.accent??'#4B57C9',motion:this.props.motion===false?'off':'on',repos,chips,q:st.q,
+      setQ:e=>this.setState({q:e.target.value}),toggleRx:()=>this.setState({rx:!st.rx}),rxOn:String(st.rx),
+      rxBtn:'height:44px;padding:0 16px;border-radius:22px;cursor:pointer;font-family:\'Roboto Mono\',monospace;border:1px solid '+(st.rx?'var(--accent)':'#C6C8D8')+';background:'+(st.rx?'#E6E8FF':'#FFFFFF'),
+      rxStyle:st.rx?'display:flex;gap:8px;align-items:center;padding:8px;border-radius:12px;background:#F1F2F8':'display:none',
+      rxMsg,rxMsgStyle:'font-size:12px;font-weight:600;color:'+(bad?'#8B1A10':'#063D31'),
+      scanText:scanning?'Looking for drives: 2 of 4 repositories scanned, results so far are shown':'Scan finished: 4 repositories, 3 drives found. Cached for this session.',
+      scanDot:scanning?'width:14px;height:14px;border-radius:7px;border:2px solid #C6C8D8;border-top-color:var(--accent);animation:spin 900ms linear infinite':'width:14px;height:14px;border-radius:7px;background:#CDEFE3',
+      showRepo:show(['repository','scanning','repoError'].includes(stage)),
+      ...this.flow(stage,show),
+      showSnaps:show(stage==='snapshots'),showWhere:show(stage==='location'),showProgress:show(stage==='restoring'),showUnlock:show(stage==='unlock'),showDone:show(stage==='mounted'),
+  }
+}
+}
+</script>
+</body>
+</html>
