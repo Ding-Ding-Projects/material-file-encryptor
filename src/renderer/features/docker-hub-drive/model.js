@@ -31,7 +31,8 @@ export const searchRows = repositories => repositories.flatMap(item => [{ id: it
 /** Applies the filter chip, then the set of ids the search matched (null means no search is active). */
 export function visibleRepositories(repositories, chip, matchedIds = null) {
   const allowed = matchedIds ? new Set(matchedIds) : null;
-  return repositories.filter(item => chipMatches(chip, item) && (!allowed || allowed.has(item.id)));
+  // Repositories that hold drives come first; the host's newest-first order is kept within each group.
+  return repositories.filter(item => chipMatches(chip, item) && (!allowed || allowed.has(item.id))).sort((a, b) => Number(b.drives.length > 0) - Number(a.drives.length > 0));
 }
 /** A plain-text matcher used when the shared search control is not available (and by tests). */
 export function plainMatcher(query) { const needle = String(query ?? '').toLocaleLowerCase(); return rows => rows.filter(row => !needle || row.text.toLocaleLowerCase().includes(needle)); }

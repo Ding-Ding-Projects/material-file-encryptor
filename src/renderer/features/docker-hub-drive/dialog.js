@@ -41,6 +41,9 @@ md-list-item.snap{border:2px solid var(--md-sys-color-outline-variant,#c6c8d8);b
 md-list-item.snap[aria-pressed=true]{border-color:var(--md-sys-color-primary,#4b57c9);background:var(--md-sys-color-secondary-container,#f0f1ff)}
 .with-info{display:flex;align-items:flex-start;gap:8px;min-width:0}
 .with-info>:not(mfe-control-guidance){flex:1;min-width:0}
+.with-info>md-outlined-select{flex:0 1 260px}
+.with-info>md-icon-button{flex:none}
+.head md-icon-button{width:48px;height:48px;--md-icon-button-state-layer-width:48px;--md-icon-button-state-layer-height:48px;font-size:28px}
 .body>md-outlined-button,.body>md-filled-button{justify-self:start}
 .actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;padding-top:6px}
 .error{color:var(--md-sys-color-error,#b3261e)}
@@ -94,8 +97,10 @@ export class HubDriveDialog extends SurfaceElement {
   }
   /** The dialog would otherwise focus an information icon and pop its tooltip. Focus the first real control instead. */
   focusFirst() {
+    // Never scroll: focusing a control far down the list would open the picker scrolled to the bottom.
+    if (this.stage === 'repository') { this.picker.focusSearch?.(); return; }
     const first = this.shadowRoot.querySelector?.('.body md-list-item, .body md-outlined-text-field, .body md-filled-button, .body md-outlined-button, .body input');
-    first?.focus?.();
+    first?.focus?.({ preventScroll: true });
   }
   letters() {
     const state = this.getVaultState() || {};
@@ -143,6 +148,8 @@ export class HubDriveDialog extends SurfaceElement {
     const list = element('ol', { class: 'steps', 'aria-label': title }, items.map(([key, label], index) => element('li', { 'aria-current': index === at ? 'step' : 'false', 'data-done': String(index < at), text: `${index + 1} ${this.t(label)}` })));
     const body = element('div', { class: 'body' }, this[`stage_${this.stage}`]?.() ?? []);
     this.dialog.replaceChildren(element('div', {}, [head, element('div', { class: 'frame' }, [list, body])]));
+    // A new step starts at its top, whatever the previous step was scrolled to.
+    if (this.lastStage !== this.stage) { this.lastStage = this.stage; const scroller = this.shadowRoot.querySelector?.('.body'); if (scroller) scroller.scrollTop = 0; }
   }
   stage_choose() {
     const card = (key, hint, action, on, pick) => { const node = element('md-list-item', { type: 'button', class: 'choice', role: 'radio', 'aria-checked': String(on) }, [element('div', { slot: 'headline', text: this.t(key) }), element('div', { slot: 'supporting-text', text: this.t(hint) }), element('div', { slot: 'trailing-supporting-text', text: this.t(action) })]); node.addEventListener('click', pick); return node; };
