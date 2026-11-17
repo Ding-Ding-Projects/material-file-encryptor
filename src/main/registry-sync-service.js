@@ -9,7 +9,9 @@ import { validateRegistrySchedule, nextRegistryRun, registryOccurrence } from '.
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 const identity = stat => `${stat.dev}:${stat.ino}`;
 const ERROR = 'Registry synchronization is incomplete. Local encrypted data was retained. Review the destination and retry.';
-async function physical(root) {
+const PHASES = { discovering: 'checking the destination', downloading: 'downloading snapshots from other devices', preparing: 'preparing the encrypted snapshot', uploading: 'uploading', restoring: 'restoring' };
+const SAFE_REASONS = new Set(['The destination contains a different vault.', 'Snapshot catalogue exceeds this client limit. Narrow the repository before retrying.', 'Snapshot catalogue exceeds the metadata limit.', 'Native synchronization did not settle.', 'Native synchronization needs attention.']);
+export async function physical(root) {
   if (typeof root !== 'string' || !path.isAbsolute(root)) throw Error('Choose an absolute local storage folder.');
   for (let cursor = path.resolve(root); ; cursor = path.dirname(cursor)) {
     const stat = await fs.lstat(cursor);
@@ -18,7 +20,7 @@ async function physical(root) {
   }
   return path.resolve(root);
 }
-async function createFile(root, relative, bytes) {
+export async function createFile(root, relative, bytes) {
   if (!/^(?:vault\.json|(?:parts|commits|activity)\/(?:[a-f0-9]{32}|[a-f0-9]{64})\.mfe)$/.test(relative)) throw Error('Invalid encrypted object path.');
   await physical(root);
   const filename = path.join(root, relative);
@@ -33,7 +35,7 @@ async function createFile(root, relative, bytes) {
 }
 
 /** Main-process orchestration. No registry endpoint or filesystem path is accepted from a renderer. */
-export function createRegistrySyncService({ root, contexts, nativeRequest, authorize, chooseRestore, backgroundRegistration = async () => {}, storageFactory = createRegistryStorage, testDestination = null, now = Date.now }) {
+export function createRegistrySyncService({ root, contexts, nativeRequest, authorize, chooseRestore, backgroundRegistration = async () => {}, storageFactory = createRegistryStorage, testDestination = null, now = Date.now, leaseRetryMs = 60000, onChanged = () => {} }) {
   let rows = {}, loaded = false, loading = null, configuring = false, ticking = false, saving = Promise.resolve(), active = null;
   const file = path.join(root, 'registry-sync.json');
   async function readState() {
@@ -92,7 +94,15 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
     controller.signal.addEventListener('abort', cancelNative, { once: true });
     row.lastError = null; row.interrupted = true; row.progress = null;
     try { await save(); return await action(current, row, controller.signal); }
-    catch { row.state = controller.signal.aborted ? 'cancelled' : 'incomplete'; row.lastError = ERROR; throw Error(ERROR); }
+    catch (error) {
+      const failedStep = PHASES[row.state];
+      row.state = controller.signal.aborted ? 'cancelled' : 'incomplete';
+      // Plain reasons written by this service are shown; anything else keeps the generic message.
+      const reason = !controller.signal.aborted && (SAFE_REASONS.has(error?.message) || error?.nativeReason === true) ? ' ' + error.message : '';
+      // The step name says where it stopped without exposing paths, account details or registry responses.
+      const where = !controller.signal.aborted && failedStep ? ` (stopped while ${failedStep})` : '';
+      row.lastError = ERROR + reason + where; throw Error(ERROR + reason + where);
+    }
     finally {
       clearTimeout(timer); controller.signal.removeEventListener('abort', cancelNative); row.interrupted = active.leases.size > 0;
       active.settled = true;
@@ -103,7 +113,21 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
   }
   async function acquire(id, source) {
     active.controller.signal.throwIfAborted();
-    const lease = await nativeRequest('beginSnapshot', { storageDir: source }, id);
+    let lease;
+    // Native refusals here are plain sentences meant for people, so they may be shown; anything path-like stays hidden.
+    // Any in-flight native request (even a status refresh from an open page) makes the host refuse the lease
+    // for a moment, so a busy refusal is retried briefly instead of failing the whole backup.
+    const deadline = Date.now() + leaseRetryMs;
+    for (;;) {
+      try { lease = await nativeRequest('beginSnapshot', { storageDir: source }, id); break; }
+      catch (error) {
+        const busy = /wait for synchronization to stop|still releasing native work/i.test(String(error?.message || ''));
+        if (!busy || Date.now() >= deadline || active.controller.signal.aborted) { lease = error; break; }
+        await new Promise(resolve => setTimeout(resolve, 250));
+      }
+    }
+    if (lease instanceof Error) try { throw lease; }
+    catch (error) { const shown = Error(String(error?.message || '')); const m = shown.message; if (m && m.length <= 200 && !m.includes('/') && !m.includes('\\') && !/[A-Za-z]:/.test(m)) shown.nativeReason = true; throw shown; }
     if (typeof lease?.leaseId !== 'string' || !lease.leaseId || typeof lease.storageDir !== 'string') throw Error('Invalid native snapshot lease.');
     active.leases.add(lease.leaseId); return lease;
   }
@@ -181,7 +205,9 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
     sync(id) {
       return exclusive(id, async (current, row, signal) => {
         const client = storage(row); row.state = 'discovering'; let downloaded = 0;
-        const revisions = await client.list(signal);
+        const ownVaultId = JSON.parse(await fs.readFile(path.join(current.storageDir, 'vault.json'), 'utf8')).VaultId;
+        // Other drives may share this repository; only this drive's snapshots take part in its synchronization.
+        const revisions = await client.list(signal, { vaultId: ownVaultId });
         row.progress = { phase: 'downloading', completedFiles: 0, completedBytes: 0, totalFiles: revisions.reduce((n, revision) => n + revision.snapshot.fileCount, 0) };
         // Native admission proves this session owns the selected root before any source write.
         const admission = await acquire(id, current.storageDir);
@@ -220,7 +246,7 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
           }
           row.state = 'uploading';
           row.progress = { phase: 'preparing-upload', completedFiles: 0, completedBytes: 0, totalFiles: snapshot.manifest.files.length };
-          const result = await client.publish({ vaultId: snapshot.manifest.vaultId, deviceId: row.deviceId,
+          const result = await client.publish({ vaultId: snapshot.manifest.vaultId, deviceId: row.deviceId, driveName: current.driveName,
             parents: [...new Set(revisions.map(item => item.digest))], files: snapshot.manifest.files,
             readFile: async name => { const file = snapshot.manifest.files.find(file => file.path === name); const chunks = []; for await (const bytes of readVaultImageSnapshotFile(snapshot.directory, file, { signal })) chunks.push(bytes); const bytes = Buffer.concat(chunks); row.progress.completedFiles++; row.progress.completedBytes += bytes.length; return bytes; } }, signal);
           row.state = 'verified'; return row.lastResult = { ...result, fingerprint, downloaded, replayDeferred, published: true, verifiedAt: new Date(now()).toISOString() };
@@ -285,5 +311,8 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
     get pending() { return Boolean(active) || configuring || ticking; },
     close() { if (active || configuring || ticking) throw Error('Registry synchronization or native snapshot release is still pending.'); },
   };
+  // A finished synchronization may have published a snapshot, so listeners (the repository catalogue) learn about it.
+  const rawSync = service.sync;
+  service.sync = id => rawSync(id).finally(() => { try { onChanged(); } catch { /* A listener must never break synchronization. */ } });
   return service;
 }

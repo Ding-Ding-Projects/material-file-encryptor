@@ -26,6 +26,12 @@ import { createDockerImageTransport } from './vault-image-docker.js';
 import { registryVerificationDestination } from './registry-verification.js';
 import { createRegistryConflictRequests, REGISTRY_CONFLICT_METHODS } from './registry-conflict-requests.js';
 import { createVaultImageRequests, VAULT_IMAGE_METHODS } from './vault-image-requests.js';
+import { createDriveLocations } from './drive-locations.js';
+import { createHubCatalog } from './hub-catalog.js';
+import { createHubRegistryReader } from './hub-registry-reader.js';
+import { createHubDriveRequests, HUB_DRIVE_METHODS } from './hub-drive-requests.js';
+import { createSplitStorageService } from './split-storage/service.js';
+import { SPLIT_STORAGE_METHODS, dispatchSplitStorage, attachPartHydration } from './split-storage/ipc.js';
 import { validateRequest, validateFeatureRequest, validateWorkflowAdmission, trustedFrame } from './validation.js';
 import { parseVocabulary, MAX_VOCABULARY_BYTES } from '../shared/personal-vocabulary.js';
 import { createFeatureServices } from './feature-services.js';
@@ -120,17 +126,33 @@ const imageRequest = createVaultImageRequests({ service: vaultImages, confirm: o
 const registryRoot = path.join(app.getPath('userData'), 'RegistrySync');
 const registryDocker = createDockerImageTransport();
 const registryLogin = createRegistryLogin({ transport: registryDocker, openPage: url => shell.openExternal(url), packaged: app.isPackaged, resourcesPath: process.resourcesPath });
-const registrySync = createRegistrySyncService({ root: registryRoot,
+const registrySync = createRegistrySyncService({ root: registryRoot, onChanged: () => hubCatalog.invalidate(),
   testDestination: registryTestDestination,
-  contexts: id => id === undefined ? [...vaultSessions.rows] : (() => { const row = vaultSessions.rows.get(id); return row && { storageDir: row.state.storageDir || row.preferences.storageDir, transport: row.preferences.transport || 'folder' }; })(),
+  contexts: id => id === undefined ? [...vaultSessions.rows] : (() => { const row = vaultSessions.rows.get(id); return row && { storageDir: row.state.storageDir || row.preferences.storageDir, transport: row.preferences.transport || 'folder', driveName: row.state.driveName || row.preferences.driveName }; })(),
   nativeRequest: (method, params, id) => vaultSessions.request(method, params, id),
   authorize: (repository, signal, visibility) => registryDocker.registryAuthorization(repository, signal, visibility),
-  chooseRestore: async () => { const result = await uiDialog.showOpenDialog(window, { title: 'Choose a parent folder for a new restored vault · 選擇還原磁碟嘅上層資料夾', properties: ['openDirectory', 'createDirectory'] }); if (result.canceled) return null; return safeDestination(result.filePaths[0], [...vaultSessions.rows.values()].flatMap(row => [row.state.storageDir, row.preferences.storageDir, row.state.cacheDir, row.preferences.cacheDir])); },
+  chooseRestore: () => chooseRestoreParent(),
   backgroundRegistration: createRegistryBackground({ root: registryRoot, executable: process.execPath, packaged: app.isPackaged && !verificationMode && Boolean(fixedManifestDirectory(process.execPath)) }) });
+async function chooseRestoreParent() { const result = await uiDialog.showOpenDialog(window, { title: 'Choose a parent folder for a new restored vault · 選擇還原磁碟嘅上層資料夾', properties: ['openDirectory', 'createDirectory'] }); if (result.canceled) return null; return safeDestination(result.filePaths[0], [...vaultSessions.rows.values()].flatMap(row => [row.state.storageDir, row.preferences.storageDir, row.state.cacheDir, row.preferences.cacheDir])); }
+const driveLocations = createDriveLocations({ root: () => path.join(app.getPath('userData'), 'Drives'), validate: folder => safeDestination(folder, []) });
+const hubCatalog = createHubCatalog({
+  hub: { get: (pathname, signal) => registryDocker.hubGet(pathname, signal) },
+  reader: createHubRegistryReader({ authorize: (repository, signal) => registryDocker.registryPullAuthorization(repository, signal) }),
+  account: async signal => { const inspection = await registryDocker.inspectRegistrySignIn(signal); if (inspection?.state === 'signed-in' && inspection.account) return inspection.account; const error = Error('Sign in to Docker Hub first.'); error.code = ['missing', 'stale'].includes(inspection?.state) ? 'SIGN_IN_REQUIRED' : 'PROVIDER_UNAVAILABLE'; throw error; } });
+const hubDrive = createHubDriveRequests({ locations: driveLocations, catalog: hubCatalog, docker: registryDocker, workRoot: path.join(registryRoot, 'hub-restore'), chooseParent: () => chooseRestoreParent(), openFolder: folder => openPath(folder) });
 const registryBackupAll = createRegistryBackupAll({ docker: registryDocker, sync: registrySync,
   drives: () => [...vaultSessions.rows].map(([sessionId, { state: row, preferences: saved }]) => ({ sessionId, locked: row.locked !== false,
     name: (row.locked !== false ? saved.driveName || row.driveName : row.driveName || saved.driveName) || '', letter: (row.locked !== false ? saved.driveLetter || row.driveLetter : row.driveLetter) || '',
     storageDir: row.storageDir || saved.storageDir || '', transport: saved.transport || 'folder' })) });
+const splitContext = row => row && { storageDir: row.state.storageDir || row.preferences.storageDir, cacheDir: row.state.cacheDir || row.preferences.cacheDir,
+  transport: row.preferences.transport || 'folder', locked: row.state.locked !== false, mountedDrive: row.state.mounted ? row.state.driveLetter : null,
+  busy: Boolean(row.state.sync?.running || row.state.operation || (row.state.operations || []).some(item => ['queued', 'running', 'cancelling'].includes(item.state))) };
+const splitStorage = createSplitStorageService({
+  contexts: id => id === undefined ? [...vaultSessions.rows.values()].map(splitContext) : splitContext(vaultSessions.rows.get(id)),
+  nativeRequest: (method, params, id) => vaultSessions.request(method, params, id),
+  pickFolder: async () => { const picked = await uiDialog.showOpenDialog(window, { title: 'Choose a folder for split storage · 選擇分散存放嘅資料夾', properties: ['openDirectory', 'createDirectory'] }); return picked.canceled ? null : picked.filePaths[0] ?? null; },
+  authorize: (repository, signal, visibility) => registryDocker.registryAuthorization(repository, signal, visibility),
+  registryDestination: registryTestDestination });
 const REGISTRY_METHODS = new Set(['registryStorageStatus', 'configureRegistryStorage', 'syncRegistryStorage', 'listRegistrySnapshots', 'restoreRegistrySnapshot', 'cancelRegistryStorage']);
 const conflictRequest = createRegistryConflictRequests({
   nativeRequest: (method, params, id) => vaultSessions.request(method, params, id),
@@ -300,6 +322,11 @@ async function dispatchRequest(method, params, context) {
     if (method === 'startRegistryLogin') return registryLogin.start();
     return registryLogin.openPage();
   }
+  if (HUB_DRIVE_METHODS.has(method)) {
+    if (!helper || (verificationMode || testMode) && !registryTestDestination) throw Error('Docker Hub drives require the native vault helper.');
+    if (!['hubCatalogStatus', 'hubCatalogCancel', 'hubRestoreStatus', 'hubRestoreCancel', 'hubShowFolder'].includes(method) && (quitPending || shuttingDown || updateInstallLease)) throw Error('The application is preparing to close.');
+    return hubDrive(method, params);
+  }
   if (REGISTRY_METHODS.has(method)) {
     if (!helper || (verificationMode || testMode) && !registryTestDestination) throw Error('Registry synchronization requires the native vault helper.');
     const id = vaultSessions.selectedId;
@@ -311,6 +338,12 @@ async function dispatchRequest(method, params, context) {
     if (method === 'listRegistrySnapshots') return registrySync.list(id);
     if (method === 'restoreRegistrySnapshot') return registrySync.restore(id, params.digest);
   }
+  if (SPLIT_STORAGE_METHODS.has(method)) {
+    if (!helper) throw Error('Split storage requires the Windows helper.');
+    if (quitPending || shuttingDown || updateInstallLease) if (!['splitStorageStatus', 'cancelSplitStorage'].includes(method)) throw Error('The application is preparing to close.');
+    return dispatchSplitStorage(splitStorage, method, params, vaultSessions.selectedId);
+  }
+  if (splitStorage.pending && ['createVault', 'unlockVault', 'upgradeVault', 'mount', 'setPreferences'].includes(method)) throw Error('Wait for split storage to finish moving encrypted parts before unlocking the drive.');
   if (registrySync.pending && ['createVault', 'unlockVault', 'upgradeVault', 'lockVault', 'forceLock', 'unmount', 'mount', 'setPreferences'].includes(method)) throw Error('Wait for registry synchronization before changing the vault session.');
   if (VAULT_IMAGE_METHODS.has(method)) return imageRequest(method, params, vaultSessions.selectedId);
   if (method === 'getState') return snapshot();
@@ -434,7 +467,7 @@ async function lockAllVaults() {
 async function hasActiveWork() {
   if (restartPreparation.started) return false;
   const active=await vaultSessions.operations();
-  return Boolean(operation || registryLogin.pending || registryBackupAll.pending || registrySync.pending || vaultImages.pending || browserHandoff?.pending || await features?.pending() || active.some(item=>['queued','running','cancelling'].includes(item.state)));
+  return Boolean(operation || registryLogin.pending || registryBackupAll.pending || registrySync.pending || splitStorage.pending || vaultImages.pending || browserHandoff?.pending || await features?.pending() || active.some(item=>['queued','running','cancelling'].includes(item.state)));
 }
 async function updateStatus() {
   const snapshot=updates?.status()||{state:'unavailable',reason:'NOT_INITIALIZED'};
@@ -478,7 +511,7 @@ async function acquireUpdateLease() {
 const restartPreparation=createRestartPreparation({
   verify:async()=>{if(!updateInstallLease||!vaultSessions.safelyLocked||await hasActiveWork())throw new Error('The application is not ready to restart safely.');},
   preflight:async()=>{verificationStartup?.restore();},
-  closeServices:async()=>{await closeBrowserHandoff();await localAdapter?.close();await features?.close();await registryLogin.close();registrySync.close();await vaultImages.close();},
+  closeServices:async()=>{await closeBrowserHandoff();await localAdapter?.close();await features?.close();await registryLogin.close();hubCatalog.cancel();registrySync.close();splitStorage.close();await vaultImages.close();},
   clearMarker:()=>fs.rm(sessionMarkerPath(),{force:true}),
   disposeHelper:async()=>{helper?.dispose();},
   prepared:()=>{shuttingDown=true;}
@@ -630,8 +663,10 @@ else {
         // Do not attribute an unidentified slow response to a different vault.
         if (window && !window.isDestroyed()) window.webContents.send('vault:state', { ...snapshot(), nativeWarning: warning.message });
       });
+      attachPartHydration(nativeClient, splitStorage);
       nativeClient.on('status', (result, sessionId) => {
         if (result && typeof result.locked === 'boolean') {
+          if (result.locked === false) splitStorage.noteActivity(sessionId);
           if (vaultSessions.accept(sessionId, nativeState(result))) state = vaultSessions.selected.state;
           publish();
         }

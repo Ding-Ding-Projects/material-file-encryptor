@@ -1,3 +1,32 @@
+## Docker Hub drives without folders, 2026-11-17
+
+Branch `ai/feature/20261117-docker-hub-drive`. Ticks mean implemented with focused tests passing against a fake registry; nothing here has run against a real Docker Hub account except the sign-in relay.
+
+- [x] Create a drive: On this computer or Docker Hub; Docker Hub shows no folder picker and the host allocates per-drive storage and cache folders (owner-only where the platform allows).
+- [x] Guided Docker Hub sign-in inline in the flow. The relay fix makes Docker 29 print its device code (proved with the real `docker.exe`, then cancelled).
+- [x] Repository picker with search and the shared regex builder, All, Has drives, Empty, Public and Private filters, visibility, last pushed, size, drives found, per-row errors, progress, Refresh, keyboard navigation.
+- [x] Auto-detect drives per repository from verified snapshot configs, with the drive name as an optional manifest annotation on new snapshots.
+- [x] Create runs folders, create and mount, repository, destination with an hourly schedule, first sync; a later failure keeps the drive and retries only that step.
+- [x] Open from Docker Hub: drive cards, latest snapshot preselected, automatic restore folder, Advanced: choose folder, unlock, schedule off.
+- [ ] Live Docker Hub: namespace listing endpoint for organizations, tag listing, pull-token restore against a real account.
+- [ ] Packaged app proof of both flows and screenshots of the new dialogs.
+- [ ] Share the picker with the existing Docker Hub storage page (the backup page still has its own naming fields).
+- [ ] Manual repository entry for a repository outside the signed-in account's listing.
+
+## Split storage and mirrors, 2026-11-17
+
+Branch `ai/feature/20261117-split-storage-core` (engine, host, desktop process). Ticks mean implemented with focused tests passing.
+
+- [x] Native read path: placement.json, folder shares and folder mirrors copied into the cache and authenticated, registry parts fetched through the `hydratePart` pipe event, a clear message naming an unplugged location.
+- [x] Placed parts count as present for history, publication, snapshots, packing sizes and cache eviction.
+- [x] Planner (weighted rendezvous hashing, copies, caps, path-rule pins), mover (verify-then-delete, resumable, cancellable), Safety backup on by default, Bring everything back.
+- [x] Folder and registry locations, folder and registry mirrors, desktop IPC and the locked-folder lease.
+- [ ] Packaged app proof: apply, hold, retry and bring back on a real drive, and reading a moved file through the mounted drive.
+- [ ] Live Docker Hub: registry share upload, read-back and hydration, registry mirror publish.
+- [ ] Native drive-type query for removable drives (currently a heuristic).
+- [ ] Moves while the drive is unlocked (currently refused; the drive must be locked).
+- [ ] Locked-folder images and registry backups of a split drive (currently refused while parts live elsewhere).
+
 ## November 2026 redesign and required features, 2026-11-16
 
 Design canvas: `design/redesign-2026-11/`. Integration branch `ai/feature/20261116-redesign-integration`, pull request #20. Ticks below mean implemented in source with focused tests passing; nothing here is yet proven in the packaged or installed app.

@@ -144,6 +144,33 @@
    "title": "Documentation site: task-led home",
    "expand": "fill",
    "is_interactive": true
+  },
+  "SplitStorage.dc.html": {
+   "x": 3760,
+   "y": 0,
+   "w": 1440,
+   "h": 1180,
+   "page": "storage",
+   "title": "Split storage, Safety backup and Mirrors",
+   "is_interactive": true
+  },
+  "NewDockerHubDrive.dc.html": {
+   "x": 0,
+   "y": 1300,
+   "w": 1440,
+   "h": 1000,
+   "page": "storage",
+   "title": "New Docker Hub drive, no folders",
+   "is_interactive": true
+  },
+  "OpenFromDockerHub.dc.html": {
+   "x": 1880,
+   "y": 1300,
+   "w": 1440,
+   "h": 960,
+   "page": "storage",
+   "title": "Open a drive from Docker Hub, no folders",
+   "is_interactive": true
   }
  },
  "order": [
@@ -158,7 +185,10 @@
   "Settings.dc.html",
   "Tools.dc.html",
   "Mobile.dc.html",
-  "Site.dc.html"
+  "Site.dc.html",
+  "SplitStorage.dc.html",
+  "NewDockerHubDrive.dc.html",
+  "OpenFromDockerHub.dc.html"
  ],
  "notes": {
   "th": {
@@ -304,6 +334,30 @@
    "page": "site",
    "fill": "pink",
    "text": "Documentation site gets its own editorial look: serif display, unmasking headline, drawn file-to-backup diagram, task-led What do you want to do grid, interactive part size explorer labelled Example only, cross-article search with regex. Tweaks: accent, motion."
+  },
+  "nSplit": {
+   "x": 5240,
+   "y": 0,
+   "w": 320,
+   "page": "storage",
+   "fill": "teal",
+   "text": "Dense tool for spreading encrypted parts across the main folder, a USB drive or another folder, and Docker Hub: locations with share weight and capacity cap, a split bar, copies with the plain one-copy warning, ordered rules, plan preview with files that would be unavailable, job phases (copying, verifying, releasing) and Apply, Cancel, Verify, Bring everything back. Safety backup (on by default) asks for confirmation to turn off and shows the held state with Retry. Mirrors: complete independently openable copies, same-disk note, up to date or out of date since a time, Update now, Verify, Remove. Tweaks: accent, motion, stage (setup / running / held / done), sameDisk, mirrorStale."
+  },
+  "nNewHub": {
+   "x": 1480,
+   "y": 1300,
+   "w": 320,
+   "page": "storage",
+   "fill": "green",
+   "text": "Create a drive: choose On this computer (today's folder flow) or Docker Hub. Docker Hub asks for no folder: guided sign-in with the device code, then a rich repository picker (search with an adjacent regex builder, All, Has drives, Empty, Public and Private filters, visibility, last pushed, size, drives found, detected drive cards, per-row errors, Refresh), then drive name, letter and password or key file, the public warning, and the steps Creating, Mounting, First encrypted sync and Automatic sync on, then Done with Show folder. Tweaks: accent, motion, stage (choose, signin, repository, scanning, repoError, details, creating, done, failed)."
+  },
+  "nOpenHub": {
+   "x": 3360,
+   "y": 1300,
+   "w": 320,
+   "page": "storage",
+   "fill": "blue",
+   "text": "Open a drive from Docker Hub: the same rich repository picker where each detected drive card is the main choice (one click picks the drive and its latest snapshot), then the snapshot list, restore into an automatically created folder (Advanced: choose folder is available), progress, unlock and mounted. Tweaks: accent, motion, stage (repository, scanning, repoError, snapshots, location, restoring, unlock, mounted)."
   }
  },
  "designSystems": []

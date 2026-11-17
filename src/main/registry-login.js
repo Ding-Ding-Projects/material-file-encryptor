@@ -7,7 +7,9 @@ export const REGISTRY_LOGIN_PAGE = 'https://login.docker.com/activate';
 const INFORMATIONAL_URL = /^https:\/\/docs\.docker\.com\/[A-Za-z0-9\-._~/?=&%#]*$/;
 const MAX_DISTINCT_BYTES = 65536;
 const MAX_RAW_BYTES = 8 * 1024 * 1024;
-const stripTerminal = value => value.replace(/\x1b\][^\x07]*(?:\x07|\x1b\\)/g, '').replace(/\x1b\[[0-?]*[ -/]*[@-~]/g, '');
+// A pseudo console redraws with cursor moves instead of newlines, so a move starts a new line.
+const breakOnCursorMoves = value => value.replace(/\x1b\[[0-9;]*[HfABEFGdJK]/g, '\n');
+const stripTerminal =value => value.replace(/\x1b\][^\x07]*(?:\x07|\x1b\\)/g, '').replace(/\x1b\[[0-?]*[ -/]*[@-~]/g, '');
 
 export function registryLoginRelayPath({ packaged = false, resourcesPath = process.resourcesPath } = {}) {
   if (!packaged) return fileURLToPath(new URL('./registry-login-console.ps1', import.meta.url));
@@ -71,7 +73,7 @@ export function createRegistryLogin({ transport, openPage, spawnProcess = spawn,
     operation.raw += bytes.length;
     if (operation.raw > MAX_RAW_BYTES) return retire(operation, 'failed', 'invalid-cli-output');
     const stream = operation.streams[channel];
-    try { stream.pending += stream.decoder.decode(bytes, { stream: true }); }
+    try { stream.pending += breakOnCursorMoves(stream.decoder.decode(bytes, { stream: true })); }
     catch { return retire(operation, 'failed', 'invalid-cli-output'); }
     const lines = stream.pending.split(/\r?\n|\r/); stream.pending = lines.pop();
     if (stream.pending.length > 4096) return retire(operation, 'failed', 'invalid-cli-output');
@@ -121,7 +123,7 @@ export function createRegistryLogin({ transport, openPage, spawnProcess = spawn,
         if (active !== operation) return;
         if (operation.retired) { active = null; return; }
         for (const stream of Object.values(operation.streams)) {
-          try { stream.pending += stream.decoder.decode(); } catch { retire(operation, 'failed', 'invalid-cli-output'); }
+          try { stream.pending += breakOnCursorMoves(stream.decoder.decode()); } catch { retire(operation, 'failed', 'invalid-cli-output'); }
           if (stream.pending) line(operation, stream.pending);
         }
         if (active !== operation || operation.retired) return;

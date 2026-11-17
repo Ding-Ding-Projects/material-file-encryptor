@@ -2,6 +2,7 @@ import { validateRegistrySchedule } from './registry-schedule.js';
 import { REGISTRY_CONFLICT_METHODS, validateRegistryConflictRequest } from './registry-conflict-requests.js';
 import {ACCESS_HOST_ACTIONS,validateAccessHostRequest} from './access-host.js';
 import {normalizeDriveName} from '../shared/drive-name.js';
+import { SPLIT_STORAGE_METHODS, validateSplitStorageRequest } from './split-storage/ipc.js';
 
 // Managed-server (flavor, container and SSH target) requests. Only fixed identifiers and bounded plain values are accepted: no
 // path, URL, command, key path or password can be expressed here. File and key choosers run in the main process.
@@ -116,6 +117,7 @@ export function validateFeatureRequest(feature, action, payload, { browser = fal
 }
 export function validateRequest(method, value = {}) {
   if (!object(value)) throw new Error('Invalid request.');
+  if (SPLIT_STORAGE_METHODS.has(method)) return validateSplitStorageRequest(method, value);
   if (REGISTRY_CONFLICT_METHODS.has(method)) return validateRegistryConflictRequest(method, value);
   if (method === 'configureRegistryStorage') {
     if (!Object.hasOwn(value, 'repository') || !Object.hasOwn(value, 'schedule') || Object.keys(value).some(key => !['repository', 'visibility', 'schedule'].includes(key)) || !['private', 'public'].includes(value.visibility === undefined ? 'public' : value.visibility) || typeof value.repository !== 'string' || !/^[a-z0-9][a-z0-9_-]{1,38}\/[a-z0-9]+(?:(?:[._]|__|-+)[a-z0-9]+)*$/.test(value.repository) || value.repository.length > 220) throw Error('Invalid registry destination.');
@@ -135,6 +137,8 @@ export function validateRequest(method, value = {}) {
   }
   const schemas = {
     registryLoginStatus: {}, recheckRegistryLogin: {}, startRegistryLogin: {}, cancelRegistryLogin: {}, openRegistryLoginPage: {}, backupAllPlan: {}, backupAllStatus: {}, backupAllCancel: {},
+    hubDriveFolders: {}, hubDriveFoldersDiscard: { driveId: 'driveid' }, hubCatalogStart: { force: 'boolean?' }, hubCatalogStatus: {}, hubCatalogCancel: {},
+    hubEnsureRepository: { repository: 'repository' }, hubRestoreSnapshot: { repository: 'repository', digest: 'digest', location: 'hublocation' }, hubRestoreStatus: {}, hubRestoreCancel: {}, hubShowFolder: { driveId: 'driveid' },
     registryStorageStatus: {}, syncRegistryStorage: {}, listRegistrySnapshots: {}, restoreRegistrySnapshot: { digest: 'digest' }, cancelRegistryStorage: {},
     vaultImageStatus: {}, prepareVaultImage: { reference: 'short' }, buildVaultImage: { previewId: 'session' }, uploadVaultImage: { previewId: 'session' }, discardVaultImage: {}, cancelVaultImage: {},
     addSession: {}, selectSession: { sessionId: 'session' }, removeSession: { sessionId: 'session' }, getState: {}, buildMetadata: {}, browserPairing: {}, mount: { driveLetter: 'drive?', driveName: 'driveName?' }, unmount: {}, chooseFiles: {}, chooseExport: { name: 'path' }, chooseExportFolder: {}, importSelected: { paths: 'paths' }, startImport: { paths: 'paths' }, operations: {}, storageDiagnostics: {}, startPacking: { path: 'relative?', partSizeBytes: 'size?' }, cancelOperation: { operationId: 'path' }, forceLock: { language: 'language?' }, quit: {}, listFiles: { cursor: 'nonnegative?', limit: 'page?', revision: 'nonnegative?' }, listVersionLabels: { entryId: 'path' }, listActivity: { entryId: 'path?', cursor: 'path?', limit: 'page?', action: 'short?', from: 'short?', to: 'short?', fromUtc:'short?',toUtc:'short?',pattern:'short?' }, previewVersion: { versionId: 'path' }, labelVersion: { versionId: 'path', label: 'short' }, exportVersion: { versionId: 'path' }, exportText: { name: 'filename', mime: 'mime', content: 'text' }, fileAction: { id: 'path', action: 'fileAction', destination: 'path?' }, resplitAll: {}, createVault: { storageDir: 'path', cacheDir: 'path', driveLetter: 'drive', password: 'password?', keyFilePath: 'path?', partSizeBytes: 'size', transport: 'transport?', remoteRepository: 'repository?', autoUnlock: 'boolean?', driveName: 'driveName?' },
@@ -154,6 +158,8 @@ export function validateRequest(method, value = {}) {
     if ((item === undefined || item === null) && optional) continue;
     let valid = false;
     if (type === 'digest') valid = typeof item === 'string' && /^sha256:[a-f0-9]{64}$/.test(item);
+    else if (type === 'driveid') valid = typeof item === 'string' && /^[a-f0-9]{16}$/.test(item);
+    else if (type === 'hublocation') valid = ['automatic', 'choose'].includes(item);
     else if (type === 'language') valid = ['en','yue','bilingual'].includes(item);
     else if (type === 'days') valid = item === null || Number.isSafeInteger(item) && item >= 1 && item <= 36500;
     else if (type === 'nonnegative') valid = Number.isSafeInteger(item) && item >= 0;

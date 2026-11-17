@@ -104,3 +104,4 @@ test('real registry preserves concurrent heads and verifies downloads', { skip: 
   assert.equal(received.get('vault.json'), 'synthetic-merged');
   assert.deepEqual((await storage.readRevision(c.digest)).snapshot.parents, [a.digest, b.digest]);
 });
+

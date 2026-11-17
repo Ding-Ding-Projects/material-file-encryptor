@@ -22,6 +22,15 @@ async function fixture(t, extra = {}) {
 }
 const configuration = (schedule = DEFAULT_REGISTRY_SCHEDULE) => ({ repository: 'test/vault', visibility: 'private', schedule });
 
+test('a finished synchronization, even a failed one, tells listeners that a repository may have changed', async t => {
+  let changes = 0;
+  const f = await fixture(t, { onChanged: () => { changes++; } });
+  await assert.rejects(f.service.sync('main'));
+  assert.equal(changes, 1);
+  const broken = await fixture(t, { onChanged: () => { throw Error('listener failure'); } });
+  await assert.rejects(broken.service.sync('main'), /Registry synchronization is incomplete|Save a registry destination/);
+});
+
 test('legacy saved visibility remains private and explicit public survives reload', async t => {
   const f = await fixture(t); const legacy = configuration(); delete legacy.visibility;
   assert.equal(validateRequest('configureRegistryStorage', legacy).visibility, undefined);
@@ -144,4 +153,55 @@ test('calendar retry consumes the original repeated local occurrence',async t=>{
   await f.service.configure('main',configuration({...DEFAULT_REGISTRY_SCHEDULE,enabled:true,mode:'calendar',days:[0],times:['01:30'],timeZone:'America/Toronto',retryMinutes:10}));
   clock=Date.parse('2026-11-01T05:30:00Z');await f.service.tick();assert.equal((await f.service.status('main')).nextDue,Date.parse('2026-11-01T05:40:00Z'));
   clock=Date.parse('2026-11-01T05:40:00Z');await f.service.tick();assert.equal((await f.service.status('main')).nextDue,Date.parse('2026-11-08T06:30:00Z'));
+});
+
+test('synchronization asks the registry only for this drive, so one repository can hold several drives', async t => {
+  const seen = [];
+  const f = await fixture(t, { storageFactory: () => ({ list: async (_signal, options) => { seen.push(options); throw Error('offline'); } }) });
+  await f.service.configure('main', configuration());
+  await assert.rejects(f.service.sync('main'));
+  assert.deepEqual(seen, [{ vaultId: 'a'.repeat(32) }]);
+});
+test('a known plain reason is shown with the generic message and other failures stay generic', async t => {
+  const other = { digest: 'sha256:' + 'b'.repeat(64), snapshot: { vaultId: 'c'.repeat(32), fileCount: 1 }, tag: 'mfe-' + 'c'.repeat(32) + '-' + 'd'.repeat(32) };
+  const f = await fixture(t, { storageFactory: () => ({ list: async () => [other] }) });
+  await f.service.configure('main', configuration());
+  await assert.rejects(f.service.sync('main'), /different vault/);
+  assert.match((await f.service.status('main')).lastError, /incomplete.*different vault/);
+  const g = await fixture(t, { storageFactory: () => ({ list: async () => { throw Error('C:\private\path secret detail'); } }) });
+  await g.service.configure('main', configuration());
+  await assert.rejects(g.service.sync('main'), error => !/private|secret/.test(error.message));
+});
+
+test('the error names the step where synchronization stopped, without private detail', async t => {
+  const f = await fixture(t, { storageFactory: () => ({ list: async () => [], publish: async () => { throw Error('C:\private\detail 401'); } }) });
+  await f.service.configure('main', configuration());
+  await assert.rejects(f.service.sync('main'), error => /stopped while (uploading|preparing the encrypted snapshot)/.test(error.message) && !/private|401/.test(error.message));
+});
+
+test('a plain native refusal of the storage lease is shown, but a path-like one is not', async t => {
+  const cases = [
+    ['Lock the vault and wait for synchronization to stop before preparing an image.', true],
+    ['Cannot open C:\\Users\\someone\\vault', false],
+    ['Share \\\\server\\vault is busy', false],
+    ['Folder /home/someone/vault is busy', false],
+  ];
+  for (const [message, shown] of cases) {
+    const f = await fixture(t, { storageFactory: () => ({ list: async () => [] }), nativeRequest: async method => { if (method === 'beginSnapshot') throw Error(message); return {}; } });
+    await f.service.configure('main', configuration());
+    await assert.rejects(f.service.sync('main'), error => error.message.includes(message) === shown && !/someone|server/.test(error.message));
+  }
+});
+
+test('a briefly busy native host is waited for, and a lasting refusal still fails', async t => {
+  let refusals = 2; const calls = [];
+  const busy = 'Lock the vault and wait for synchronization to stop before preparing an image.';
+  const nativeRequest = async method => { calls.push(method); if (method === 'beginSnapshot') { if (refusals-- > 0) throw Error(busy); return { leaseId: 'lease', storageDir: 'unused' }; } return method === 'releaseSnapshot' ? { released: true } : {}; };
+  const f = await fixture(t, { leaseRetryMs: 5000, nativeRequest, storageFactory: () => ({ list: async () => [] }) });
+  await f.service.configure('main', configuration());
+  await assert.rejects(f.service.sync('main'));
+  assert.equal(calls.filter(m => m === 'beginSnapshot').length, 4, 'two busy refusals were retried, then the admission and preparation leases were both granted');
+  const g = await fixture(t, { leaseRetryMs: 600, nativeRequest: async method => { if (method === 'beginSnapshot') throw Error(busy); return {}; }, storageFactory: () => ({ list: async () => [] }) });
+  await g.service.configure('main', configuration());
+  await assert.rejects(g.service.sync('main'), /wait for synchronization to stop/);
 });

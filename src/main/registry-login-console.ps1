@@ -1,5 +1,8 @@
 # Fixed-purpose hidden console relay for the official Docker CLI device flow.
 # No credential, device code or child output is written to files or diagnostics.
+# STARTF_USESTDHANDLES (0x100) with null handles is required: without it the child inherits this
+# relay's redirected pipes as its standard handles, Docker 29 sees stdin as a non-terminal and refuses
+# to start the interactive device login. With it the child gets the pseudo console's real console handles.
 param([Parameter(Mandatory=$true)][string]$DockerExecutable,[Parameter(Mandatory=$true)][string]$ConfigurationDirectory)
 $ErrorActionPreference='Stop'
 try {
@@ -44,7 +47,7 @@ public static class RegistryLoginConsole {
    CloseHandle(inputRead);inputRead=IntPtr.Zero;CloseHandle(outputWrite);outputWrite=IntPtr.Zero;
    IntPtr size=IntPtr.Zero;InitializeProcThreadAttributeList(IntPtr.Zero,1,0,ref size);list=Marshal.AllocHGlobal(size);Check(InitializeProcThreadAttributeList(list,1,0,ref size));
    Check(UpdateProcThreadAttribute(list,0,(IntPtr)0x00020016,console,(IntPtr)IntPtr.Size,IntPtr.Zero,IntPtr.Zero));
-   STARTUPINFOEX startup=new STARTUPINFOEX();startup.StartupInfo.cb=Marshal.SizeOf(typeof(STARTUPINFOEX));startup.Attributes=list;
+   STARTUPINFOEX startup=new STARTUPINFOEX();startup.StartupInfo.cb=Marshal.SizeOf(typeof(STARTUPINFOEX));startup.Attributes=list;startup.StartupInfo.flags=0x100;
    job=CreateJobObject(IntPtr.Zero,null);Check(job!=IntPtr.Zero);EXTENDED_LIMIT limits=new EXTENDED_LIMIT();limits.basic.flags=0x00002000;Check(SetInformationJobObject(job,9,ref limits,(uint)Marshal.SizeOf(typeof(EXTENDED_LIMIT))));
    Check(CreateProcess(executable,new StringBuilder("\""+executable+"\" --config \""+config+"\" login"),IntPtr.Zero,IntPtr.Zero,false,0x00080000|0x00000004,IntPtr.Zero,Path.GetDirectoryName(executable),ref startup,out process));
    Check(AssignProcessToJobObject(job,process.Process));

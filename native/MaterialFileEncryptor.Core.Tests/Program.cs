@@ -64,6 +64,14 @@ var cases = new (string,Action)[] {
     ("targeted release protects pins, open, dirty, pending and offline state",TargetedProtection),
     ("targeted release preserves shared and orphaned ciphertext",TargetedShared),
     ("targeted release authenticates source before deleting cache",TargetedAuthentication),
+    ("split storage reads parts held in a folder location",SplitStorageTests.FolderLocation),
+    ("split storage names a disconnected location and recovers on reconnect",SplitStorageTests.MissingLocation),
+    ("split storage refuses a damaged folder copy",SplitStorageTests.DamagedFolderCopy),
+    ("split storage fetches registry parts outside locks and authenticates them",SplitStorageTests.RegistryHydration),
+    ("split storage eviction keeps a cached part whose only copy is offline",SplitStorageTests.EvictionKeepsOnlyCopy),
+    ("split storage mirror opens as a storage folder and serves reads",SplitStorageTests.MirrorOpensAndServesReads),
+    ("split storage rules pin parts by drive path",SplitStorageTests.RulePatterns),
+    ("split storage refuses a damaged placement file without deleting",SplitStorageTests.DamagedPlacementFile),
 };
 if(args.Length==2 && args[0]=="crash-write") {
     var options=Options(args[1]); using var c=VaultCredentials.Password("strong test credential"); var v=VaultEngine.Open(options,c);

@@ -11,6 +11,7 @@ internal static class Program
     }
     private static string SafeError(Exception error) => error switch
     {
+        MaterialFileEncryptor.Core.SplitLocationUnavailableException => error.Message,
         CryptographicException => "Unlock failed. Check your password or key file; encrypted data may also be damaged.",
         FileNotFoundException or DirectoryNotFoundException => "The selected file or encrypted vault could not be found.",
         UnauthorizedAccessException => "Access was denied. Check folder and file permissions.",
@@ -35,6 +36,7 @@ internal static class Program
             return driver.GetProperty("available").GetBoolean() ? 0 : 1;
         }
         using var cancellation = new CancellationTokenSource();
+        PartHydrationBridge.Send = Send;
         // This root is supplied only by the desktop-owned private pipe launcher.
         // Runtime admission stays closed until the native lifetime checks pass.
         OllamaRuntimeBroker? managedRuntime = null;
@@ -84,7 +86,9 @@ internal static class Program
                     // Clone before disposing the parsed request. Dispatch registers
                     // admission immediately but never blocks the stdin reader.
                     JsonElement ownedParameters = parameters.ValueKind == JsonValueKind.Undefined ? default : parameters.Clone();
-                    Task<object?> pending = method.StartsWith("server.", StringComparison.Ordinal)
+                    Task<object?> pending = method == "hydratePartResult"
+                        ? Task.FromResult<object?>(PartHydrationBridge.Complete(ownedParameters))
+                        : method.StartsWith("server.", StringComparison.Ordinal)
                         ? servers.DispatchAsync(method.Substring(7), ownedParameters)
                         : method.StartsWith("managedOllama.", StringComparison.Ordinal)
                             ? DispatchManagedAsync(managedRuntime, method, ownedParameters)

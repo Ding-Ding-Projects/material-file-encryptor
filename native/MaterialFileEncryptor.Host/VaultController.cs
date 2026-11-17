@@ -161,6 +161,8 @@ internal sealed partial class VaultController : IDisposable
         if (method == "startExport") return StartExport(args);
         if (method == "startPacking") return StartPacking(args);
         if (method == "storageDiagnostics") return StorageDiagnostics();
+        if (method == "splitStorageInventory") return SplitStorageInventory(args);
+        if (method == "splitStorageAffected") return SplitStorageAffected(args);
         if (method == "listFiles") return ListFiles(args);
         if (method == "statusSummary") return StatusSummary();
         if (method == "getFile")
@@ -382,6 +384,8 @@ internal sealed partial class VaultController : IDisposable
         opened.HydrateEncryptedFileAsync = (relative, cancellation) => selectedTransport == "privateGit" && !transportAvailable
             ? Task.FromException(new IOException("Connect to private storage to retrieve uncached encrypted content."))
             : selectedBackend.EnsureFileAsync(relative, cancellation);
+        // Split storage applies to folder-backed drives only. Registry-held parts are fetched by the desktop process.
+        if (selectedTransport == "folder") opened.FetchPlacedPartAsync = PartHydrationBridge.FetchAsync;
         if (selectedBackend is PrivateGitHubVaultTransport privateBackend) opened.IsEncryptedFileAvailable = relative => transportAvailable && privateBackend.ContainsFile(relative);
         opened.HistoryChanged += () => { Interlocked.Increment(ref historyRevision); historyPending = true; };
         opened.SyncAsync().GetAwaiter().GetResult();

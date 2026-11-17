@@ -82,6 +82,20 @@ function objectLimit(relative, limits) {
   if (!relative.startsWith('parts/')) return Math.min(limits.objectBytes, METADATA_BYTES + 36);
   return Math.min(limits.objectBytes, OBJECT.exec(relative)[2].length === 64 ? 90000000 : PART_BYTES);
 }
+/**
+ * Split storage keeps a placement file beside the vault. It is not part of an image, and an image of a
+ * locked folder is refused while some parts live only in other locations, because they would be missing.
+ */
+async function requireUnsplit(filename) {
+  await physical(filename);
+  const stat = await fs.lstat(filename);
+  let value;
+  try { if (stat.size > 64 * 1024 ** 2) throw Error(); value = JSON.parse(await fs.readFile(filename, 'utf8')); }
+  catch { throw Error('The split storage placement file is damaged. Nothing was packaged.'); }
+  const parts = value && typeof value.parts === 'object' && value.parts ? Object.values(value.parts) : [];
+  if (parts.some(holders => !Array.isArray(holders) || !holders.includes('main')))
+    throw Error('Some encrypted parts of this drive are stored in other split storage locations. Unlock the drive to include them, or bring everything back to the main disk first. Nothing was packaged.');
+}
 async function inventory(root, limits, signal) {
   await physical(root);
   if (!(await fs.lstat(root)).isDirectory()) throw Error('Select an encrypted storage folder.');
@@ -94,6 +108,7 @@ async function inventory(root, limits, signal) {
   for await (const entry of await fs.opendir(root)) {
     signal?.throwIfAborted();
     if (entry.name === 'vault.json' && entry.isFile()) add('vault.json');
+    else if (entry.name === 'placement.json' && entry.isFile()) await requireUnsplit(path.join(root, entry.name));
     else if (['parts', 'commits', 'activity'].includes(entry.name) && entry.isDirectory()) {
       const folder = path.join(root, entry.name); await physical(folder);
       for await (const object of await fs.opendir(folder)) {

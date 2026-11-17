@@ -297,6 +297,27 @@ Appearance, language, text size, high contrast, sound and animation controls, in
 
 </details>
 
+#### Docker Hub drive, no folders
+
+These captures show creating a drive on Docker Hub without choosing any folder, and opening a backed-up drive from Docker Hub, as the packaged app rendered them on source `a2581b24` (the [capture manifest](docs/images/captures/docker-hub-drive/manifest.json) names what was left out for privacy). The signed-in account is real and its name is only the public repository namespace.
+
+<details>
+<summary>Docker Hub drive, no folders (7)</summary>
+
+| Create: where | Create: repository picker | Create: details |
+|---|---|---|
+| ![Create a drive dialog, step 1 Where, with two choice cards: On this computer (choose a folder) and Docker Hub (no folder to choose)](docs/images/captures/docker-hub-drive/create-where-light-en.png) | ![Create a drive dialog, step 3 Repository, showing the signed-in account, the search box with Regex builder and Refresh, the filter chips and repository rows with drive cards](docs/images/captures/docker-hub-drive/create-repository-picker-light-en.png) | ![Create a drive dialog, step 4 Details, with the chosen repository, name, letter, password fields, the public warning and where the local copy lives](docs/images/captures/docker-hub-drive/create-details-light-en.png) |
+
+| Docker Hub storage after backup | Open: drive cards | Open: snapshots |
+|---|---|---|
+| ![Docker Hub storage page with the saved destination, public visibility, last verified digest and the snapshot controls](docs/images/captures/docker-hub-drive/docker-hub-storage-after-backup-light-en.png) | ![Open a drive from Docker Hub dialog, step 1 Drive, with filter chips and a repository holding nine detected drives as cards](docs/images/captures/docker-hub-drive/open-picker-drive-cards-light-en.png) | ![Open a drive from Docker Hub dialog, step 2 Snapshot, with the latest snapshot selected, restore into the app's own folder, drive letter and Advanced: choose folder](docs/images/captures/docker-hub-drive/open-snapshots-light-en.png) |
+
+| Open: unlock |
+|---|
+| ![Open a drive from Docker Hub dialog, step 4 Unlock, after the snapshot was restored and verified](docs/images/captures/docker-hub-drive/open-unlock-light-en.png) |
+
+</details>
+
 #### Docker Hub backup
 
 No account was signed in for these captures. They show the page as the app renders it with no saved account, and after the guided sign-in could not reach the service.

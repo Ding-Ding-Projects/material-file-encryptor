@@ -1,5 +1,5 @@
 const phases=new Set(['renderer-entry','shell-mounted','status-rendered','feature-mount','startup-settled','locked-drive-ready','navigation']);
-const views=new Set(['quicktype','virtual-disks','drive','offline','history','recycle','settings','help','details','converter','ollama','access','personalization','documentation','changelog','status','workflow','updates','storage','server-manager','browser-pairing','onboarding','base64-tools','live-charts','screen-recording','drawing','dimsum','tools']);
+const views=new Set(['quicktype','virtual-disks','drive','offline','history','recycle','settings','help','details','converter','ollama','access','personalization','documentation','changelog','status','workflow','updates','storage','split-storage','server-manager','browser-pairing','onboarding','base64-tools','live-charts','screen-recording','drawing','dimsum','tools']);
 const outcomes=new Set(['ready','settled','failed','unavailable','unmeasured','superseded','disposed']);
 
 /** Local bounded measurements contain fixed identifiers, never application data. */

@@ -111,6 +111,7 @@ async function hubJson(fetcher, pathname, options, signal, message = HUB_ERROR) 
   } catch (error) { checkCancellation(signal); if (error?.code === 'AUTHENTICATION_REQUIRED' || error?.code === 'NOT_FOUND') throw error; const unavailable = Error(message); unavailable.code = 'PROVIDER_UNAVAILABLE'; throw unavailable; }
   finally { if (reader) await reader.cancel().catch(() => {}); }
 }
+const HUB_READ_PATH = /^\/v2\/(?:repositories\/namespaces|namespaces\/[a-z0-9][a-z0-9_-]{1,38}\/repositories(?:\/[a-z0-9]+(?:(?:[._]|__|-+)[a-z0-9]+)*\/tags)?(?:\?page_size=\d{1,3}&page=\d{1,3})?)$/;
 const IDENTITY_TOKEN_USER = '<token>';
 const ACCOUNT_NAME = /^[A-Za-z0-9][A-Za-z0-9_.-]{0,254}$/;
 function reasonError(reason, message) { const error = Error(message); error.reason = reason; return error; }
@@ -319,6 +320,29 @@ export function createDockerImageTransport({ platform = process.platform, progra
     async registryLoginCommand(signal) {
       const context = await loginContext(signal);
       return { executable: context.executable, configDirectory: context.configDirectory, env: { ...context.env } };
+    },
+    /** Read-only Docker Hub API access for the repository catalogue. Only these fixed read paths are allowed. */
+    async hubGet(pathname, signal) {
+      if (typeof pathname !== 'string' || pathname.length > 300 || !HUB_READ_PATH.test(pathname)) throw Error('This Docker Hub request is not allowed.');
+      const { token, credentials } = await hubToken(signal); credentials.secret = '';
+      return hubJson(fetcher, pathname, { method: 'GET', headers: { Authorization: `Bearer ${token}` } }, signal);
+    },
+    /** A pull-only registry token for any repository the account may read, public or private. No write permission is implied. */
+    async registryPullAuthorization(repository, signal) {
+      const target = imageTarget(`${repository}:pull`);
+      const credentials = await credential(signal); let response;
+      try {
+        const url = new URL('https://auth.docker.io/token');
+        url.searchParams.set('service', 'registry.docker.io'); url.searchParams.set('scope', `repository:${target.repository}:pull`);
+        response = await fetcher(url, { redirect: 'error', cache: 'no-store', signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(20000)]) : AbortSignal.timeout(20000),
+          headers: { Authorization: 'Basic ' + Buffer.from(`${credentials.identifier}:${credentials.secret}`).toString('base64') } });
+        if (!response.ok) throw Error();
+        const parsed = JSON.parse(await response.text());
+        const token = parsed.token || parsed.access_token;
+        if (!validToken(token)) throw Error();
+        return { Authorization: `Bearer ${token}` };
+      } catch { throw Error(HUB_ERROR); }
+      finally { credentials.secret = ''; await response?.body?.cancel().catch(() => {}); }
     },
     async registryAuthorization(repository, signal, visibility = 'public') {
       const target = imageTarget(`${repository}:authorization`);
