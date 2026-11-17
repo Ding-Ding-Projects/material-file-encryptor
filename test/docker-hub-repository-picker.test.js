@@ -37,15 +37,23 @@ async function fixture({ snapshot = done(sample()), mode = 'open', services = {}
   await new Promise(resolve => setImmediate(resolve));
   return { picker, calls };
 }
-const names = picker => all(picker.list, node => node.className === 'name').map(node => node.textContent);
+const names = picker => all(picker.list, node => node.className === 'name').map(node => textOf(node).replace(/\s+/g, ''));
 const chip = (picker, label) => all(picker.chipsGroup, node => node.className === 'chip' && node.label.startsWith(label))[0];
 const search = (picker, query, regex = false) => { picker.search.listeners['search-change']({ detail: { query, regex, flags: 'iu' } }); return new Promise(resolve => setImmediate(resolve)); };
 
 test('each repository row shows visibility, last pushed, size and how many drives were found', async () => {
   const { picker } = await fixture();
-  assert.deepEqual(names(picker), ['pat/material-file-encryptor-storage', 'pat/notes', 'acme/shared', 'pat/broken']);
+  assert.deepEqual(names(picker), ['pat/material-file-encryptor-storage', 'acme/shared', 'pat/notes', 'pat/broken'], 'repositories that hold drives come first');
   const text = textOf(picker.list);
   for (const expected of ['Public', 'Private', '2 drives found', '1 drive found', 'No drives', '5.0 MiB', 'Size unknown', 'Never pushed', 'Last pushed 20']) assert.ok(text.includes(expected), expected);
+});
+
+test('a repository name is a left-aligned list row with the namespace muted, not a centred monospace button', async () => {
+  const { picker } = await fixture();
+  const row = all(picker.list, node => node.className === 'name')[0];
+  assert.equal(row.localName, 'md-list-item');
+  const headline = row.children[0]; assert.equal(headline.attributes.slot, 'headline');
+  assert.deepEqual(headline.children.map(node => [node.className, node.textContent]), [['ns', 'pat/'], ['', 'material-file-encryptor-storage']]);
 });
 
 test('detected drives are shown as cards under their repository with name, id, last backup, snapshots and size', async () => {

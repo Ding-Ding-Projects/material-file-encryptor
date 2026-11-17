@@ -16,7 +16,8 @@ const STYLE = `
 .repo[data-selected=true]{border:2px solid var(--md-sys-color-primary,#4b57c9)}
 .repo[data-error=true]{border-color:var(--md-sys-color-error,#b3261e)}
 .head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.name{font-family:var(--mfe-mono,ui-monospace,monospace);font-weight:600;flex:1 1 220px;min-width:0;overflow-wrap:anywhere;background:transparent;border:0;color:inherit;text-align:start;cursor:pointer;min-height:48px;padding:0}
+md-list-item.name{--md-list-item-leading-space:4px;--md-list-item-trailing-space:4px;flex:1 1 240px;min-width:0;min-height:48px;text-align:start}
+.ns{color:var(--md-sys-color-on-surface-variant,#555)}
 .badge{padding:3px 10px;border-radius:10px;font-size:12px;font-weight:700;white-space:nowrap;background:var(--md-sys-color-surface-variant,#e4e6f0);color:var(--md-sys-color-on-surface-variant,#3a3c4c)}
 .badge[data-vis=public]{background:var(--md-sys-color-tertiary-container,#ffe0b8);color:var(--md-sys-color-on-tertiary-container,#4a2c00)}
 .badge[data-found=true]{background:var(--md-sys-color-tertiary-container,#cdefe3);color:var(--md-sys-color-on-tertiary-container,#063d31)}
@@ -143,10 +144,17 @@ export class HubRepositoryPicker extends SurfaceElement {
     this.empty.hidden = shown > 0 || catalogBusy(this.snapshot) || Boolean(catalogProblem(this.snapshot));
     this.empty.textContent = shown > 0 ? '' : (this.snapshot?.repositories ?? []).length ? this.t('nothingShown') : this.t('noRepositories');
   }
+  /** A left-aligned row in the normal type scale: the namespace is muted, the repository name leads. */
+  nameItem(id) {
+    const [namespace, name] = id.split('/');
+    const item = element('md-list-item', { type: 'button', class: 'name' });
+    item.append(element('div', { slot: 'headline' }, [element('span', { class: 'ns', text: `${namespace}/` }), element('span', { text: name })]));
+    return item;
+  }
   suggestedItem() {
     const suggestion = suggestedRepository(this.account, this.snapshot?.repositories ?? []);
     const node = element('li', { class: 'repo', role: 'option', 'aria-selected': String(this.selected === suggestion.repository), 'data-selected': String(this.selected === suggestion.repository), 'data-key': suggestion.repository });
-    const name = element('button', { type: 'button', class: 'name', text: suggestion.repository }); name.addEventListener('click', () => this.chooseSuggested());
+    const name = this.nameItem(suggestion.repository); name.addEventListener('click', () => this.chooseSuggested());
     node.append(element('div', { class: 'head' }, [name, element('span', { class: 'badge', 'data-vis': 'public', text: this.t('visPublic') })]),
       element('p', { class: 'meta', text: suggestion.exists ? this.t('repositoryHolds', { n: suggestion.driveCount }) : this.t('repositoryNew') }));
     return node;
@@ -154,7 +162,7 @@ export class HubRepositoryPicker extends SurfaceElement {
   repositoryItem(repository) {
     const selectedRepo = this.selected === repository.id || String(this.selected ?? '').startsWith(`${repository.id}#`);
     const node = element('li', { class: 'repo', role: 'option', 'aria-selected': String(selectedRepo), 'data-selected': String(selectedRepo), 'data-error': String(Boolean(repository.error)), 'data-key': repository.id });
-    const name = element('button', { type: 'button', class: 'name', text: repository.id }); name.addEventListener('click', () => this.choose(repository));
+    const name = this.nameItem(repository.id); name.addEventListener('click', () => this.choose(repository));
     const count = repository.drives.length;
     node.append(element('div', { class: 'head' }, [name,
       element('span', { class: 'badge', 'data-vis': repository.visibility, text: this.t(repository.visibility === 'public' ? 'visPublic' : 'visPrivate') }),
@@ -191,7 +199,7 @@ export class HubRepositoryPicker extends SurfaceElement {
     else if (event.key === 'Home') move(0);
     else if (event.key === 'End') move(stops.length - 1);
   }
-  focusSearch() { this.search.focus?.(); }
+  focusSearch() { this.search.focus?.({ preventScroll: true }); }
   destroy() { this.disposed = true; clearTimeout(this.timer); this.timer = null; this.services.hubCatalogCancel?.(); }
 }
 register('mfe-hub-repository-picker', HubRepositoryPicker);

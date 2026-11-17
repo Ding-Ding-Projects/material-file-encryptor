@@ -186,6 +186,19 @@ test('each field sits in a row with its information icon, and the first real con
   dialog.focusFirst(); assert.equal(focused, 'first');
 });
 
+test('every new step starts at the top of the scroll area and the picker step never scrolls to focus', async () => {
+  const { dialog } = fixture(); dialog.open('create');
+  const scroller = { scrollTop: 500 }; dialog.shadowRoot.querySelector = () => scroller;
+  dialog.stage = 'repository'; dialog.render();
+  assert.equal(scroller.scrollTop, 0);
+  scroller.scrollTop = 300; dialog.render();
+  assert.equal(scroller.scrollTop, 300, 'a re-render of the same step keeps the position');
+  let searchFocus = 0, controlFocus = 0; dialog.picker.focusSearch = () => { searchFocus++; };
+  dialog.shadowRoot.querySelector = () => ({ focus: options => { controlFocus++; assert.equal(options.preventScroll, true); } });
+  dialog.focusFirst(); assert.equal(searchFocus, 1); assert.equal(controlFocus, 0);
+  dialog.stage = 'details'; dialog.focusFirst(); assert.equal(controlFocus, 1);
+});
+
 test('Cantonese and bilingual wording reach the dialog', async () => {
   const { dialog } = fixture(); dialog.open('create');
   dialog.setLanguage('yue'); assert.ok(textOf(dialog.dialog).includes('喺呢部電腦'));
