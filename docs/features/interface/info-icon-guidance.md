@@ -18,8 +18,9 @@ An icon never reads the live value of its control, never copies private text suc
 
 The inventories below cover the static markup of each page and the controls that the page code creates at start-up. A coverage check reads each page as text and fails when a capable control has neither an explanation nor a stated reason.
 
-- Desktop app (`src/renderer/index.html`): 87 explanations (1 for groups of related controls), 9 stated exemptions.
+- Desktop app (`src/renderer/index.html`): 88 explanations (1 for groups of related controls), 9 stated exemptions.
 - Split storage page (`src/renderer/features/split-storage/panel.js`): 2 explanations (0 for groups of related controls), 0 stated exemptions.
+- Docker Hub drive dialog (`src/renderer/features/docker-hub-drive/dialog.js`): 4 explanations (0 for groups of related controls), 0 stated exemptions.
 - Website (`docs/site/index.html`): 22 explanations (0 for groups of related controls), 7 stated exemptions.
 - Browser extension popup (`browser-extension/popup.html`): 15 explanations (1 for groups of related controls), 0 stated exemptions.
 - Browser extension workspace (`browser-extension/options.html`): 140 explanations (3 for groups of related controls), 3 stated exemptions.
@@ -942,6 +943,16 @@ Source checks mount every icon on a document fixture and open it from the keyboa
 - Default: The first entry in the list
 - Example: Example for "Creation part size unit": the unit decides how the number is read. The overall byte limit still applies.
 
+### desktop-vault-use-hub
+
+**Use Docker Hub, no folders** — `#vault-use-hub`
+
+- Kind: button
+- Purpose: Close this dialog and use Docker Hub instead: create a drive that needs no folder, or open one found in your Docker Hub repositories.
+- Effects: The app keeps the local encrypted copy in its own data area. Only encrypted files go to Docker Hub, and you sign in on the official page.
+- Default: Not invoked
+- Example: Example for "Use Docker Hub, no folders": the app keeps the local encrypted copy in its own data area. Only encrypted files go to Docker Hub, and you sign in on the official page.
+
 ### desktop-dialog-cancel
 
 **Cancel** — `#dialog-cancel`
@@ -1015,6 +1026,48 @@ Source checks mount every icon on a document fixture and open it from the keyboa
 - Effects: With one copy, every location that holds a share is needed to open the files stored on it. More copies need more space.
 - Default: 1
 - Example: Example for "Copies of each part": with one copy, every location that holds a share is needed to open the files stored on it. More copies need more space.
+
+## Docker Hub drive dialog
+
+### docker-hub-drive-hub-drive-name
+
+**Drive name** — `#hub-drive-name`
+
+- Kind: text
+- Purpose: An optional label for this drive. It is saved with every encrypted snapshot so the drive can be recognized later when you open it from Docker Hub.
+- Effects: Anyone who can read a public repository can read the label, so do not put anything private in it. It is also the name shown for the drive in this app.
+- Default: Drive
+- Example: Example for "Drive name": anyone who can read a public repository can read the label, so do not put anything private in it. It is also the name shown for the drive in this app.
+
+### docker-hub-drive-hub-drive-letter
+
+**Drive letter** — `#hub-drive-letter`
+
+- Kind: choice
+- Purpose: The letter this drive gets in Windows Explorer once it is mounted.
+- Effects: Only letters that are free on this computer are offered. The drive appears under that letter as soon as it is created or restored.
+- Default: The first free letter
+- Example: Example for "Drive letter": only letters that are free on this computer are offered. The drive appears under that letter as soon as it is created or restored.
+
+### docker-hub-drive-hub-password
+
+**Password** — `#hub-password`
+
+- Kind: credential
+- Purpose: The password that protects this drive. It is used to derive the encryption key and is never sent anywhere.
+- Effects: The repository is public and vault.json allows offline password guessing, so a long passphrase or a key file is strongly recommended. A forgotten password cannot be recovered.
+- Default: Empty
+- Example: Example for "Password": the repository is public and vault.json allows offline password guessing, so a long passphrase or a key file is strongly recommended. A forgotten password cannot be recovered.
+
+### docker-hub-drive-hub-advanced
+
+**Advanced: choose folder** — `#hub-advanced`
+
+- Kind: button
+- Purpose: Restores the snapshot into a parent folder you pick yourself instead of the app's own folder.
+- Effects: The restored storage folder is created inside the folder you choose. The local cache stays in the app's own data area.
+- Default: Not invoked
+- Example: Example for "Advanced: choose folder": the restored storage folder is created inside the folder you choose. The local cache stays in the app's own data area.
 
 ## Website
 

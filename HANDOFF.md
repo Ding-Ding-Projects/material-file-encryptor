@@ -1807,3 +1807,13 @@ Two real downloaded-package diagnostics passed native admission and reached stor
 The registry verification provider still used the obsolete Tools menu. It now activates the direct storage control, opening the real narrow navigation drawer when necessary, with visibility checks and bounded waits. Independent review approved the correction; 24 focused checks passed. The old route failed the same destination contract before replacement. This is renderer-control wiring evidence, not pointer, keyboard or complete runtime acceptance.
 
 Four declared state producers still lack reproducible native paths, and physical display-scale proof remains unavailable. Keep the full 33-by-48 matrix and installed background execution incomplete. All seven historical original branches remain verified in the private recovery repository and must not be merged into public history.
+
+## Docker Hub drives without folders, 2026-11-17
+
+Branch `ai/feature/20261117-docker-hub-drive`, started from the split storage integration branch. Host: `src/main/drive-locations.js`, `hub-catalog.js`, `hub-registry-reader.js`, `registry-restore.js`, `hub-drive-requests.js`, wired in `main.js` with `hub*` methods in `validation.js` and `preload.cjs`; read-only Hub API paths and a pull-only registry token in `vault-image-docker.js`. Renderer: `src/renderer/features/docker-hub-drive/` (copy, model and flows, picker, dialog), opened from the create and unlock dialogs and the command palette. Design boards `NewDockerHubDrive.dc.html` and `OpenFromDockerHub.dc.html` in `design/redesign-2026-11/`.
+
+Decisions: the host allocates every folder, so the renderer never calls a folder chooser for these flows. The restore only accepts a digest the catalogue itself found. The drive name is a manifest annotation, not part of the validated snapshot config, so older apps still read new snapshots. The catalogue lists tags through the Docker Hub API and verifies one snapshot per device through the registry client, so a repository cannot make the app invent a drive.
+
+Fixed on the way: the sign-in relay now passes real console handles to Docker 29 (STARTF_USESTDHANDLES with null handles) and the parser treats cursor moves as line breaks; the multi-drive listing filter used the vault id where tags carry the device id, so it now reads foreign devices once and keeps snapshots whose verified config matches.
+
+Open: live Docker Hub proof (organization namespace endpoint, tag listing, restore), packaged app proof and screenshots, sharing the picker with the Docker Hub storage page.

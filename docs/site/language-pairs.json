@@ -581,6 +581,12 @@
       "translationSha256": "3bdc762dd24076bea10bfec6ea9bfe3c882afa00eeac25fce6311423cad52d2a"
     },
     {
+      "source": "docs/features/storage/docker-hub-drive.md",
+      "translation": "docs/features/storage/docker-hub-drive.zh-HK.md",
+      "sourceSha256": "a138b819cee0311b13a03da3d9b11a4210c780b3d384636123d61391ef2209df",
+      "translationSha256": "54726dff2b7809437a082e4a155535fd7ed2ae36cdd88b44e72ac3c63a7581d1"
+    },
+    {
       "source": "docs/features/storage/file-history-activity.md",
       "translation": "docs/features/storage/file-history-activity.zh-HK.md",
       "sourceSha256": "f7deea30c0934657eac71a8e865d2abc6a75aa9156f3ff7eb7cdeddf202ae39f",

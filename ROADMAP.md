@@ -1,3 +1,18 @@
+## Docker Hub drives without folders, 2026-11-17
+
+Branch `ai/feature/20261117-docker-hub-drive`. Ticks mean implemented with focused tests passing against a fake registry; nothing here has run against a real Docker Hub account except the sign-in relay.
+
+- [x] Create a drive: On this computer or Docker Hub; Docker Hub shows no folder picker and the host allocates per-drive storage and cache folders (owner-only where the platform allows).
+- [x] Guided Docker Hub sign-in inline in the flow. The relay fix makes Docker 29 print its device code (proved with the real `docker.exe`, then cancelled).
+- [x] Repository picker with search and the shared regex builder, All, Has drives, Empty, Public and Private filters, visibility, last pushed, size, drives found, per-row errors, progress, Refresh, keyboard navigation.
+- [x] Auto-detect drives per repository from verified snapshot configs, with the drive name as an optional manifest annotation on new snapshots.
+- [x] Create runs folders, create and mount, repository, destination with an hourly schedule, first sync; a later failure keeps the drive and retries only that step.
+- [x] Open from Docker Hub: drive cards, latest snapshot preselected, automatic restore folder, Advanced: choose folder, unlock, schedule off.
+- [ ] Live Docker Hub: namespace listing endpoint for organizations, tag listing, pull-token restore against a real account.
+- [ ] Packaged app proof of both flows and screenshots of the new dialogs.
+- [ ] Share the picker with the existing Docker Hub storage page (the backup page still has its own naming fields).
+- [ ] Manual repository entry for a repository outside the signed-in account's listing.
+
 ## Split storage and mirrors, 2026-11-17
 
 Branch `ai/feature/20261117-split-storage-core` (engine, host, desktop process). Ticks mean implemented with focused tests passing.

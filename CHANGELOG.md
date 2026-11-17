@@ -1,3 +1,11 @@
+# Docker Hub drives without folders, 2026-11-17
+
+- Create a drive now offers On this computer or Docker Hub. A Docker Hub drive needs no folder: the app creates its storage and cache folders in its own data area, creates the repository if needed, backs the drive up and turns on hourly sync.
+- Open a drive from Docker Hub finds drives already backed up in your repositories and organizations, restores the latest snapshot into an automatic folder and unlocks it. Advanced: choose folder keeps the native chooser.
+- New repository picker with search and a regex builder, filters, visibility, last pushed, size and detected drive cards. New snapshots carry the drive name as an optional label, visible to anyone who can read a public repository.
+- Fix the Docker sign-in relay so Docker 29 shows its device code instead of refusing a non-terminal. Fix repository listing for a drive whose snapshots come from several devices.
+- Not yet proven against a live Docker Hub account or in the installed app; see ROADMAP.md.
+
 # Split storage and mirrors, 2026-11-17
 
 - Spread a drive's encrypted parts across the main storage folder, other folders or disks, and Docker Hub, with weights, copies, size caps and path rules. Every location holds only ciphertext.

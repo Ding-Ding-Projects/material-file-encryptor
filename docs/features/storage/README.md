@@ -23,3 +23,5 @@ This category has no public HTTP API. A Postman collection is not applicable.
 - [加密儲存庫備份、還原及同步](registry-sync.zh-HK.md)
 - [Split storage, Safety backup and mirrors](split-storage.md)
 - [分散存放、安全備份及鏡像備份](split-storage.zh-HK.md)
+- [Docker Hub drives without choosing a folder](docker-hub-drive.md)
+- [唔使揀資料夾嘅 Docker Hub 磁碟](docker-hub-drive.zh-HK.md)

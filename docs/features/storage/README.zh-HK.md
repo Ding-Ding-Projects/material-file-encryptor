@@ -23,3 +23,5 @@
 - [Encrypted registry backup, restore and synchronization](registry-sync.md)
 - [分散存放、安全備份及鏡像備份](split-storage.zh-HK.md)
 - [Split storage, Safety backup and mirrors](split-storage.md)
+- [唔使揀資料夾嘅 Docker Hub 磁碟](docker-hub-drive.zh-HK.md)
+- [Docker Hub drives without choosing a folder](docker-hub-drive.md)
