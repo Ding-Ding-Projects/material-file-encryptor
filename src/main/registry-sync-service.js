@@ -35,7 +35,7 @@ async function createFile(root, relative, bytes) {
 }
 
 /** Main-process orchestration. No registry endpoint or filesystem path is accepted from a renderer. */
-export function createRegistrySyncService({ root, contexts, nativeRequest, authorize, chooseRestore, backgroundRegistration = async () => {}, storageFactory = createRegistryStorage, testDestination = null, now = Date.now }) {
+export function createRegistrySyncService({ root, contexts, nativeRequest, authorize, chooseRestore, backgroundRegistration = async () => {}, storageFactory = createRegistryStorage, testDestination = null, now = Date.now, leaseRetryMs = 60000 }) {
   let rows = {}, loaded = false, loading = null, configuring = false, ticking = false, saving = Promise.resolve(), active = null;
   const file = path.join(root, 'registry-sync.json');
   async function readState() {
@@ -115,7 +115,18 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
     active.controller.signal.throwIfAborted();
     let lease;
     // Native refusals here are plain sentences meant for people, so they may be shown; anything path-like stays hidden.
-    try { lease = await nativeRequest('beginSnapshot', { storageDir: source }, id); }
+    // Any in-flight native request (even a status refresh from an open page) makes the host refuse the lease
+    // for a moment, so a busy refusal is retried briefly instead of failing the whole backup.
+    const deadline = Date.now() + leaseRetryMs;
+    for (;;) {
+      try { lease = await nativeRequest('beginSnapshot', { storageDir: source }, id); break; }
+      catch (error) {
+        const busy = /wait for synchronization to stop|still releasing native work/i.test(String(error?.message || ''));
+        if (!busy || Date.now() >= deadline || active.controller.signal.aborted) { lease = error; break; }
+        await new Promise(resolve => setTimeout(resolve, 250));
+      }
+    }
+    if (lease instanceof Error) try { throw lease; }
     catch (error) { const shown = Error(String(error?.message || '')); const m = shown.message; if (m && m.length <= 200 && !m.includes('/') && !m.includes('\\') && !/[A-Za-z]:/.test(m)) shown.nativeReason = true; throw shown; }
     if (typeof lease?.leaseId !== 'string' || !lease.leaseId || typeof lease.storageDir !== 'string') throw Error('Invalid native snapshot lease.');
     active.leases.add(lease.leaseId); return lease;

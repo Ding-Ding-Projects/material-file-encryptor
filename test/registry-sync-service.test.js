@@ -183,3 +183,16 @@ test('a plain native refusal of the storage lease is shown, but a path-like one 
     await assert.rejects(f.service.sync('main'), error => error.message.includes(message) === shown && !/someone|server/.test(error.message));
   }
 });
+
+test('a briefly busy native host is waited for, and a lasting refusal still fails', async t => {
+  let refusals = 2; const calls = [];
+  const busy = 'Lock the vault and wait for synchronization to stop before preparing an image.';
+  const nativeRequest = async method => { calls.push(method); if (method === 'beginSnapshot') { if (refusals-- > 0) throw Error(busy); return { leaseId: 'lease', storageDir: 'unused' }; } return method === 'releaseSnapshot' ? { released: true } : {}; };
+  const f = await fixture(t, { leaseRetryMs: 5000, nativeRequest, storageFactory: () => ({ list: async () => [] }) });
+  await f.service.configure('main', configuration());
+  await assert.rejects(f.service.sync('main'));
+  assert.equal(calls.filter(m => m === 'beginSnapshot').length, 4, 'two busy refusals were retried, then the admission and preparation leases were both granted');
+  const g = await fixture(t, { leaseRetryMs: 600, nativeRequest: async method => { if (method === 'beginSnapshot') throw Error(busy); return {}; }, storageFactory: () => ({ list: async () => [] }) });
+  await g.service.configure('main', configuration());
+  await assert.rejects(g.service.sync('main'), /wait for synchronization to stop/);
+});
