@@ -9,6 +9,13 @@ const OBJECT = /^(?:vault\.json|(?:parts|commits|activity)\/(?:[a-f0-9]{32}|[a-f
 const BLOB_DELIVERY_ORIGIN = 'https://production.cloudfront.docker.com';
 const BLOB_REDIRECTS = new Set([301, 302, 303, 307, 308]);
 const MAX_BLOB_REDIRECTS = 3;
+export const DRIVE_NAME_ANNOTATION = 'io.material-file-encryptor.drive-name';
+/** The optional drive name label. It is user text visible to anyone who can read the repository. */
+export function cleanDriveNameLabel(value) {
+  if (typeof value !== 'string') return null;
+  const text = value.normalize('NFC').trim();
+  return text && [...text].length <= 64 && !/[\x00-\x1f\x7f‪-‮⁦-⁩]/.test(text) ? text : null;
+}
 const sha = value => 'sha256:' + createHash('sha256').update(value).digest('hex');
 const exact = (value, fields) => value && typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length === fields.length && fields.every(key => Object.hasOwn(value, key));
 const fail = () => Error('Encrypted registry operation could not be verified. Local data is unchanged.');
@@ -150,11 +157,12 @@ export function createRegistryStorage({ destination, authorize, fetcher = fetch,
     let config; try { config = validateRegistrySnapshot(JSON.parse(await getBlob(manifest.config, CONFIG, signal))); } catch { throw fail(); }
     if (manifest.layers.length !== config.files.length || manifest.layers.some((item, i) =>
       !validDescriptor(item, LAYER, maxObjectBytes) || item.digest !== config.files[i].digest || item.size !== config.files[i].size)) throw fail();
-    return { digest, snapshot: config };
+    const driveName = cleanDriveNameLabel(manifest.annotations?.[DRIVE_NAME_ANNOTATION]);
+    return { digest, snapshot: config, driveName };
   }
   return {
     target,
-    async publish({ vaultId, deviceId, parents = [], files, readFile }, signal) {
+    async publish({ vaultId, deviceId, parents = [], files, readFile, driveName }, signal) {
       signal = signal ? AbortSignal.any([signal, AbortSignal.timeout(3600000)]) : AbortSignal.timeout(3600000);
       // Capture caller-owned metadata before asynchronous authorization or upload.
       const frozen = structuredClone({ vaultId, deviceId, parents, files });
@@ -174,7 +182,8 @@ export function createRegistryStorage({ destination, authorize, fetcher = fetch,
       validateRegistrySnapshot(config);
       const configuration = Buffer.from(JSON.stringify(config));
       const manifest = Buffer.from(JSON.stringify({ schemaVersion: 2, mediaType: OCI,
-        config: await putBlob(configuration, CONFIG, signal), layers: config.files.map(({ path, ...item }) => item) }));
+        config: await putBlob(configuration, CONFIG, signal), layers: config.files.map(({ path, ...item }) => item),
+        ...(cleanDriveNameLabel(driveName) ? { annotations: { [DRIVE_NAME_ANNOTATION]: cleanDriveNameLabel(driveName) } } : {}) }));
       const digest = sha(manifest), tag = `mfe-${frozen.deviceId}-${randomUUID().replaceAll('-', '')}`;
       await authorization(signal, true);
       const result = await request(`${base}/manifests/${tag}`, { method: 'PUT', body: manifest, headers: { 'Content-Type': OCI } }, signal);
@@ -188,7 +197,7 @@ export function createRegistryStorage({ destination, authorize, fetcher = fetch,
     // With a vault id, only that drive's snapshots are read, so one repository can hold several drives.
     async list(signal, { vaultId } = {}) {
       if (vaultId !== undefined && !/^[a-f0-9]{32}$/.test(vaultId)) throw fail();
-      const prefix = vaultId ? `mfe-${vaultId}-` : 'mfe-';
+      const prefix = 'mfe-';
       signal = signal ? AbortSignal.any([signal, AbortSignal.timeout(3600000)]) : AbortSignal.timeout(3600000);
       await authorization(signal, true);
       const tags = new Set(); let url = `${base}/tags/list?n=100`; const pages = new Set();
@@ -204,14 +213,16 @@ export function createRegistryStorage({ destination, authorize, fetcher = fetch,
         if (link && !/^<[^>]+>;\s*rel="next"$/.test(link)) throw fail();
         url = link ? new URL(link.match(/^<([^>]+)>/)[1], target.endpoint).href : null;
       }
-      const revisions = []; let metadataBytes = 0;
+      const revisions = [], foreignDevices = new Set(); let metadataBytes = 0;
       for (const tag of [...tags].sort()) {
+        // Tags are mfe-<device id>-<revision>, and one device belongs to one drive, so a foreign device is read once.
+        if (foreignDevices.has(tag.slice(4, 36))) continue;
         const response = await request(`${base}/manifests/${tag}`, { headers: { Accept: OCI } }, signal);
         const raw = await bounded(response, 32 * 1024 ** 2, signal);
         const revision = await readRevision(sha(raw), signal);
         metadataBytes += Buffer.byteLength(JSON.stringify(revision.snapshot)) + raw.length;
         if (metadataBytes > 64 * 1024 ** 2) throw Error('Snapshot catalogue exceeds the metadata limit.');
-        if (vaultId && revision.snapshot.vaultId !== vaultId) continue;
+        if (vaultId && revision.snapshot.vaultId !== vaultId) { foreignDevices.add(tag.slice(4, 36)); continue; }
         const { files, ...summary } = revision.snapshot;
         revisions.push({ digest: revision.digest, snapshot: { ...summary, fileCount: files.length }, tag });
       }

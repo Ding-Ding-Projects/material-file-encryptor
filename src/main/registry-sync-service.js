@@ -228,7 +228,7 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
           }
           row.state = 'uploading';
           row.progress = { phase: 'preparing-upload', completedFiles: 0, completedBytes: 0, totalFiles: snapshot.manifest.files.length };
-          const result = await client.publish({ vaultId: snapshot.manifest.vaultId, deviceId: row.deviceId,
+          const result = await client.publish({ vaultId: snapshot.manifest.vaultId, deviceId: row.deviceId, driveName: current.driveName,
             parents: [...new Set(revisions.map(item => item.digest))], files: snapshot.manifest.files,
             readFile: async name => { const file = snapshot.manifest.files.find(file => file.path === name); const chunks = []; for await (const bytes of readVaultImageSnapshotFile(snapshot.directory, file, { signal })) chunks.push(bytes); const bytes = Buffer.concat(chunks); row.progress.completedFiles++; row.progress.completedBytes += bytes.length; return bytes; } }, signal);
           row.state = 'verified'; return row.lastResult = { ...result, fingerprint, downloaded, replayDeferred, published: true, verifiedAt: new Date(now()).toISOString() };

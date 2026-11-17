@@ -124,7 +124,7 @@ const registryDocker = createDockerImageTransport();
 const registryLogin = createRegistryLogin({ transport: registryDocker, openPage: url => shell.openExternal(url), packaged: app.isPackaged, resourcesPath: process.resourcesPath });
 const registrySync = createRegistrySyncService({ root: registryRoot,
   testDestination: registryTestDestination,
-  contexts: id => id === undefined ? [...vaultSessions.rows] : (() => { const row = vaultSessions.rows.get(id); return row && { storageDir: row.state.storageDir || row.preferences.storageDir, transport: row.preferences.transport || 'folder' }; })(),
+  contexts: id => id === undefined ? [...vaultSessions.rows] : (() => { const row = vaultSessions.rows.get(id); return row && { storageDir: row.state.storageDir || row.preferences.storageDir, transport: row.preferences.transport || 'folder', driveName: row.state.driveName || row.preferences.driveName }; })(),
   nativeRequest: (method, params, id) => vaultSessions.request(method, params, id),
   authorize: (repository, signal, visibility) => registryDocker.registryAuthorization(repository, signal, visibility),
   chooseRestore: async () => { const result = await uiDialog.showOpenDialog(window, { title: 'Choose a parent folder for a new restored vault · 選擇還原磁碟嘅上層資料夾', properties: ['openDirectory', 'createDirectory'] }); if (result.canceled) return null; return safeDestination(result.filePaths[0], [...vaultSessions.rows.values()].flatMap(row => [row.state.storageDir, row.preferences.storageDir, row.state.cacheDir, row.preferences.cacheDir])); },
