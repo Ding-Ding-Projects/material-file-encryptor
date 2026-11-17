@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Split storage</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..800&amp;family=Roboto+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+@keyframes rise{from{transform:translateY(10px);opacity:0}to{transform:none;opacity:1}}
+@keyframes shimmer{from{background-position:-120px 0}to{background-position:120px 0}}
+@keyframes pop{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.1);opacity:1}100%{transform:none}}
+[data-motion=off] *{animation:none!important;transition:none!important}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+button,select,input{font:inherit;color:inherit}
+</style>
+</helmet>
+<div data-motion="{{motion}}" style="--accent:{{accent}};width:1440px;height:1180px;position:relative;font-family:'Roboto Flex',system-ui,sans-serif;font-size:13px;color:#1A1B24;background:#E9EBF2;overflow:hidden;display:flex;flex-direction:column">
+<div aria-hidden="true" style="height:40px;background:#DADDE8;flex:none"></div>
+<div aria-hidden="true" style="height:44px;background:#FFFFFF;border-bottom:1px solid #DCDEE8;flex:none"></div>
+<div style="flex:1;display:flex;gap:1px;background:#DCDEE8;min-height:0">
+<nav aria-label="Main navigation" style="flex:0 0 232px;background:#F7F8FB;padding:10px 8px;display:flex;flex-direction:column;gap:2px">
+<span style="padding:8px 12px;border-radius:8px;color:#4A4C5C">My drive</span><span style="padding:8px 12px;border-radius:8px;color:#4A4C5C">Available offline</span><span style="padding:8px 12px;border-radius:8px;color:#4A4C5C">History</span><span style="padding:8px 12px;border-radius:8px;color:#4A4C5C">Recycle Bin</span><span style="padding:8px 12px;border-radius:8px;color:#4A4C5C">Docker Hub storage</span><span style="padding:8px 12px;border-radius:8px;background:#E6E8FF;color:#26318F;font-weight:600">Local tools</span>
+</nav>
+<main style="flex:1;background:#FFFFFF;overflow:auto;padding:16px 20px;display:flex;flex-direction:column;gap:12px">
+<header style="display:flex;align-items:center;gap:10px">
+<h1 style="margin:0;font-size:20px;font-weight:600;flex:1">Split storage</h1>
+<span style="{{statePill}}">{{stateText}}</span>
+</header>
+<p style="margin:0;color:#4A4C5C;line-height:1.5;max-width:900px">Spread the encrypted parts of this drive across several places. Only encrypted parts leave the main storage folder; vault.json, history and activity records always stay in the main folder.</p>
+
+<div role="status" aria-live="polite" style="{{heldStyle}}"><b>Split not finished, your files are still all on the main disk.</b><span>Reason: USB backup (E:) was disconnected after 38 of 60 parts. Nothing was removed from the main disk.</span><span><button type="button" style="height:36px;padding:0 16px;border:0;border-radius:8px;background:var(--accent);color:#FFFFFF;font-weight:600">Retry</button></span></div>
+
+<div style="display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:16px;align-items:start">
+<div style="display:flex;flex-direction:column;gap:10px">
+<p style="margin:0;font-size:11px;font-weight:700;letter-spacing:.06em;color:#4A4C5C">LOCATIONS</p>
+<sc-for list="{{locs}}" as="l" hint-placeholder-count="3">
+<div style="border:1px solid {{l.border}};border-radius:12px;padding:10px 12px;display:grid;gap:8px;animation:rise 320ms cubic-bezier(.05,.7,.1,1) both">
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b style="flex:1;min-width:120px">{{l.name}}</b><span style="{{l.kindBadge}}">{{l.kind}}</span><span style="{{l.stateBadge}}">{{l.state}}</span><span style="font-weight:700;font-size:16px;font-variant-numeric:tabular-nums">{{l.pct}}%</span></div>
+<div style="font-family:'Roboto Mono',monospace;font-size:11px;color:#4A4C5C">{{l.where}}</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;align-items:end">
+<label style="display:flex;flex-direction:column;gap:3px;font-size:11px;font-weight:600;color:#4A4C5C">Share weight<input type="number" value="{{l.weight}}" onInput="{{l.setWeight}}" style="height:34px;border:1px solid #C6C8D8;border-radius:8px;padding:0 8px"></label>
+<label style="display:flex;flex-direction:column;gap:3px;font-size:11px;font-weight:600;color:#4A4C5C">Capacity cap (GiB, 0 = none)<input type="number" value="{{l.cap}}" style="height:34px;border:1px solid #C6C8D8;border-radius:8px;padding:0 8px"></label>
+<span style="font-size:12px;color:#4A4C5C;line-height:1.4">{{l.free}}<br>{{l.stored}}</span>
+</div>
+</div>
+</sc-for>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" style="height:36px;padding:0 14px;border:1px solid #C6C8D8;border-radius:8px;background:#FFFFFF">Add a drive or USB location</button><button type="button" style="height:36px;padding:0 14px;border:1px solid #C6C8D8;border-radius:8px;background:#FFFFFF">Add Docker Hub</button></div>
+<p style="margin:0;font-size:12px;color:#4A4C5C">Labels are visible to anyone who can read the storage folder.</p>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:12px">
+<p style="margin:0;font-size:11px;font-weight:700;letter-spacing:.06em;color:#4A4C5C">HOW THE PARTS ARE SPLIT</p>
+<div role="img" aria-label="Split bar" style="display:flex;height:16px;border-radius:8px;overflow:hidden;background:#E4E6F0"><sc-for list="{{segments}}" as="s" hint-placeholder-count="3"><span style="{{s.style}}"></span></sc-for></div>
+<div style="display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px"><sc-for list="{{segments}}" as="s" hint-placeholder-count="3"><span><i style="{{s.dot}}"></i>{{s.name}} {{s.pct}}%</span></sc-for></div>
+<label style="display:flex;flex-direction:column;gap:3px;font-size:12px;font-weight:600;color:#4A4C5C">Copies of each part
+<select value="{{copies}}" onChange="{{setCopies}}" style="height:34px;border:1px solid #C6C8D8;border-radius:8px;background:#FFFFFF"><option value="1">1 (split only)</option><option value="2">2 (one extra copy)</option><option value="3">3</option></select></label>
+<div style="{{copiesWarnStyle}}">With 1 copy, every location is needed to open the files stored on it. If one is unplugged, those files are unavailable until it is connected again.</div>
+<p style="margin:0;font-size:12px;color:#4A4C5C">The unit is a whole encrypted part, so the Part size setting controls how fine the split can be.</p>
+
+<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:#E6E8FF;color:#26318F">
+<label for="safety" style="flex:1;font-weight:600">Safety backup: keep everything on the main disk until the split finishes</label>
+<button type="button" aria-label="More about Safety backup" style="width:28px;height:28px;border:1px solid currentColor;border-radius:14px;background:transparent;font-weight:700">i</button>
+<button id="safety" type="button" role="switch" aria-checked="{{safetyOn}}" onClick="{{toggleSafety}}" style="{{switchStyle}}"><span style="{{thumbStyle}}"></span></button>
+</div>
+<div style="{{confirmStyle}}"><b>Turn off Safety backup?</b><span>Each part will be removed from the main disk as soon as its new copy verifies, so the main disk no longer holds a full copy while the split runs. If a USB drive or a connection fails midway, some files can be unavailable until that location is connected again.</span><span style="display:flex;gap:8px"><button type="button" onClick="{{keepSafety}}" style="height:36px;padding:0 14px;border:1px solid #C6C8D8;border-radius:8px;background:#FFFFFF">Keep it on</button><button type="button" onClick="{{confirmOff}}" style="height:36px;padding:0 14px;border:0;border-radius:8px;background:#B3261E;color:#FFFFFF;font-weight:600">Turn off</button></span></div>
+
+<p style="margin:0;font-size:11px;font-weight:700;letter-spacing:.06em;color:#4A4C5C">RULES (FIRST MATCH WINS)</p>
+<div style="display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr) auto;gap:6px;align-items:center"><input value="Projects/**" aria-label="Pattern" style="height:34px;border:1px solid #C6C8D8;border-radius:8px;padding:0 8px;font-family:'Roboto Mono',monospace"><select aria-label="Location" style="height:34px;border:1px solid #C6C8D8;border-radius:8px;background:#FFFFFF"><option>Main storage folder</option></select><span style="color:#4A4C5C">↑ ↓ ×</span>
+<input value="*.mp4" aria-label="Pattern" style="height:34px;border:1px solid #C6C8D8;border-radius:8px;padding:0 8px;font-family:'Roboto Mono',monospace"><select aria-label="Location" style="height:34px;border:1px solid #C6C8D8;border-radius:8px;background:#FFFFFF"><option>USB backup (E:)</option></select><span style="color:#4A4C5C">↑ ↓ ×</span></div>
+<button type="button" style="height:34px;padding:0 14px;border:1px solid #C6C8D8;border-radius:8px;background:#FFFFFF;align-self:flex-start">Add rule</button>
+</div>
+</div>
+
+<section aria-labelledby="mir" style="border-top:1px solid #ECEDF3;padding-top:12px;display:grid;gap:10px">
+<h2 id="mir" style="margin:0;font-size:11px;font-weight:700;letter-spacing:.06em;color:#4A4C5C">MIRRORS</h2>
+<p style="margin:0;color:#4A4C5C;line-height:1.5;max-width:900px">A mirror keeps a complete copy of this drive's encrypted storage folder, including vault.json, history and activity. It does not take part in shares, copies or rules, and it keeps working when splitting is off.</p>
+<sc-for list="{{mirrors}}" as="m" hint-placeholder-count="2">
+<div style="border:1px solid #DCDEE8;border-radius:12px;padding:10px 12px;display:grid;gap:6px">
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b style="flex:1;min-width:140px">{{m.name}}</b><span style="{{m.stateBadge}}">{{m.state}}</span><button type="button" style="height:32px;padding:0 12px;border:1px solid #C6C8D8;border-radius:8px;background:#FFFFFF">Verify</button><button type="button" style="height:32px;padding:0 12px;border:0;border-radius:8px;background:transparent;color:#B3261E">Remove</button></div>
+<div style="font-family:'Roboto Mono',monospace;font-size:11px;color:#4A4C5C">{{m.where}}</div>
+<div style="{{m.freshStyle}}">{{m.fresh}}</div>
+<div style="{{m.diskStyle}}">This is on the same disk as your main storage, so it protects against mistakes but not against that disk failing.</div>
+</div>
+</sc-for>
+<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button type="button" style="height:36px;padding:0 14px;border:1px solid #C6C8D8;border-radius:8px;background:#FFFFFF">Add a mirror folder</button><button type="button" style="height:36px;padding:0 14px;border:1px solid #C6C8D8;border-radius:8px;background:#FFFFFF">Add a Docker Hub mirror</button><button type="button" style="height:36px;padding:0 16px;border:0;border-radius:8px;background:var(--accent);color:#FFFFFF;font-weight:600">Update mirrors now</button><a href="Unlock.dc.html" style="color:#3A46B5;font-weight:600">Open a drive from a mirror…</a></div>
+<p style="margin:0;font-size:12px;color:#4A4C5C">If the main disk is lost, a connected mirror can be opened as a drive on its own with the existing open-a-drive flow.</p>
+</section>
+
+<section aria-labelledby="plan" style="border-top:1px solid #ECEDF3;padding-top:12px;display:grid;gap:8px">
+<h2 id="plan" style="margin:0;font-size:11px;font-weight:700;letter-spacing:.06em;color:#4A4C5C">PLAN PREVIEW AND JOB</h2>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px">
+<div style="display:grid;gap:4px"><b>{{planMoves}}</b><span>{{planUnavail}}</span><span style="font-family:'Roboto Mono',monospace;font-size:11px;color:#4A4C5C">Projects/film.mp4 · Backups/2026.iso · +3 more</span></div>
+<div style="display:grid;gap:6px"><ol style="margin:0;padding:0;list-style:none;display:flex;gap:14px"><sc-for list="{{phases}}" as="p" hint-placeholder-count="3"><li style="{{p.style}}">{{p.t}}</li></sc-for></ol><div style="height:8px;border-radius:4px;background:#E4E6F0;overflow:hidden"><div style="{{bar}}"></div></div><span style="font-variant-numeric:tabular-nums">{{jobText}}</span></div>
+</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button type="button" style="height:36px;padding:0 14px;border:1px solid #C6C8D8;border-radius:8px;background:#FFFFFF">Preview</button><button type="button" style="height:36px;padding:0 14px;border:1px solid #C6C8D8;border-radius:8px;background:#FFFFFF">Save settings</button><button type="button" style="height:36px;padding:0 14px;border:1px solid #C6C8D8;border-radius:8px;background:#FFFFFF">Cancel</button><button type="button" style="height:36px;padding:0 14px;border:1px solid #C6C8D8;border-radius:8px;background:#FFFFFF">Verify</button><button type="button" style="height:36px;padding:0 14px;border:1px solid #C6C8D8;border-radius:8px;background:#FFFFFF">Bring everything back</button><button type="button" style="height:36px;padding:0 16px;border:0;border-radius:8px;background:var(--accent);color:#FFFFFF;font-weight:600">Apply split</button></div>
+</section>
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#4B57C9","options":["#4B57C9","#00696B","#8B4A00","#A23B72"],"section":"Look"},"motion":{"editor":"boolean","default":true,"section":"Look"},"stage":{"editor":"enum","options":["setup","running","held","done"],"default":"setup","section":"Stage"},"sameDisk":{"editor":"boolean","default":true,"section":"Mirrors"},"mirrorStale":{"editor":"boolean","default":false,"section":"Mirrors"},"$preview":{"width":1440,"height":1180}}'>
+class Component extends DCLogic {
+  constructor(p){super(p);this.state={w:[2,1,1],copies:'1',safety:true,asking:false};}
+  renderVals(){
+    const stage=this.props.stage??'setup',w=this.state.w,sum=w.reduce((a,b)=>a+b,0);
+    const defs=[['Main storage folder','Folder','C:\\Users\\you\\MaterialFiles','#4B57C9','Always keeps vault.json, history and activity'],['USB backup (E:)','Another drive or USB','E:\\MaterialFileEncryptor-Split\\a1b2','#8B4A00','Removable'],['Docker Hub','Docker Hub','docker.io/yourname/mfe-split','#00696B','Public, ciphertext only']];
+    const free=['38.4 GiB free','7.0 GiB free','Free space unknown'],stored=['20 parts, 10 GiB stored','10 parts, 5.0 GiB stored','10 parts, 5.0 GiB stored'];
+    const held=stage==='held';
+    const locs=defs.map((d,i)=>({name:d[0],kind:d[1],where:d[2],pct:Math.round(w[i]/sum*1000)/10,weight:w[i],cap:i===1?8:0,free:free[i],stored:stored[i],
+      state:held&&i===1?'Not connected':'Connected',border:held&&i===1?'#B3261E':'#DCDEE8',
+      kindBadge:'padding:3px 8px;border-radius:8px;font-size:11px;font-weight:700;background:#F1F2F8;color:#3A3C4C',
+      stateBadge:'padding:3px 8px;border-radius:8px;font-size:11px;font-weight:700;'+(held&&i===1?'background:#FFDAD6;color:#410002':'background:#CDEFE3;color:#063D31'),
+      setWeight:e=>{const v=Number(e.target.value);if(v>0){const n=[...this.state.w];n[i]=v;this.setState({w:n});}}}));
+    const segments=defs.map((d,i)=>({style:'height:100%;flex-grow:'+w[i]+';background:'+d[3]+';transition:flex-grow 360ms cubic-bezier(.2,0,0,1)',dot:'display:inline-block;width:10px;height:10px;border-radius:5px;margin-right:6px;background:'+d[3],name:d[0],pct:Math.round(w[i]/sum*1000)/10}));
+    const phaseIndex={setup:-1,running:1,held:0,done:3}[stage];
+    const phases=['Copying parts','Verifying copies','Releasing space on the main disk'].map((t,i)=>({t,style:'color:'+(i===phaseIndex?'#1A1B24':'#4A4C5C')+';font-weight:'+(i===phaseIndex?700:400)}));
+    const pct={setup:0,running:62,held:63,done:100}[stage];
+    const stale=this.props.mirrorStale===true,same=this.props.sameDisk!==false;
+    const mirrors=[{name:'Mirror on this disk',where:'C:\\MirrorCopy\\MaterialFileEncryptor-Mirror\\a1b2',state:'Connected',stateBadge:'padding:3px 8px;border-radius:8px;font-size:11px;font-weight:700;background:#CDEFE3;color:#063D31',fresh:stale?'Out of date since 2026-11-16 10:30 · 7 parts, 3.0 GiB behind':'Up to date · Last updated 2026-11-17 09:12',freshStyle:'font-weight:600;color:'+(stale?'#8B1A10':'#063D31'),diskStyle:same?'padding:8px 10px;border-radius:8px;background:#FFF1DE;color:#4A2C00;line-height:1.5':'display:none'},
+      {name:'Docker Hub mirror',where:'docker.io/yourname/mfe-mirror',state:stale?'Not connected':'Connected',stateBadge:'padding:3px 8px;border-radius:8px;font-size:11px;font-weight:700;'+(stale?'background:#FFDAD6;color:#410002':'background:#CDEFE3;color:#063D31'),fresh:stale?'Out of date since 2026-11-16 10:30 · 7 parts, 3.0 GiB behind':'Up to date · Last updated 2026-11-17 09:12',freshStyle:'font-weight:600;color:'+(stale?'#8B1A10':'#063D31'),diskStyle:'display:none'}];
+    const box='padding:12px 14px;border-radius:12px;display:grid;gap:8px;';
+    return {accent:this.props.accent??'#4B57C9',motion:this.props.motion===false?'off':'on',locs,segments,phases,mirrors,
+      stateText:{setup:'Not applied yet',running:'Splitting: verifying copies',held:'Held by Safety backup',done:'Split applied'}[stage],
+      statePill:'padding:4px 10px;border-radius:10px;font-weight:700;font-size:12px;'+(held?'background:#FFDAD6;color:#410002':stage==='done'?'background:#CDEFE3;color:#063D31;animation:pop 420ms cubic-bezier(.05,.7,.1,1) both':'background:#E6E8FF;color:#26318F'),
+      heldStyle:held?box+'background:#FFDAD6;color:#410002':'display:none',
+      copiesWarnStyle:this.state.copies==='1'?box+'background:#FFF1DE;color:#4A2C00;line-height:1.5':'display:none',
+      copies:this.state.copies,setCopies:e=>this.setState({copies:e.target.value}),
+      safetyOn:String(this.state.safety),
+      switchStyle:'position:relative;width:52px;height:32px;border:0;border-radius:16px;cursor:pointer;transition:background 200ms;background:'+(this.state.safety?'var(--accent)':'#79747E'),
+      thumbStyle:'position:absolute;top:4px;left:'+(this.state.safety?'24px':'4px')+';width:24px;height:24px;border-radius:12px;background:#FFFFFF;transition:left 200ms cubic-bezier(.2,0,0,1)',
+      toggleSafety:()=>{if(this.state.safety)this.setState({asking:true});else this.setState({safety:true});},
+      confirmStyle:this.state.asking?box+'background:#FFFFFF;border:2px solid #B3261E;animation:rise 240ms cubic-bezier(.05,.7,.1,1) both':'display:none',
+      keepSafety:()=>this.setState({asking:false}),confirmOff:()=>this.setState({asking:false,safety:false}),
+      planMoves:stage==='setup'?'30 parts, 15 GiB to move':'Nothing left to move',planUnavail:stage==='setup'?'12 files would be unavailable if a location is disconnected:':'Every file stays available if one location is disconnected.',
+      bar:'height:100%;border-radius:4px;transition:width 600ms cubic-bezier(.2,0,0,1);width:'+pct+'%;background:'+(held?'#B3261E':'var(--accent)'),
+      jobText:{setup:'No split job is running.',running:'38 of 60 parts · 7.6 GiB / 12 GiB · Now at USB backup (E:)',held:'38 of 60 parts · stopped before every copy verified',done:'60 of 60 parts · released 15 GiB on the main disk'}[stage]};
+  }
+}
+</script>
+</body>
+</html>

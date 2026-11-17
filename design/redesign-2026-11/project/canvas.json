@@ -144,6 +144,15 @@
    "title": "Documentation site: task-led home",
    "expand": "fill",
    "is_interactive": true
+  },
+  "SplitStorage.dc.html": {
+   "x": 3760,
+   "y": 0,
+   "w": 1440,
+   "h": 1180,
+   "page": "storage",
+   "title": "Split storage, Safety backup and Mirrors",
+   "is_interactive": true
   }
  },
  "order": [
@@ -158,7 +167,8 @@
   "Settings.dc.html",
   "Tools.dc.html",
   "Mobile.dc.html",
-  "Site.dc.html"
+  "Site.dc.html",
+  "SplitStorage.dc.html"
  ],
  "notes": {
   "th": {
@@ -304,6 +314,14 @@
    "page": "site",
    "fill": "pink",
    "text": "Documentation site gets its own editorial look: serif display, unmasking headline, drawn file-to-backup diagram, task-led What do you want to do grid, interactive part size explorer labelled Example only, cross-article search with regex. Tweaks: accent, motion."
+  },
+  "nSplit": {
+   "x": 5240,
+   "y": 0,
+   "w": 320,
+   "page": "storage",
+   "fill": "teal",
+   "text": "Dense tool for spreading encrypted parts across the main folder, a USB drive or another folder, and Docker Hub: locations with share weight and capacity cap, a split bar, copies with the plain one-copy warning, ordered rules, plan preview with files that would be unavailable, job phases (copying, verifying, releasing) and Apply, Cancel, Verify, Bring everything back. Safety backup (on by default) asks for confirmation to turn off and shows the held state with Retry. Mirrors: complete independently openable copies, same-disk note, up to date or out of date since a time, Update now, Verify, Remove. Tweaks: accent, motion, stage (setup / running / held / done), sameDisk, mirrorStale."
   }
  },
  "designSystems": []

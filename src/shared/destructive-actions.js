@@ -102,6 +102,9 @@ export const DESTRUCTIVE_ACTIONS = Object.freeze([
   entry('extension.discard-operation', E, 'browser-extension/operations-panel.js', ['discardOperation'], ['Discard a saved operation', '捨棄已儲存嘅操作'], ['The saved operation is deleted. Nothing was sent or changed.', '已儲存嘅操作會被刪除，之前冇傳送或更改任何嘢。']),
   entry('extension.discard-all-operations', E, 'browser-extension/operations-panel.js', ['discardAll'], ['Discard all saved operations', '捨棄所有已儲存嘅操作'], ['Every saved operation is deleted. Nothing was sent or changed.', '所有已儲存嘅操作都會被刪除，之前冇傳送或更改任何嘢。']),
 
+  // ---- Desktop: split storage --------------------------------------------------------------------------------
+  entry('desktop.split-storage-safety-off', D, 'src/renderer/features/split-storage/panel.js', ['safetyBackup'], ['Turn off Safety backup', '關閉安全備份'], ['Each part is removed from the main disk as soon as its new copy verifies, so the main disk no longer holds a full copy while the split runs. An unplugged drive or a lost connection midway can leave some files unavailable until that location is connected again.', '每個分段一驗證到新副本就會即時由主磁碟移除，分散期間主磁碟唔再有完整副本。如果中途拔走磁碟或者連線中斷，部分檔案要等嗰個位置重新連接先打開到。']),
+
   // ---- Documentation site ------------------------------------------------------------------------------------
   entry('site.clear-vocabulary', S, 'docs/site/site.js', ['clearPrivateVocabulary'], ['Clear personal wording', '清除個人用詞'], ['The stored wording file is removed from this browser and the original wording returns.', '儲存咗嘅用詞檔會由呢個瀏覽器移除，原本用詞會恢復。']),
   entry('site.clear-workspace-vocabulary', S, 'docs/site/workspace.js', ['private-wording'], ['Clear private wording', '清除私人用詞'], ['The stored private wording is removed from this browser and the original wording returns.', '儲存咗嘅私人用詞會由呢個瀏覽器移除，原本用詞會恢復。']),
