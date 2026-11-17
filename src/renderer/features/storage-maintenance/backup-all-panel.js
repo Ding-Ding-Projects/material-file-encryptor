@@ -1,6 +1,7 @@
 import { SurfaceElement, element, localized, register } from '../../../shared/surface/registry.js';
 import { reducedMotionRequested } from '../../../shared/surface/reduced-motion.js';
 import { BACKUP_ALL_COPY } from './backup-all-copy.js';
+import { REGISTRY_LOGIN_COPY } from './registry-login-copy.js';
 import { BACKUP_ALL_METHODS, backupAllPlan, backupAllStatus, defaultBackupSelection, backupSummary, validBackupSuffix, fill } from './backup-all-model.js';
 
 const POLL_MS = 800;
@@ -58,7 +59,7 @@ export class BackupAllPanel extends SurfaceElement {
     this.render();
   }
   t(key, values) {
-    const [en, yue] = BACKUP_ALL_COPY[key] || [key, key], translated = this.translateText(en);
+    const [en, yue] = BACKUP_ALL_COPY[key] || REGISTRY_LOGIN_COPY[key] || [key, key], translated = this.translateText(en);
     const base = translated !== en ? translated : localized({ en, yue }, this.language === 'zh-HK' ? 'yue' : this.language);
     return values ? fill(base, values) : base;
   }

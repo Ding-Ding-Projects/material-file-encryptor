@@ -38,7 +38,7 @@ export class RegistryConflictsPanel extends SurfaceElement {
     const key = state?.sessionId ? JSON.stringify([state.sessionId, state.storageDir || '']) : null;
     const changed = key !== this.key, wasAvailable = this.available(); this.key = key; this.vaultState = state;
     if (key && !this.sessions.has(key)) this.sessions.set(key, entry());
-    if (!this.available() && this.current()) { const row = this.current(); row.generation++; row.rows = null; row.cursor = null; row.selected = null; row.choice = ''; row.restoredPaths=[]; row.pending = null; }
+    if (!this.available() && this.current()) { const row = this.current(); row.generation++; row.rows = null; row.cursor = null; row.selected = null; row.choice = ''; row.restoredPaths=[]; row.pending = null; row.error = ''; row.message = ''; }
     this.render(); if ((changed || !wasAvailable) && this.available()) void this.refresh();
   }
   synchronize() { this.setVaultState(this.getVaultState()); return this.current(); }
@@ -92,7 +92,7 @@ export class RegistryConflictsPanel extends SurfaceElement {
     this.buttons.cancel.disabled = !available || row?.pending === 'settling' || !row?.selected && !pending;
     this.buttons.apply.disabled = !available || pending || !choices.includes(row?.choice); this.buttons.apply.hidden = !choices.length;
     this.status.textContent = this.t(!available ? 'unavailable' : row?.pending || row?.message || (row?.rows === null || !row ? 'unloaded' : !row.rows.length ? 'empty' : 'loaded')) + (available && row?.rows?.length ? `: ${row.rows.length}` : '');
-    this.error.textContent = row?.error ? this.t(row.error) : ''; this.error.hidden = !row?.error;
+    this.error.textContent = available && row?.error ? this.t(row.error) : ''; this.error.hidden = !(available && row?.error);
     this.records.replaceChildren();
     for (const item of row?.rows || []) {
       const title = `${item.current?.path || item.preserved?.path || item.conflictId} · ${this.kindLabel(item.kind)}`;
