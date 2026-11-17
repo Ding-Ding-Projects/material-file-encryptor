@@ -9,6 +9,7 @@ import { validateRegistrySchedule, nextRegistryRun, registryOccurrence } from '.
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 const identity = stat => `${stat.dev}:${stat.ino}`;
 const ERROR = 'Registry synchronization is incomplete. Local encrypted data was retained. Review the destination and retry.';
+const PHASES = { discovering: 'checking the destination', downloading: 'downloading snapshots from other devices', preparing: 'preparing the encrypted snapshot', uploading: 'uploading', restoring: 'restoring' };
 const SAFE_REASONS = new Set(['The destination contains a different vault.', 'Snapshot catalogue exceeds this client limit. Narrow the repository before retrying.', 'Snapshot catalogue exceeds the metadata limit.', 'Native synchronization did not settle.', 'Native synchronization needs attention.']);
 export async function physical(root) {
   if (typeof root !== 'string' || !path.isAbsolute(root)) throw Error('Choose an absolute local storage folder.');
@@ -34,7 +35,7 @@ export async function createFile(root, relative, bytes) {
 }
 
 /** Main-process orchestration. No registry endpoint or filesystem path is accepted from a renderer. */
-export function createRegistrySyncService({ root, contexts, nativeRequest, authorize, chooseRestore, backgroundRegistration = async () => {}, storageFactory = createRegistryStorage, testDestination = null, now = Date.now }) {
+export function createRegistrySyncService({ root, contexts, nativeRequest, authorize, chooseRestore, backgroundRegistration = async () => {}, storageFactory = createRegistryStorage, testDestination = null, now = Date.now, leaseRetryMs = 60000 }) {
   let rows = {}, loaded = false, loading = null, configuring = false, ticking = false, saving = Promise.resolve(), active = null;
   const file = path.join(root, 'registry-sync.json');
   async function readState() {
@@ -94,10 +95,13 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
     row.lastError = null; row.interrupted = true; row.progress = null;
     try { await save(); return await action(current, row, controller.signal); }
     catch (error) {
+      const failedStep = PHASES[row.state];
       row.state = controller.signal.aborted ? 'cancelled' : 'incomplete';
       // Plain reasons written by this service are shown; anything else keeps the generic message.
-      const reason = !controller.signal.aborted && SAFE_REASONS.has(error?.message) ? ' ' + error.message : '';
-      row.lastError = ERROR + reason; throw Error(ERROR + reason);
+      const reason = !controller.signal.aborted && (SAFE_REASONS.has(error?.message) || error?.nativeReason === true) ? ' ' + error.message : '';
+      // The step name says where it stopped without exposing paths, account details or registry responses.
+      const where = !controller.signal.aborted && failedStep ? ` (stopped while ${failedStep})` : '';
+      row.lastError = ERROR + reason + where; throw Error(ERROR + reason + where);
     }
     finally {
       clearTimeout(timer); controller.signal.removeEventListener('abort', cancelNative); row.interrupted = active.leases.size > 0;
@@ -109,7 +113,21 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
   }
   async function acquire(id, source) {
     active.controller.signal.throwIfAborted();
-    const lease = await nativeRequest('beginSnapshot', { storageDir: source }, id);
+    let lease;
+    // Native refusals here are plain sentences meant for people, so they may be shown; anything path-like stays hidden.
+    // Any in-flight native request (even a status refresh from an open page) makes the host refuse the lease
+    // for a moment, so a busy refusal is retried briefly instead of failing the whole backup.
+    const deadline = Date.now() + leaseRetryMs;
+    for (;;) {
+      try { lease = await nativeRequest('beginSnapshot', { storageDir: source }, id); break; }
+      catch (error) {
+        const busy = /wait for synchronization to stop|still releasing native work/i.test(String(error?.message || ''));
+        if (!busy || Date.now() >= deadline || active.controller.signal.aborted) { lease = error; break; }
+        await new Promise(resolve => setTimeout(resolve, 250));
+      }
+    }
+    if (lease instanceof Error) try { throw lease; }
+    catch (error) { const shown = Error(String(error?.message || '')); const m = shown.message; if (m && m.length <= 200 && !m.includes('/') && !m.includes('\\') && !/[A-Za-z]:/.test(m)) shown.nativeReason = true; throw shown; }
     if (typeof lease?.leaseId !== 'string' || !lease.leaseId || typeof lease.storageDir !== 'string') throw Error('Invalid native snapshot lease.');
     active.leases.add(lease.leaseId); return lease;
   }

@@ -163,3 +163,36 @@ test('a known plain reason is shown with the generic message and other failures 
   await g.service.configure('main', configuration());
   await assert.rejects(g.service.sync('main'), error => !/private|secret/.test(error.message));
 });
+
+test('the error names the step where synchronization stopped, without private detail', async t => {
+  const f = await fixture(t, { storageFactory: () => ({ list: async () => [], publish: async () => { throw Error('C:\private\detail 401'); } }) });
+  await f.service.configure('main', configuration());
+  await assert.rejects(f.service.sync('main'), error => /stopped while (uploading|preparing the encrypted snapshot)/.test(error.message) && !/private|401/.test(error.message));
+});
+
+test('a plain native refusal of the storage lease is shown, but a path-like one is not', async t => {
+  const cases = [
+    ['Lock the vault and wait for synchronization to stop before preparing an image.', true],
+    ['Cannot open C:\\Users\\someone\\vault', false],
+    ['Share \\\\server\\vault is busy', false],
+    ['Folder /home/someone/vault is busy', false],
+  ];
+  for (const [message, shown] of cases) {
+    const f = await fixture(t, { storageFactory: () => ({ list: async () => [] }), nativeRequest: async method => { if (method === 'beginSnapshot') throw Error(message); return {}; } });
+    await f.service.configure('main', configuration());
+    await assert.rejects(f.service.sync('main'), error => error.message.includes(message) === shown && !/someone|server/.test(error.message));
+  }
+});
+
+test('a briefly busy native host is waited for, and a lasting refusal still fails', async t => {
+  let refusals = 2; const calls = [];
+  const busy = 'Lock the vault and wait for synchronization to stop before preparing an image.';
+  const nativeRequest = async method => { calls.push(method); if (method === 'beginSnapshot') { if (refusals-- > 0) throw Error(busy); return { leaseId: 'lease', storageDir: 'unused' }; } return method === 'releaseSnapshot' ? { released: true } : {}; };
+  const f = await fixture(t, { leaseRetryMs: 5000, nativeRequest, storageFactory: () => ({ list: async () => [] }) });
+  await f.service.configure('main', configuration());
+  await assert.rejects(f.service.sync('main'));
+  assert.equal(calls.filter(m => m === 'beginSnapshot').length, 4, 'two busy refusals were retried, then the admission and preparation leases were both granted');
+  const g = await fixture(t, { leaseRetryMs: 600, nativeRequest: async method => { if (method === 'beginSnapshot') throw Error(busy); return {}; }, storageFactory: () => ({ list: async () => [] }) });
+  await g.service.configure('main', configuration());
+  await assert.rejects(g.service.sync('main'), /wait for synchronization to stop/);
+});
