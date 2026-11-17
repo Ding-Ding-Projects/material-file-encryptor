@@ -480,7 +480,7 @@ function updateDialog() {
  $('password-fields').hidden = isKey; $('key-fields').hidden = !isKey;
  $('password-input').required = !isKey; $('confirm-password').required = creating && !isKey; $('key-path').required = isKey;
  $('password-input').autocomplete = creating ? 'new-password' : 'current-password';
- const hubRoute = $('vault-use-hub'); hubRoute.hidden = upgrading || !api?.hubDriveFolders; setText('vault-use-hub', creating ? 'Use Docker Hub, no folders' : 'Open from Docker Hub');
+ const place = $('vault-place'); place.hidden = upgrading || !api?.hubDriveFolders; $('vault-place-pc').label = t('On this computer'); $('vault-place-pc').selected = true; $('vault-place-hub').selected = false; $('vault-place-hub').label = t(creating ? 'Docker Hub, no folders' : 'Docker Hub');
 }
 const DRIVE_NAME_ERROR = 'Use 1 to 32 characters. Slashes, colons, asterisks, question marks, quotes, angle brackets, vertical bars and control characters are not allowed.';
 const normalizedDriveLetter = value => /^[A-Z]:?$/i.test(String(value || '')) ? String(value)[0].toUpperCase() : '';
@@ -557,7 +557,7 @@ async function openHubDrive(mode) {
  }
  if (mode === 'open') hubDriveView.openExisting(); else hubDriveView.openCreate();
 }
-function openVaultDialog(mode) { prepareVaultForm(mode); $('vault-dialog').showModal(); $('storage-input').focus(); }
+function openVaultDialog(mode) { prepareVaultForm(mode); const shown = $('vault-dialog').showModal(); $('storage-input').focus(); /* The dialog moves focus to its first control once it has opened, which is an information icon. Put it on the first field instead. */ Promise.resolve(shown).then(() => { if ($('vault-dialog').open) $('storage-input').focus(); }, () => {}); }
 /** Unlocks from the in-tab card: the saved folders and letter fill the same form the dialog uses, so both paths send identical requests. */
 async function unlockInline({mode,password,keyFilePath,autoUnlock}) {
  if (busy || !state || !api) return {ok:false,error:''};
@@ -646,7 +646,8 @@ listen('vault-form','submit',async event => {
  if (result?.ok) { closeVaultDialog(); if(unlocking)unlockMotion.play('success'); }
  else if (result && unlocking) unlockMotion.play('failure');
 });
-listen('vault-use-hub','click',() => { const unlocking = dialogMode === 'unlock'; closeVaultDialog(); void openHubDrive(unlocking ? 'open' : 'create'); });
+listen('vault-place-hub','click',() => { const unlocking = dialogMode === 'unlock'; closeVaultDialog(); void openHubDrive(unlocking ? 'open' : 'create'); });
+listen('vault-place-pc','click',() => { $('vault-place-pc').selected = true; $('vault-place-hub').selected = false; });
 listen('lock-button','click',() => run('Locking drive…',() => api.lock(),'Drive locked.'));
 window.addEventListener('mfe:open-split-storage',() => { if(!foundation)return; foundation.model.openTab({id:'split-storage',label:canonicalViewLabels['split-storage']}); foundation.shell.activate('split-storage'); });
 window.addEventListener('mfe:open-cloud-backup',() => { if(!foundation)return; const title=canonicalViewLabels.storage||'Docker Hub storage'; foundation.model.openTab({id:'storage',label:title}); foundation.shell.activate('storage'); requestAnimationFrame(()=>featureMounts.get('storage')?.focusBackup?.(false)); });

@@ -105,4 +105,9 @@ mfe-control-guidance[data-info-icon]:has(+[hidden]){display:none}
 .vault-session-bar > .field-help { flex-basis:100%; margin:0; }
 @media (max-width:600px) { .vault-session-picker { flex-basis:100%; } }
 .wording-celebration--calm{inset:auto 16px 16px auto;display:block;padding:0}
+/* Drive dialog polish: the last field stays fully reachable, the choice search stays beside its select, and the drive letter status only shows with its list. */
+.dialog-body{padding-bottom:24px;scroll-padding-block:24px}
+.dialog-body>md-outlined-select[data-select-search-composition="adjacent"]:has(+md-icon-button[data-choice-search]){width:calc(100% - 128px)}
+#drive-letter-options[hidden]~#drive-letter-status{display:none}
+#vault-place{margin:4px 0 12px;display:flex;gap:8px}
 .wording-celebration--calm .wording-celebration__headline{padding:10px 16px;border-radius:16px;font-size:1rem;font-weight:500;box-shadow:none;background:var(--md-sys-color-surface-container-high,#ece6f0);color:var(--md-sys-color-on-surface,#1d1b20)}

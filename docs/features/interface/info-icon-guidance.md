@@ -18,7 +18,7 @@ An icon never reads the live value of its control, never copies private text suc
 
 The inventories below cover the static markup of each page and the controls that the page code creates at start-up. A coverage check reads each page as text and fails when a capable control has neither an explanation nor a stated reason.
 
-- Desktop app (`src/renderer/index.html`): 88 explanations (1 for groups of related controls), 9 stated exemptions.
+- Desktop app (`src/renderer/index.html`): 89 explanations (1 for groups of related controls), 9 stated exemptions.
 - Split storage page (`src/renderer/features/split-storage/panel.js`): 2 explanations (0 for groups of related controls), 0 stated exemptions.
 - Docker Hub drive dialog (`src/renderer/features/docker-hub-drive/dialog.js`): 4 explanations (0 for groups of related controls), 0 stated exemptions.
 - Website (`docs/site/index.html`): 22 explanations (0 for groups of related controls), 7 stated exemptions.
@@ -943,15 +943,25 @@ Source checks mount every icon on a document fixture and open it from the keyboa
 - Default: The first entry in the list
 - Example: Example for "Creation part size unit": the unit decides how the number is read. The overall byte limit still applies.
 
-### desktop-vault-use-hub
+### desktop-vault-place-pc
 
-**Use Docker Hub, no folders** — `#vault-use-hub`
+**On this computer** — `#vault-place-pc`
+
+- Kind: button
+- Purpose: Keep the drive on this computer: you choose the encrypted storage folder, the cache folder and the drive letter below.
+- Effects: Nothing changes until you choose Create & mount or Unlock & mount. Only encrypted files are written to the storage folder.
+- Default: Not invoked
+- Example: Example for "On this computer": nothing changes until you choose Create & mount or Unlock & mount. Only encrypted files are written to the storage folder.
+
+### desktop-vault-place-hub
+
+**Docker Hub, no folders** — `#vault-place-hub`
 
 - Kind: button
 - Purpose: Close this dialog and use Docker Hub instead: create a drive that needs no folder, or open one found in your Docker Hub repositories.
 - Effects: The app keeps the local encrypted copy in its own data area. Only encrypted files go to Docker Hub, and you sign in on the official page.
 - Default: Not invoked
-- Example: Example for "Use Docker Hub, no folders": the app keeps the local encrypted copy in its own data area. Only encrypted files go to Docker Hub, and you sign in on the official page.
+- Example: Example for "Docker Hub, no folders": the app keeps the local encrypted copy in its own data area. Only encrypted files go to Docker Hub, and you sign in on the official page.
 
 ### desktop-dialog-cancel
 
