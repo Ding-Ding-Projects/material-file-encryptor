@@ -162,7 +162,7 @@ export function createRegistryStorage({ destination, authorize, fetcher = fetch,
   }
   return {
     target,
-    async publish({ vaultId, deviceId, parents = [], files, readFile, driveName }, signal) {
+    async publish({ vaultId, deviceId, parents = [], files, readFile, driveName, onVerifying = null }, signal) {
       signal = signal ? AbortSignal.any([signal, AbortSignal.timeout(3600000)]) : AbortSignal.timeout(3600000);
       // Capture caller-owned metadata before asynchronous authorization or upload.
       const frozen = structuredClone({ vaultId, deviceId, parents, files });
@@ -180,6 +180,8 @@ export function createRegistryStorage({ destination, authorize, fetcher = fetch,
         config.files.push({ path: file.path, ...await putBlob(bytes, LAYER, signal) });
       }
       validateRegistrySnapshot(config);
+      // Every layer is uploaded; what remains is writing and reading back the manifest.
+      try { onVerifying?.(); } catch { /* A progress listener never changes publication. */ }
       const configuration = Buffer.from(JSON.stringify(config));
       const manifest = Buffer.from(JSON.stringify({ schemaVersion: 2, mediaType: OCI,
         config: await putBlob(configuration, CONFIG, signal), layers: config.files.map(({ path, ...item }) => item),

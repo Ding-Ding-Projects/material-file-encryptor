@@ -194,9 +194,10 @@ function checkContentAddress(relative, sha256) {
   if (match?.[1] === 'parts' && match[2].length === 64 && match[2].toLowerCase() !== sha256)
     throw Error('An encrypted content-addressed object has an invalid hash.');
 }
-async function verifyRows(root, rows, expected, signal, inspect = false) {
-  let configuration;
+async function verifyRows(root, rows, expected, signal, inspect = false, progress = null) {
+  let configuration, checkedBytes = 0;
   for (let index = 0; index < rows.length; index++) {
+    progress?.(index, checkedBytes); checkedBytes += rows[index].bytes;
     signal?.throwIfAborted();
     const row = rows[index], file = expected[index];
     if (!file || row.path !== file.path || row.bytes !== file.bytes) throw Error(PREPARED_CHANGED);
@@ -218,7 +219,8 @@ async function cleanOwned(directory, ownedIdentity) {
   } catch (error) { if (error.code !== 'ENOENT') return; }
 }
 /** Caller must hold a native locked-source lease for the complete copy. No credentials or decryption are used here. */
-export async function createVaultImageSnapshot({ source, workRoot, limits: overrides = {}, signal }) {
+/** onProgress, when given, receives { phase: 'copying' | 'checking', completedFiles, totalFiles, completedBytes, totalBytes }. */
+export async function createVaultImageSnapshot({ source, workRoot, limits: overrides = {}, signal, onProgress = null }) {
   signal?.throwIfAborted();
   const limits = limitsFor(overrides);
   source = await physical(source); workRoot = await physical(workRoot, true);
@@ -229,6 +231,9 @@ export async function createVaultImageSnapshot({ source, workRoot, limits: overr
   const ownedIdentity = identity(await fs.lstat(directory, { bigint: true }));
   const vault = path.join(directory, 'vault');
   const manifest = { schemaVersion: 1, kind: 'encrypted-vault-storage', createdAt: new Date().toISOString(), files: [] };
+  const totalFiles = rows.length, totalBytes = rows.reduce((total, row) => total + row.bytes, 0);
+  const report = (phase, completedFiles, completedBytes) => { try { onProgress?.({ phase, completedFiles, totalFiles, completedBytes, totalBytes }); } catch { /* A progress listener never changes the snapshot. */ } };
+  let copiedBytes = 0;
   try {
     await physical(directory); await fs.mkdir(vault, { mode: 0o700 });
     for (const row of rows) {
@@ -246,17 +251,18 @@ export async function createVaultImageSnapshot({ source, workRoot, limits: overr
         if (stable(await handle.stat({ bigint: true })) !== row.identity) throw Error(CHANGED);
         checkContentAddress(row.path, digest);
         manifest.files.push(Object.freeze({ path: row.path, bytes: row.bytes, sha256: digest }));
+        copiedBytes += row.bytes; report('copying', manifest.files.length, copiedBytes);
       } finally { await handle.close(); }
     }
     if (JSON.stringify(await inventory(source, limits, signal)) !== JSON.stringify(rows)) throw Error(CHANGED);
-    await verifyRows(source, rows, manifest.files, signal);
+    await verifyRows(source, rows, manifest.files, signal, false, (files, bytes) => report('checking', files, bytes));
     if (JSON.stringify(await inventory(source, limits, signal)) !== JSON.stringify(rows)) throw Error(CHANGED);
     Object.freeze(manifest.files); Object.freeze(manifest);
     await physical(directory);
     await fs.writeFile(path.join(directory, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n', { flag: 'wx', mode: 0o600 });
     await fs.writeFile(path.join(directory, 'Dockerfile'), DOCKERFILE, { flag: 'wx', mode: 0o600 });
     const snapshot = Object.freeze({ directory, manifest, fileCount: rows.length, totalBytes: rows.reduce((total, row) => total + row.bytes, 0) });
-    await verifyVaultImageSnapshot(snapshot, { signal });
+    await verifyVaultImageSnapshot(snapshot, { signal, onProgress: (files, bytes) => report('checking-copy', files, bytes) });
     return snapshot;
   } catch (error) { await cleanOwned(directory, ownedIdentity); throw error; }
 }
@@ -288,7 +294,7 @@ async function exactControlFile(directory, name, expected, signal) {
     if (!bytes.equals(Buffer.from(expected)) || stable(await handle.stat({ bigint: true })) !== row.identity) throw Error(PREPARED_CHANGED);
   } finally { await handle.close(); }
 }
-export async function verifyVaultImageSnapshot(snapshot, { signal } = {}) {
+export async function verifyVaultImageSnapshot(snapshot, { signal, onProgress = null } = {}) {
   signal?.throwIfAborted(); validateManifest(snapshot);
   await physical(snapshot.directory);
   const expectedNames = ['Dockerfile', 'manifest.json', 'vault'].sort().join('|');
@@ -297,7 +303,7 @@ export async function verifyVaultImageSnapshot(snapshot, { signal } = {}) {
   await exactControlFile(snapshot.directory, 'manifest.json', JSON.stringify(snapshot.manifest, null, 2) + '\n', signal);
   const root = path.join(snapshot.directory, 'vault'), rows = await inventory(root, DEFAULT_LIMITS, signal);
   if (rows.length !== snapshot.manifest.files.length) throw Error(PREPARED_CHANGED);
-  const configuration = await verifyRows(root, rows, snapshot.manifest.files, signal, true);
+  const configuration = await verifyRows(root, rows, snapshot.manifest.files, signal, true, onProgress);
   if (configuration?.vaultId !== snapshot.manifest.vaultId || configuration?.format !== snapshot.manifest.format ||
       JSON.stringify(await inventory(root, DEFAULT_LIMITS, signal)) !== JSON.stringify(rows)) throw Error(PREPARED_CHANGED);
   await exactControlFile(snapshot.directory, 'Dockerfile', DOCKERFILE, signal);

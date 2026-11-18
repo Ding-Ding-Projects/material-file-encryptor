@@ -171,7 +171,7 @@ test('repository normalization and native lease recovery retain bounded action a
   const { panel } = await fixture();
   panel.services.registryStorageStatus = async () => ({ sessionId: 'main', source: 'C:\\main', configured: true, configuration: configuration(), state: 'native-release-unverified' });
   await panel.refresh(); assert.equal(panel.buttons.cancel.disabled, false); assert.equal(panel.buttons.sync.disabled, true);
-  assert.match(panel.statusText.textContent, /native-release-unverified/);
+  assert.match(panel.statusText.textContent, /not yet confirmed that its snapshot was released/);
 });
 
 test('scheduled cancellation clears only after matching settled status and can cancel a later operation',async()=>{

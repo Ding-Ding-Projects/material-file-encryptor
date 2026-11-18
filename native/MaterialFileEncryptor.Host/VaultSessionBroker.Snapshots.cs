@@ -14,6 +14,7 @@ internal sealed partial class VaultSessionBroker
         {
             ++session.Pending;session.Transition=true;session.Preparing=true;session.SnapshotPreparing=true;
             session.SnapshotCancellation=new CancellationTokenSource();
+            ResetStagingProgress(session);
             return AcquireStagedSnapshotAsync(session,session.SnapshotCancellation.Token);
         }
         if(!session.Controller.IsSessionReleased())throw new InvalidOperationException("The vault is still releasing native work.");
@@ -22,6 +23,18 @@ internal sealed partial class VaultSessionBroker
         session.SnapshotCancellation=new CancellationTokenSource();
         return AcquireSnapshotAsync(session, source,session.SnapshotCancellation.Token);
     }
+    private static void ResetStagingProgress(Session session)
+    {
+        Interlocked.Exchange(ref session.StagingPartsDone,0);Interlocked.Exchange(ref session.StagingPartsTotal,0);
+        Interlocked.Exchange(ref session.StagingBytesDone,0);Interlocked.Exchange(ref session.StagingBytesTotal,0);
+    }
+    // Counts only, never paths: callers show how far staging has gone and whether a lease is still held.
+    private static object SnapshotProgress(Session session) => new
+    {
+        preparing=session.SnapshotPreparing, leased=session.SnapshotId is not null,
+        partsDone=Interlocked.Read(ref session.StagingPartsDone), partsTotal=Interlocked.Read(ref session.StagingPartsTotal),
+        bytesDone=Interlocked.Read(ref session.StagingBytesDone), bytesTotal=Interlocked.Read(ref session.StagingBytesTotal),
+    };
     private Task<object?> CancelSnapshot(Session session)
     {
         if(!session.SnapshotPreparing || session.SnapshotCancellation is null)
@@ -49,7 +62,11 @@ internal sealed partial class VaultSessionBroker
         try
         {
             // Never execute encryption, hydration or staging under the broker lock.
-            var result=await Task.Run(()=>session.Controller.StageSnapshotAsync(cancellationToken)).ConfigureAwait(false);
+            var result=await Task.Run(()=>session.Controller.StageSnapshotAsync(cancellationToken,(partsDone,partsTotal,bytesDone,bytesTotal)=>
+            {
+                Interlocked.Exchange(ref session.StagingPartsTotal,partsTotal);Interlocked.Exchange(ref session.StagingBytesTotal,bytesTotal);
+                Interlocked.Exchange(ref session.StagingPartsDone,partsDone);Interlocked.Exchange(ref session.StagingBytesDone,bytesDone);
+            })).ConfigureAwait(false);
             staged=result.Snapshot;
             lock(gate)
             {

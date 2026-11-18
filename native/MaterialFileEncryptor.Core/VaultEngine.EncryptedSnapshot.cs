@@ -9,7 +9,10 @@ public sealed partial class VaultEngine
     private readonly Dictionary<string, HashSet<string>> encryptedSnapshotParts = [];
     internal Action? EncryptedSnapshotTestPoint { get; set; }
 
-    public async Task<EncryptedSnapshot> StageEncryptedSnapshotAsync(CancellationToken cancellationToken = default)
+    public Task<EncryptedSnapshot> StageEncryptedSnapshotAsync(CancellationToken cancellationToken = default) => StageEncryptedSnapshotAsync(null, cancellationToken);
+
+    /// <summary>Reports copied parts and bytes as (partsDone, partsTotal, bytesDone, bytesTotal). Totals cover parts already present locally; a part hydrated during staging adds its size when copied.</summary>
+    public async Task<EncryptedSnapshot> StageEncryptedSnapshotAsync(Action<int,int,long,long>? progress, CancellationToken cancellationToken = default)
     {
         using var lifetime = AcquireStorageOperation();
         string identity = Guid.NewGuid().ToString("N");
@@ -43,6 +46,14 @@ public sealed partial class VaultEngine
         string root = Path.Combine(Path.GetTempPath(), "mfe-encrypted-snapshot-" + identity);
         try
         {
+            long bytesTotal=0,bytesDone=0;int partsDone=0;
+            foreach (var part in parts)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                var local=new FileInfo(ObjectPath(cache,"parts",part));var remote=new FileInfo(ObjectPath(source,"parts",part));
+                bytesTotal+=local.Exists?local.Length:remote.Exists?remote.Length:0;
+            }
+            progress?.Invoke(0,parts.Length,0,bytesTotal);
             EncryptedSnapshotTestPoint?.Invoke();
             // All source hydration and large ciphertext copies run outside gate.
             Directory.CreateDirectory(root);
@@ -88,6 +99,8 @@ public sealed partial class VaultEngine
                 string target = ObjectPath(root, "parts", part);
                 CopyAtomic(input, target, cancellationToken);
                 VerifyPart(target, part, cancellationToken:cancellationToken);
+                long copied=new FileInfo(target).Length;bytesDone+=copied;if(bytesDone>bytesTotal)bytesTotal=bytesDone;
+                progress?.Invoke(++partsDone,parts.Length,bytesDone,bytesTotal);
             }
             cancellationToken.ThrowIfCancellationRequested();
             return new EncryptedSnapshot(root);

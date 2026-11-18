@@ -20,6 +20,8 @@ internal sealed partial class VaultSessionBroker : IDisposable
         public CancellationTokenSource? SnapshotCancellation;
         public string? SnapshotId;
         public MaterialFileEncryptor.Core.VaultEngine.EncryptedSnapshot? StagedSnapshot;
+        // Staging counters are written by the preparation task and read by progress requests.
+        public long StagingPartsDone, StagingPartsTotal, StagingBytesDone, StagingBytesTotal;
     }
     private readonly object gate = new();
     private readonly Dictionary<string, Session> sessions = new(StringComparer.Ordinal);
@@ -65,6 +67,7 @@ internal sealed partial class VaultSessionBroker : IDisposable
             }
             var session = Find(sessionId);
             if (method == "cancelSnapshot") return CancelSnapshot(session);
+            if (method == "snapshotProgress") return Task.FromResult<object?>(SnapshotProgress(session));
             if (method == "beginSnapshot") return BeginSnapshot(session, args);
             if (method == "releaseSnapshot") return Task.FromResult<object?>(ReleaseSnapshot(session, args));
             if ((session.SnapshotPreparing || session.SnapshotId is not null && session.StagedSnapshot is null) && method is not ("status" or "statusSummary" or "operations"))

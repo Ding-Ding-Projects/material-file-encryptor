@@ -9,8 +9,28 @@ import { validateRegistrySchedule, nextRegistryRun, registryOccurrence } from '.
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 const identity = stat => `${stat.dev}:${stat.ino}`;
 const ERROR = 'Registry synchronization is incomplete. Local encrypted data was retained. Review the destination and retry.';
-const PHASES = { discovering: 'checking the destination', downloading: 'downloading snapshots from other devices', preparing: 'preparing the encrypted snapshot', uploading: 'uploading', restoring: 'restoring' };
-const SAFE_REASONS = new Set(['The destination contains a different vault.', 'Snapshot catalogue exceeds this client limit. Narrow the repository before retrying.', 'Snapshot catalogue exceeds the metadata limit.', 'Native synchronization did not settle.', 'Native synchronization needs attention.']);
+// Each step a person can see while synchronization runs. Row state and progress.step use these names.
+const PHASES = { discovering: 'checking the destination', 'waiting-drive': 'waiting for the drive to be ready', downloading: 'downloading snapshots from other devices',
+  applying: 'applying downloaded history to the drive', preparing: 'preparing the encrypted snapshot', uploading: 'uploading', verifying: 'verifying the upload', restoring: 'restoring' };
+const STALLED = 'The drive stopped making progress while preparing the snapshot. Nothing was uploaded.';
+const RELEASE_TIMEOUT = 'The drive did not confirm that it was released in time.';
+const BUSY = 'The drive stayed busy with other work. Retry when it has finished.';
+const SAFE_REASONS = new Set(['The destination contains a different vault.', 'Snapshot catalogue exceeds this client limit. Narrow the repository before retrying.', 'Snapshot catalogue exceeds the metadata limit.', 'Native synchronization did not settle.', 'Native synchronization needs attention.', STALLED, RELEASE_TIMEOUT, BUSY]);
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms).unref?.());
+/** Rejects as soon as the signal aborts. The underlying native request keeps running and is settled by its owner. */
+function abortable(promise, signal) {
+  if (!signal) return promise;
+  return new Promise((resolve, reject) => {
+    const onAbort = () => reject(signal.reason instanceof Error ? signal.reason : Error('Cancelled.'));
+    if (signal.aborted) { onAbort(); return; }
+    signal.addEventListener('abort', onAbort, { once: true });
+    promise.then(value => { signal.removeEventListener('abort', onAbort); resolve(value); }, error => { signal.removeEventListener('abort', onAbort); reject(error); });
+  });
+}
+function withTimeout(promise, ms, message) {
+  let timer; const limit = new Promise((_, reject) => { timer = setTimeout(() => reject(Error(message)), ms); timer.unref?.(); });
+  return Promise.race([promise, limit]).finally(() => clearTimeout(timer));
+}
 export async function physical(root) {
   if (typeof root !== 'string' || !path.isAbsolute(root)) throw Error('Choose an absolute local storage folder.');
   for (let cursor = path.resolve(root); ; cursor = path.dirname(cursor)) {
@@ -35,7 +55,7 @@ export async function createFile(root, relative, bytes) {
 }
 
 /** Main-process orchestration. No registry endpoint or filesystem path is accepted from a renderer. */
-export function createRegistrySyncService({ root, contexts, nativeRequest, authorize, chooseRestore, backgroundRegistration = async () => {}, storageFactory = createRegistryStorage, testDestination = null, now = Date.now, leaseRetryMs = 60000, onChanged = () => {} }) {
+export function createRegistrySyncService({ root, contexts, nativeRequest, authorize, chooseRestore, backgroundRegistration = async () => {}, storageFactory = createRegistryStorage, testDestination = null, now = Date.now, leaseRetryMs = 60000, nativeStallMs = 5 * 60000, releaseTimeoutMs = 30000, lateLeaseWaitMs = 20000, progressPollMs = 500, onChanged = () => {} }) {
   let rows = {}, loaded = false, loading = null, configuring = false, ticking = false, saving = Promise.resolve(), active = null;
   const file = path.join(root, 'registry-sync.json');
   async function readState() {
@@ -88,52 +108,116 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
   async function exclusive(id, action, requireSource = true) {
     await load(); const current = context(id, requireSource), row = rows[current.key]; if (!row) throw Error('Save a registry destination first.');
     if (active || configuring) throw Error('Wait for the current registry operation.');
-    const controller = new AbortController(); active = { id, controller, key: current.key, leases: new Set(), settled: false };
+    const controller = new AbortController(); active = { id, controller, key: current.key, leases: new Set(), late: new Set(), settled: false, failure: null };
+    const operation = active;
     const timer = setTimeout(() => controller.abort(), 3600000); timer.unref();
     const cancelNative = () => { void nativeRequest('cancelSnapshot', {}, id).catch(() => {}); };
     controller.signal.addEventListener('abort', cancelNative, { once: true });
-    row.lastError = null; row.interrupted = true; row.progress = null;
+    row.lastError = null; row.interrupted = true; row.progress = null; row.operationStartedAt = now();
     try { await save(); return await action(current, row, controller.signal); }
     catch (error) {
       const failedStep = PHASES[row.state];
-      row.state = controller.signal.aborted ? 'cancelled' : 'incomplete';
+      // A stall or a timeout aborts the work like Cancel does, but it is reported as a failure with its plain reason.
+      const cancelled = controller.signal.aborted && !operation.failure;
+      const message = operation.failure || error?.message;
+      row.state = cancelled ? 'cancelled' : 'incomplete';
       // Plain reasons written by this service are shown; anything else keeps the generic message.
-      const reason = !controller.signal.aborted && (SAFE_REASONS.has(error?.message) || error?.nativeReason === true) ? ' ' + error.message : '';
+      const reason = !cancelled && (SAFE_REASONS.has(message) || error?.nativeReason === true) ? ' ' + message : '';
       // The step name says where it stopped without exposing paths, account details or registry responses.
-      const where = !controller.signal.aborted && failedStep ? ` (stopped while ${failedStep})` : '';
+      const where = !cancelled && failedStep ? ` (stopped while ${failedStep})` : '';
       row.lastError = ERROR + reason + where; throw Error(ERROR + reason + where);
     }
     finally {
-      clearTimeout(timer); controller.signal.removeEventListener('abort', cancelNative); row.interrupted = active.leases.size > 0;
-      active.settled = true;
-      if (active.leases.size) { row.state = 'native-release-unverified'; row.lastError = 'Native snapshot release is unverified. Retry Cancel before closing or starting another operation.'; }
+      clearTimeout(timer); controller.signal.removeEventListener('abort', cancelNative);
+      // A lease that the drive grants after Cancel is released as soon as it arrives. Wait a little for it.
+      await settleLate(operation, lateLeaseWaitMs);
+      row.interrupted = operation.leases.size > 0 || operation.late.size > 0; row.progress = null;
+      operation.settled = true;
+      // The reason the work stopped stays visible beside the release warning.
+      if (row.interrupted) { row.state = 'native-release-unverified'; row.lastError = (row.lastError ? row.lastError + ' ' : '') + 'Native snapshot release is unverified. Retry Cancel before closing or starting another operation.'; }
       else active = null;
       await save();
     }
   }
-  async function acquire(id, source) {
-    active.controller.signal.throwIfAborted();
-    let lease;
-    // Native refusals here are plain sentences meant for people, so they may be shown; anything path-like stays hidden.
-    // Any in-flight native request (even a status refresh from an open page) makes the host refuse the lease
-    // for a moment, so a busy refusal is retried briefly instead of failing the whole backup.
-    const deadline = Date.now() + leaseRetryMs;
-    for (;;) {
-      try { lease = await nativeRequest('beginSnapshot', { storageDir: source }, id); break; }
-      catch (error) {
-        const busy = /wait for synchronization to stop|still releasing native work/i.test(String(error?.message || ''));
-        if (!busy || Date.now() >= deadline || active.controller.signal.aborted) { lease = error; break; }
-        await new Promise(resolve => setTimeout(resolve, 250));
+  async function settleLate(operation, ms) {
+    if (!operation.late.size) return;
+    await Promise.race([Promise.allSettled([...operation.late]), sleep(ms)]);
+  }
+  /** Describes the visible step. Counts stay null when the step has nothing to count. */
+  function step(row, name, counts = {}) {
+    row.state = name;
+    row.progress = { step: name, phase: counts.phase || name, startedAt: row.operationStartedAt ?? now(), stepStartedAt: now(), unit: 'files',
+      completedFiles: 0, totalFiles: null, completedBytes: 0, totalBytes: null, ...counts };
+  }
+  // Native staging reports parts and bytes; a host without that request simply leaves the counts empty.
+  async function watchStaging(operation, id, row) {
+    let lastKey = '', changedAt = now(), stopped = false;
+    const poll = (async () => {
+      while (!stopped && !operation.controller.signal.aborted) {
+        await sleep(progressPollMs); if (stopped) break;
+        let value = null; try { value = await withTimeout(nativeRequest('snapshotProgress', {}, id), 10000, 'progress'); } catch { /* Older host or a busy reply. */ }
+        if (stopped) break;
+        if (value && row.progress && Number.isSafeInteger(value.partsTotal) && value.partsTotal > 0) {
+          row.progress.unit = 'parts'; row.progress.completedFiles = value.partsDone; row.progress.totalFiles = value.partsTotal;
+          row.progress.completedBytes = value.bytesDone; row.progress.totalBytes = value.bytesTotal;
+        }
+        const key = value ? `${value.partsDone}:${value.bytesDone}:${value.partsTotal}` : 'none';
+        if (key !== lastKey) { lastKey = key; changedAt = now(); }
+        // Only a host that reports counts can be judged stalled; staging that is merely slow keeps moving them.
+        else if (value?.preparing && now() - changedAt >= nativeStallMs) { operation.failure = STALLED; operation.controller.abort(); break; }
       }
-    }
+    })();
+    poll.catch(() => {});
+    // The loop checks the flag after every wait, so it never writes progress for a later step.
+    return () => { stopped = true; };
+  }
+  async function acquire(id, source, purpose = 'admission') {
+    const operation = active, signal = operation.controller.signal, row = rows[operation.key];
+    signal.throwIfAborted();
+    step(row, purpose === 'snapshot' ? 'preparing' : 'waiting-drive', { phase: purpose === 'snapshot' ? 'staging' : 'waiting-drive' });
+    let lease;
+    const stopWatching = await watchStaging(operation, id, row);
+    try {
+      // Native refusals here are plain sentences meant for people, so they may be shown; anything path-like stays hidden.
+      // Any in-flight native request (even a status refresh from an open page) makes the host refuse the lease
+      // for a moment, so a busy refusal is retried briefly instead of failing the whole backup.
+      const deadline = Date.now() + leaseRetryMs;
+      for (;;) {
+        const request = nativeRequest('beginSnapshot', { storageDir: source }, id);
+        try { lease = await abortable(request, signal); break; }
+        catch (error) {
+          if (signal.aborted) {
+            // The drive may still grant this lease after Cancel; it is released the moment it arrives.
+            const late = request.then(value => adoptLate(operation, id, value), () => {}).finally(() => { operation.late.delete(late); finishLate(operation); });
+            operation.late.add(late);
+            throw error;
+          }
+          const busy = /wait for synchronization to stop|still releasing native work/i.test(String(error?.message || ''));
+          if (!busy || Date.now() >= deadline) { lease = error; break; }
+          await abortable(sleep(250), signal);
+        }
+      }
+    } finally { await stopWatching(); }
     if (lease instanceof Error) try { throw lease; }
     catch (error) { const shown = Error(String(error?.message || '')); const m = shown.message; if (m && m.length <= 200 && !m.includes('/') && !m.includes('\\') && !/[A-Za-z]:/.test(m)) shown.nativeReason = true; throw shown; }
     if (typeof lease?.leaseId !== 'string' || !lease.leaseId || typeof lease.storageDir !== 'string') throw Error('Invalid native snapshot lease.');
-    active.leases.add(lease.leaseId); return lease;
+    operation.leases.add(lease.leaseId);
+    // Cancel during the hand-over still releases the lease before the operation settles.
+    if (signal.aborted) { await release(id, lease, operation); signal.throwIfAborted(); }
+    return lease;
   }
-  async function release(id, lease) {
-    const operation = active;
-    const result = await nativeRequest('releaseSnapshot', { leaseId: lease.leaseId }, id);
+  async function adoptLate(operation, id, lease) {
+    if (typeof lease?.leaseId !== 'string' || !lease.leaseId) return;
+    operation.leases.add(lease.leaseId);
+    await release(id, lease, operation).catch(() => {});
+  }
+  function finishLate(operation) {
+    // A late lease that has been released lets a settled operation end without another Cancel.
+    if (!operation.settled || operation.leases.size || operation.late.size || active !== operation) return;
+    const row = rows[operation.key]; row.state = 'cancelled'; row.interrupted = false; row.lastError = null; active = null; void save().catch(() => {});
+  }
+  async function release(id, lease, operation = active) {
+    const result = await withTimeout(nativeRequest('releaseSnapshot', { leaseId: lease.leaseId }, id), releaseTimeoutMs, RELEASE_TIMEOUT);
     if (result?.released !== true) throw Error('Native snapshot release was not confirmed.');
     operation.leases.delete(lease.leaseId);
   }
@@ -204,19 +288,19 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
     },
     sync(id) {
       return exclusive(id, async (current, row, signal) => {
-        const client = storage(row); row.state = 'discovering'; let downloaded = 0;
+        const client = storage(row); step(row, 'discovering', { totalFiles: null }); let downloaded = 0;
         const ownVaultId = JSON.parse(await fs.readFile(path.join(current.storageDir, 'vault.json'), 'utf8')).VaultId;
         // Other drives may share this repository; only this drive's snapshots take part in its synchronization.
         const revisions = await client.list(signal, { vaultId: ownVaultId });
-        row.progress = { phase: 'downloading', completedFiles: 0, completedBytes: 0, totalFiles: revisions.reduce((n, revision) => n + revision.snapshot.fileCount, 0) };
+        const totalFiles = revisions.reduce((n, revision) => n + revision.snapshot.fileCount, 0);
         // Native admission proves this session owns the selected root before any source write.
-        const admission = await acquire(id, current.storageDir);
+        const admission = await acquire(id, current.storageDir, 'admission');
         try {
           signal.throwIfAborted();
+          step(row, 'downloading', { totalFiles });
           const vault = JSON.parse(await fs.readFile(path.join(current.storageDir, 'vault.json'), 'utf8'));
           for (const item of revisions) {
             if (item.snapshot.vaultId !== vault.VaultId) throw Error('The destination contains a different vault.');
-            row.state = 'downloading';
             const staged = await stageRevision(client, item.digest, signal, row);
             try { await mergeObjects(staged.staging, current.storageDir, staged.revision.snapshot.files, signal); downloaded++; }
             finally { await fs.rm(staged.staging, { recursive: true }); }
@@ -224,30 +308,40 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
         } finally { await release(id, admission); }
         // The existing native replay owns concurrent file conflict preservation and live handles.
         signal.throwIfAborted();
-        let native = await nativeRequest('sync', {}, id);
+        step(row, 'applying', { unit: 'commits', completedFiles: null });
+        let native = await abortable(nativeRequest('sync', {}, id), signal);
         const nativeDeadline = now() + 30 * 60000;
         while (native?.sync?.running) {
           signal.throwIfAborted(); if (now() >= nativeDeadline) throw Error('Native synchronization did not settle.');
-          await new Promise(resolve => setTimeout(resolve, 200));
-          native = await nativeRequest('statusSummary', {}, id);
+          // Pending work counts stand in for a bar: they show the replay is moving even without a total.
+          if (Number.isSafeInteger(native.sync.pendingCommits)) row.progress.pendingCommits = native.sync.pendingCommits;
+          if (Number.isSafeInteger(native.sync.pendingLocalFrames)) row.progress.pendingFrames = native.sync.pendingLocalFrames;
+          await abortable(sleep(200), signal);
+          native = await abortable(nativeRequest('statusSummary', {}, id), signal);
         }
         if (native?.locked !== true && native?.sync?.error) throw Error('Native synchronization needs attention.');
         const replayDeferred = native?.locked === true;
-        row.state = 'preparing'; let lease, snapshot;
+        let lease, snapshot;
         try {
           try {
-            lease = await acquire(id, current.storageDir);
+            lease = await acquire(id, current.storageDir, 'snapshot');
             signal.throwIfAborted();
-            snapshot = await createVaultImageSnapshot({ source: lease.storageDir, workRoot: path.join(root, 'snapshots'), signal });
+            step(row, 'preparing', { phase: 'copying', unit: 'files' });
+            snapshot = await createVaultImageSnapshot({ source: lease.storageDir, workRoot: path.join(root, 'snapshots'), signal,
+              onProgress: ({ phase, completedFiles, totalFiles, completedBytes, totalBytes }) => {
+                if (row.state !== 'preparing') return;
+                if (row.progress.phase !== phase) row.progress.stepStartedAt = now();
+                Object.assign(row.progress, { phase, completedFiles, totalFiles, completedBytes, totalBytes });
+              } });
           } finally { if (lease) await release(id, lease); }
           const fingerprint = hash(Buffer.from(JSON.stringify(snapshot.manifest.files)));
           if (row.lastResult?.fingerprint === fingerprint && revisions.some(item => item.digest === row.lastResult.digest)) {
             row.state = 'verified'; return row.lastResult = { ...row.lastResult, downloaded, replayDeferred, published: false, verifiedAt: new Date(now()).toISOString() };
           }
-          row.state = 'uploading';
-          row.progress = { phase: 'preparing-upload', completedFiles: 0, completedBytes: 0, totalFiles: snapshot.manifest.files.length };
+          step(row, 'uploading', { phase: 'preparing-upload', totalFiles: snapshot.manifest.files.length, totalBytes: snapshot.totalBytes });
           const result = await client.publish({ vaultId: snapshot.manifest.vaultId, deviceId: row.deviceId, driveName: current.driveName,
             parents: [...new Set(revisions.map(item => item.digest))], files: snapshot.manifest.files,
+            onVerifying: () => step(row, 'verifying', { totalFiles: null }),
             readFile: async name => { const file = snapshot.manifest.files.find(file => file.path === name); const chunks = []; for await (const bytes of readVaultImageSnapshotFile(snapshot.directory, file, { signal })) chunks.push(bytes); const bytes = Buffer.concat(chunks); row.progress.completedFiles++; row.progress.completedBytes += bytes.length; return bytes; } }, signal);
           row.state = 'verified'; return row.lastResult = { ...result, fingerprint, downloaded, replayDeferred, published: true, verifiedAt: new Date(now()).toISOString() };
         } finally { if (snapshot) await fs.rm(snapshot.directory, { recursive: true }); }
@@ -259,7 +353,7 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
         if (!/^sha256:[a-f0-9]{64}$/.test(digest)) throw Error('Invalid snapshot digest.');
         const selected = await chooseRestore(); if (!selected) { row.state = 'idle'; return { cancelled: true }; }
         signal.throwIfAborted(); await physical(selected); row.state = 'restoring';
-        row.progress = { phase: 'downloading-restore', completedFiles: 0, completedBytes: 0, totalFiles: null };
+        step(row, 'restoring', { phase: 'downloading-restore' });
         const staged = await stageRevision(storage(row), digest, signal, row);
         const restoredVaultId = staged.revision.snapshot.vaultId;
         const destination = path.join(selected, `restored-vault-${randomUUID().slice(0, 8)}`);
@@ -282,8 +376,11 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
         const operation = active;
         if (!operation.releasing) operation.releasing = (async () => {
           try {
-            for (const leaseId of [...operation.leases]) await release(id, { leaseId });
-            rows[operation.key].state = 'cancelled'; rows[operation.key].interrupted = false;
+            for (const leaseId of [...operation.leases]) await release(id, { leaseId }, operation);
+            // A lease still on its way from the drive is waited for briefly; if it never arrives, ownership stays explicit.
+            await settleLate(operation, lateLeaseWaitMs);
+            if (operation.leases.size || operation.late.size) return;
+            rows[operation.key].state = 'cancelled'; rows[operation.key].interrupted = false; rows[operation.key].lastError = null;
             if (active === operation) active = null;
             await save();
           } finally { operation.releasing = null; }
