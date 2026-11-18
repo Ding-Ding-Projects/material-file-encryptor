@@ -40,6 +40,7 @@ export const REGISTRY_COPY = {
   step_verifying:['Verifying the upload','正在驗證上傳'], step_restoring:['Downloading the restored copy','正在下載還原副本'],
   phase_staging:['the drive is copying its encrypted parts','磁碟正在複製加密部分'], phase_copying:['copying encrypted files','正在複製加密檔案'],
   phase_checking:['checking the drive copy','正在核對磁碟副本'], 'phase_checking-copy':['checking the prepared snapshot','正在核對已準備的快照'],
+  'phase_drive-busy':['the drive is finishing other work first','磁碟正在先完成其他工作'],
   'phase_waiting-drive':['the drive is getting ready','磁碟正在準備'],
   countOf_parts:['{done} of {total} parts','{done} / {total} 個部分'], countOf_files:['{done} of {total} files','{done} / {total} 個檔案'],
   count_parts:['{done} parts','{done} 個部分'], count_files:['{done} files','{done} 個檔案'],

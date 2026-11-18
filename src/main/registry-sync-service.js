@@ -57,7 +57,7 @@ export async function createFile(root, relative, bytes) {
 }
 
 /** Main-process orchestration. No registry endpoint or filesystem path is accepted from a renderer. */
-export function createRegistrySyncService({ root, contexts, nativeRequest, authorize, chooseRestore, backgroundRegistration = async () => {}, storageFactory = createRegistryStorage, testDestination = null, now = Date.now, leaseRetryMs = 60000, nativeStallMs = 10 * 60000, releaseTimeoutMs = 30000, yieldWaitMs = 30000, resumeDelayMs = 60000, lateLeaseWaitMs = 20000, progressPollMs = 500, onChanged = () => {} }) {
+export function createRegistrySyncService({ root, contexts, nativeRequest, authorize, chooseRestore, backgroundRegistration = async () => {}, storageFactory = createRegistryStorage, testDestination = null, now = Date.now, leaseRetryMs = 15 * 60000, nativeStallMs = 10 * 60000, releaseTimeoutMs = 30000, yieldWaitMs = 30000, resumeDelayMs = 60000, lateLeaseWaitMs = 20000, progressPollMs = 500, onChanged = () => {} }) {
   let rows = {}, loaded = false, loading = null, configuring = false, ticking = false, saving = Promise.resolve(), active = null;
   const file = path.join(root, 'registry-sync.json');
   async function readState() {
@@ -156,13 +156,15 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
       completedFiles: 0, totalFiles: null, completedBytes: 0, totalBytes: null, ...counts };
   }
   // Native staging reports parts and bytes; a host without that request simply leaves the counts empty.
-  async function watchStaging(operation, id, row) {
+  async function watchStaging(operation, id, row, purpose = 'admission') {
     let lastKey = '', changedAt = now(), stopped = false;
     const poll = (async () => {
       while (!stopped && !operation.controller.signal.aborted) {
         await sleep(progressPollMs); if (stopped) break;
         let value = null; try { value = await withTimeout(nativeRequest('snapshotProgress', {}, id), 10000, 'progress'); } catch { /* Older host or a busy reply. */ }
         if (stopped) break;
+        // A drive that was busy has now started staging: the visible step follows it.
+        if (value?.preparing && purpose === 'snapshot' && row.state === 'waiting-drive') step(row, 'preparing', { phase: 'staging' });
         if (value && row.progress && Number.isSafeInteger(value.partsTotal) && value.partsTotal > 0) {
           row.progress.unit = 'parts'; row.progress.completedFiles = value.partsDone; row.progress.totalFiles = value.partsTotal;
           row.progress.completedBytes = value.bytesDone; row.progress.totalBytes = value.bytesTotal;
@@ -182,7 +184,7 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
     signal.throwIfAborted();
     step(row, purpose === 'snapshot' ? 'preparing' : 'waiting-drive', { phase: purpose === 'snapshot' ? 'staging' : 'waiting-drive' });
     let lease;
-    const stopWatching = await watchStaging(operation, id, row);
+    const stopWatching = await watchStaging(operation, id, row, purpose);
     try {
       // Native refusals here are plain sentences meant for people, so they may be shown; anything path-like stays hidden.
       // Any in-flight native request (even a status refresh from an open page) makes the host refuse the lease
@@ -199,7 +201,11 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
             throw error;
           }
           const busy = /wait for synchronization to stop|still releasing native work/i.test(String(error?.message || ''));
-          if (!busy || Date.now() >= deadline) { lease = error; break; }
+          // A drive still writing a large change answers "busy" for a while. Waiting is shown as its own step,
+          // bounded, and cancellable; giving up after a minute made large drives fail for no reason.
+          if (busy && Date.now() >= deadline) { lease = Error(BUSY); break; }
+          if (!busy) { lease = error; break; }
+          if (row.state !== 'waiting-drive' || row.progress?.phase !== 'drive-busy') step(row, 'waiting-drive', { phase: 'drive-busy' });
           await abortable(sleep(250), signal);
         }
       }

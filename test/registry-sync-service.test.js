@@ -181,16 +181,20 @@ test('the error names the step where synchronization stopped, without private de
 
 test('a plain native refusal of the storage lease is shown, but a path-like one is not', async t => {
   const cases = [
-    ['Lock the vault and wait for synchronization to stop before preparing an image.', true],
+    ['Snapshot preparation is not available for this vault.', true],
     ['Cannot open C:\\Users\\someone\\vault', false],
     ['Share \\\\server\\vault is busy', false],
     ['Folder /home/someone/vault is busy', false],
   ];
   for (const [message, shown] of cases) {
-    const f = await fixture(t, { storageFactory: () => ({ list: async () => [] }), nativeRequest: async method => { if (method === 'beginSnapshot') throw Error(message); return {}; } });
+    const f = await fixture(t, { leaseRetryMs: 300, storageFactory: () => ({ list: async () => [] }), nativeRequest: async method => { if (method === 'beginSnapshot') throw Error(message); return {}; } });
     await f.service.configure('main', configuration());
     await assert.rejects(f.service.sync('main'), error => error.message.includes(message) === shown && !/someone|server/.test(error.message));
   }
+  // A drive that stays busy past the wait limit is reported with a plain sentence of this service's own.
+  const busy = await fixture(t, { leaseRetryMs: 300, storageFactory: () => ({ list: async () => [] }), nativeRequest: async method => { if (method === 'beginSnapshot') throw Error('Lock the vault and wait for synchronization to stop before preparing an image.'); return {}; } });
+  await busy.service.configure('main', configuration());
+  await assert.rejects(busy.service.sync('main'), /stayed busy with other work/);
 });
 
 test('a briefly busy native host is waited for, and a lasting refusal still fails', async t => {
@@ -203,5 +207,5 @@ test('a briefly busy native host is waited for, and a lasting refusal still fail
   assert.equal(calls.filter(m => m === 'beginSnapshot').length, 3, 'two busy refusals were retried, then the snapshot lease was granted; with nothing to download no admission lease is needed');
   const g = await fixture(t, { leaseRetryMs: 600, nativeRequest: async method => { if (method === 'beginSnapshot') throw Error(busy); return {}; }, storageFactory: () => ({ list: async () => [] }) });
   await g.service.configure('main', configuration());
-  await assert.rejects(g.service.sync('main'), /wait for synchronization to stop/);
+  await assert.rejects(g.service.sync('main'), /stayed busy with other work/);
 });

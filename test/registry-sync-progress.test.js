@@ -172,6 +172,25 @@ test('cancel during the native replay stops waiting at once', async t => {
   assert.equal((await f.service.status('main')).lastError, null, 'a cancelled run leaves no error for the page to show');
 });
 
+test('a drive that stays busy is shown as waiting, then as staging once it starts, instead of failing after a minute', async t => {
+  let refusals = 0, preparing = false;
+  const f = await fixture(t, { storageFactory: () => ({ list: async () => [] }),
+    nativeRequest: async method => {
+      if (method === 'snapshotProgress') return { preparing, partsDone: 0, partsTotal: preparing ? 4 : 0, bytesDone: 0, bytesTotal: preparing ? 400 : 0 };
+      if (method === 'beginSnapshot') {
+        if (refusals++ < 6) throw Error('Lock the vault and wait for synchronization to stop before preparing an image.');
+        preparing = true; await new Promise(resolve => setTimeout(resolve, 200)); return { leaseId: 'late', storageDir: f.source, storageOnly: true };
+      }
+      return method === 'releaseSnapshot' ? { released: true } : {};
+    } });
+  const seen = new Set(); let done = false;
+  const running = f.service.sync('main').catch(() => {}).finally(() => { done = true; });
+  while (!done) { const s = await f.service.status('main'); if (s.progress) seen.add(`${s.state}/${s.progress.phase}`); await new Promise(r => setTimeout(r, 5)); }
+  await running;
+  assert.ok(seen.has('waiting-drive/drive-busy'), [...seen].join(', '));
+  assert.ok(seen.has('preparing/staging'), [...seen].join(', '));
+});
+
 test('the progress view gives a fraction, elapsed time and a slow note after the threshold', () => {
   const now = 1_000_000;
   const view = progressView({ step: 'preparing', phase: 'staging', unit: 'parts', completedFiles: 25, totalFiles: 100, completedBytes: 250, totalBytes: 1000, stepStartedAt: now - 65000, startedAt: now - 125000 }, now);

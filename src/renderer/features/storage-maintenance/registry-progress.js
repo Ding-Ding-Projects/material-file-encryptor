@@ -53,7 +53,7 @@ export function progressView(progress, nowMs = Date.now()) {
   const elapsedMs = started === null ? null : Math.max(0, nowMs - started);
   const totalElapsedMs = Number.isFinite(progress.startedAt) ? Math.max(0, nowMs - progress.startedAt) : null;
   const slow = elapsedMs !== null && elapsedMs >= SLOW_AFTER_MS[step];
-  const phase = ['copying', 'checking', 'checking-copy', 'staging', 'waiting-drive'].includes(progress.phase) ? progress.phase : null;
+  const phase = ['copying', 'checking', 'checking-copy', 'staging', 'waiting-drive', 'drive-busy'].includes(progress.phase) ? progress.phase : null;
   return { step, phase, unit, done, total, bytesDone, bytesTotal, fraction, elapsedMs, totalElapsedMs, slow,
     pendingCommits: count(progress.pendingCommits) ? progress.pendingCommits : null };
 }
