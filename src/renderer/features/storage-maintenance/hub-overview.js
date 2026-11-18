@@ -18,7 +18,7 @@ export function mountHubOverview(host, {services = {}, getLanguage = () => 'en',
   const help = (node, key) => { const value = L(key); node.setAttribute('data-help-text', value); node.setAttribute('aria-description', value); return node; };
   const root = el('div', {class: 'hub-overview'});
   host.prepend(root);
-  let status = null, failed = false, generation = 0, message = '', timer = null, disposed = false;
+  let status = null, failed = false, generation = 0, message = '', timer = null, disposed = false, settled = false, lastJson = '', removal = null;
   const when = value => { const relative = relativeTime(value, now()); if (relative.key === 'date') return new Date(relative.time).toLocaleString(getLanguage() === 'yue' ? 'zh-HK' : 'en', {month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'}); return L(relative.key, {count: relative.count}); };
   const delayText = seconds => seconds === 60 ? L('1 minute') : seconds % 60 === 0 ? L('{count} minutes', {count: seconds / 60}) : L('{count} seconds', {count: seconds});
 
@@ -36,7 +36,8 @@ export function mountHubOverview(host, {services = {}, getLanguage = () => 'en',
       {id: 'hub:prune', label: text('Prune old snapshots now', AUTO_BACKUP_COPY['Prune old snapshots now']), disabled: !drive.lastBackup || typeof services.autoBackupPrune !== 'function', run: run('autoBackupPrune', drive.sessionId)},
       {id: 'hub:move', label: text('Move to its own repository', AUTO_BACKUP_COPY['Move to its own repository']), disabled: !usable || !drive.repository || !status?.signedIn, run: run('autoBackupMove', drive.sessionId)},
       {id: 'hub:switch', label: drive.enabled ? text('Stop backing up', AUTO_BACKUP_COPY['Stop backing up']) : text('Start backing up', AUTO_BACKUP_COPY['Start backing up']), disabled: !usable, run: run('autoBackupSetDrive', drive.sessionId, !drive.enabled)},
-      {id: 'hub:open', label: text('Open this drive', AUTO_BACKUP_COPY['Open this drive']), run: () => onOpenDrive(drive.sessionId)}
+      {id: 'hub:open', label: text('Open this drive', AUTO_BACKUP_COPY['Open this drive']), run: () => onOpenDrive(drive.sessionId)},
+      {id: 'hub:remove', label: text('Remove this drive’s backups…', AUTO_BACKUP_COPY['Remove this drive’s backups…']), disabled: !drive.repository || typeof services.autoBackupListOwn !== 'function', run: () => void askRemove(drive)}
     ]});
   }
   function driveRow(drive) {
@@ -70,6 +71,26 @@ export function mountHubOverview(host, {services = {}, getLanguage = () => 'en',
     }
     return el('tr', {class: 'group-row', 'data-near-limit': String(group.nearLimit)}, [el('th', {scope: 'colgroup', colspan: '7'}, [...cells, end])]);
   }
+  /** Lists this computer's snapshots of the drive and asks before removing exactly those tags. */
+  async function askRemove(drive) {
+    try { const listed = await services.autoBackupListOwn(drive.sessionId); removal = {drive, repository: listed.repository, snapshots: listed.snapshots}; message = ''; }
+    catch (error) { removal = null; message = String(error?.message || error); }
+    lastJson = ''; render(); root.querySelector('#hub-remove-cancel')?.focus();
+  }
+  function removalPanel() {
+    const tags = removal.snapshots.map(item => item.tag);
+    const list = el('pre', {class: 'tag-list', tabindex: '0', 'aria-label': L('Tags that will be removed')}, [doc.createTextNode(tags.join('\n') || L('This computer has no snapshots of this drive in the repository.'))]);
+    const copy = el('md-text-button', {type: 'button', id: 'hub-remove-copy'}, [el('span', {text: L('Copy list')})]);
+    copy.addEventListener('click', () => void doc.defaultView.navigator.clipboard?.writeText(tags.join('\n')).catch(() => {}));
+    const cancel = el('md-text-button', {type: 'button', id: 'hub-remove-cancel'}, [el('span', {text: L('Cancel')})]);
+    cancel.addEventListener('click', () => { removal = null; lastJson = ''; render(); });
+    const remove = el('md-filled-button', {type: 'button', id: 'hub-remove-confirm', class: 'danger', disabled: !tags.length}, [el('span', {text: L('Remove {count} snapshots', {count: tags.length})})]);
+    remove.addEventListener('click', () => { const target = removal; removal = null; void act(async () => { const result = await services.autoBackupRemove(target.drive.sessionId, tags); await services.autoBackupSetDrive(target.drive.sessionId, false); return result; }, result => L('Removed {removed} snapshots; {failed} could not be confirmed.', {removed: result?.removed ?? 0, failed: result?.failed ?? 0})); });
+    return el('div', {class: 'hub-notice hub-remove', role: 'alertdialog', 'aria-label': L('Remove this drive’s backups…')}, [
+      el('strong', {text: L('Remove {count} snapshots of {drive} from {repository}?', {count: tags.length, drive: removal.drive.name || removal.drive.sessionId, repository: removal.repository})}),
+      el('p', {text: L('Only snapshots this computer uploaded for this drive are removed. Encrypted layers shared with other drives stay. Backup for this drive is turned off afterwards. This cannot be undone.')}),
+      list, el('div', {class: 'actions'}, [copy, cancel, remove])]);
+  }
   function notice() {
     const turnOn = el('md-filled-button', {type: 'button', id: 'hub-auto-backup-on'}, [el('span', {text: L('Turn on automatic backup')})]);
     turnOn.addEventListener('click', () => void act(() => services.autoBackupUpdate({noticeAcknowledged: true, enabled: true})));
@@ -100,7 +121,10 @@ export function mountHubOverview(host, {services = {}, getLanguage = () => 'en',
     else for (const group of groupDrives(status.drives)) { body.append(groupRow(group)); for (const drive of group.drives) body.append(driveRow(drive)); }
     const children = [toolbar, summaryRow];
     if (status?.signedIn && status.noticeRequired) children.push(notice());
-    children.push(el('table', {class: 'hub-overview-table', 'aria-label': L('Backup')}, [head, body]));
+    if (removal) children.push(removalPanel());
+    // Rows enter with the list motion once; the refreshes that follow replace them in place without replaying it.
+    children.push(el('table', {class: 'hub-overview-table', 'aria-label': L('Backup'), ...(settled ? {'data-settled': ''} : {})}, [head, body]));
+    if (status) settled = true;
     const pruneNote = status?.drives?.some(drive => drive.lastPrune?.failed > 0) ? L('Some old snapshots could not be removed; they are tried again after the next backup.') : '';
     children.push(el('p', {class: 'hub-overview-note', role: 'status', text: [message, pruneNote].filter(Boolean).join(' ')}));
     root.replaceChildren(...children);
@@ -108,7 +132,7 @@ export function mountHubOverview(host, {services = {}, getLanguage = () => 'en',
   async function load() {
     const request = ++generation;
     if (typeof services.autoBackupStatus !== 'function') { failed = true; render(); return; }
-    try { const value = await services.autoBackupStatus(); if (request !== generation || disposed) return; status = value; failed = false; }
+    try { const value = await services.autoBackupStatus(); if (request !== generation || disposed) return; const json = JSON.stringify(value) + Math.floor(now() / 60000); if (json === lastJson && !failed && !message) return; lastJson = json; status = value; failed = false; }
     catch { if (request !== generation || disposed) return; failed = true; }
     render();
   }
