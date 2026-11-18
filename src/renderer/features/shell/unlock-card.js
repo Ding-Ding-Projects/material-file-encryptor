@@ -39,7 +39,8 @@ export function mountUnlockCard({doc = document, translate, hooks}) {
     const name = state?.driveName;
     $('unlock-card-title').textContent = name ? t('{name} is locked').replace('{name}', name) : t('This drive is locked');
     $('unlock-card-subtitle').textContent = configured ? t('Unlock to mount it in File Explorer.') : t('Choose the encrypted storage folder first, then unlock.');
-    const disabled = working || hooks.isBusy() || !state;
+    // A busy flag is checked again on submit; disabling on it here left the button stale after a lock finished.
+    const disabled = working || !state;
     for (const id of ['unlock-submit', 'unlock-choose-key']) $(id).disabled = disabled;
     for (const id of ['unlock-password', 'unlock-key-path', 'unlock-auto']) $(id).disabled = working;
     form.dataset.state = working ? 'working' : $('unlock-error').hidden ? 'locked' : 'failed';
