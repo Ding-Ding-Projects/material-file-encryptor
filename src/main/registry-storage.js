@@ -318,7 +318,9 @@ export function createRegistryStorage({ destination, authorize, fetcher = fetch,
       for (const tag of [...tags].sort()) {
         // Tags are mfe-<device id>-<revision>, and one device belongs to one drive, so a foreign device is read once.
         if (foreignDevices.has(tag.slice(4, 36))) continue;
-        const response = await request(`${base}/manifests/${tag}`, { headers: { Accept: OCI } }, signal);
+        // A snapshot removed moments ago can stay in the tag list for a while; its tag already answers 404 and is skipped.
+        const response = await request(`${base}/manifests/${tag}`, { headers: { Accept: OCI }, allowNotFound: true }, signal);
+        if (response.status === 404) { await response.body?.cancel(); continue; }
         const raw = await bounded(response, 32 * 1024 ** 2, signal);
         const revision = await readRevision(sha(raw), signal);
         metadataBytes += Buffer.byteLength(JSON.stringify(revision.snapshot)) + raw.length;

@@ -153,6 +153,20 @@ test('a tag left behind after its manifest is gone is removed through the fallba
   assert.equal(reported.pruned, 0); assert.equal(reported.failed, 2);
 });
 
+test('a removed snapshot still shown in the tag list is skipped instead of failing the whole listing', async () => {
+  const { registry, mine } = await sharedRepository();
+  const stale = mine[3];
+  const fetcher = async (input, options = {}) => {
+    const url = new URL(input);
+    if (url.pathname.endsWith('/tags/list')) return new Response(JSON.stringify({ name: registry.destination.repository, tags: [...new Set([...registry.tags.keys(), stale.tag])].sort() }));
+    return registry.fetcher(input, options);
+  };
+  const client = createRegistryStorage({ destination: registry.destination, fetcher });
+  await client.deleteSnapshot({ digest: stale.digest, tag: stale.tag });
+  const listed = await client.list(undefined, { vaultId: VAULT_A });
+  assert.equal(listed.length, 13); assert.ok(!listed.some(item => item.tag === stale.tag));
+});
+
 test('the delete request refuses anything that is not a drive snapshot reference', async () => {
   const registry = createFakeRegistry('test/x');
   const client = createRegistryStorage({ destination: registry.destination, fetcher: registry.fetcher });
