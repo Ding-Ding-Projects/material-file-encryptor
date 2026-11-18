@@ -59,7 +59,19 @@ test('overlapping literal trie prefixes have bounded work and never partly apply
   const vocabulary=parseVocabulary(canonical({['a'.repeat(159)+'b']:'found',z:'changed'}));
   const demanding='z'+'a'.repeat(10000);
   assert.equal(replaceVocabulary(demanding,vocabulary),demanding);
-  assert.equal(replaceVocabulary('z'+'a'.repeat(159)+'b',vocabulary),'changedfound');
+  assert.equal(replaceVocabulary('z '+'a'.repeat(159)+'b',vocabulary),'changed found');
+  assert.equal(replaceVocabulary('z'+'a'.repeat(159)+'b',vocabulary),'z'+'a'.repeat(159)+'b','keys never match from the middle of a word');
+});
+test('whole words and phrases only: a short key never changes the inside of a longer word', () => {
+  const vocabulary=parseVocabulary(canonical({app:'tool','Docker Hub':'Registry','Docker Hub storage':'Registry shelf',Docker:'Boxes',資料:'data'}));
+  assert.equal(replaceVocabulary('Folders appear in the app',vocabulary),'Folders appear in the tool');
+  assert.equal(replaceVocabulary('apps and application and app.',vocabulary),'apps and application and tool.');
+  assert.equal(replaceVocabulary('Docker Hub storage and Docker Hub and Docker',vocabulary),'Registry shelf and Registry and Boxes','a mapped phrase wins over its inner word');
+  assert.equal(replaceVocabulary('Docker Hubs and DockerHub',vocabulary),'Boxes Hubs and DockerHub','the phrase needs its whole last word, the inner word still maps on its own');
+  assert.equal(replaceVocabulary('word4999 word49990',parseVocabulary(canonical({word4999:'label'}))),'label word49990');
+  assert.equal(replaceVocabulary('我的資料夾同資料',vocabulary),'我的data夾同data','CJK text needs no boundary between characters');
+  assert.equal(replaceVocabulary('café app',parseVocabulary(canonical({caf:'x',app:'tool'}))),'café tool','accented letters count as letters');
+  assert.equal(replaceVocabulary('(app) "app" app-like',vocabulary),'(tool) "tool" tool-like','punctuation is a boundary');
 });
 test('Unicode trie uses longest original match and does not cascade', () => {
   const vocabulary=parseVocabulary(canonical({'😀':'first','😀😀':'資料夾','資料夾':'second'}));
