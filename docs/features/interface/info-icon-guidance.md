@@ -570,13 +570,13 @@ Source checks mount every icon on a document fixture and open it from the keyboa
 
 ### desktop-inspector-backup-settings
 
-**Backup settings** — `#inspector-backup-settings`
+**Open Docker Hub backup** — `#inspector-backup-settings`
 
 - Kind: button
-- Purpose: Open the storage tab, where the cloud backup is configured.
+- Purpose: Open the Docker Hub backup page, where this drive’s automatic backup is shown and changed.
 - Effects: Opening the tab changes no setting.
 - Default: Not invoked
-- Example: Example for "Backup settings": opening the tab changes no setting.
+- Example: Example for "Open Docker Hub backup": opening the tab changes no setting.
 
 ### desktop-density-setting
 

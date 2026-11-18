@@ -91,3 +91,17 @@ export function statusBarState(status, sessionId, now = Date.now()) {
   if (drive.lastBackup) return { key: 'Backed up {ago}', ago: relativeTime(drive.lastBackup, now), tone: 'ok' };
   return { key: 'Waiting for the first backup', tone: 'muted' };
 }
+
+/**
+ * The details pane sentence for one drive: the status bar state, but it says whether backup is off for
+ * this drive only or for every drive, and why a backup is paused. null when automatic backup does not
+ * know the drive, so the caller can fall back to the older per-drive destination.
+ */
+export function detailsPaneState(status, sessionId, now = Date.now()) {
+  const line = statusBarState(status, sessionId, now);
+  if (!line) return null;
+  const drive = status.drives.find(item => item.sessionId === sessionId);
+  if (line.key === 'Automatic backup off' && status.settings?.enabled && !status.noticeRequired && !drive.enabled) return { key: 'Automatic backup is off for this drive', tone: 'muted' };
+  if (line.key === 'Paused') return { key: 'Paused while you use the drive', tone: 'busy' };
+  return line;
+}
