@@ -169,6 +169,7 @@ test('cancel during the native replay stops waiting at once', async t => {
   const started = Date.now(); await f.service.cancel('main'); await running;
   assert.ok(Date.now() - started < 2000);
   assert.equal((await f.service.status('main')).state, 'cancelled'); assert.equal(f.service.pending, false);
+  assert.equal((await f.service.status('main')).lastError, null, 'a cancelled run leaves no error for the page to show');
 });
 
 test('the progress view gives a fraction, elapsed time and a slow note after the threshold', () => {

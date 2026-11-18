@@ -130,7 +130,8 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
       const reason = !cancelled && (SAFE_REASONS.has(message) || error?.nativeReason === true) ? ' ' + message : '';
       // The step name says where it stopped without exposing paths, account details or registry responses.
       const where = !cancelled && failedStep ? ` (stopped while ${failedStep})` : '';
-      row.lastError = ERROR + reason + where; throw Error(ERROR + reason + where);
+      // A cancelled run is not a failure, so it leaves no error behind for the page to show in red.
+      row.lastError = cancelled ? null : ERROR + reason + where; throw Error(ERROR + reason + where);
     }
     finally {
       clearTimeout(timer); controller.signal.removeEventListener('abort', cancelNative);
