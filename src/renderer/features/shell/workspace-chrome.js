@@ -428,7 +428,7 @@ export function mountWorkspaceChrome({doc = document, translate, getLanguage, ho
     if (!name) return;
     name.textContent = file ? relativeName(file, '') : t('Select a file to see its details.');
     const sizeText = file && Number.isFinite(file.size) ? hooks.formatBytes(file.size) : '';
-    meta.textContent = file ? [sizeText, formatDate(file.modified), t(file.offline ? 'Available offline' : 'Encrypted storage only')].filter(Boolean).join(' · ') : '';
+    meta.textContent = file ? [sizeText, formatDate(file.modified), t(file.offline ? 'On this PC' : 'Online only')].filter(Boolean).join(' · ') : '';
     const partsSection = $('inspector-parts-section'), grid = $('inspector-parts'), label = $('inspector-parts-label');
     const shape = partMapShape(file?.partCount);
     partsSection.hidden = shape.count === 0;
