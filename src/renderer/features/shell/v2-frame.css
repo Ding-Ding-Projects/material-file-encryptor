@@ -157,7 +157,6 @@ mfe-control-guidance[data-presentation=hint][data-open=true]{display:block;flex:
 /* ---------- narrow windows ---------- */
 :root[data-max839] .drive-switcher{max-width:140px}
 :root[data-max839] .titlebar mfe-workspace-shell{display:none}
-:root[data-max839] .drive-tabs-host{display:none}
 :root[data-max839] body>.app-shell{grid-template-columns:minmax(0,1fr)}
 :root[data-max839] .sidebar{background:var(--v2-side)}
 @media (pointer:coarse){md-filled-button,md-outlined-button,md-text-button,md-filled-tonal-button{--md-filled-button-container-height:48px;--md-outlined-button-container-height:48px;--md-text-button-container-height:48px;--md-filled-tonal-button-container-height:48px}}
