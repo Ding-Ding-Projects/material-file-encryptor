@@ -59,12 +59,13 @@ export function createShareService({ docker, readSource, store, chooseSaveFile, 
       await docker.ensurePublicRepository(repository, signal);
       key = randomBytes(32);
       active.state = 'encrypting';
+      // Wrap first, so a passphrase problem stops the share before anything is uploaded.
+      const wrapped = passphrase ? await wrapShareKey(key, passphrase, { randomBytes }) : null;
       const ciphertext = await sealShare({ key, source: source.open(signal), name: source.name, size: source.size, modified: source.modified, maxBytes: maxObjectBytes, randomBytes, signal });
       active.state = 'uploading';
       const client = storage(repository, (name, authSignal, visibility) => docker.registryAuthorization(name, authSignal, visibility));
       const published = await publishShare({ storage: client, ciphertext, signal });
       active.state = 'saving';
-      const wrapped = passphrase ? await wrapShareKey(key, passphrase, { randomBytes }) : null;
       const command = formatShareCommand({ host: registryHost, repository, digest: published.digest, ...(wrapped ? { wrapped } : { key }) });
       const { entry, saved } = await store.add({ name: source.name, size: source.size, repository, digest: published.digest, tag: published.tag, passphrase: Boolean(wrapped), command });
       return { entry, command, link: shareLink(command), commandLine: shareCommandLine(command), listSaved: saved, persistent: store.persistent };
