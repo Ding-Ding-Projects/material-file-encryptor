@@ -47,6 +47,7 @@ import {mountWorkspaceChrome} from './features/shell/workspace-chrome.js';
 import {mountUnlockCard} from './features/shell/unlock-card.js';
 import {mountDriveList} from './features/shell/drive-list.js';
 import {mountHomeDashboard} from './features/home-dashboard/index.js';
+import {mountSettingsLayout} from './features/settings-layout/index.js';
 import {SHELL_COPY} from './features/shell/copy.js';
 import {loadShellPreferences,saveShellPreferences,applyShellPreferences,normalizeShellPreferences} from './features/shell/shell-preferences.js';
 const rendererTiming=createRendererTiming(),timingLifetime=new AbortController();
@@ -1070,6 +1071,7 @@ function setupEnhancedWorkspace() {
  const details=addFeatureRoot('details','File details','檔案詳情');const detailContent=document.createElement('div');details.append(detailContent);fileDetails=mountFileDetails(detailContent,{translate:t,language:preferences.language,services:{listVersions:id=>api.listVersions?api.listVersions(id):api.history({entryId:id}),listActivity:query=>api.listActivity?api.listActivity(query):Promise.reject(new Error('File activity bridge is unavailable.')),previewVersion:id=>api.previewVersion(id),labelVersion:(id,label)=>api.labelVersion(id,label),exportVersion:id=>api.exportVersion(id),restoreVersion:async id=>{if(await superConfirm('desktop.restore-version'))return api.restoreVersion(id);}}});
  const detailsButton=document.createElement('md-text-button');detailsButton.id='file-details-button';detailsButton.textContent=t('File details');detailsButton.onclick=()=>{const file=currentFiles().find(f=>f.id===selected);if(file)fileDetails.selectEntry(file);foundation.model.openTab({id:'details',label:'File details'});foundation.shell.activate('details');};document.querySelector('.file-actions').append(detailsButton);
  const settingsSearch=control('input');settingsSearch.type='search';settingsSearch.id='settings-local-search';settingsSearch.setAttribute('aria-label',t('Search settings'));$('view-settings').children[0].after(settingsSearch);workspaceDisposers.push(attachEnhancedSearch(settingsSearch,$('view-settings')));
+ const settingsLayout=mountSettingsLayout($('view-settings'),{getLanguage:()=>preferences.language,openView:id=>{foundation.model.openTab({id,label:canonicalViewLabels[id]||id});foundation.shell.activate(id);},getBackupStatus:()=>api?.registryStorageStatus?api.registryStorageStatus():null});workspaceDisposers.push(subscribeLanguage(()=>settingsLayout.setLanguage()),()=>settingsLayout.destroy());
  // Every capable shell control carries its help as a tooltip and accessible description, with no icon in the layout.
  // Help mode (the ? button in the title bar) shows the same text under every control. Neither starts the real operation.
  const helpTooltip=installHelpTooltip(document);workspaceDisposers.push(()=>helpTooltip.destroy());
