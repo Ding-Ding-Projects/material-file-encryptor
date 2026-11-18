@@ -10,6 +10,13 @@ const BLOB_DELIVERY_ORIGIN = 'https://production.cloudfront.docker.com';
 const BLOB_REDIRECTS = new Set([301, 302, 303, 307, 308]);
 const MAX_BLOB_REDIRECTS = 3;
 export const DRIVE_NAME_ANNOTATION = 'io.material-file-encryptor.drive-name';
+/** When the snapshot was published. Retention uses it; older snapshots without it fall back to other sources. */
+export const CREATED_ANNOTATION = 'org.opencontainers.image.created';
+/** Reads the created annotation: a bounded ISO 8601 UTC time, or null. */
+export function snapshotCreatedAt(value) {
+  if (typeof value !== 'string' || value.length > 40 || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/.test(value)) return null;
+  const time = Date.parse(value); return Number.isFinite(time) ? time : null;
+}
 /** The optional drive name label. It is user text visible to anyone who can read the repository. */
 export function cleanDriveNameLabel(value) {
   if (typeof value !== 'string') return null;
@@ -167,7 +174,17 @@ export function createRegistryStorage({ destination, authorize, fetcher = fetch,
     if (manifest.layers.length !== config.files.length || manifest.layers.some((item, i) =>
       !validDescriptor(item, LAYER, maxObjectBytes) || item.digest !== config.files[i].digest || item.size !== config.files[i].size)) throw fail();
     const driveName = cleanDriveNameLabel(manifest.annotations?.[DRIVE_NAME_ANNOTATION]);
-    return { digest, snapshot: config, driveName };
+    return { digest, snapshot: config, driveName, createdAt: snapshotCreatedAt(manifest.annotations?.[CREATED_ANNOTATION]) };
+  }
+  /** True for each reference that the registry answers with 404. Any other answer counts as still present. */
+  async function snapshotGone({ digest, tag }, signal) {
+    if (typeof digest !== 'string' || !DIGEST.test(digest) || typeof tag !== 'string' || !TAG.test(tag)) throw fail();
+    const gone = async reference => {
+      try { const response = await request(`${base}/manifests/${reference}`, { method: 'HEAD', headers: { Accept: OCI }, allowNotFound: true }, signal); await response.body?.cancel(); return response.status === 404; }
+      catch (error) { if (signal?.aborted) throw error; return false; }
+    };
+    const digestGone = await gone(digest), tagGone = await gone(tag);
+    return { digestGone, tagGone, removed: digestGone && tagGone };
   }
   // Single-purpose OCI artifacts (shared files) reuse the same authorization, upload, redirect and verification
   // rules. Their tags can never take the drive snapshot form, so drive listing never sees them.
@@ -208,7 +225,7 @@ export function createRegistryStorage({ destination, authorize, fetcher = fetch,
     artifacts,
     // known: layer digests that snapshots in this repository already reference; they are linked, never uploaded again.
     // Any other layer the registry already has (an earlier run that stopped part way) is skipped after a HEAD check.
-    async publish({ vaultId, deviceId, parents = [], files, readFile, driveName, onVerifying = null, known = new Set(), onSkipped = null }, signal) {
+    async publish({ vaultId, deviceId, parents = [], files, readFile, driveName, onVerifying = null, known = new Set(), onSkipped = null, createdAt = Date.now() }, signal) {
       signal = signal ? AbortSignal.any([signal, AbortSignal.timeout(3600000)]) : AbortSignal.timeout(3600000);
       // Capture caller-owned metadata before asynchronous authorization or upload.
       const frozen = structuredClone({ vaultId, deviceId, parents, files });
@@ -252,7 +269,7 @@ export function createRegistryStorage({ destination, authorize, fetcher = fetch,
       const configuration = Buffer.from(JSON.stringify(config));
       const manifest = Buffer.from(JSON.stringify({ schemaVersion: 2, mediaType: OCI,
         config: await putBlob(configuration, CONFIG, signal), layers: config.files.map(({ path, ...item }) => item),
-        ...(cleanDriveNameLabel(driveName) ? { annotations: { [DRIVE_NAME_ANNOTATION]: cleanDriveNameLabel(driveName) } } : {}) }));
+        annotations: { [CREATED_ANNOTATION]: new Date(createdAt).toISOString(), ...(cleanDriveNameLabel(driveName) ? { [DRIVE_NAME_ANNOTATION]: cleanDriveNameLabel(driveName) } : {}) } }));
       const digest = sha(manifest), tag = `mfe-${frozen.deviceId}-${randomUUID().replaceAll('-', '')}`;
       await authorization(signal, true);
       const result = await request(`${base}/manifests/${tag}`, { method: 'PUT', body: manifest, headers: { 'Content-Type': OCI } }, signal);
@@ -261,8 +278,22 @@ export function createRegistryStorage({ destination, authorize, fetcher = fetch,
       await readRevision(digest, signal);
       const check = await request(`${base}/manifests/${tag}`, { headers: { Accept: OCI } }, signal);
       if (sha(await bounded(check, 32 * 1024 ** 2, signal)) !== digest) throw fail();
-      return { digest, tag, repository: target.repository, verified: true };
+      return { digest, tag, repository: target.repository, verified: true, createdAt: new Date(createdAt).toISOString() };
     },
+    /**
+     * Removes one drive snapshot by its manifest digest and then confirms that neither the digest nor the tag
+     * resolves any more. Encrypted layers are content addressed and may be shared with other snapshots or other
+     * drives, so they are left for the registry to collect. The client must hold a delete-scoped token.
+     */
+    async deleteSnapshot({ digest, tag }, signal) {
+      if (typeof digest !== 'string' || !DIGEST.test(digest) || typeof tag !== 'string' || !TAG.test(tag)) throw fail();
+      await authorization(signal, true);
+      let accepted = false;
+      try { const result = await request(`${base}/manifests/${digest}`, { method: 'DELETE', allowNotFound: true }, signal); await result.body?.cancel(); accepted = true; }
+      catch (error) { if (signal?.aborted) throw error; }
+      return { accepted, ...await snapshotGone({ digest, tag }, signal) };
+    },
+    snapshotGone,
     // With a vault id, only that drive's snapshots are read, so one repository can hold several drives.
     // includeFiles keeps each revision's object list so a caller can skip what it already has or what is already uploaded.
     async list(signal, { vaultId, includeFiles = false } = {}) {
@@ -294,8 +325,10 @@ export function createRegistryStorage({ destination, authorize, fetcher = fetch,
         if (metadataBytes > 64 * 1024 ** 2) throw Error('Snapshot catalogue exceeds the metadata limit.');
         if (vaultId && revision.snapshot.vaultId !== vaultId) { foreignDevices.add(tag.slice(4, 36)); continue; }
         const { files, ...summary } = revision.snapshot;
-        revisions.push({ digest: revision.digest, snapshot: { ...summary, fileCount: files.length }, tag, ...(includeFiles ? { files: files.map(({ path, digest, size }) => ({ path, digest, size })) } : {}) });
+        revisions.push({ digest: revision.digest, snapshot: { ...summary, fileCount: files.length }, tag, createdAt: revision.createdAt, ...(includeFiles ? { files: files.map(({ path, digest, size }) => ({ path, digest, size })) } : {}) });
       }
+      // Every drive in a repository shares this client's tag limit, so the total travels beside the drive's own list.
+      Object.defineProperty(revisions, 'tagCount', { value: tags.size, enumerable: false });
       return revisions;
     },
     readRevision,
