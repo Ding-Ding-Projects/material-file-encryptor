@@ -22,7 +22,7 @@ export const AUTO_BACKUP_COPY = Object.freeze({
   'Number of snapshot tags in this repository. Docker Hub use by this app is limited to 1,000 tags per repository, shared by every drive in it.': '呢個 repository 入面嘅快照標籤數目。呢個程式每個 repository 最多用 1,000 個標籤，入面所有磁碟一齊用。',
   'Remove this drive’s backups…': '刪除呢個磁碟嘅備份…', 'Tags that will be removed': '會刪除嘅標籤', 'Copy list': '複製清單', 'Cancel': '取消',
   'This computer has no snapshots of this drive in the repository.': '呢部電腦喺呢個 repository 冇呢個磁碟嘅快照。',
-  'Remove {count} snapshots': '刪除 {count} 個快照', 'Remove {count} snapshots of {drive} from {repository}?': '要喺 {repository} 刪除 {drive} 嘅 {count} 個快照嗎？',
+  'Remove {count} snapshots': '刪除 {count} 個快照', 'Remove 1 snapshot': '刪除 1 個快照', 'Remove 1 snapshot of {drive} from {repository}?': '要喺 {repository} 刪除 {drive} 嘅 1 個快照嗎？', 'Remove {count} snapshots of {drive} from {repository}?': '要喺 {repository} 刪除 {drive} 嘅 {count} 個快照嗎？',
   'Only snapshots this computer uploaded for this drive are removed. Encrypted layers shared with other drives stay. Backup for this drive is turned off afterwards. This cannot be undone.':
     '只會刪除呢部電腦幫呢個磁碟上載嘅快照，同其他磁碟共用嘅加密分層會保留。刪除之後呢個磁碟嘅備份會關閉。呢個動作冇得還原。',
   'Removed {removed} snapshots; {failed} could not be confirmed.': '刪除咗 {removed} 個快照；{failed} 個未能確認。',

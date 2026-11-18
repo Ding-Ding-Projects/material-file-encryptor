@@ -12,7 +12,7 @@ Nothing is uploaded automatically before step 3. To keep one drive on this PC on
 
 ## When a drive backs up
 
-- **After changes:** about 1 minute after the drive goes quiet. Each new change restarts the wait.
+- **After changes:** about 1 minute after the drive goes quiet. Each new change restarts the wait. The drive keeps settling its file history for up to a minute after a write, so in practice a backup starts two to three minutes after the last change.
 - **Periodic check:** every hour, which also catches anything missed, such as changes made while offline.
 - **On lock:** a drive with changes waiting backs up when it locks.
 - **On app close:** drives with changes waiting get up to 2 minutes to back up; anything still running then is cancelled and runs at the next start.
@@ -52,14 +52,19 @@ Snapshots made before this update carry no creation time. The app dates them fro
 
 The app reads at most 1,000 snapshot tags per repository, shared by every drive in it. Each repository row shows **N of 1,000 tags**. From 800 it turns amber and offers **Move drives to their own repositories**.
 
+## Docker Hub pull limits
+
+Docker Hub counts every manifest read as a pull, and a personal account gets a limited number per hour (200 when this was written). Before each backup the app checks each snapshot with a request Docker Hub does not count and reads a snapshot only the first time it sees it while the app is running, so after the first backup of a session a backup costs at most one pull however many snapshots the repository holds. If the account runs out anyway, for example because other tools pull at the same time, backups fail with a retry and continue once the hour has passed.
+
 ## What the page shows
 
 - A summary line: backed up some minutes ago, backing up with a percentage, waiting for connection, or needs attention.
 - The drive table grouped by repository: visibility, drive count and the tag meter, then each drive with its last backup, snapshot count, state and switch.
-- The row menu: Back up now, Restore…, Prune old snapshots now, Move to its own repository, Stop or Start backing up, Open this drive.
+- The row menu: Back up now, Restore…, Prune old snapshots now, Move to its own repository, Stop or Start backing up, Open this drive, and Remove this drive's backups…, which lists the exact tags this PC uploaded for the drive, offers Copy list, and removes only after you confirm. The drive's switch is turned off afterwards.
 
 ## Verification state
 
 - Unit and service tests cover retention selection, drive isolation, failure safety, retry timing, triggers and request validation.
 - Pruning was run against real Docker Hub through the production sync service and transport with two synthetic drives in one repository: only the first drive's old snapshots were removed, the second drive's stayed, the deleted digest answered "not found", and the newest snapshot restored with its data intact.
-- Not yet proven: a drive from another computer shown read-only in the table, renaming a drive label, removing all of a drive's backups from the row menu, a size column, and background backup while the app is closed. See ROADMAP.md.
+- The packaged app was run with real drives against a test repository on Docker Hub: after the notice the first automatic backup started within seconds, a change was backed up automatically about two and a half minutes after the write, pruning removed the older snapshot, the row menu removed exactly the drive's own two snapshots while 13 other tags stayed, and a drive pointed at a repository the account cannot create showed Needs attention without uploading anything.
+- Not yet proven: a drive from another computer shown read-only in the table, renaming a drive label, a size column, the tag meter turning amber near 1,000 tags, and background backup while the app is closed. See ROADMAP.md.
