@@ -311,7 +311,7 @@ public sealed partial class VaultEngine : IDisposable
         using var bufferBudget=TransferBufferBudget.Reserve(3L*65536);
         VaultCrypto.ValidatePhysicalPath(destination);
         Directory.CreateDirectory(Path.GetDirectoryName(destination)!); var temp=destination+"."+Guid.NewGuid().ToString("N")+".tmp";
-        try { using(var output=new FileStream(temp,FileMode.CreateNew,FileAccess.Write,FileShare.None,65536,FileOptions.WriteThrough)) { var buffer=new byte[65536];int read;while((read=input.Read(buffer))!=0){token.ThrowIfCancellationRequested();output.Write(buffer,0,read);} output.Flush(true); } File.Move(temp,destination,true); } finally { if(File.Exists(temp)) File.Delete(temp); }
+        try { using(var output=new FileStream(temp,FileMode.CreateNew,FileAccess.Write,FileShare.None,65536,FileOptions.WriteThrough)) { var buffer=new byte[65536];int read;while((read=input.Read(buffer))!=0){token.ThrowIfCancellationRequested();output.Write(buffer,0,read);} output.Flush(true); } TransientFileMove.Move(temp,destination,true,token); } finally { if(File.Exists(temp)) File.Delete(temp); }
     }
     private int Read(Entry e,long offset,Span<byte> destination,CancellationToken cancellationToken=default)
     {
