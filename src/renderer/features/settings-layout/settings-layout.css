@@ -42,6 +42,6 @@
 :root[data-max839] .settings-category>span{width:auto}
 :root[data-max839] .settings-categories{min-height:0}
 /* Backup category: retention numbers and value chips. */
-.retention-fields .retention-field{width:88px}
+.retention-fields .retention-field{width:132px;min-width:132px}
 .retention-fields .chip,.setting-inline .chip{font-size:11px;padding:2px 6px;border-radius:3px;background:var(--v2-line2);color:var(--v2-text2)}
 #settings-backup-message:empty{display:none}

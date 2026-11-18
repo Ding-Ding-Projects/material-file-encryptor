@@ -152,10 +152,12 @@ export function mountSettingsLayout(view, {getLanguage = () => 'en', openView = 
     if (searching) content.dataset.searching = ''; else delete content.dataset.searching;
     for (const button of list.querySelectorAll('.settings-category')) button.setAttribute('aria-selected', String(!searching && button.dataset.category === active));
   }
-  function select(id) { active = id; apply(); content.scrollTop = 0; }
+  // The backup status changes while the app runs (sign-in, the notice, every backup), so opening Backup reads it again.
+  function refreshBackup() { return Promise.resolve().then(getBackupStatus).then(value => { if (value) { status = value; renderBackup(); apply(); } }, () => {}); }
+  function select(id) { active = id; apply(); content.scrollTop = 0; if (id === 'backup') void refreshBackup(); }
   search?.addEventListener('search-change', () => { searching = Boolean(search.query); apply(); });
   function render() { renderBackup(); renderUpdates(); renderNav(); apply(); }
   render();
-  Promise.resolve().then(getBackupStatus).then(value => { status = value; renderBackup(); apply(); }, () => {});
+  void refreshBackup();
   return {setLanguage: render, select, destroy() { layout.remove(); }};
 }

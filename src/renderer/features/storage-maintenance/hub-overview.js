@@ -84,10 +84,10 @@ export function mountHubOverview(host, {services = {}, getLanguage = () => 'en',
     copy.addEventListener('click', () => void doc.defaultView.navigator.clipboard?.writeText(tags.join('\n')).catch(() => {}));
     const cancel = el('md-text-button', {type: 'button', id: 'hub-remove-cancel'}, [el('span', {text: L('Cancel')})]);
     cancel.addEventListener('click', () => { removal = null; lastJson = ''; render(); });
-    const remove = el('md-filled-button', {type: 'button', id: 'hub-remove-confirm', class: 'danger', disabled: !tags.length}, [el('span', {text: L('Remove {count} snapshots', {count: tags.length})})]);
+    const remove = el('md-filled-button', {type: 'button', id: 'hub-remove-confirm', class: 'danger', disabled: !tags.length}, [el('span', {text: tags.length === 1 ? L('Remove 1 snapshot') : L('Remove {count} snapshots', {count: tags.length})})]);
     remove.addEventListener('click', () => { const target = removal; removal = null; void act(async () => { const result = await services.autoBackupRemove(target.drive.sessionId, tags); await services.autoBackupSetDrive(target.drive.sessionId, false); return result; }, result => L('Removed {removed} snapshots; {failed} could not be confirmed.', {removed: result?.removed ?? 0, failed: result?.failed ?? 0})); });
     return el('div', {class: 'hub-notice hub-remove', role: 'alertdialog', 'aria-label': L('Remove this drive’s backups…')}, [
-      el('strong', {text: L('Remove {count} snapshots of {drive} from {repository}?', {count: tags.length, drive: removal.drive.name || removal.drive.sessionId, repository: removal.repository})}),
+      el('strong', {text: L(tags.length === 1 ? 'Remove 1 snapshot of {drive} from {repository}?' : 'Remove {count} snapshots of {drive} from {repository}?', {count: tags.length, drive: removal.drive.name || removal.drive.sessionId, repository: removal.repository})}),
       el('p', {text: L('Only snapshots this computer uploaded for this drive are removed. Encrypted layers shared with other drives stay. Backup for this drive is turned off afterwards. This cannot be undone.')}),
       list, el('div', {class: 'actions'}, [copy, cancel, remove])]);
   }

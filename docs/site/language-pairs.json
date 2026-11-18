@@ -637,8 +637,8 @@
     {
       "source": "docs/features/storage/automatic-backup.md",
       "translation": "docs/features/storage/automatic-backup.zh-HK.md",
-      "sourceSha256": "7b48b954aacb440b221f7e66dbdfc6872ed18b7786fb6e857454d75bf95e6e2c",
-      "translationSha256": "5a95590e2015ea3f5f98169cfc471fe94fdc1c249e7706d15e6126ac48c5fd27"
+      "sourceSha256": "b99beeebfb13c7fd81c6d3bab98c34fa01e837abd17087b6d590882f3565c6ba",
+      "translationSha256": "887e5df6b93bb52704bdd4ea7704573333073d47e8f4fd7e4436123872000356"
     },
     {
       "source": "docs/features/storage/registry-sync.md",

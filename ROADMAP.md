@@ -8,9 +8,11 @@ Issues #26 and #27. Ticks mean implemented with focused tests passing; live proo
 - [x] Automatic backup controller: on by default once signed in and the public notice is acknowledged, 1 minute after idle, hourly check, on lock, on close with pending changes (bounded to 2 minutes), on reconnect, retry 1, 5, 15 minutes then hourly, per-drive switch, shared repository `<account>/material-file-encryptor-storage` or one per drive.
 - [x] Docker Hub backup page: summary line, one-time public notice, drive table grouped by repository with the tag meter (amber at 800 with Move drives to their own repositories), per-drive switch and row menu (Back up now, Restore, Prune old snapshots now, Move to its own repository, Stop or Start backing up, Open this drive).
 - [x] Settings > Backup: automatic on or off, idle delay, periodic check, back up on lock, repository layout, default repository, retention numbers.
-- [ ] Packaged-app proof with real drives: automatic backup after a change, pruning in the window, and screenshots of the page and Settings.
+- [x] Packaged-app proof with real drives against a test repository: automatic backup after a change, pruning, Remove this drive's backups (own tags only, others untouched), Needs attention, and captures of the page and Settings (kept outside the repository for the README refresh).
+- [x] Remove this drive's backups from the row menu, with the exact tag list, Copy list and a host-side check that every tag is the drive's own.
+- [x] At most one Docker Hub pull per backup (HEAD listing and a verified snapshot cache), after a live run exhausted the account's hourly pull limit.
 - [ ] Back up while the app is closed (needs the scheduled task decision; shown disabled).
-- [ ] Drives backed up from another computer shown read-only in the table, Rename label, Remove this drive's backups with the exact tag list, a size column, and the status bar backup text.
+- [ ] Drives backed up from another computer shown read-only in the table, Rename label, a size column, the status bar backup text (it still shows the older sync wording), and the older Docker Hub panel text below the table that still describes one repository per drive and an hourly sync.
 - [ ] Command palette entries for Back up now and Prune old snapshots now.
 
 ## Share a file through Docker Hub, 2026-11-17
