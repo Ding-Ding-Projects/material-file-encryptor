@@ -19,7 +19,7 @@ import {offerRegisteredViews} from '../../../shared/surface/view-registration.js
 if(typeof document!=='undefined')installShadowReducedMotion(document);
 
 /** Mounts reusable chrome without mutating host content or acquiring host capabilities. */
-export function mountSurfaceFoundation({host,before=null,storage,language='en',provenance,tabs=[],onActivate=()=>{},commands=[],onExport,renderText=value=>value,onNotificationAction,onNotification,onQuit,onAddDrive,navigationHost,sounds,homeStatus,homeActivity}={}) {
+export function mountSurfaceFoundation({host,before=null,storage,language='en',provenance,tabs=[],onActivate=()=>{},commands=[],onExport,renderText=value=>value,onNotificationAction,onNotification,onQuit,onAddDrive,navigationHost,sounds,homeStatus,homeActivity,homeDashboard}={}) {
   if(!(host instanceof HTMLElement))throw new TypeError('A host element is required');
   tabs=[...tabs];
   const model=createSurfaceModel({storage,storageKey:'mfe.surface.tabs.v1',tabs:tabs.slice(0,1).map(tab=>({...tab,label:localized(tab.label,'en')}))});
@@ -33,11 +33,13 @@ export function mountSurfaceFoundation({host,before=null,storage,language='en',p
   const views=new Map();let activeLanguage=language;let hostCommands=commands;
   // Home lists every destination as a card; it is a view of the shell like any other and opens only when asked.
   const homeRoot=element('section',{class:'home-view',hidden:true});const homeGrid=element('mfe-home-grid');homeRoot.append(homeGrid);
+  // The desktop shows Home as a status dashboard; the card grid stays for surfaces that do not provide one.
+  const dashboard=typeof homeDashboard?.mount==='function'?homeDashboard.mount(homeRoot):null;if(dashboard)homeGrid.hidden=true;
   views.set(HOME_ID,{id:HOME_ID,root:homeRoot,label:HOME_LABEL,layout:false});labels.set(HOME_ID,HOME_LABEL);model.registerCanonicalTab(HOME_ID,'Home');
   let recentRows=null,recentRequest=0;
-  const renderHome=()=>{homeRoot.setAttribute('aria-label',localized(HOME_LABEL,activeLanguage));let status={};try{status=homeStatus?.()||{};}catch{status={};}homeGrid.configure({layout:'flagship',entries:flagshipEntries(labels,model.getState(),status),tools:toolsSummary(labels),recent:recentRows,language:activeLanguage,onOpen:entry=>{model.openTab({id:entry.id,label:localized(labels.get(entry.id),'en')});shell.activate(entry.id);}});};
+  const renderHome=()=>{homeRoot.setAttribute('aria-label',localized(HOME_LABEL,activeLanguage));let status={};try{status=homeStatus?.()||{};}catch{status={};}if(dashboard){try{dashboard.render({language:activeLanguage,state:homeDashboard.state?.()||null,status,recent:recentRows});}catch(error){console.error(error);}}homeGrid.configure({layout:'flagship',entries:flagshipEntries(labels,model.getState(),status),tools:toolsSummary(labels),recent:recentRows,language:activeLanguage,onOpen:entry=>{model.openTab({id:entry.id,label:localized(labels.get(entry.id),'en')});shell.activate(entry.id);}});};
   // Recent activity comes from real history and notification data, read each time Home is shown. A failed read is an empty list.
-  const refreshRecent=()=>{if(typeof homeActivity!=='function')return;const request=++recentRequest;Promise.resolve().then(()=>homeActivity()).then(rows=>Array.isArray(rows)?rows:[],()=>[]).then(rows=>{if(request!==recentRequest)return;recentRows=rows;homeGrid.setRecent(rows);});};
+  const refreshRecent=()=>{if(typeof homeActivity!=='function')return;const request=++recentRequest;Promise.resolve().then(()=>homeActivity()).then(rows=>Array.isArray(rows)?rows:[],()=>[]).then(rows=>{if(request!==recentRequest)return;recentRows=rows;homeGrid.setRecent(rows);if(dashboard&&!homeRoot.hidden)renderHome();});};
   // Every destination opens by default the first time it is offered. A tab the person closed stays closed, and a
   // destination added by a later update opens once. Offered ids are remembered so this never repeats.
   const offerViews=list=>offerRegisteredViews(model,list,view=>localized(labels.get(view.id)||view.label,'en'));

@@ -1,156 +1,130 @@
 import {localized, text} from '../../../shared/surface/registry.js';
-import {HOME_ICONS, moveHomeFocus} from '../../../shared/surface/home.js';
 import {LOCAL_TOOL_LABELS, LOCAL_TOOL_SUMMARIES, LOCAL_TOOL_KEYWORDS, localToolGroups, LOCAL_TOOLS_LABEL} from '../../../shared/surface/local-tools-catalog.js';
 import '../../../shared/surface/search.js';
 
-/** A keyboard-operable button made from a div, so its layout is not constrained by a Material button's label slot. */
-function pressable(node) {
-  node.setAttribute('role', 'button');
-  node.tabIndex = 0;
-  node.addEventListener('keydown', event => {
-    if (event.target !== node || event.altKey || event.ctrlKey || event.metaKey) return;
-    if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); node.click(); }
-  });
-}
-
-const SVG_NS = 'http://www.w3.org/2000/svg';
-function glyph(id) {
-  const svg = document.createElementNS(SVG_NS, 'svg');
-  svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('width', '22'); svg.setAttribute('height', '22');
-  svg.setAttribute('aria-hidden', 'true'); svg.setAttribute('focusable', 'false');
-  const path = document.createElementNS(SVG_NS, 'path');
-  path.setAttribute('fill', 'currentColor'); path.setAttribute('d', HOME_ICONS[id] || HOME_ICONS.apps);
-  svg.append(path);
-  return svg;
-}
-
 /**
- * The Local tools page: every tool that is not a flagship Home card, grouped by category, with category filters and
- * the shared search control (with its regex builder). All counts come from the tools that are actually registered.
+ * The Local tools page as a dense list: a search with its regex builder, a Group by choice (category or name), a
+ * table of every registered tool with what it does, and a details pane with Open and Open in new tab. Selecting a row
+ * shows its details; Enter, a double click or Open starts the tool. All counts come from the tools that are actually
+ * registered; the page claims no status it cannot check.
  *   isRegistered(id)   whether a destination exists;   open(id)   opens or focuses that destination;
+ *   openInTab(id)      opens it as a title bar tab (falls back to open);
  *   getLanguage()      'en' | 'yue' | 'bilingual';     subscribeLanguage(listener) returns a disposer.
  */
-export function mountLocalTools(host, {isRegistered = () => true, open = () => {}, getLanguage = () => 'en', subscribeLanguage = () => () => {}} = {}) {
+export function mountLocalTools(host, {isRegistered = () => true, open = () => {}, openInTab = open, getLanguage = () => 'en', subscribeLanguage = () => () => {}} = {}) {
   const doc = host.ownerDocument;
   const language = () => getLanguage() || 'en';
   const t = (en, yue) => localized(text(en, yue), language());
-  let category = 'all', generation = 0, alive = true;
+  let grouping = 'category', selected = null, generation = 0, alive = true, matchedIds = null;
+  const el = (tag, props = {}, children = []) => { const node = doc.createElement(tag); for (const [key, value] of Object.entries(props)) { if (key === 'text') node.textContent = value; else if (key === 'class') node.className = value; else node.setAttribute(key, value); } node.append(...children); return node; };
 
-  const root = doc.createElement('section');
-  root.className = 'local-tools';
-  root.setAttribute('aria-label', localized(LOCAL_TOOLS_LABEL, language()));
-  const header = doc.createElement('header'); header.className = 'local-tools-header';
-  const title = doc.createElement('h2'); title.id = 'local-tools-heading';
-  const searchHost = doc.createElement('div'); searchHost.className = 'local-tools-search';
+  const root = el('section', {class: 'local-tools'});
+  const toolbar = el('div', {class: 'v2-toolbar local-tools-toolbar', role: 'toolbar'});
   const search = doc.createElement('mfe-search');
-  search.setAttribute('scope', 'local-tools');
+  search.setAttribute('scope', 'local-tools'); search.setAttribute('data-compact', '');
   search.language = language();
-  searchHost.append(search);
-  header.append(title, searchHost);
-  const layout = doc.createElement('div'); layout.className = 'local-tools-layout';
-  const nav = doc.createElement('nav'); nav.className = 'local-tools-categories';
-  const body = doc.createElement('div'); body.className = 'local-tools-body';
-  const status = doc.createElement('p'); status.className = 'local-tools-status'; status.setAttribute('role', 'status');
-  layout.append(nav, body);
-  root.append(header, layout, status);
+  const groupLabel = el('span', {class: 'local-tools-group-label'});
+  const groupChoice = el('div', {class: 'segmented', role: 'radiogroup'});
+  const openTab = el('md-text-button', {id: 'local-tools-open-tab', type: 'button'});
+  toolbar.append(el('div', {class: 'local-tools-search'}, [search]), groupLabel, groupChoice, openTab);
+  const table = el('table', {class: 'local-tools-table'});
+  const head = el('thead'), body = el('tbody');
+  table.append(head, body);
+  const details = el('aside', {class: 'local-tools-details'});
+  const status = el('p', {class: 'local-tools-status', role: 'status'});
+  root.append(toolbar, el('div', {class: 'local-tools-layout'}, [el('div', {class: 'local-tools-main'}, [table, status]), details]));
   host.replaceChildren(root);
 
-  let tiles = [];
   const groupsNow = () => localToolGroups(isRegistered);
   const total = () => groupsNow().reduce((sum, group) => sum + group.items.length, 0);
+  const entries = () => groupsNow().flatMap(group => group.items.map(id => ({id, group, label: LOCAL_TOOL_LABELS[id] || text(id, id), summary: LOCAL_TOOL_SUMMARIES[id] || text('Open this tool.', '打開呢個工具。')})));
+  const searchText = entry => [entry.label.en, entry.label.yue, entry.summary.en, entry.summary.yue, LOCAL_TOOL_KEYWORDS[entry.id] || '', entry.group.label.en, entry.group.label.yue].join(' ');
 
-  function render() {
-    const groups = groupsNow();
+  function renderChrome() {
     root.setAttribute('aria-label', localized(LOCAL_TOOLS_LABEL, language()));
-    title.textContent = localized(LOCAL_TOOLS_LABEL, language());
+    toolbar.setAttribute('aria-label', t('Local tools commands', '本機工具指令'));
     search.setAttribute('label', t('Search tools', '搜尋工具'));
-    search.language = language();
-    search.setLanguage?.(language());
-    if (category !== 'all' && !groups.some(group => group.id === category)) category = 'all';
-    nav.setAttribute('aria-label', t('Tool categories', '工具類別'));
-    nav.replaceChildren();
-    const choices = [{id: 'all', label: text('All', '全部'), count: total()}, ...groups.map(group => ({id: group.id, label: group.label, count: group.items.length}))];
-    for (const choice of choices) {
-      const button = doc.createElement('div');
-      pressable(button); button.className = 'local-tools-category'; button.dataset.category = choice.id;
-      button.setAttribute('aria-pressed', String(choice.id === category));
-      const name = doc.createElement('span'); name.textContent = localized(choice.label, language());
-      const count = doc.createElement('span'); count.className = 'count'; count.textContent = String(choice.count);
-      button.append(name, count);
-      button.addEventListener('click', () => { category = choice.id; render(); void applyFilter(); });
-      nav.append(button);
-    }
+    search.language = language(); search.setLanguage?.(language());
+    groupLabel.textContent = t('Group by', '分組方式');
+    groupChoice.setAttribute('aria-label', t('Group by', '分組方式'));
+    groupChoice.replaceChildren(...[['category', t('Category', '類別')], ['name', t('Name', '名稱')]].map(([id, label]) => {
+      const button = el('button', {type: 'button', role: 'radio', 'aria-checked': String(grouping === id), 'data-grouping': id, text: label});
+      button.addEventListener('click', () => { grouping = id; renderChrome(); renderRows(); });
+      return button;
+    }));
+    openTab.replaceChildren(el('span', {text: t('Open in new tab', '喺新分頁開啟')}));
+    openTab.disabled = !selected;
+    table.setAttribute('aria-label', localized(LOCAL_TOOLS_LABEL, language()));
+    head.replaceChildren(el('tr', {}, [el('th', {scope: 'col', text: t('Tool', '工具')}), el('th', {scope: 'col', text: t('What it does', '用途')}), el('th', {scope: 'col', text: t('Category', '類別')})]));
+  }
+  function row(entry) {
+    const tr = el('tr', {class: 'local-tools-row', 'data-tool': entry.id, 'data-category': entry.group.id, tabindex: entry.id === selected ? '0' : '-1', 'aria-selected': String(entry.id === selected)});
+    tr.append(el('td', {class: 'name', text: localized(entry.label, language())}), el('td', {class: 'detail', text: localized(entry.summary, language())}), el('td', {class: 'category', text: localized(entry.group.label, language())}));
+    tr.addEventListener('click', () => select(entry.id));
+    tr.addEventListener('dblclick', () => open(entry.id));
+    tr.addEventListener('keydown', event => keydown(event, tr, entry));
+    return tr;
+  }
+  function renderRows() {
+    const all = entries().filter(entry => !matchedIds || matchedIds.has(entry.id));
+    if (!all.some(entry => entry.id === selected)) selected = all[0]?.id ?? null;
     body.replaceChildren();
-    tiles = [];
-    let index = 0;
-    for (const group of groups) {
-      const section = doc.createElement('section'); section.className = 'local-tools-group'; section.dataset.category = group.id;
-      const heading = doc.createElement('h3'); heading.textContent = localized(group.label, language());
-      const grid = doc.createElement('ul'); grid.className = 'local-tools-grid';
-      for (const id of group.items) {
-        const item = doc.createElement('li');
-        const tile = doc.createElement('div');
-        pressable(tile); tile.className = 'local-tools-tile'; tile.dataset.tool = id; tile.dataset.category = group.id;
-        tile.style.setProperty('--i', String(index++));
-        const label = LOCAL_TOOL_LABELS[id] || text(id, id), summary = LOCAL_TOOL_SUMMARIES[id] || text('Open this tool.', '打開呢個工具。');
-        tile.setAttribute('aria-label', localized(label, language()));
-        tile.setAttribute('aria-description', localized(summary, language()));
-        const icon = doc.createElement('span'); icon.className = 'icon'; icon.setAttribute('aria-hidden', 'true'); icon.append(glyph(id));
-        const copy = doc.createElement('span'); copy.className = 'copy';
-        const name = doc.createElement('b'); name.textContent = localized(label, language());
-        const detail = doc.createElement('span'); detail.className = 'detail'; detail.textContent = localized(summary, language());
-        copy.append(name, detail);
-        tile.append(icon, copy);
-        tile.addEventListener('click', () => open(id));
-        tile.addEventListener('keydown', event => keydown(event, tile));
-        item.append(tile); grid.append(item);
-        tiles.push({id, tile, item, section, text: [label.en, label.yue, summary.en, summary.yue, LOCAL_TOOL_KEYWORDS[id] || '', group.label.en, group.label.yue].join(' ')});
+    if (grouping === 'category') {
+      for (const group of groupsNow()) {
+        const items = all.filter(entry => entry.group.id === group.id);
+        if (!items.length) continue;
+        body.append(el('tr', {class: 'local-tools-group-row', 'data-category': group.id}, [el('th', {scope: 'colgroup', colspan: '3'}, [el('span', {text: localized(group.label, language())}), el('span', {class: 'count', text: String(items.length)})])]));
+        for (const entry of items) body.append(row(entry));
       }
-      section.append(heading, grid);
-      body.append(section);
+    } else {
+      for (const entry of [...all].sort((a, b) => localized(a.label, 'en').localeCompare(localized(b.label, 'en')))) body.append(row(entry));
     }
+    if (!body.querySelector('[tabindex="0"]')) body.querySelector('.local-tools-row')?.setAttribute('tabindex', '0');
+    status.textContent = all.length ? t(`${all.length} of ${total()} tools`, `${total()} 個工具入面嘅 ${all.length} 個`) : t('No tools match. Change the search.', '冇符合嘅工具。請更改搜尋。');
+    renderDetails();
   }
-
-  function visibleTiles() { return tiles.filter(entry => !entry.item.hidden && !entry.section.hidden).map(entry => entry.tile); }
-  function columns(list) {
-    const first = list[0]?.getBoundingClientRect?.();
-    if (!first) return 1;
-    return Math.max(1, list.filter(tile => Math.abs(tile.getBoundingClientRect().top - first.top) < 2).length);
+  function renderDetails() {
+    const entry = entries().find(item => item.id === selected);
+    openTab.disabled = !entry;
+    if (!entry) { details.replaceChildren(el('p', {class: 'muted', text: t('Select a tool to see what it does.', '揀一個工具就會見到佢嘅用途。')})); return; }
+    const openButton = el('md-filled-button', {type: 'button', id: 'local-tools-open'}, [el('span', {text: t('Open', '開啟')})]);
+    openButton.addEventListener('click', () => open(entry.id));
+    const inTab = el('md-outlined-button', {type: 'button'}, [el('span', {text: t('Open in new tab', '喺新分頁開啟')})]);
+    inTab.addEventListener('click', () => openInTab(entry.id));
+    details.replaceChildren(el('h2', {text: localized(entry.label, language())}), el('p', {class: 'muted', text: localized(entry.summary, language())}), el('dl', {}, [el('dt', {text: t('Category', '類別')}), el('dd', {text: localized(entry.group.label, language())})]), el('div', {class: 'actions'}, [openButton, inTab]));
   }
-  function keydown(event, tile) {
+  function select(id, focus = false) {
+    selected = id;
+    for (const tr of body.querySelectorAll('.local-tools-row')) { const on = tr.dataset.tool === id; tr.setAttribute('aria-selected', String(on)); tr.tabIndex = on ? 0 : -1; if (on && focus) tr.focus(); }
+    renderDetails();
+  }
+  function keydown(event, tr, entry) {
     if (event.altKey || event.ctrlKey || event.metaKey) return;
-    const list = visibleTiles();
-    const next = moveHomeFocus(list.indexOf(tile), event.key, columns(list), list.length);
-    if (next < 0) return;
-    event.preventDefault();
-    list[next].focus();
+    const rows = [...body.querySelectorAll('.local-tools-row')], index = rows.indexOf(tr);
+    const move = {ArrowDown: 1, ArrowUp: -1, Home: -index, End: rows.length - 1 - index}[event.key];
+    if (move !== undefined) { event.preventDefault(); const next = rows[Math.max(0, Math.min(rows.length - 1, index + move))]; if (next) select(next.dataset.tool, true); }
+    else if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); open(entry.id); }
   }
+  openTab.addEventListener('click', () => { if (selected) openInTab(selected); });
 
   async function applyFilter() {
     const request = ++generation;
-    const scoped = tiles.filter(entry => category === 'all' || entry.tile.dataset.category === category);
-    let matched = scoped;
-    if (search.query) {
-      const outcome = await search.filter(scoped.map(entry => ({id: entry.id, text: entry.text})), {reportOutcome: true});
+    if (!search.query) matchedIds = null;
+    else {
+      const outcome = await search.filter(entries().map(entry => ({id: entry.id, text: searchText(entry)})), {reportOutcome: true});
       if (!alive || request !== generation || outcome.outcome === 'superseded') return;
-      const ids = new Set((outcome.rows || []).map(row => row.id));
-      matched = scoped.filter(entry => ids.has(entry.id));
+      matchedIds = new Set((outcome.rows || []).map(item => item.id));
     }
-    const shown = new Set(matched);
-    for (const entry of tiles) entry.item.hidden = !shown.has(entry);
-    for (const group of body.querySelectorAll('.local-tools-group')) group.hidden = ![...group.querySelectorAll('.local-tools-tile')].some(tile => !tile.closest('li').hidden);
-    const count = matched.length;
-    status.textContent = count ? t(`Showing ${count} of ${total()} tools`, `顯示 ${total()} 個工具入面嘅 ${count} 個`) : t('No tools match. Change the search or choose another category.', '冇符合嘅工具。請更改搜尋或者揀其他類別。');
+    renderRows();
   }
 
   search.addEventListener('search-change', () => { void applyFilter(); });
-  render();
-  void applyFilter();
-  const stop = subscribeLanguage(() => { render(); void applyFilter(); });
+  renderChrome(); renderRows(); void applyFilter();
+  const stop = subscribeLanguage(() => { renderChrome(); renderRows(); });
 
   return {
-    refresh() { render(); void applyFilter(); },
-    focusFirst() { visibleTiles()[0]?.focus(); },
+    refresh() { renderChrome(); void applyFilter(); },
+    focusFirst() { (body.querySelector('.local-tools-row[tabindex="0"]') || body.querySelector('.local-tools-row'))?.focus(); },
     count: total,
     destroy() { alive = false; generation++; stop?.(); host.replaceChildren(); },
   };
