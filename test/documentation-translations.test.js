@@ -19,7 +19,7 @@ const REQUIRED = [
   'performance/README', 'performance/native-helper', 'performance/native-lifecycle-performance',
   'platform/packaged-documentation-cache', 'platform/README', 'platform/extension-assessment', 'platform/public-route-acceptance', 'platform/current-integration', 'platform/documentation-and-status', 'platform/instruction-currency', 'platform/public-document-foundation', 'platform/renderer-task-timing',
   'release/README', 'release/installer-repair', 'release/native-update-controller', 'release/preview-delivery', 'release/preview-verification',
-  'schedules/README', 'schedules/external-sources', 'storage/README', 'storage/file-history-activity', 'storage/git-transport', 'storage/history-and-recycle-bin', 'storage/native-vault', 'storage/docker-hub-drive', 'storage/physical-packing', 'storage/split-storage', 'storage/transfer-lifecycle',
+  'schedules/README', 'schedules/external-sources', 'storage/README', 'storage/file-history-activity', 'storage/git-transport', 'storage/history-and-recycle-bin', 'storage/native-vault', 'storage/docker-hub-drive', 'storage/share-via-docker-hub', 'storage/physical-packing', 'storage/split-storage', 'storage/transfer-lifecycle',
   'server-manager/README', 'server-manager/foundation', 'server-manager/native-file-lease', 'server-manager/native-supervision', 'server-manager/preparation',
   'surface-foundation/README', 'surface-foundation/coverage', 'surface-foundation/integration', 'surface-foundation/layout-and-notifications', 'surface-foundation/updates-panel', 'surface-foundation/workflow-handoffs',
 ].map(name => `docs/features/${name}.md`).sort();

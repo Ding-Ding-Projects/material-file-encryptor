@@ -1,3 +1,11 @@
+# Share a file through Docker Hub, 2026-11-17
+
+- Share via Docker Hub encrypts one file from an unlocked drive with a new key, uploads it to your public `material-file-encryptor-shares` repository and gives you one command, a link and a ready command line. The recipient needs the app but no Docker Hub account.
+- Optional passphrase: the command then carries only a wrapped key. File name, size and modified time are encrypted; the registry sees only the blob size.
+- Receive a shared file accepts a pasted command, a `material-file-encryptor://` link (registered for the current account by the installer) or `--receive`. Wrong keys, tampering, truncation, unknown versions and foreign hosts are refused without echoing the command.
+- Shared files lists your shares, copies a command again, revokes one or all. Revoke deletes the upload by digest and only forgets the command once Docker Hub no longer serves it. Downloaded copies cannot be recalled.
+- One real share, receive and revoke of a tiny test file ran against Docker Hub from the development computer; the packaged app flow is not yet proven. See ROADMAP.md.
+
 # Docker Hub drives without folders, 2026-11-17
 
 - Create a drive now offers On this computer or Docker Hub. A Docker Hub drive needs no folder: the app creates its storage and cache folders in its own data area, creates the repository if needed, backs the drive up and turns on hourly sync.

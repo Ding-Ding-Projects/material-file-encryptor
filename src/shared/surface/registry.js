@@ -31,6 +31,7 @@ export const surfaceRegistry = Object.freeze([
   ,{ tag: 'mfe-group-manager', role: 'dialog', module: 'group-manager.js', primitives: ['md-dialog','md-outlined-text-field','md-switch'] }
   ,{ tag: 'mfe-hub-repository-picker', role: 'region', module: '../../renderer/features/docker-hub-drive/picker.js', primitives: ['mfe-search','md-outlined-button','md-filled-button','md-linear-progress'] }
   ,{ tag: 'mfe-hub-drive-dialog', role: 'dialog', module: '../../renderer/features/docker-hub-drive/dialog.js', primitives: ['mfe-dialog','md-outlined-text-field','md-outlined-select','md-filled-button','md-outlined-button','md-icon-button','md-linear-progress'] }
+  ,{ tag: 'mfe-share-dialog', role: 'dialog', module: '../../renderer/features/share/dialog.js', primitives: ['mfe-dialog','md-outlined-text-field','md-switch','md-filled-button','md-outlined-button','md-icon-button','md-linear-progress'] }
   ,{ tag: 'mfe-new-tab-catalog', role: 'dialog', module: 'new-tab-catalog.js', primitives: ['md-dialog','md-list','md-list-item','md-text-button','mfe-search'] }
 ]);
 

@@ -327,6 +327,32 @@ export function createDockerImageTransport({ platform = process.platform, progra
       const { token, credentials } = await hubToken(signal); credentials.secret = '';
       return hubJson(fetcher, pathname, { method: 'GET', headers: { Authorization: `Bearer ${token}` } }, signal);
     },
+    /**
+     * Removes one shared-file tag. Only share-<32 hex> tags in a material-file-encryptor-shares repository are
+     * accepted, so this can never touch a drive backup. Docker Hub has served tag deletion at two paths; the
+     * current one is tried first. A tag that is already gone counts as removed.
+     */
+    async deleteShareTag(repository, tag, signal) {
+      const target = imageTarget(`${repository}:${tag}`);
+      if (target.name !== 'material-file-encryptor-shares' || !/^share-[a-f0-9]{32}$/.test(target.tag)) throw Error('Only shared-file tags can be removed.');
+      const { token, credentials } = await hubToken(signal); credentials.secret = '';
+      const paths = [`/v2/namespaces/${target.namespace}/repositories/${target.name}/tags/${target.tag}`, `/v2/repositories/${target.namespace}/${target.name}/tags/${target.tag}/`];
+      let missing = 0;
+      for (const pathname of paths) {
+        checkCancellation(signal);
+        let response;
+        try {
+          response = await fetcher(HUB + pathname, { method: 'DELETE', redirect: 'error', cache: 'no-store', headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
+            signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(20000)]) : AbortSignal.timeout(20000) });
+        } catch { checkCancellation(signal); const error = Error(HUB_ERROR); error.code = 'PROVIDER_UNAVAILABLE'; throw error; }
+        await response.body?.cancel().catch(() => {});
+        if (response.ok) return { removed: true };
+        if ([401, 403].includes(response.status)) { const error = Error('Docker Hub did not allow this account to remove the shared file.'); error.code = 'AUTHENTICATION_REQUIRED'; throw error; }
+        if ([404, 405].includes(response.status)) { missing++; continue; }
+        const error = Error(HUB_ERROR); error.code = 'PROVIDER_UNAVAILABLE'; throw error;
+      }
+      return { removed: missing === paths.length, alreadyGone: true };
+    },
     /** A pull-only registry token for any repository the account may read, public or private. No write permission is implied. */
     async registryPullAuthorization(repository, signal) {
       const target = imageTarget(`${repository}:pull`);
@@ -344,8 +370,9 @@ export function createDockerImageTransport({ platform = process.platform, progra
       } catch { throw Error(HUB_ERROR); }
       finally { credentials.secret = ''; await response?.body?.cancel().catch(() => {}); }
     },
-    async registryAuthorization(repository, signal, visibility = 'public') {
+    async registryAuthorization(repository, signal, visibility = 'public', actions = 'pull,push') {
       const target = imageTarget(`${repository}:authorization`);
+      if (!['pull,push', 'pull,push,delete'].includes(actions)) throw Error('Invalid registry permission.');
       await repositoryAccess(target, signal, visibility);
       const credentials = await credential(signal);
       let response;
@@ -353,7 +380,7 @@ export function createDockerImageTransport({ platform = process.platform, progra
         const authorization = 'Basic ' + Buffer.from(`${credentials.identifier}:${credentials.secret}`).toString('base64');
         const url = new URL('https://auth.docker.io/token');
         url.searchParams.set('service', 'registry.docker.io');
-        url.searchParams.set('scope', `repository:${repository}:pull,push`);
+        url.searchParams.set('scope', `repository:${repository}:${actions}`);
         response = await fetcher(url, { redirect: 'error', cache: 'no-store', signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(20000)]) : AbortSignal.timeout(20000), headers: { Authorization: authorization } });
         if (!response.ok) throw Error();
         const reader = response.body.getReader(); let bytes = 0; const chunks = [];
@@ -365,6 +392,12 @@ export function createDockerImageTransport({ platform = process.platform, progra
         return { Authorization: `Bearer ${token}` };
       } catch { throw Error(HUB_ERROR); }
       finally { credentials.secret = ''; await response?.body?.cancel().catch(() => {}); }
+    },
+    /** Delete permission is granted only for a shared-files repository, so a drive backup can never be deleted through it. */
+    async registryDeleteAuthorization(repository, signal) {
+      const target = imageTarget(`${repository}:authorization`);
+      if (target.name !== 'material-file-encryptor-shares') throw Error('Only shared files can be removed.');
+      return this.registryAuthorization(repository, signal, 'public', 'pull,push,delete');
     },
     async build(target, snapshot, signal) {
       target = checkedTarget(target);

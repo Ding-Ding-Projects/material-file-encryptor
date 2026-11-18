@@ -1,3 +1,20 @@
+## Share a file through Docker Hub, 2026-11-17
+
+Branch `ai/feature/20261117-share-via-docker-hub`. Ticks mean implemented with focused tests passing; live proof is stated per item.
+
+- [x] Chunked AES-256-GCM share format with a fresh key per share, counter nonces with a final-chunk flag, an authenticated header and encrypted metadata.
+- [x] Optional passphrase wrap (scrypt N=2^17, r=8, p=1).
+- [x] Strict `mfe-share:v1` command, link and command-line parsing that refuses foreign hosts and repositories and never echoes input.
+- [x] Upload as a single-layer OCI artifact tagged `share-<hex>` in `<account>/material-file-encryptor-shares`, created public if missing. Proven live once with a 10-byte test file.
+- [x] Anonymous receive with digest checks, name and size before saving, Save as or save into the mounted drive. Proven live once (download, decrypt and byte-for-byte compare) outside the app window.
+- [x] Revoke and revoke all: delete the manifest with a delete-scoped token, then the tag, and confirm both are gone for an anonymous reader. Proven live once: the digest returned 404 afterwards.
+- [x] Shared files list encrypted with protected storage, in memory only when that is unavailable.
+- [x] Share, receive and list dialog in `src/renderer/features/share/`, command bar button, file right-click, command palette and New tab catalog, Shared files link on the Docker Hub storage page, information icons.
+- [x] `material-file-encryptor://` link handler registered and removed by the Squirrel hooks (HKCU), `--receive` on first launch and through the single-instance handler.
+- [ ] Packaged app proof: share from a mounted drive, open a link from a browser, receive into the drive, and screenshots of the three dialog modes.
+- [ ] Progress for large uploads (the phase is shown; bytes are not).
+- [ ] Streaming upload for shares near the 1 GiB limit (the ciphertext is currently held in memory before upload).
+
 ## Docker Hub drives without folders, 2026-11-17
 
 Branch `ai/feature/20261117-docker-hub-drive`. Ticks mean implemented with focused tests passing against a fake registry; nothing here has run against a real Docker Hub account except the sign-in relay.
