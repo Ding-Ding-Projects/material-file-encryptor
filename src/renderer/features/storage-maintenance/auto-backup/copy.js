@@ -10,7 +10,7 @@ export const AUTO_BACKUP_COPY = Object.freeze({
   'Back up now': '立即備份', 'Prune old snapshots now': '而家清走舊快照', 'Move to its own repository': '搬去自己嘅 repository', 'Stop backing up': '停止備份',
   'Start backing up': '開始備份', 'Open this drive': '開啟呢個磁碟', 'Drive actions': '磁碟操作', 'Back up this drive': '備份呢個磁碟',
   'Backed up {done} drives.': '備份咗 {done} 個磁碟。', 'Backed up {done} drives; {failed} need attention.': '備份咗 {done} 個磁碟；{failed} 個需要處理。',
-  'Automatic backup off': '自動備份已關閉', 'Paused': '暫停咗', 'Sign in to back up': '登入 Docker Hub 先可以備份',
+  'Automatic backup off': '自動備份已關閉', 'Automatic backup is off for this drive': '呢個磁碟嘅自動備份已關閉', 'Paused': '暫停咗', 'Sign in to back up': '登入 Docker Hub 先可以備份',
   'Automatic backup is on': '自動備份已開啟', 'Automatic backup is off': '自動備份已關閉', 'Backed up {ago}': '{ago}備份咗', 'Backing up… {percent}%': '備份緊… {percent}%',
   'Sign in to Docker Hub to back up automatically': '登入 Docker Hub 就可以自動備份', 'Read the notice below to turn on automatic backup': '睇完下面嘅說明就可以開啟自動備份',
   'Loading the drive list…': '載入緊磁碟清單…', 'The drive list could not be read. The details below still work.': '讀唔到磁碟清單，下面嘅詳情仍然可以用。',
