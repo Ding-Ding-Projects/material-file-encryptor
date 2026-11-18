@@ -1,6 +1,7 @@
 import {createStartupSurprise,observeStartupInteraction} from '../shared/local-ux/surprise.js';
 import {plainErrorMessage} from '../shared/ipc-error.js';
 import {isBackupBusyRefusal,BACKUP_BUSY_HOLD_MS,BACKUP_BUSY_RETRY_MS} from '../shared/backup-busy.js';
+import {patchRows,fileRowFromPath} from './file-rows.js';
 import {createMotionController} from './motion/motion-controller.js';
 import {createUnlockChoreography} from './motion/unlock-choreography.js';
 import {createInstallationTakeover,createTakeoverPreference} from './features/installation/takeover.js';
@@ -449,8 +450,9 @@ async function renderFiles() {
  if(rows===null||key!==renderedFilesKey)return;
  if(searchFailed)renderedFilesKey='';const visible=new Set(rows.map(row=>row.id));const filtered=candidates.filter(file=>visible.has(file.id));
  const selectedBefore = selected; fileSelection.prune(filtered.map(file => file.id)); selected = fileSelection.primary; if (selectedBefore && !selected) fileDetails?.selectEntry(null);
- const fragment = document.createDocumentFragment();
- for (const file of filtered) {
+ const fileById=new Map(filtered.map(file=>[file.id,file]));
+ const signature=file=>JSON.stringify([file.path,file.size,file.offline,file.modified,file.partCount,file.partSizeBytes,state?.partSizeBytes,shellScope?shellScope.nameFor(file):file.path,preferences.language]);
+ patchRows($('file-list'),filtered.map(file=>({key:file.id,signature:signature(file)})),({key})=>{const file=fileById.get(key);
   const row = document.createElement('tr'); row.dataset.fileId=file.id;row.classList.toggle('selected',fileSelection.has(file.id));row.setAttribute('aria-selected',String(fileSelection.has(file.id)));
   const cell = () => { const td = document.createElement('td'); row.append(td); return td; };
   const select = control('input',{type:'checkbox'}); select.type = 'checkbox'; select.className = 'file-selection'; select.checked = fileSelection.has(file.id); select.setAttribute('aria-label',`${t('Select')} ${file.path}`);
@@ -465,9 +467,9 @@ async function renderFiles() {
   row.addEventListener('click',event => { if (event.target === select || event.composedPath().includes(select)) return; if (event.shiftKey) fileSelection.range(visibleFileIds(),file.id,{additive:event.ctrlKey||event.metaKey}); else if (event.ctrlKey||event.metaKey) fileSelection.toggle(file.id); else fileSelection.only(file.id); syncSelection(); });
   row.addEventListener('dblclick',() => { if (!busy && state.mounted) openSelected(); });
   select.addEventListener('keydown',event => { if (event.key === 'Enter') { event.preventDefault(); openSelected(); } });
-  fragment.append(row);
- }
- $('file-list').replaceChildren(fragment); $('file-count').textContent = `(${filtered.length})`;
+  return row;
+ });
+ $('file-count').textContent = `(${filtered.length})`;
  updateSelectedFileRows();
  $('empty-files').hidden = filtered.length > 0; $('empty-import-button').hidden = Boolean(query) || view === 'offline';
  setText('empty-title',searchFailed ? 'The search could not finish' : query ? 'No matching files' : view === 'offline' ? 'No offline files yet' : 'Room for your first file');
@@ -485,7 +487,7 @@ function updateSelectedFileRows(){
 /** Applies the selection model to the rows, the action buttons and the details panel. */
 function syncSelection(){selected=fileSelection.primary;updateSelectedFileRows();renderAvailability();foundation?.updateChrome?.();fileDetails?.selectEntry(currentFiles().find(file=>file.id===selected)||null);}
 function selectFile(file){fileSelection.only(file.id);syncSelection();}
-async function loadFilePage(append=false){if(!api?.listFiles||state?.locked)return;const revision=state.filesRevision??state.revision??'initial';if(!append&&filePageRevision===revision)return;const request=++filePageRequest;filePageRevision=revision;const lastKnown=pagedFiles;if(!append){pagedFiles=[];selected=null;fileSelection.clear();fileDetails?.selectEntry(null);renderedFilesKey='';renderFiles();}try{const page=await api.listFiles({cursor:append?fileNextCursor:null,limit:100,revision:revision==='initial'?undefined:revision});if(request!==filePageRequest||state?.locked)return;const items=Array.isArray(page)?page:page.items||page.files||[];pagedFiles=append?[...(pagedFiles||[]),...items]:items;fileNextCursor=page.nextCursor??null;const more=$('load-more-files');if(more)more.hidden=!fileNextCursor;renderedFilesKey='';renderFiles();foundation?.updateChrome?.();}catch(error){if(request!==filePageRequest)return;
+async function loadFilePage(append=false){if(!api?.listFiles||state?.locked)return;const revision=state.filesRevision??state.revision??'initial';if(!append&&filePageRevision===revision)return;const request=++filePageRequest;filePageRevision=revision;const lastKnown=pagedFiles;/* A refresh keeps the rows, the selection, focus and any open menu; renderFiles patches only what changed. */try{const page=await api.listFiles({cursor:append?fileNextCursor:null,limit:100,revision:revision==='initial'?undefined:revision});if(request!==filePageRequest||state?.locked)return;const items=Array.isArray(page)?page:page.items||page.files||[];pagedFiles=append?[...(pagedFiles||[]),...items]:items;fileNextCursor=page.nextCursor??null;const more=$('load-more-files');if(more)more.hidden=!fileNextCursor;renderedFilesKey='';renderFiles();foundation?.updateChrome?.();}catch(error){if(request!==filePageRequest)return;
  // While a backup holds the drive the last known listing stays on screen and is refreshed shortly after.
  if(isBackupBusyRefusal(error)){if(!append){pagedFiles=lastKnown;renderedFilesKey='';renderFiles();}filePageRevision=null;noteBackupBusy();setTimeout(()=>{if(request===filePageRequest)void loadFilePage();},BACKUP_BUSY_RETRY_MS);return;}
  showError(error);}}
@@ -1108,8 +1110,9 @@ function setupEnhancedWorkspace() {
  // A share link opened from outside the app arrives as an id; the key stays in the main process.
  let stopShareLinks=null;try{stopShareLinks=api?.onFeatureEvent?.('share',event=>{if(event?.type==='receive'&&typeof event.incomingId==='string')void openShare('receive',{incomingId:event.incomingId});else if(event?.type==='receive-invalid')void openShare('receive');});}catch{/* a bridge without share events (an older host or a test fixture) simply has no incoming links */}if(stopShareLinks)workspaceDisposers.push(stopShareLinks);
  api?.shareStatus?.().then(status=>{if(typeof status?.incomingId==='string')void openShare('receive',{incomingId:status.incomingId});}).catch(()=>{});
- // Right-click (or Shift+F10) on a file row offers sharing that file.
- const fileList=$('file-list');if(fileList)workspaceDisposers.push(registerContextActions(fileList,({target})=>{const row=target?.closest?.('tr[data-file-id]');if(!row||!api?.shareCreate)return null;return{target:row,anchor:row,language:preferences.language==='zh-HK'?'yue':preferences.language,items:[{id:'file-share',label:{en:'Share via Docker Hub…',yue:SHARE_UI_COPY['Share via Docker Hub…']},disabled:!state?.mounted||state.locked!==false,run:()=>{if(!fileSelection.has(row.dataset.fileId)){fileSelection.only(row.dataset.fileId);syncSelection();}void openShare('share');}}]};}));
+ // Right-click, Shift+F10 or the Menu key on a file row offers sharing that file. The keyboard target is the
+ // row checkbox, whose inner input sits in a shadow root, so the row is found on the event path, not by closest().
+ const fileList=$('file-list');if(fileList)workspaceDisposers.push(registerContextActions(fileList,({target,path})=>{const row=fileRowFromPath(path,target);if(!row||!api?.shareCreate)return null;return{target:row,anchor:row,language:preferences.language==='zh-HK'?'yue':preferences.language,items:[{id:'file-share',label:{en:'Share via Docker Hub…',yue:SHARE_UI_COPY['Share via Docker Hub…']},disabled:!state?.mounted||state.locked!==false,run:()=>{if(!fileSelection.has(row.dataset.fileId)){fileSelection.only(row.dataset.fileId);syncSelection();}void openShare('share');}}]};}));
  const stopAuthenticatorFocus=api?.onFeatureEvent?.('access',event=>{if(event?.type!=='focusAuthenticator')return;foundation.model.openTab({id:'access',label:canonicalViewLabels.access});foundation.shell.activate('access');featureMounts.get('access')?.showAuthenticator?.();});if(stopAuthenticatorFocus)workspaceDisposers.push(stopAuthenticatorFocus);
  const stopAccessibility=api?.onFeatureEvent?.('personalization',event=>{if(event.type==='accessibilityState')acceptAccessibility(event.state);});if(stopAccessibility)workspaceDisposers.push(stopAccessibility);
  const openPalette=foundation.palette.open.bind(foundation.palette);foundation.palette.open=()=>{refreshPaletteInventory();openPalette();};const originalChangeButtons=[...document.querySelectorAll('[data-view]')];for(const button of originalChangeButtons)button.addEventListener('click',()=>{foundation.model.openTab({id:button.dataset.view,label:canonicalViewLabels[button.dataset.view]||button.dataset.view});foundation.shell.activate(button.dataset.view);});
