@@ -1,6 +1,6 @@
 import { SurfaceElement, element, localized, register } from '../../../shared/surface/registry.js';
 import { RegistryLoginPanel } from '../storage-maintenance/registry-login-panel.js';
-import { REGISTRY_LOGIN_COPY } from '../storage-maintenance/registry-login-copy.js';
+import { registryLoginText } from '../storage-maintenance/registry-login-text.js';
 import { createInfoIconController } from '../../../shared/surface/info-icon-controller.js';
 let infoIconFactory = createInfoIconController;
 /** Lets a test replace the information icon mounting, which needs a real document. */
@@ -53,7 +53,6 @@ summary{cursor:pointer;font-weight:600;min-height:32px}
 @media(max-width:700px){.frame{grid-template-columns:minmax(0,1fr);min-width:0}.steps{flex-direction:row;overflow:auto}}
 :host-context([data-motion=reduced]) *,:host-context([data-low-stimulation=true]) *{animation:none!important;transition:none!important}`;
 
-const LOGIN_TEXT = (key, language) => { const pair = REGISTRY_LOGIN_COPY[key]; return pair ? localized({ en: pair[0], yue: pair[1] }, language) : key; };
 const DRIVE_LETTERS = 'DEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
 /**
@@ -70,7 +69,7 @@ export class HubDriveDialog extends SurfaceElement {
     this.dialog = element('dialog', { 'aria-labelledby': 'hub-drive-title' });
     this.dialog.addEventListener('close', () => { if (!this.running) this.reset(); });
     this.shadowRoot.append(this.dialog);
-    this.loginPanel = new RegistryLoginPanel({ translate: key => LOGIN_TEXT(key, this.language === 'zh-HK' ? 'yue' : this.language), onSignedIn: value => this.signedIn(value) });
+    this.loginPanel = new RegistryLoginPanel({ translate: key => registryLoginText(key, this.language), onSignedIn: value => this.signedIn(value) });
     this.picker = element('mfe-hub-repository-picker');
     this.picker.addEventListener('hub-repository-choose', event => this.chosen(event.detail));
     this.picker.addEventListener('hub-sign-in-needed', () => { this.stage = this.mode === 'open' ? 'repository' : 'signin'; this.loginPanel.start?.(); this.render(); });
