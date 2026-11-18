@@ -59,9 +59,10 @@ mfe-titlebar .window-brand{display:flex;align-items:center;flex:none;gap:0;paddi
 mfe-titlebar .window-brand>[data-icon]{width:24px;height:24px;border-radius:4px;background:var(--v2-accent);color:var(--v2-on-accent)}
 mfe-titlebar .window-brand>[data-icon] .icon{width:16px;height:16px;color:var(--v2-on-accent)}
 mfe-titlebar .window-brand .brand-name{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
-.drive-switcher{all:unset;display:flex;align-items:center;gap:6px;flex:none;height:28px;max-width:220px;padding:0 8px;border-radius:var(--v2-radius);font-size:13px;font-weight:600;color:var(--v2-text);cursor:pointer;white-space:nowrap;-webkit-app-region:no-drag}
-.drive-switcher:hover{background:var(--v2-hover)}
-.drive-switcher:focus-visible{outline:2px solid var(--v2-accent);outline-offset:-2px}
+.drive-switcher{flex:none;max-width:220px;--md-text-button-container-height:28px;--md-text-button-label-text-weight:600;--md-text-button-label-text-color:var(--v2-text);--md-text-button-leading-space:8px;--md-text-button-trailing-space:8px;min-height:28px;white-space:nowrap;-webkit-app-region:no-drag}
+.drive-switcher-caret{margin-inline-start:6px}
+
+
 .drive-switcher-name{overflow:hidden;text-overflow:ellipsis}
 .drive-switcher-caret{font-size:10px;color:var(--v2-text2)}
 .drive-tabs-host{flex:0 1 auto;align-items:stretch;padding-inline:4px 0;gap:0}
