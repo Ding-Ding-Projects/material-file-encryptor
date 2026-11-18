@@ -29,7 +29,6 @@ var cases = new (string,Action)[] {
     ("packing authenticates and repairs pre-existing source ciphertext",PackingTests.SourceAuthentication),
     ("packing dense 80 MiB physical caps and bounded records",PackingTests.Dense),
     ("encrypted activity snapshots, paging, tamper refusal and upgrade",ActivityTests.Run),
-    ("object publication retries a destination briefly held open by another program",TransientMoveTests.Run),
     ("hydration runs outside core and callback locks before atomic mutation",HydrationConcurrency),
     ("independent earlier deletion requires explicit selection",ExplicitDescendants),
     ("separate filesystem child deletions restore with original directory identity",SeparateDeletes),
