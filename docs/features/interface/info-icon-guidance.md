@@ -18,9 +18,10 @@ An icon never reads the live value of its control, never copies private text suc
 
 The inventories below cover the static markup of each page and the controls that the page code creates at start-up. A coverage check reads each page as text and fails when a capable control has neither an explanation nor a stated reason.
 
-- Desktop app (`src/renderer/index.html`): 89 explanations (1 for groups of related controls), 9 stated exemptions.
+- Desktop app (`src/renderer/index.html`): 90 explanations (1 for groups of related controls), 9 stated exemptions.
 - Split storage page (`src/renderer/features/split-storage/panel.js`): 2 explanations (0 for groups of related controls), 0 stated exemptions.
 - Docker Hub drive dialog (`src/renderer/features/docker-hub-drive/dialog.js`): 4 explanations (0 for groups of related controls), 0 stated exemptions.
+- Share via Docker Hub dialog (`src/renderer/features/share/dialog.js`): 7 explanations (0 for groups of related controls), 0 stated exemptions.
 - Website (`docs/site/index.html`): 22 explanations (0 for groups of related controls), 7 stated exemptions.
 - Browser extension popup (`browser-extension/popup.html`): 15 explanations (1 for groups of related controls), 0 stated exemptions.
 - Browser extension workspace (`browser-extension/options.html`): 140 explanations (3 for groups of related controls), 3 stated exemptions.
@@ -482,6 +483,16 @@ Source checks mount every icon on a document fixture and open it from the keyboa
 - Effects: Only the path text is copied. The file and its contents stay encrypted.
 - Default: Not invoked
 - Example: Example for "Copy path": only the path text is copied. The file and its contents stay encrypted.
+
+### desktop-share-button
+
+**Share via Docker Hub** — `#share-button`
+
+- Kind: button
+- Purpose: Encrypt the selected file with a new key, upload it to your public Docker Hub share repository and get a command that opens it.
+- Effects: Anyone with the command can open the file, so send it privately. The recipient needs this app but no Docker Hub account, and you can revoke the share later.
+- Default: Not invoked
+- Example: Example for "Share via Docker Hub": anyone with the command can open the file, so send it privately. The recipient needs this app but no Docker Hub account, and you can revoke the share later.
 
 ### desktop-backup-now-button
 
@@ -1078,6 +1089,78 @@ Source checks mount every icon on a document fixture and open it from the keyboa
 - Effects: The restored storage folder is created inside the folder you choose. The local cache stays in the app's own data area.
 - Default: Not invoked
 - Example: Example for "Advanced: choose folder": the restored storage folder is created inside the folder you choose. The local cache stays in the app's own data area.
+
+## Share via Docker Hub dialog
+
+### share-share-passphrase-switch
+
+**Also require a passphrase** — `#share-passphrase-switch`
+
+- Kind: toggle
+- Purpose: Adds a passphrase that is needed together with the share command to open the file.
+- Effects: When it is on, the command carries a key wrapped with your passphrase, so someone who only sees the command cannot open the file. Send the passphrase another way.
+- Default: Off
+- Example: Example for "Also require a passphrase": when it is on, the command carries a key wrapped with your passphrase, so someone who only sees the command cannot open the file. Send the passphrase another way.
+
+### share-share-passphrase
+
+**Passphrase** — `#share-passphrase`
+
+- Kind: credential
+- Purpose: The passphrase the recipient must type to open this share.
+- Effects: It is stretched with scrypt and never uploaded or stored. A forgotten passphrase cannot be recovered; share the file again instead.
+- Default: Empty
+- Example: Example for "Passphrase": it is stretched with scrypt and never uploaded or stored. A forgotten passphrase cannot be recovered; share the file again instead.
+
+### share-share-passphrase-confirm
+
+**Confirm passphrase** — `#share-passphrase-confirm`
+
+- Kind: credential
+- Purpose: Type the same passphrase again so a typing mistake does not lock the recipient out.
+- Effects: Sharing stays unavailable until both fields match and the passphrase has at least 8 characters.
+- Default: Empty
+- Example: Example for "Confirm passphrase": sharing stays unavailable until both fields match and the passphrase has at least 8 characters.
+
+### share-share-command
+
+**Share command** — `#share-command`
+
+- Kind: text
+- Purpose: The command that downloads and opens the shared file. It includes the key, unless a passphrase was set.
+- Effects: Anyone with this command can open the file, so send it privately. Copy it again later from Shared files, until you revoke the share.
+- Default: Empty
+- Example: Example for "Share command": anyone with this command can open the file, so send it privately. Copy it again later from Shared files, until you revoke the share.
+
+### share-receive-command
+
+**Share command or link** — `#receive-command`
+
+- Kind: text
+- Purpose: Paste the command or link you were sent. A whole command line that contains it also works.
+- Effects: The file is downloaded from Docker Hub without signing in and checked before anything is saved. A command that is damaged or points anywhere but Docker Hub is refused.
+- Default: Empty
+- Example: Example for "Share command or link": the file is downloaded from Docker Hub without signing in and checked before anything is saved. A command that is damaged or points anywhere but Docker Hub is refused.
+
+### share-receive-passphrase
+
+**Passphrase for the share** — `#receive-passphrase`
+
+- Kind: credential
+- Purpose: The passphrase the sender set for this share.
+- Effects: It is used only on this computer to unwrap the key. A wrong passphrase is refused and nothing is downloaded or saved.
+- Default: Empty
+- Example: Example for "Passphrase for the share": it is used only on this computer to unwrap the key. A wrong passphrase is refused and nothing is downloaded or saved.
+
+### share-share-revoke-all
+
+**Revoke all shares** — `#share-revoke-all`
+
+- Kind: button
+- Purpose: Removes every active share from Docker Hub so their commands stop working.
+- Effects: Each removal is confirmed with Docker Hub before its command is forgotten. Copies already downloaded cannot be recalled.
+- Default: Not invoked
+- Example: Example for "Revoke all shares": each removal is confirmed with Docker Hub before its command is forgotten. Copies already downloaded cannot be recalled.
 
 ## Website
 
