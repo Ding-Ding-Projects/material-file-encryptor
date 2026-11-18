@@ -138,7 +138,7 @@ export async function buildDocumentation(root,output,home) {
 // the documentation checkout's moving HEAD.
 export const INTENDED_CAPTURE_UI_SOURCE = '9394b351469d26c795c5ee48d8ebf1c2ddbe6618';
 // A capture refreshed from a later packaged or installed build is admitted by listing its exact source here; every other source is refused.
-export const ADDITIONAL_CAPTURE_UI_SOURCES = Object.freeze(['ca91b0209c3aa0bf0f378f62a60cefc778ef869a', '6ef15e86efc8ed4644e10d74131f7e562e7906f6', '5db936fc36a15530379071db52d88f0b4fb4608e', 'a3593fc45ab9bcc25c28b9e3d90f05dff9758d7f', 'b83449ed712d85ddf6043e8dd5c2777e5554b91c', '4a49919d44628f65e335f82f3321dbd9607bf3e7']);
+export const ADDITIONAL_CAPTURE_UI_SOURCES = Object.freeze(['ca91b0209c3aa0bf0f378f62a60cefc778ef869a', '6ef15e86efc8ed4644e10d74131f7e562e7906f6', '5db936fc36a15530379071db52d88f0b4fb4608e', 'a3593fc45ab9bcc25c28b9e3d90f05dff9758d7f', 'b83449ed712d85ddf6043e8dd5c2777e5554b91c', '4a49919d44628f65e335f82f3321dbd9607bf3e7', 'b694994360801f4858402db3185c23694ceae817', 'fbee1bc9afc3cb471e567f6cdadb12d528de77e6']);
 function canonicalPresentationAttributes(tag){
  const match=tag.match(/^<([a-z][a-z0-9-]*)([\s\S]*?)\/?\s*>$/);if(!match)throw Error('Noncanonical capture presentation tag');
  const attributes={};let rest=match[2];
