@@ -1,5 +1,6 @@
 import {app} from 'electron';
 import {registerExplorerCommand} from './explorer-command.js';
+import {registerShareProtocol} from './share/share-protocol.js';
 import {handleNativeHostSquirrelEvent} from './browser-host-squirrel.js';
 import {runSquirrelLifecycle} from './squirrel-lifecycle.js';
 
@@ -15,6 +16,8 @@ const outcome = process.platform === 'win32'
     exit: code => app.exit(code),
     registerExplorer: executable => registerExplorerCommand(executable),
     removeExplorer: executable => registerExplorerCommand(executable, {remove: true}),
+    registerProtocol: executable => registerShareProtocol(executable),
+    removeProtocol: executable => registerShareProtocol(executable, {remove: true}),
     disableLogin: () => app.setLoginItemSettings({openAtLogin: false, path: process.execPath, args: ['--startup']}),
     nativeHostEvent: details => handleNativeHostSquirrelEvent(details),
   })

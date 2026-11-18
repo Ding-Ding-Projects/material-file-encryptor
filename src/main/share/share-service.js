@@ -33,7 +33,8 @@ export function createShareService({ docker, readSource, store, chooseSaveFile, 
   const receiving = new Map(), incoming = new Map();
   const registryHost = testDestination ? new URL(testDestination.endpoint).host : DOCKER_HUB_REGISTRY_HOST;
   const storage = (repository, authorize) => shareStorage({ repository, authorize, testDestination, maxObjectBytes, ...(storageFactory ? { factory: storageFactory } : {}) });
-  const status = () => active ? { state: active.state, name: active.name, size: active.size } : { state: 'idle' };
+  // The newest link that arrived before the window was ready to listen, so the renderer can pick it up.
+  const status = () => { sweep(); const latest = [...incoming.keys()].at(-1) ?? null; return active ? { state: active.state, name: active.name, size: active.size, incomingId: latest } : { state: 'idle', incomingId: latest }; };
   function sweep() {
     for (const [id, item] of receiving) if (item.expires < now()) { item.key.fill(0); receiving.delete(id); }
     for (const [id, item] of incoming) if (item.expires < now()) incoming.delete(id);
