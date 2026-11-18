@@ -9,10 +9,14 @@ public sealed partial class VaultEngine
     private readonly Dictionary<string, HashSet<string>> encryptedSnapshotParts = [];
     internal Action? EncryptedSnapshotTestPoint { get; set; }
 
-    public Task<EncryptedSnapshot> StageEncryptedSnapshotAsync(CancellationToken cancellationToken = default) => StageEncryptedSnapshotAsync(null, cancellationToken);
+    public Task<EncryptedSnapshot> StageEncryptedSnapshotAsync(CancellationToken cancellationToken = default) => StageEncryptedSnapshotAsync(null, false, cancellationToken);
+    public Task<EncryptedSnapshot> StageEncryptedSnapshotAsync(Action<int,int,long,long>? progress, CancellationToken cancellationToken = default) => StageEncryptedSnapshotAsync(progress, false, cancellationToken);
 
     /// <summary>Reports copied parts and bytes as (partsDone, partsTotal, bytesDone, bytesTotal). Totals cover parts already present locally; a part hydrated during staging adds its size when copied.</summary>
-    public async Task<EncryptedSnapshot> StageEncryptedSnapshotAsync(Action<int,int,long,long>? progress, CancellationToken cancellationToken = default)
+    /// <param name="leaveSourceParts">Parts already in the storage folder are listed in <see cref="EncryptedSnapshot.SourceParts"/> instead of
+    /// being copied. The storage folder never deletes a part, so a caller can read them in place; only parts that exist
+    /// solely in the local cache are staged. This keeps temporary disk use to the data that is not yet in storage.</param>
+    public async Task<EncryptedSnapshot> StageEncryptedSnapshotAsync(Action<int,int,long,long>? progress, bool leaveSourceParts, CancellationToken cancellationToken = default)
     {
         using var lifetime = AcquireStorageOperation();
         string identity = Guid.NewGuid().ToString("N");
@@ -47,6 +51,13 @@ public sealed partial class VaultEngine
         try
         {
             long bytesTotal=0,bytesDone=0;int partsDone=0;
+            var inSource=new List<string>();
+            if(leaveSourceParts)
+            {
+                VaultCrypto.ValidatePhysicalPath(Path.Combine(source,"parts"));
+                foreach(var part in parts){cancellationToken.ThrowIfCancellationRequested();if(File.Exists(ObjectPath(source,"parts",part)))inSource.Add(part);}
+                var resident=inSource.ToHashSet(StringComparer.Ordinal);parts=parts.Where(part=>!resident.Contains(part)).ToArray();
+            }
             foreach (var part in parts)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -103,7 +114,7 @@ public sealed partial class VaultEngine
                 progress?.Invoke(++partsDone,parts.Length,bytesDone,bytesTotal);
             }
             cancellationToken.ThrowIfCancellationRequested();
-            return new EncryptedSnapshot(root);
+            return new EncryptedSnapshot(root, leaveSourceParts ? source : null, inSource.Select(part => "parts/" + part + ".mfe").ToArray());
         }
         catch
         {
@@ -117,8 +128,11 @@ public sealed partial class VaultEngine
     {
         private readonly object cleanupGate = new();
         private bool closed;
-        internal EncryptedSnapshot(string storageRoot) { StorageRoot=storageRoot; }
+        internal EncryptedSnapshot(string storageRoot, string? sourceRoot = null, IReadOnlyList<string>? sourceParts = null) { StorageRoot=storageRoot; SourceRoot=sourceRoot; SourceParts=sourceParts ?? Array.Empty<string>(); }
         public string StorageRoot { get; }
+        /// <summary>The storage folder holding <see cref="SourceParts"/>, or null when every part was staged.</summary>
+        public string? SourceRoot { get; }
+        public IReadOnlyList<string> SourceParts { get; }
         public void Dispose()
         {
             lock (cleanupGate)

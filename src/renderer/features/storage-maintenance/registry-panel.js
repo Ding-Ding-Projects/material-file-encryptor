@@ -162,7 +162,14 @@ export class RegistryStoragePanel extends SurfaceElement {
   async sync() {
     const current = this.synchronize(); if (!current || this.buttons.sync.disabled) return;
     await this.perform('syncing', async (row, id, source) => {
-      const result = await this.services.syncRegistryStorage();
+      let result;
+      try { result = await this.services.syncRegistryStorage(); }
+      catch (error) {
+        // A backup that paused because the drive was used is not a failure; it resumes by itself.
+        if (!/Backup paused while you used the drive/.test(String(error?.message || ''))) throw error;
+        if (this.isCurrent(row)) { row.message = 'paused'; await this.readStatus(row, id, source); }
+        return;
+      }
       if (!this.isCurrent(row)) return;
       row.message = result?.verified === true && DIGEST.test(result.digest) ? 'verified' : 'unverified';
       row.snapshots = null; row.selected = ''; await this.readStatus(row, id, source);
@@ -241,7 +248,7 @@ export class RegistryStoragePanel extends SurfaceElement {
     this.recoveryText.textContent=this.recoveryText.hidden?'':`${this.t(recovery.complete===true?'recoveryComplete':'recoveryIncomplete')}\n${recovery.destination}`;
     this.deferredText.hidden=status?.lastResult?.replayDeferred!==true;this.deferredText.textContent=this.t('replayDeferred');
     // A running operation is described by its step below, so a status refresh never hides it behind "Reading saved status".
-    const message = !available ? 'unavailable' : current?.cancelling ? 'cancelling' : status?.state === 'native-release-unverified' ? 'releaseUnverified' : busy && status.state !== 'restoring' ? 'syncing' : current?.pending || current?.message || (!status ? 'unverified' : !status.configured ? 'unconfigured' : status.state === 'incomplete' ? 'unverified' : busy ? 'syncing' : 'idle');
+    const message = !available ? 'unavailable' : current?.cancelling ? 'cancelling' : status?.state === 'native-release-unverified' ? 'releaseUnverified' : status?.state === 'paused' && !current?.pending ? 'paused' : busy && status.state !== 'restoring' ? 'syncing' : current?.pending || current?.message || (!status ? 'unverified' : !status.configured ? 'unconfigured' : status.state === 'incomplete' ? 'unverified' : busy ? 'syncing' : 'idle');
     this.statusText.textContent = this.t(message);
     this.error.textContent = current?.error ? this.t(current.error) : status?.lastError ? this.t('error') : ''; this.error.hidden = !this.error.textContent;
     this.restoredLocation.textContent = current?.restoredDestination || ''; this.restoreResult.hidden = !current?.restoredDestination;

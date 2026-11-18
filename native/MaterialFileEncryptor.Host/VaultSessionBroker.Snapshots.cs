@@ -10,12 +10,21 @@ internal sealed partial class VaultSessionBroker
             throw new InvalidOperationException("Lock the vault and wait for synchronization to stop before preparing an image.");
         string? suppliedSource=String(args,"storageDir");
         session.Controller.ValidateSnapshotSource(suppliedSource);
+        bool leaveSourceParts=Flag(args,"leaveSourceParts");
+        if(Flag(args,"admissionOnly") && session.Controller.HasOpenSnapshotSource)
+        {
+            // An open drive already owns its folder. Admission only marks the lease; nothing is staged and other
+            // requests keep working, so writing downloaded objects never holds the drive.
+            if(suppliedSource is null)throw new ArgumentException("Select encrypted storage.");
+            session.SnapshotId=Guid.NewGuid().ToString("N");session.AdmissionLease=true;
+            return Task.FromResult<object?>(new {leaseId=session.SnapshotId,storageDir=Path.GetFullPath(suppliedSource),storageOnly=true,sourceMode="unlocked-admission"});
+        }
         if(session.Controller.HasOpenSnapshotSource)
         {
             ++session.Pending;session.Transition=true;session.Preparing=true;session.SnapshotPreparing=true;
             session.SnapshotCancellation=new CancellationTokenSource();
             ResetStagingProgress(session);
-            return AcquireStagedSnapshotAsync(session,session.SnapshotCancellation.Token);
+            return AcquireStagedSnapshotAsync(session,session.SnapshotCancellation.Token,leaveSourceParts);
         }
         if(!session.Controller.IsSessionReleased())throw new InvalidOperationException("The vault is still releasing native work.");
         string source = session.Controller.SnapshotSource(suppliedSource);
@@ -23,6 +32,7 @@ internal sealed partial class VaultSessionBroker
         session.SnapshotCancellation=new CancellationTokenSource();
         return AcquireSnapshotAsync(session, source,session.SnapshotCancellation.Token);
     }
+    private static bool Flag(JsonElement args,string key)=>args.ValueKind==JsonValueKind.Object&&args.TryGetProperty(key,out var value)&&value.ValueKind==JsonValueKind.True;
     private static void ResetStagingProgress(Session session)
     {
         Interlocked.Exchange(ref session.StagingPartsDone,0);Interlocked.Exchange(ref session.StagingPartsTotal,0);
@@ -56,7 +66,7 @@ internal sealed partial class VaultSessionBroker
             --session.Pending;session.Transition=false;session.Preparing=false;session.SnapshotPreparing=false;Reconcile(session);
         }
     }
-    private async Task<object?> AcquireStagedSnapshotAsync(Session session,CancellationToken cancellationToken)
+    private async Task<object?> AcquireStagedSnapshotAsync(Session session,CancellationToken cancellationToken,bool leaveSourceParts=false)
     {
         MaterialFileEncryptor.Core.VaultEngine.EncryptedSnapshot? staged=null;
         try
@@ -66,14 +76,15 @@ internal sealed partial class VaultSessionBroker
             {
                 Interlocked.Exchange(ref session.StagingPartsTotal,partsTotal);Interlocked.Exchange(ref session.StagingBytesTotal,bytesTotal);
                 Interlocked.Exchange(ref session.StagingPartsDone,partsDone);Interlocked.Exchange(ref session.StagingBytesDone,bytesDone);
-            })).ConfigureAwait(false);
+            },leaveSourceParts)).ConfigureAwait(false);
             staged=result.Snapshot;
             lock(gate)
             {
                 if(closing)throw new InvalidOperationException("Vault sessions are shutting down.");
                 cancellationToken.ThrowIfCancellationRequested();
                 session.StagedSnapshot=staged;session.SnapshotId=Guid.NewGuid().ToString("N");staged=null;
-                return new {leaseId=session.SnapshotId,storageDir=session.StagedSnapshot.StorageRoot,storageOnly=false,sourceMode=result.Mode};
+                return new {leaseId=session.SnapshotId,storageDir=session.StagedSnapshot.StorageRoot,storageOnly=false,sourceMode=result.Mode,
+                    sourceRoot=session.StagedSnapshot.SourceRoot,sourceParts=session.StagedSnapshot.SourceParts};
             }
         }
         finally
@@ -112,7 +123,7 @@ internal sealed partial class VaultSessionBroker
         string supplied = String(args, "leaseId") ?? throw new ArgumentException("Snapshot lease identity is required.");
         if (session.SnapshotId != supplied) throw new InvalidOperationException("The snapshot lease no longer exists.");
         session.StagedSnapshot?.Dispose();session.StagedSnapshot=null;
-        session.SnapshotId = null; Reconcile(session);
+        session.SnapshotId = null; session.AdmissionLease=false; Reconcile(session);
         return new { released = true };
     }
 }

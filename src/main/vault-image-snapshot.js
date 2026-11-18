@@ -336,3 +336,14 @@ export async function* readVaultImageSnapshotFile(directory, file, { signal } = 
     if (stable(await fs.lstat(filename, { bigint: true })) !== row.identity) throw Error(PREPARED_CHANGED);
   } finally { await handle.close(); }
 }
+
+// Building blocks for an incremental registry snapshot that references objects in place instead of copying them.
+export const inventoryVaultStorage = (root, signal) => inventory(root, DEFAULT_LIMITS, signal);
+export async function describeStorageObject(root, relative) {
+  if (!validPath(relative) || relative === 'vault.json') throw Error('Unsupported encrypted vault object.');
+  const filename = path.join(root, relative); await physical(filename);
+  const stat = await fs.lstat(filename, { bigint: true });
+  if (!stat.isFile() || stat.nlink !== 1n || stat.size > BigInt(objectLimit(relative, DEFAULT_LIMITS))) throw Error('Unsupported encrypted vault object.');
+  return { path: relative, bytes: Number(stat.size), identity: stable(stat) };
+}
+export { openRow as openStorageObject, inspectRecords as inspectStorageObject, hashHandle as hashStorageObject, checkContentAddress, physical as storagePath };

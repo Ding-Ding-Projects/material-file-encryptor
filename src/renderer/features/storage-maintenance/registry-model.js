@@ -26,7 +26,7 @@ export function registryConfiguration(draft) {
   return { repository: repository.replace(/^docker\.io\//, ''), visibility:draft.visibility, schedule: { enabled: Boolean(draft.enabled), mode: draft.mode, intervalMinutes, days, times, timeZone, missed: draft.missed, retryMinutes, background: Boolean(draft.background) } };
 }
 export function registryBusy(status) {
-  return Boolean(status && !['idle', 'ready', 'completed', 'verified', 'incomplete', 'cancelled', 'failed', 'error', 'unverified', 'disabled', 'unconfigured'].includes(status.state));
+  return Boolean(status && !['idle', 'ready', 'completed', 'verified', 'incomplete', 'cancelled', 'paused', 'failed', 'error', 'unverified', 'disabled', 'unconfigured'].includes(status.state));
 }
 export function registrySnapshots(value) {
   if (!Array.isArray(value) || value.length > 1000) throw Error('invalidSnapshots');

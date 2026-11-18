@@ -109,6 +109,15 @@ export function createRegistryStorage({ destination, authorize, fetcher = fetch,
     if (reported && reported !== item.digest) throw fail();
     return item;
   }
+  /** True only when the registry confirms a blob with exactly this digest and size. Any doubt means upload it. */
+  async function hasBlob(digest, size, signal) {
+    if (!DIGEST.test(digest)) throw fail();
+    try {
+      const response = await request(`${base}/blobs/${digest}`, { method: 'HEAD', allowNotFound: true }, signal);
+      await response.body?.cancel();
+      return response.status === 200 && Number(response.headers.get('content-length')) === size && (response.headers.get('docker-content-digest') || digest) === digest;
+    } catch (error) { if (signal?.aborted) throw error; return false; }
+  }
   async function getBlob(item, type, signal) {
     if (!validDescriptor(item, type, maxObjectBytes)) throw fail();
     const response = await blobResponse(item.digest, signal);
@@ -162,7 +171,9 @@ export function createRegistryStorage({ destination, authorize, fetcher = fetch,
   }
   return {
     target,
-    async publish({ vaultId, deviceId, parents = [], files, readFile, driveName, onVerifying = null }, signal) {
+    // known: layer digests that snapshots in this repository already reference; they are linked, never uploaded again.
+    // Any other layer the registry already has (an earlier run that stopped part way) is skipped after a HEAD check.
+    async publish({ vaultId, deviceId, parents = [], files, readFile, driveName, onVerifying = null, known = new Set(), onSkipped = null }, signal) {
       signal = signal ? AbortSignal.any([signal, AbortSignal.timeout(3600000)]) : AbortSignal.timeout(3600000);
       // Capture caller-owned metadata before asynchronous authorization or upload.
       const frozen = structuredClone({ vaultId, deviceId, parents, files });
@@ -175,8 +186,17 @@ export function createRegistryStorage({ destination, authorize, fetcher = fetch,
       await authorization(signal, true);
       for (const file of frozen.files) {
         if (!OBJECT.test(file.path) || !Number.isSafeInteger(file.bytes) || file.bytes < 0 || file.bytes > maxObjectBytes || !/^[a-f0-9]{64}$/.test(file.sha256)) throw fail();
+        const digest = `sha256:${file.sha256}`;
+        if (known.has(digest)) { config.files.push({ path: file.path, mediaType: LAYER, digest, size: file.bytes }); continue; }
+        // Every new object is read and checked before any network request about it.
         const bytes = await readFile(file.path, signal);
-        if (!(bytes instanceof Uint8Array) || bytes.length !== file.bytes || sha(bytes) !== `sha256:${file.sha256}`) throw fail();
+        if (!(bytes instanceof Uint8Array) || bytes.length !== file.bytes || sha(bytes) !== digest) throw fail();
+        // Large layers left by a run that stopped part way are not sent twice; small ones are cheaper to send.
+        if (file.bytes >= 1024 * 1024 && await hasBlob(digest, file.bytes, signal)) {
+          config.files.push({ path: file.path, mediaType: LAYER, digest, size: file.bytes });
+          try { onSkipped?.(file); } catch { /* Progress never changes publication. */ }
+          continue;
+        }
         config.files.push({ path: file.path, ...await putBlob(bytes, LAYER, signal) });
       }
       validateRegistrySnapshot(config);
@@ -197,7 +217,8 @@ export function createRegistryStorage({ destination, authorize, fetcher = fetch,
       return { digest, tag, repository: target.repository, verified: true };
     },
     // With a vault id, only that drive's snapshots are read, so one repository can hold several drives.
-    async list(signal, { vaultId } = {}) {
+    // includeFiles keeps each revision's object list so a caller can skip what it already has or what is already uploaded.
+    async list(signal, { vaultId, includeFiles = false } = {}) {
       if (vaultId !== undefined && !/^[a-f0-9]{32}$/.test(vaultId)) throw fail();
       const prefix = 'mfe-';
       signal = signal ? AbortSignal.any([signal, AbortSignal.timeout(3600000)]) : AbortSignal.timeout(3600000);
@@ -226,7 +247,7 @@ export function createRegistryStorage({ destination, authorize, fetcher = fetch,
         if (metadataBytes > 64 * 1024 ** 2) throw Error('Snapshot catalogue exceeds the metadata limit.');
         if (vaultId && revision.snapshot.vaultId !== vaultId) { foreignDevices.add(tag.slice(4, 36)); continue; }
         const { files, ...summary } = revision.snapshot;
-        revisions.push({ digest: revision.digest, snapshot: { ...summary, fileCount: files.length }, tag });
+        revisions.push({ digest: revision.digest, snapshot: { ...summary, fileCount: files.length }, tag, ...(includeFiles ? { files: files.map(({ path, digest, size }) => ({ path, digest, size })) } : {}) });
       }
       return revisions;
     },
@@ -240,11 +261,12 @@ export function createRegistryStorage({ destination, authorize, fetcher = fetch,
       if (!file) throw fail();
       return getBlob(file, LAYER, signal);
     },
-    async download(digest, writeFile, signal) {
+    // only: a set of object paths; the rest of the revision is not fetched.
+    async download(digest, writeFile, signal, { only = null } = {}) {
       signal = signal ? AbortSignal.any([signal, AbortSignal.timeout(3600000)]) : AbortSignal.timeout(3600000);
       await authorization(signal, true);
       const revision = await readRevision(digest, signal);
-      for (const file of revision.snapshot.files) await writeFile(file.path, await getBlob(file, LAYER, signal), signal);
+      for (const file of revision.snapshot.files) if (!only || only.has(file.path)) await writeFile(file.path, await getBlob(file, LAYER, signal), signal);
       return revision;
     },
   };

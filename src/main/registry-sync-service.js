@@ -3,7 +3,8 @@ import path from 'node:path';
 import { constants } from 'node:fs';
 import { createHash, randomUUID } from 'node:crypto';
 import { createRegistryStorage, registryDestination } from './registry-storage.js';
-import { createVaultImageSnapshot, readVaultImageSnapshotFile } from './vault-image-snapshot.js';
+import { createVaultImageSnapshot, inspectVaultConfiguration, describeStorageObject, openStorageObject, inspectStorageObject, checkContentAddress } from './vault-image-snapshot.js';
+import { planRegistrySnapshot } from './registry-snapshot-plan.js';
 import { validateRegistrySchedule, nextRegistryRun, registryOccurrence } from './registry-schedule.js';
 
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
@@ -15,6 +16,7 @@ const PHASES = { discovering: 'checking the destination', 'waiting-drive': 'wait
 const STALLED = 'The drive stopped making progress while preparing the snapshot. Nothing was uploaded.';
 const RELEASE_TIMEOUT = 'The drive did not confirm that it was released in time.';
 const BUSY = 'The drive stayed busy with other work. Retry when it has finished.';
+export const PAUSED = 'Backup paused while you used the drive; it will resume.';
 const SAFE_REASONS = new Set(['The destination contains a different vault.', 'Snapshot catalogue exceeds this client limit. Narrow the repository before retrying.', 'Snapshot catalogue exceeds the metadata limit.', 'Native synchronization did not settle.', 'Native synchronization needs attention.', STALLED, RELEASE_TIMEOUT, BUSY]);
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms).unref?.());
 /** Rejects as soon as the signal aborts. The underlying native request keeps running and is settled by its owner. */
@@ -55,7 +57,7 @@ export async function createFile(root, relative, bytes) {
 }
 
 /** Main-process orchestration. No registry endpoint or filesystem path is accepted from a renderer. */
-export function createRegistrySyncService({ root, contexts, nativeRequest, authorize, chooseRestore, backgroundRegistration = async () => {}, storageFactory = createRegistryStorage, testDestination = null, now = Date.now, leaseRetryMs = 60000, nativeStallMs = 5 * 60000, releaseTimeoutMs = 30000, lateLeaseWaitMs = 20000, progressPollMs = 500, onChanged = () => {} }) {
+export function createRegistrySyncService({ root, contexts, nativeRequest, authorize, chooseRestore, backgroundRegistration = async () => {}, storageFactory = createRegistryStorage, testDestination = null, now = Date.now, leaseRetryMs = 60000, nativeStallMs = 10 * 60000, releaseTimeoutMs = 30000, yieldWaitMs = 30000, resumeDelayMs = 60000, lateLeaseWaitMs = 20000, progressPollMs = 500, onChanged = () => {} }) {
   let rows = {}, loaded = false, loading = null, configuring = false, ticking = false, saving = Promise.resolve(), active = null;
   const file = path.join(root, 'registry-sync.json');
   async function readState() {
@@ -70,7 +72,8 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
         // Destinations saved before visibility existed were private; only new destinations default to public.
         row.visibility = registryDestination({ repository: row.repository, visibility: row.visibility ?? 'private' }).visibility; validateRegistrySchedule(row.schedule);
         if (row.nextDue !== null && !Number.isFinite(row.nextDue) || row.retryOccurrence !== undefined && !Number.isFinite(row.retryOccurrence)) throw Error(ERROR);
-        row.state = row.interrupted ? 'incomplete' : 'idle'; row.lastError = row.interrupted ? ERROR : row.lastError;
+        // A backup paused for the drive keeps its pause across a restart, so it still resumes.
+        row.state = row.interrupted ? 'incomplete' : Number.isFinite(row.resumeAt) ? 'paused' : 'idle'; row.lastError = row.interrupted ? ERROR : row.lastError;
         row.progress = null;
       }
       rows = value.rows;
@@ -105,17 +108,19 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
     return structuredClone({ activeOperation: active ? { sessionId: active.id, state: rows[active.key]?.state || 'incomplete' } : null, sessionId: id, source: current.storageDir, configured: Boolean(row), configuration: row ? { repository: row.repository, visibility: row.visibility, schedule: row.schedule } : null,
       state: row?.state || 'unconfigured', progress: row?.progress || null, nextDue: row?.nextDue || null, lastResult: row?.lastResult || null, restoreRecovery: row?.restoreRecovery || null, lastError: row?.lastError || null });
   }
-  async function exclusive(id, action, requireSource = true) {
+  async function exclusive(id, action, requireSource = true, kind = 'other') {
     await load(); const current = context(id, requireSource), row = rows[current.key]; if (!row) throw Error('Save a registry destination first.');
     if (active || configuring) throw Error('Wait for the current registry operation.');
-    const controller = new AbortController(); active = { id, controller, key: current.key, leases: new Set(), late: new Set(), settled: false, failure: null };
+    const controller = new AbortController(); active = { id, kind, controller, key: current.key, leases: new Set(), late: new Set(), settled: false, failure: null, yielded: false };
     const operation = active;
     const timer = setTimeout(() => controller.abort(), 3600000); timer.unref();
     const cancelNative = () => { void nativeRequest('cancelSnapshot', {}, id).catch(() => {}); };
     controller.signal.addEventListener('abort', cancelNative, { once: true });
-    row.lastError = null; row.interrupted = true; row.progress = null; row.operationStartedAt = now();
+    row.lastError = null; row.interrupted = true; row.progress = null; row.operationStartedAt = now(); delete row.resumeAt;
     try { await save(); return await action(current, row, controller.signal); }
     catch (error) {
+      // Using the drive pauses a backup at a safe point instead of being refused; it resumes on its own.
+      if (operation.yielded) { row.state = 'paused'; row.resumeAt = now() + resumeDelayMs; throw Error(PAUSED); }
       const failedStep = PHASES[row.state];
       // A stall or a timeout aborts the work like Cancel does, but it is reported as a failure with its plain reason.
       const cancelled = controller.signal.aborted && !operation.failure;
@@ -171,7 +176,7 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
     // The loop checks the flag after every wait, so it never writes progress for a later step.
     return () => { stopped = true; };
   }
-  async function acquire(id, source, purpose = 'admission') {
+  async function acquire(id, source, purpose = 'admission', extra = {}) {
     const operation = active, signal = operation.controller.signal, row = rows[operation.key];
     signal.throwIfAborted();
     step(row, purpose === 'snapshot' ? 'preparing' : 'waiting-drive', { phase: purpose === 'snapshot' ? 'staging' : 'waiting-drive' });
@@ -183,7 +188,7 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
       // for a moment, so a busy refusal is retried briefly instead of failing the whole backup.
       const deadline = Date.now() + leaseRetryMs;
       for (;;) {
-        const request = nativeRequest('beginSnapshot', { storageDir: source }, id);
+        const request = nativeRequest('beginSnapshot', { storageDir: source, ...(purpose === 'admission' ? { admissionOnly: true } : {}), ...extra }, id);
         try { lease = await abortable(request, signal); break; }
         catch (error) {
           if (signal.aborted) {
@@ -221,21 +226,47 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
     if (result?.released !== true) throw Error('Native snapshot release was not confirmed.');
     operation.leases.delete(lease.leaseId);
   }
-  async function stageRevision(client, digest, signal, row) {
+  /** True when this drive already holds the registry object: same path and size, and the same bytes unless the name is its own hash. */
+  async function presentLocally(source, file) {
+    const filename = path.join(source, file.path);
+    let stat; try { stat = await fs.lstat(filename); } catch (error) { if (error.code === 'ENOENT') return false; throw error; }
+    if (!stat.isFile() || stat.isSymbolicLink() || stat.size !== file.size) return false;
+    // A part named by its own content hash is identical whenever the name and size match.
+    if (/^parts\/[a-f0-9]{64}\.mfe$/.test(file.path)) return file.digest === `sha256:${file.path.slice(6, 70)}`;
+    await physical(filename);
+    return `sha256:${hash(await fs.readFile(filename))}` === file.digest;
+  }
+  /** Downloads one revision (or only the listed objects of it) into this service's staging and checks every object. */
+  async function stageRevision(client, digest, signal, row, only = null) {
     const staging = await fs.mkdtemp(path.join(root, 'incoming-'));
     try {
       const revision = await client.download(digest, async (name, bytes) => {
         signal.throwIfAborted(); await createFile(staging, name, bytes);
-        if (row) { row.progress.completedFiles++; row.progress.completedBytes += bytes.length; }
-      }, signal);
-      // Structural and content-address verification precedes activation. Normal unlock authenticates the vault key.
-      const verified = await createVaultImageSnapshot({ source: staging, workRoot: path.join(root, 'validation'), signal });
-      try { if (verified.manifest.vaultId !== revision.snapshot.vaultId) throw Error(ERROR); }
-      finally { await fs.rm(verified.directory, { recursive: true }); }
-      return { staging, revision };
-    } catch (error) { await fs.rm(staging, { recursive: true }); throw error; }
+        if (row?.progress) { row.progress.completedFiles++; row.progress.completedBytes += bytes.length; }
+      }, signal, only ? { only } : undefined);
+      const files = only ? revision.snapshot.files.filter(file => only.has(file.path)) : revision.snapshot.files;
+      if (!only) {
+        // Structural and content-address verification precedes activation. Normal unlock authenticates the vault key.
+        const verified = await createVaultImageSnapshot({ source: staging, workRoot: path.join(root, 'validation'), signal });
+        try { if (verified.manifest.vaultId !== revision.snapshot.vaultId) throw Error(ERROR); }
+        finally { await fs.rm(verified.directory, { recursive: true }); }
+      } else {
+        // A partial download is checked object by object: structure, content address and, for vault.json, the vault identity.
+        for (const file of files) {
+          signal.throwIfAborted();
+          if (file.path === 'vault.json') {
+            if (inspectVaultConfiguration(await fs.readFile(path.join(staging, 'vault.json'))).vaultId !== revision.snapshot.vaultId) throw Error(ERROR);
+            continue;
+          }
+          const described = await describeStorageObject(staging, file.path), handle = await openStorageObject(staging, described);
+          try { await inspectStorageObject(handle, file.path, described.bytes, signal); } finally { await handle.close(); }
+          checkContentAddress(file.path, file.digest.slice(7));
+        }
+      }
+      return { staging, revision, files };
+    } catch (error) { await fs.rm(staging, { recursive: true, force: true }); throw error; }
   }
-  async function mergeObjects(staging, source, files, signal) {
+  async function mergeObjects(staging, source, files, signal, row = null) {
     await physical(source);
     // Objects are append-only. A differing object is a collision, never an overwrite.
     // Transaction metadata is copied last so incomplete transfers remain undiscoverable by replay.
@@ -249,6 +280,7 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
         const existing = path.join(source, entry.path); await physical(existing);
         const stat = await fs.lstat(existing); if (!stat.isFile() || stat.nlink !== 1 || stat.size !== incoming.length || hash(await fs.readFile(existing)) !== hash(incoming)) throw Error('Immutable encrypted object collision.');
       }
+      if (row?.progress) { row.progress.completedFiles++; row.progress.completedBytes += incoming.length; }
     }
   }
   const service = {
@@ -291,61 +323,94 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
         const client = storage(row); step(row, 'discovering', { totalFiles: null }); let downloaded = 0;
         const ownVaultId = JSON.parse(await fs.readFile(path.join(current.storageDir, 'vault.json'), 'utf8')).VaultId;
         // Other drives may share this repository; only this drive's snapshots take part in its synchronization.
-        const revisions = await client.list(signal, { vaultId: ownVaultId });
-        const totalFiles = revisions.reduce((n, revision) => n + revision.snapshot.fileCount, 0);
-        // Native admission proves this session owns the selected root before any source write.
-        const admission = await acquire(id, current.storageDir, 'admission');
-        try {
-          signal.throwIfAborted();
-          step(row, 'downloading', { totalFiles });
-          const vault = JSON.parse(await fs.readFile(path.join(current.storageDir, 'vault.json'), 'utf8'));
-          for (const item of revisions) {
-            if (item.snapshot.vaultId !== vault.VaultId) throw Error('The destination contains a different vault.');
-            const staged = await stageRevision(client, item.digest, signal, row);
-            try { await mergeObjects(staged.staging, current.storageDir, staged.revision.snapshot.files, signal); downloaded++; }
-            finally { await fs.rm(staged.staging, { recursive: true }); }
-          }
-        } finally { await release(id, admission); }
-        // The existing native replay owns concurrent file conflict preservation and live handles.
-        signal.throwIfAborted();
-        step(row, 'applying', { unit: 'commits', completedFiles: null });
-        let native = await abortable(nativeRequest('sync', {}, id), signal);
-        const nativeDeadline = now() + 30 * 60000;
-        while (native?.sync?.running) {
-          signal.throwIfAborted(); if (now() >= nativeDeadline) throw Error('Native synchronization did not settle.');
-          // Pending work counts stand in for a bar: they show the replay is moving even without a total.
-          if (Number.isSafeInteger(native.sync.pendingCommits)) row.progress.pendingCommits = native.sync.pendingCommits;
-          if (Number.isSafeInteger(native.sync.pendingLocalFrames)) row.progress.pendingFrames = native.sync.pendingLocalFrames;
-          await abortable(sleep(200), signal);
-          native = await abortable(nativeRequest('statusSummary', {}, id), signal);
+        const revisions = await client.list(signal, { vaultId: ownVaultId, includeFiles: true });
+        // Every object any of this drive's snapshots holds is already on the registry and never uploaded again.
+        const known = new Map();
+        for (const item of revisions) for (const file of item.files || []) known.set(file.path, { size: file.size, digest: file.digest });
+        // Revisions already merged here, and objects this drive already has, cost nothing to download again.
+        const merged = new Set(Array.isArray(row.merged) ? row.merged : []);
+        const wanted = [];
+        for (const item of revisions) {
+          if (item.snapshot.vaultId !== ownVaultId) throw Error('The destination contains a different vault.');
+          if (merged.has(item.digest)) continue;
+          if (!Array.isArray(item.files)) { wanted.push({ item, missing: null }); continue; }
+          const missing = [];
+          for (const file of item.files) { signal.throwIfAborted(); if (!await presentLocally(current.storageDir, file)) missing.push(file); }
+          if (missing.length) wanted.push({ item, missing }); else merged.add(item.digest);
         }
-        if (native?.locked !== true && native?.sync?.error) throw Error('Native synchronization needs attention.');
-        const replayDeferred = native?.locked === true;
-        let lease, snapshot;
+        row.merged = [...merged].slice(-500);
+        if (wanted.length) {
+          step(row, 'downloading', { totalFiles: wanted.reduce((n, entry) => n + (entry.missing ? entry.missing.length : entry.item.snapshot.fileCount), 0),
+            totalBytes: wanted.every(entry => entry.missing) ? wanted.reduce((n, entry) => n + entry.missing.reduce((m, file) => m + file.size, 0), 0) : null });
+          // Downloads land in this service's own staging first; the drive is only held while verified objects are written.
+          const staged = [];
+          try {
+            for (const entry of wanted) staged.push(await stageRevision(client, entry.item.digest, signal, row, entry.missing ? new Set(entry.missing.map(file => file.path)) : null));
+            const admission = await acquire(id, current.storageDir, 'admission');
+            try {
+              signal.throwIfAborted();
+              step(row, 'downloading', { phase: 'merging', totalFiles: staged.reduce((n, entry) => n + entry.files.length, 0) });
+              for (const entry of staged) { await mergeObjects(entry.staging, current.storageDir, entry.files, signal, row); downloaded++; merged.add(entry.revision.digest); }
+            } finally { await release(id, admission); }
+          } finally { for (const entry of staged) await fs.rm(entry.staging, { recursive: true, force: true }); }
+          row.merged = [...merged].slice(-500);
+          // The existing native replay owns concurrent file conflict preservation and live handles.
+          signal.throwIfAborted();
+          step(row, 'applying', { unit: 'commits', completedFiles: null });
+          let native = await abortable(nativeRequest('sync', {}, id), signal);
+          const nativeDeadline = now() + 30 * 60000;
+          while (native?.sync?.running) {
+            signal.throwIfAborted(); if (now() >= nativeDeadline) throw Error('Native synchronization did not settle.');
+            // Pending work counts stand in for a bar: they show the replay is moving even without a total.
+            if (Number.isSafeInteger(native.sync.pendingCommits)) row.progress.pendingCommits = native.sync.pendingCommits;
+            await abortable(sleep(200), signal);
+            native = await abortable(nativeRequest('statusSummary', {}, id), signal);
+          }
+          if (native?.locked !== true && native?.sync?.error) throw Error('Native synchronization needs attention.');
+          row.replayDeferred = native?.locked === true;
+        } else row.replayDeferred = false;
+        const replayDeferred = row.replayDeferred === true;
+        let lease, plan;
         try {
           try {
-            lease = await acquire(id, current.storageDir, 'snapshot');
+            // The drive copies only parts that exist solely in its local cache; parts already in its storage folder
+            // are listed instead, so temporary disk use stays at the data that is not yet in storage.
+            lease = await acquire(id, current.storageDir, 'snapshot', { leaveSourceParts: true });
             signal.throwIfAborted();
-            step(row, 'preparing', { phase: 'copying', unit: 'files' });
-            snapshot = await createVaultImageSnapshot({ source: lease.storageDir, workRoot: path.join(root, 'snapshots'), signal,
+            step(row, 'preparing', { phase: 'checking', unit: 'files' });
+            plan = await planRegistrySnapshot({ stagedRoot: lease.storageDir, stagedIsTemporary: lease.storageOnly !== true,
+              sourceRoot: typeof lease.sourceRoot === 'string' ? lease.sourceRoot : null, sourceParts: Array.isArray(lease.sourceParts) ? lease.sourceParts : [],
+              known, workRoot: path.join(root, 'snapshots'), signal,
               onProgress: ({ phase, completedFiles, totalFiles, completedBytes, totalBytes }) => {
                 if (row.state !== 'preparing') return;
-                if (row.progress.phase !== phase) row.progress.stepStartedAt = now();
                 Object.assign(row.progress, { phase, completedFiles, totalFiles, completedBytes, totalBytes });
               } });
           } finally { if (lease) await release(id, lease); }
-          const fingerprint = hash(Buffer.from(JSON.stringify(snapshot.manifest.files)));
+          if (plan.manifest.vaultId !== ownVaultId) throw Error('The destination contains a different vault.');
+          const fingerprint = hash(Buffer.from(JSON.stringify(plan.manifest.files)));
           if (row.lastResult?.fingerprint === fingerprint && revisions.some(item => item.digest === row.lastResult.digest)) {
             row.state = 'verified'; return row.lastResult = { ...row.lastResult, downloaded, replayDeferred, published: false, verifiedAt: new Date(now()).toISOString() };
           }
-          step(row, 'uploading', { phase: 'preparing-upload', totalFiles: snapshot.manifest.files.length, totalBytes: snapshot.totalBytes });
-          const result = await client.publish({ vaultId: snapshot.manifest.vaultId, deviceId: row.deviceId, driveName: current.driveName,
-            parents: [...new Set(revisions.map(item => item.digest))], files: snapshot.manifest.files,
+          step(row, 'uploading', { phase: 'preparing-upload', totalFiles: plan.upload.length, totalBytes: plan.uploadBytes });
+          const result = await client.publish({ vaultId: plan.manifest.vaultId, deviceId: row.deviceId, driveName: current.driveName,
+            parents: [...new Set(revisions.map(item => item.digest))], files: plan.manifest.files,
+            known: new Set(plan.manifest.files.filter(file => plan.reused.has(file.path)).map(file => `sha256:${file.sha256}`)),
             onVerifying: () => step(row, 'verifying', { totalFiles: null }),
-            readFile: async name => { const file = snapshot.manifest.files.find(file => file.path === name); const chunks = []; for await (const bytes of readVaultImageSnapshotFile(snapshot.directory, file, { signal })) chunks.push(bytes); const bytes = Buffer.concat(chunks); row.progress.completedFiles++; row.progress.completedBytes += bytes.length; return bytes; } }, signal);
-          row.state = 'verified'; return row.lastResult = { ...result, fingerprint, downloaded, replayDeferred, published: true, verifiedAt: new Date(now()).toISOString() };
-        } finally { if (snapshot) await fs.rm(snapshot.directory, { recursive: true }); }
-      });
+            // Each new object counts once it is read; a large one the registry already had is then not sent again.
+            readFile: async name => { const bytes = await plan.read(name, signal); row.progress.completedFiles++; row.progress.completedBytes += bytes.length; return bytes; } }, signal);
+          row.state = 'verified'; return row.lastResult = { ...result, fingerprint, downloaded, replayDeferred, published: true, uploadedFiles: plan.upload.length, uploadedBytes: plan.uploadBytes, verifiedAt: new Date(now()).toISOString() };
+        } finally { if (plan) await plan.dispose(); }
+      }, true, 'sync');
+    },
+    /** Called before the drive itself is locked, unlocked, mounted or changed. A running backup pauses rather than holding the drive. */
+    async yieldForDrive() {
+      const operation = active;
+      if (!operation || operation.kind !== 'sync') return { yielded: false };
+      operation.yielded = true; operation.controller.abort();
+      const end = Date.now() + yieldWaitMs;
+      while (active === operation && Date.now() < end) await sleep(50);
+      if (active === operation) throw Error('The backup is still releasing the drive. Retry in a moment.');
+      return { yielded: true };
     },
     list(id) { return exclusive(id, async (_current, row, signal) => { row.state = 'discovering'; const value = await storage(row).list(signal); row.state = 'idle'; return value; }, false); },
     restore(id, digest) {
@@ -395,11 +460,18 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
       try {
         for (const [id] of contexts()) {
           const raw = contexts(id); if (!raw?.storageDir || raw.transport !== 'folder') continue;
-          const current = context(id), row = rows[current.key]; if (!row?.schedule.enabled || !row.nextDue || row.nextDue > now()) continue;
+          const current = context(id), row = rows[current.key];
+          if (row?.state === 'paused' && Number.isFinite(row.resumeAt) && row.resumeAt <= now()) {
+            // A paused backup resumes once, whatever its schedule; a new pause sets a new resume time.
+            delete row.resumeAt; await save();
+            try { await service.sync(id); } catch { /* The row records the outcome. */ }
+            await save(); break;
+          }
+          if (!row?.schedule.enabled || !row.nextDue || row.nextDue > now()) continue;
           const due = row.retryOccurrence ?? row.nextDue;
           if (row.retryOccurrence === undefined && row.schedule.missed === 'skip' && now() - due > 5 * 60000) { row.nextDue = nextRegistryRun(row.schedule, now()); await save(); continue; }
           try { await service.sync(id); row.nextDue = nextRegistryRun(row.schedule, now(), registryOccurrence(row.schedule, due)); delete row.retryOccurrence; }
-          catch { row.retryOccurrence = due; row.nextDue = now() + row.schedule.retryMinutes * 60000; }
+          catch { if (row.state !== 'paused') { row.retryOccurrence = due; row.nextDue = now() + row.schedule.retryMinutes * 60000; } }
           await save(); break;
         }
       } finally { ticking = false; }

@@ -22,6 +22,8 @@ internal sealed partial class VaultSessionBroker : IDisposable
         public MaterialFileEncryptor.Core.VaultEngine.EncryptedSnapshot? StagedSnapshot;
         // Staging counters are written by the preparation task and read by progress requests.
         public long StagingPartsDone, StagingPartsTotal, StagingBytesDone, StagingBytesTotal;
+        // An admission lease on an open drive stages nothing and does not hold back other requests.
+        public bool AdmissionLease;
     }
     private readonly object gate = new();
     private readonly Dictionary<string, Session> sessions = new(StringComparer.Ordinal);
@@ -70,7 +72,7 @@ internal sealed partial class VaultSessionBroker : IDisposable
             if (method == "snapshotProgress") return Task.FromResult<object?>(SnapshotProgress(session));
             if (method == "beginSnapshot") return BeginSnapshot(session, args);
             if (method == "releaseSnapshot") return Task.FromResult<object?>(ReleaseSnapshot(session, args));
-            if ((session.SnapshotPreparing || session.SnapshotId is not null && session.StagedSnapshot is null) && method is not ("status" or "statusSummary" or "operations"))
+            if ((session.SnapshotPreparing || session.SnapshotId is not null && session.StagedSnapshot is null && !session.AdmissionLease) && method is not ("status" or "statusSummary" or "operations"))
                 throw new InvalidOperationException("An encrypted image snapshot is being prepared. Wait for it to finish.");
             if (method == "removeSession")
             {

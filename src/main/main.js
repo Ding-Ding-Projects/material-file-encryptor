@@ -344,7 +344,8 @@ async function dispatchRequest(method, params, context) {
     return dispatchSplitStorage(splitStorage, method, params, vaultSessions.selectedId);
   }
   if (splitStorage.pending && ['createVault', 'unlockVault', 'upgradeVault', 'mount', 'setPreferences'].includes(method)) throw Error('Wait for split storage to finish moving encrypted parts before unlocking the drive.');
-  if (registrySync.pending && ['createVault', 'unlockVault', 'upgradeVault', 'lockVault', 'forceLock', 'unmount', 'mount', 'setPreferences'].includes(method)) throw Error('Wait for registry synchronization before changing the vault session.');
+  // The drive always comes first: a running backup pauses at a safe point, releases its snapshot and resumes later.
+  if (registrySync.pending && ['createVault', 'unlockVault', 'upgradeVault', 'lockVault', 'forceLock', 'unmount', 'mount', 'setPreferences'].includes(method)) await registrySync.yieldForDrive();
   if (VAULT_IMAGE_METHODS.has(method)) return imageRequest(method, params, vaultSessions.selectedId);
   if (method === 'getState') return snapshot();
   if (method === 'buildMetadata') return buildMetadata;

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { createHash } from 'node:crypto';
 import { createRegistrySyncService } from '../src/main/registry-sync-service.js';
 import { DEFAULT_REGISTRY_SCHEDULE } from '../src/main/registry-schedule.js';
 import { progressView, formatBytes, formatDuration, formatTimestamp, SLOW_AFTER_MS } from '../src/renderer/features/storage-maintenance/registry-progress.js';
@@ -23,16 +24,26 @@ async function fixture(t, extra = {}) {
   await service.configure('main', { repository: 'test/vault', visibility: 'private', schedule: DEFAULT_REGISTRY_SCHEDULE });
   return { root, source, work, options, requests, service };
 }
+// One revision from another device holding a commit object this drive does not have yet.
+function remoteRevision() {
+  const bytes = record(48, 0x61), digest = 'sha256:' + createHash('sha256').update(bytes).digest('hex');
+  const file = { path: `commits/${'c'.repeat(32)}.mfe`, digest, size: bytes.length };
+  const revision = { digest: 'sha256:' + 'e'.repeat(64), snapshot: { vaultId: 'a'.repeat(32), deviceId: 'f'.repeat(32), parents: [], fileCount: 1 }, tag: 'mfe-' + 'f'.repeat(32) + '-' + '1'.repeat(32), files: [file] };
+  return { revision, list: async () => [revision],
+    download: async (_digest, writeFile, signal) => { await writeFile(file.path, bytes, signal); return { digest: revision.digest, snapshot: { ...revision.snapshot, files: [{ ...file, mediaType: 'x' }] } }; } };
+}
 const until = async (fn, ms = 5000) => { const end = Date.now() + ms; while (Date.now() < end) { if (await fn()) return; await new Promise(r => setTimeout(r, 10)); } throw Error('condition not reached'); };
 
 test('a full synchronization walks through named steps with counts, ending verified', async t => {
   const seen = [];
   let service;
   const watch = async () => { const s = await service.status('main'); const key = s.progress ? `${s.state}:${s.progress.step}` : s.state; if (seen.at(-1) !== key) seen.push(key); };
+  const remote = remoteRevision();
   const f = await fixture(t, { storageFactory: () => ({
-    list: async () => { await watch(); return []; },
-    publish: async ({ files, readFile, onVerifying }) => {
-      for (const file of files) { await readFile(file.path); await watch(); }
+    list: async (...args) => { await watch(); return remote.list(...args); },
+    download: async (...args) => { const value = await remote.download(...args); await watch(); return value; },
+    publish: async ({ files, readFile, onVerifying, known }) => {
+      for (const file of files) { if (known?.has(`sha256:${file.sha256}`)) continue; await readFile(file.path); await watch(); }
       onVerifying(); await watch();
       return { digest: 'sha256:' + 'b'.repeat(64), verified: true };
     } }),
@@ -40,9 +51,19 @@ test('a full synchronization walks through named steps with counts, ending verif
   service = f.service;
   const result = await service.sync('main');
   assert.equal(result.verified, true);
-  for (const expected of ['discovering:discovering', 'waiting-drive:waiting-drive', 'applying:applying', 'preparing:preparing', 'uploading:uploading', 'verifying:verifying'])
+  for (const expected of ['discovering:discovering', 'downloading:downloading', 'waiting-drive:waiting-drive', 'applying:applying', 'preparing:preparing', 'uploading:uploading', 'verifying:verifying'])
     assert.ok(seen.includes(expected), `${expected} was shown; saw ${seen.join(', ')}`);
   assert.equal((await service.status('main')).state, 'verified');
+  assert.equal(result.downloaded, 1);
+});
+
+test('a drive with nothing new to download skips the download, the drive admission and the replay', async t => {
+  const methods = [];
+  const f = await fixture(t, { storageFactory: () => ({ list: async () => [], publish: async ({ files, readFile }) => { for (const file of files) await readFile(file.path); return { digest: 'sha256:' + 'b'.repeat(64), verified: true }; } }),
+    nativeRequest: async (method, params) => { methods.push([method, params?.admissionOnly === true]); return method === 'beginSnapshot' ? { leaseId: 'only', storageDir: f.source, storageOnly: true } : method === 'releaseSnapshot' ? { released: true } : {}; } });
+  await f.service.sync('main');
+  assert.deepEqual(methods.filter(([method]) => method === 'beginSnapshot'), [['beginSnapshot', false]], 'only the snapshot lease was taken');
+  assert.ok(!methods.some(([method]) => method === 'sync'), 'no native replay was started');
 });
 
 test('upload progress counts files and bytes against a known total', async t => {
@@ -83,7 +104,7 @@ test('cancel while the drive is still staging ends the operation at once and rel
       return {};
     } });
   const running = f.service.sync('main').then(() => null, error => error);
-  await until(async () => (await f.service.status('main')).state === 'waiting-drive');
+  await until(async () => (await f.service.status('main')).state === 'preparing');
   const started = Date.now();
   await f.service.cancel('main');
   setTimeout(grant, 300);
@@ -103,7 +124,7 @@ test('a lease that never arrives after cancel keeps ownership explicit until it 
       return method === 'releaseSnapshot' ? { released: true } : {};
     } });
   const running = f.service.sync('main').catch(() => {});
-  await until(async () => (await f.service.status('main')).state === 'waiting-drive');
+  await until(async () => (await f.service.status('main')).state === 'preparing');
   await f.service.cancel('main'); await running;
   assert.equal(f.service.pending, true); assert.equal((await f.service.status('main')).state, 'native-release-unverified');
   grant();
@@ -135,7 +156,8 @@ test('a drive that never confirms release times out with a plain reason and keep
 });
 
 test('cancel during the native replay stops waiting at once', async t => {
-  const f = await fixture(t, { storageFactory: () => ({ list: async () => [] }),
+  const remote = remoteRevision();
+  const f = await fixture(t, { storageFactory: () => ({ list: remote.list, download: remote.download }),
     nativeRequest: async method => {
       if (method === 'sync') return { sync: { running: true, pendingCommits: 4 } };
       if (method === 'statusSummary') return { sync: { running: true, pendingCommits: 3 } };
