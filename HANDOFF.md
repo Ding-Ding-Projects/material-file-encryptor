@@ -1835,3 +1835,12 @@ Decisions (also in `design/redesign-2026-11/v2-decisions.md`): pages no longer o
 
 Open: packaged-build captures and README replacement (see the branch report), automatic backup and retention backends, context-menu filter removal, per-drive figures, Share and Shared files (separate lane).
 
+## Seamless Docker Hub backup and retention, 2026-11-18
+
+Branch `ai/feature/20261118-seamless-backup` (issues #26 and #27). Host: `src/main/auto-backup/` (`retention.js` pure selection, `prune.js` drive-scoped removal with 404 readback, `read-guard.js` snapshots a restore is reading, `tag-dates.js` Docker Hub push times for older snapshots, `settings.js` stored settings and per-drive switches, `controller.js` triggers and retry, `ipc.js` requests). `registry-sync-service.js` prunes after every verified backup and has `pruneNow`; `registry-storage.js` writes the `org.opencontainers.image.created` annotation, returns `createdAt` and the repository tag count from `list`, and has `deleteSnapshot` and `snapshotGone`; `vault-image-docker.js` has `registryBackupDeleteAuthorization` and `deleteSnapshotTag`, both refusing the shared-files repository. Renderer: `features/storage-maintenance/auto-backup/` (model and copy), `hub-overview.js`, and the Backup category in `features/settings-layout`.
+
+Decisions: pruning only considers tags whose device id is this computer's and whose config names this drive's vault, so other drives and other computers are never touched. The newest verified snapshot and digests held by a restore are always kept, and a digest also used by a kept tag is never deleted. Nothing is uploaded automatically until the public notice has been acknowledged. A drive configured with a private repository is left to its own schedule. Backup while the app is closed stays off (scheduled task decision pending). Change detection uses the `revision` field the native status already reports.
+
+Live proof: pruning ran against real Docker Hub (`transitdc/mfe-auto-backup-test`) through the production sync service, storage client and Docker Hub transport, with two synthetic drives and a stub native lease, from Node rather than the app window.
+
+Open: packaged-app proof with real drives and screenshots, read-only rows for drives from another computer, Rename label, Remove this drive's backups, a size column, the status bar text, and command palette entries.

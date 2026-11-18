@@ -42,6 +42,16 @@ test('every verified backup prunes this drive to its retention rules and reports
   assert.equal(last.prune.pruned, 1);
 });
 
+test('a backup spends at most one Docker Hub pull, however many snapshots the repository holds', async t => {
+  const registry = createFakeRegistry('test/material-file-encryptor-storage');
+  const f = await fixture(t, registry, { retention: () => ({ keepLatest: 10, keepDaily: 0, keepWeekly: 0 }) });
+  for (let n = 0; n < 6; n++) { await touch(f.source, n); f.advance(3600000); await f.service.sync('main'); }
+  registry.requests.length = 0;
+  await touch(f.source, 9); f.advance(3600000); await f.service.sync('main');
+  const pulls = registry.requests.filter(line => line.startsWith('GET ') && line.includes('/manifests/'));
+  assert.equal(pulls.length, 1, `manifest reads: ${pulls.join(', ')}`);
+});
+
 test('a failed prune never fails the backup and is retried after the next one', async t => {
   const registry = createFakeRegistry('test/material-file-encryptor-storage');
   let refuse = true;
@@ -67,4 +77,23 @@ test('prune now applies the rules without a new backup, and needs a verified bac
   policy = { keepLatest: 1, keepDaily: 0, keepWeekly: 0 };
   const outcome = await f.service.pruneNow('main');
   assert.equal(outcome.pruned, 4); assert.equal(registry.tags.size, 1);
+});
+
+test('removing a drive\'s backups takes exactly the confirmed own tags and refuses anything else', async t => {
+  const registry = createFakeRegistry('test/material-file-encryptor-storage');
+  const f = await fixture(t, registry, { retention: () => ({ keepLatest: 10, keepDaily: 0, keepWeekly: 0 }) });
+  for (let n = 0; n < 3; n++) { await touch(f.source, n); f.advance(3600000); await f.service.sync('main'); }
+  // Another drive's snapshot in the same repository.
+  const { createHash } = await import('node:crypto');
+  const other = createRegistryStorage({ destination: registry.destination, fetcher: registry.fetcher });
+  const bytes = Buffer.from('other-drive');
+  const foreign = await other.publish({ vaultId: 'e'.repeat(32), deviceId: 'd'.repeat(32), files: [{ path: 'vault.json', bytes: bytes.length, sha256: createHash('sha256').update(bytes).digest('hex') }], readFile: async () => bytes });
+  const listed = await f.service.listOwnSnapshots('main');
+  assert.equal(listed.snapshots.length, 3); assert.ok(listed.snapshots.every(item => item.tag !== foreign.tag));
+  await assert.rejects(f.service.removeOwnSnapshots('main', [listed.snapshots[0].tag, foreign.tag]), /Only this drive's own snapshots/);
+  assert.equal(registry.tags.size, 4, 'a request naming a foreign tag removes nothing');
+  const result = await f.service.removeOwnSnapshots('main', listed.snapshots.map(item => item.tag));
+  assert.deepEqual(result, { removed: 3, failed: 0 });
+  assert.deepEqual([...registry.tags.keys()], [foreign.tag]);
+  assert.equal((await f.service.status('main')).lastResult, null, 'the next backup publishes a fresh snapshot');
 });

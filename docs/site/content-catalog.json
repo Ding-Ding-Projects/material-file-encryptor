@@ -216,6 +216,8 @@
     "docs/features/storage/physical-packing.zh-HK.md",
     "docs/features/storage/split-storage-internals.md",
     "docs/features/storage/split-storage-internals.zh-HK.md",
+    "docs/features/storage/automatic-backup.md",
+    "docs/features/storage/automatic-backup.zh-HK.md",
     "docs/features/storage/registry-sync.md",
     "docs/features/storage/registry-sync.zh-HK.md",
     "docs/features/storage/share-via-docker-hub.md",

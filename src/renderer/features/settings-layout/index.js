@@ -7,10 +7,14 @@ import {SETTINGS_LAYOUT_COPY as C} from './copy.js';
  * that own their own settings (Personalization, Local access). While the search has text every section is shown, so
  * the search still reaches every setting.
  *
- * Backup rows that need backend support that does not exist yet are shown disabled with "Coming in a later update";
+ * Backup rows read and save the automatic backup settings. Backing up while the app is closed still needs a decision
+ * about a Windows scheduled task, so that one row stays disabled with "Coming in a later update";
  * nothing here pretends to save a value it cannot keep.
  */
-export function mountSettingsLayout(view, {getLanguage = () => 'en', openView = () => {}, getBackupStatus = async () => null} = {}) {
+const IDLE = [30, 60, 120, 300, 600, 1800];
+const INTERVALS = [15, 30, 60, 120, 360, 720, 1440];
+export function mountSettingsLayout(view, {getLanguage = () => 'en', openView = () => {}, getBackupStatus = async () => null, backupService = {}} = {}) {
+  let backupMessage = '';
   const doc = view.ownerDocument;
   const L = key => localized(text(key, C[key] ?? key), getLanguage());
   const el = (tag, props = {}, children = []) => { const node = doc.createElement(tag); for (const [key, value] of Object.entries(props)) { if (key === 'text') node.textContent = value; else if (key === 'class') node.className = value; else if (key === 'disabled') node.disabled = value; else node.setAttribute(key, value); } node.append(...children); return node; };
@@ -47,24 +51,76 @@ export function mountSettingsLayout(view, {getLanguage = () => 'en', openView = 
     return el('div', {class: 'setting-row v2-setting-row'}, [copy, end]);
   }
   function disabledSwitch(label) { const node = el('md-switch', {'aria-label': label}); node.disabled = true; return node; }
+  const withHelp = (node, description) => { if (description) { node.setAttribute('data-help-text', description); node.setAttribute('aria-description', description); } return node; };
+  async function change(patch) {
+    if (typeof backupService.update !== 'function') return;
+    try { status = await backupService.update(patch); backupMessage = L('Saved.'); }
+    catch (error) { backupMessage = String(error?.message || L('The setting could not be saved.')); }
+    renderBackup(); apply();
+  }
+  function backupSwitch(label, description, key, value, disabled = false) {
+    const node = withHelp(el('md-switch', {'aria-label': label, id: `settings-backup-${key}`}), description);
+    node.selected = Boolean(value); node.disabled = disabled;
+    node.addEventListener('change', () => void change({[key]: node.selected}));
+    return node;
+  }
+  function backupSelect(label, description, key, value, options, disabled = false) {
+    const node = withHelp(el('md-outlined-select', {'aria-label': label, id: `settings-backup-${key}`}), description);
+    for (const [optionValue, optionLabel] of options) { const option = el('md-select-option', {value: String(optionValue)}, [el('div', {slot: 'headline', text: optionLabel})]); option.selected = String(optionValue) === String(value); node.append(option); }
+    node.disabled = disabled;
+    node.addEventListener('change', () => { const raw = node.value; void change({[key]: typeof value === 'number' ? Number(raw) : raw}); });
+    return node;
+  }
+  const minutes = count => count < 60 ? L('{count} minutes').replace('{count}', count) : count === 60 ? L('1 hour') : count % 1440 === 0 ? (count === 1440 ? L('1 day') : L('{count} days').replace('{count}', count / 1440)) : L('{count} hours').replace('{count}', count / 60);
+  const seconds = count => count < 60 ? L('{count} seconds after the drive goes idle').replace('{count}', count) : count === 60 ? L('1 minute after the drive goes idle') : L('{count} minutes after the drive goes idle').replace('{count}', count / 60);
+  function retentionFields(settings, disabled) {
+    const wrap = el('div', {class: 'setting-inline retention-fields'});
+    const field = (key, label, min, max) => {
+      const input = withHelp(el('md-outlined-text-field', {type: 'number', min: String(min), max: String(max), 'aria-label': label, id: `settings-retention-${key}`, class: 'retention-field'}), L('Only that drive\'s own snapshots from this PC are removed.'));
+      input.value = String(settings.retention[key]); input.disabled = disabled;
+      input.addEventListener('change', () => {
+        const next = Number(input.value);
+        if (!Number.isInteger(next) || next < min || next > max) { backupMessage = L('Enter a whole number from {min} to {max}.').replace('{min}', min).replace('{max}', max); renderBackup(); apply(); return; }
+        void change({retention: {...settings.retention, [key]: next}});
+      });
+      return input;
+    };
+    const total = settings.retention.keepLatest + settings.retention.keepDaily + settings.retention.keepWeekly;
+    wrap.append(el('span', {text: L('Latest')}), field('keepLatest', L('Latest snapshots to keep'), 1, 100), el('span', {text: L('· 1 per day for')}), field('keepDaily', L('Days to keep one snapshot per day'), 0, 60),
+      el('span', {text: L('days · 1 per week for')}), field('keepWeekly', L('Weeks to keep one snapshot per week'), 0, 104), el('span', {text: L('weeks')}),
+      el('span', {class: 'chip', text: L('{count} max per drive').replace('{count}', total)}));
+    return wrap;
+  }
   function renderBackup() {
-    const signedIn = status?.signedIn ?? status?.account ? true : false;
+    const signedIn = Boolean(status?.signedIn ?? status?.account);
     const account = status?.account || status?.username || '';
+    const settings = status?.settings || null;
     const openStorage = el('md-outlined-button', {type: 'button', id: 'settings-open-backup'}, [el('span', {text: L('Open Docker Hub backup')})]);
     openStorage.addEventListener('click', () => openView('storage'));
-    const backupNow = el('md-filled-button', {type: 'button', id: 'settings-backup-now'}, [el('span', {text: L('Back up drives now')})]);
+    const backupNow = el('md-filled-button', {type: 'button', id: 'settings-backup-now'}, [el('span', {text: L('Back up all now')})]);
     backupNow.addEventListener('click', () => openView('storage'));
     const accountValue = el('span', {class: 'setting-value', text: signedIn && account ? account : L('Sign in on the Docker Hub backup page.')});
-    backup.replaceChildren(
-      el('h2', {text: L('Backup')}),
-      el('div', {class: 'settings-section-actions'}, [backupNow]),
-      row(L('Docker Hub account'), '', el('div', {class: 'setting-inline'}, [accountValue, openStorage])),
-      row(L('Back up drives automatically'), L('New and existing drives back up to Docker Hub after changes.'), disabledSwitch(L('Back up drives automatically')), {comingLater: true}),
-      row(L('Back up after changes'), L('Waits until the drive is quiet, then uploads only what changed.'), el('span', {class: 'setting-value muted', text: L('1 minute after the drive goes idle')}), {comingLater: true}),
-      row(L('Back up when a drive locks'), L('Also runs when the app closes with changes waiting.'), disabledSwitch(L('Back up when a drive locks')), {comingLater: true}),
-      row(L('Keep snapshots for each drive'), L('Older snapshots are removed after each successful backup.'), el('span', {class: 'setting-value muted', text: L('Latest 10, 1 per day for 7 days, 1 per week for 8 weeks')}), {comingLater: true}),
-      row(L('Back up now'), L('Back up every drive that has changes from the Docker Hub backup page.'), el('span', {class: 'setting-value', text: L('Available today')}))
-    );
+    const rows = [el('h2', {text: L('Backup')}), el('div', {class: 'settings-section-actions'}, [backupNow]),
+      row(L('Docker Hub account'), '', el('div', {class: 'setting-inline'}, [accountValue, openStorage]))];
+    if (!settings) {
+      rows.push(row(L('Back up drives automatically'), L('Open the Docker Hub backup page to sign in and turn on automatic backup.'), disabledSwitch(L('Back up drives automatically'))));
+    } else {
+      const off = !settings.enabled;
+      const autoDescription = L('New and existing drives back up to Docker Hub after changes. Turn off one drive on its row in Docker Hub backup.');
+      rows.push(
+        row(L('Back up drives automatically'), autoDescription, backupSwitch(L('Back up drives automatically'), autoDescription, 'enabled', settings.enabled && !status.noticeRequired, status.noticeRequired)),
+        row(L('Back up after changes'), L('Waits until the drive is quiet, then uploads only what changed.'), backupSelect(L('Back up after changes'), L('Waits until the drive is quiet, then uploads only what changed.'), 'idleDelaySeconds', settings.idleDelaySeconds, IDLE.map(value => [value, seconds(value)]), off)),
+        row(L('Also check every'), L('Catches anything missed, like changes made while offline.'), backupSelect(L('Also check every'), L('Catches anything missed, like changes made while offline.'), 'intervalMinutes', settings.intervalMinutes, INTERVALS.map(value => [value, minutes(value)]), off)),
+        row(L('Back up when a drive locks'), L('Also runs when the app closes with changes waiting.'), backupSwitch(L('Back up when a drive locks'), L('Also runs when the app closes with changes waiting.'), 'onLock', settings.onLock, off)),
+        row(L('Keep backing up when the app is closed'), L('Uses a Windows scheduled task under your account.'), disabledSwitch(L('Keep backing up when the app is closed')), {comingLater: true}),
+        row(L('Repository layout'), L('Shared: up to 1,000 snapshots in total. One per drive: each drive gets its own repository.'), backupSelect(L('Repository layout'), L('Shared: up to 1,000 snapshots in total. One per drive: each drive gets its own repository.'), 'repositoryLayout', settings.repositoryLayout, [['shared', L('One shared repository')], ['per-drive', L('One repository per drive')]], off)),
+        row(L('Default repository'), L('New drives back up here. It is created as public if it does not exist.'), el('div', {class: 'setting-inline'}, [el('code', {class: 'setting-value', text: account ? (settings.repositoryLayout === 'shared' ? `${account}/material-file-encryptor-storage` : `${account}/mfe-<drive>`) : '-'}), el('span', {class: 'chip', text: L('Public')})])),
+        row(L('Keep snapshots for each drive'), L('Older ones are removed after each successful backup. Only that drive\'s own snapshots are touched.'), retentionFields(settings, false)),
+        row(L('When a backup fails'), '', el('span', {class: 'setting-value', text: L('Retries by itself: 1, 5, 15 minutes, then every hour. Resumes when the connection returns.')}))
+      );
+    }
+    rows.push(el('p', {class: 'setting-description', role: 'status', 'aria-live': 'polite', id: 'settings-backup-message', text: backupMessage}));
+    backup.replaceChildren(...rows);
   }
   function renderUpdates() {
     const open = el('md-filled-button', {type: 'button', id: 'settings-open-updates'}, [el('span', {text: L('Check for updates')})]);

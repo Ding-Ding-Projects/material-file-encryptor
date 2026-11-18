@@ -24,6 +24,33 @@ export function cleanDriveNameLabel(value) {
   return text && [...text].length <= 64 && !/[\x00-\x1f\x7f‪-‮⁦-⁩]/.test(text) ? text : null;
 }
 const sha = value => 'sha256:' + createHash('sha256').update(value).digest('hex');
+/**
+ * Verified snapshots by manifest digest. A digest names immutable bytes, so a snapshot read and checked once never has
+ * to be pulled again: every manifest GET counts against the account's Docker Hub pull limit (200 an hour for a
+ * personal account), and listing a busy repository before each backup would otherwise spend it in minutes.
+ * Bounded by the number of file entries held, oldest first out.
+ * The registry sync service owns one cache and hands it to its clients; other callers read without one.
+ */
+export function createRevisionCache({ fileLimit = 400000 } = {}) {
+  const entries = new Map(); let files = 0;
+  return Object.freeze({
+    get(endpoint, digest) {
+      const key = `${endpoint}|${digest}`, value = entries.get(key);
+      if (!value) return null;
+      entries.delete(key); entries.set(key, value);
+      return structuredClone(value);
+    },
+    set(endpoint, revision) {
+      const key = `${endpoint}|${revision.digest}`;
+      if (entries.has(key)) return;
+      entries.set(key, structuredClone(revision)); files += revision.snapshot.files.length;
+      for (const [oldest, value] of entries) {
+        if (files <= fileLimit) break;
+        entries.delete(oldest); files -= value.snapshot.files.length;
+      }
+    },
+  });
+}
 const exact = (value, fields) => value && typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length === fields.length && fields.every(key => Object.hasOwn(value, key));
 const fail = () => Error('Encrypted registry operation could not be verified. Local data is unchanged.');
 
@@ -76,7 +103,9 @@ export function validateRegistrySnapshot(value) {
  * Unique snapshot references preserve concurrent heads; no shared mutable tag is used.
  * authorize is main-owned, checks expected repository visibility, and returns only request headers.
  */
-export function createRegistryStorage({ destination, authorize, fetcher = fetch, maxObjectBytes = 1024 ** 3, uploadConcurrency = 4 }) {
+export function createRegistryStorage({ destination, authorize, fetcher = fetch, maxObjectBytes = 1024 ** 3, uploadConcurrency = 4, revisionCache = null }) {
+  const cachedRevision = (endpoint, digest) => revisionCache?.get(endpoint, digest) ?? null;
+  const rememberRevision = (endpoint, revision) => revisionCache?.set(endpoint, revision);
   const target = registryDestination(destination);
   if (!Number.isSafeInteger(maxObjectBytes) || maxObjectBytes < 1 || maxObjectBytes > 1024 ** 3) throw fail();
   const base = `${target.endpoint}/v2/${target.repository}`;
@@ -165,8 +194,12 @@ export function createRegistryStorage({ destination, authorize, fetcher = fetch,
   }
   async function readRevision(digest, signal) {
     if (!DIGEST.test(digest)) throw fail();
+    const cached = cachedRevision(target.endpoint, digest); if (cached) return cached;
     const response = await request(`${base}/manifests/${digest}`, { headers: { Accept: OCI } }, signal);
-    const raw = await bounded(response, 32 * 1024 ** 2, signal);
+    return parseRevision(digest, await bounded(response, 32 * 1024 ** 2, signal), signal);
+  }
+  /** Verifies manifest bytes already read against their digest, reads the config and remembers the result. */
+  async function parseRevision(digest, raw, signal) {
     if (sha(raw) !== digest) throw fail();
     let manifest; try { manifest = JSON.parse(raw); } catch { throw fail(); }
     if (manifest.schemaVersion !== 2 || manifest.mediaType !== OCI || !validDescriptor(manifest.config, CONFIG, 32 * 1024 ** 2) || !Array.isArray(manifest.layers)) throw fail();
@@ -174,7 +207,9 @@ export function createRegistryStorage({ destination, authorize, fetcher = fetch,
     if (manifest.layers.length !== config.files.length || manifest.layers.some((item, i) =>
       !validDescriptor(item, LAYER, maxObjectBytes) || item.digest !== config.files[i].digest || item.size !== config.files[i].size)) throw fail();
     const driveName = cleanDriveNameLabel(manifest.annotations?.[DRIVE_NAME_ANNOTATION]);
-    return { digest, snapshot: config, driveName, createdAt: snapshotCreatedAt(manifest.annotations?.[CREATED_ANNOTATION]) };
+    const revision = { digest, snapshot: config, driveName, createdAt: snapshotCreatedAt(manifest.annotations?.[CREATED_ANNOTATION]), manifestBytes: raw.length };
+    rememberRevision(target.endpoint, revision);
+    return revision;
   }
   /** True for each reference that the registry answers with 404. Any other answer counts as still present. */
   async function snapshotGone({ digest, tag }, signal) {
@@ -276,8 +311,15 @@ export function createRegistryStorage({ destination, authorize, fetcher = fetch,
       await result.body?.cancel();
       // Verify immutable bytes, then verify the advertised tag points to the same bytes.
       await readRevision(digest, signal);
-      const check = await request(`${base}/manifests/${tag}`, { headers: { Accept: OCI } }, signal);
-      if (sha(await bounded(check, 32 * 1024 ** 2, signal)) !== digest) throw fail();
+      // The tag check is a HEAD (not a pull) when the registry names the digest; otherwise the bytes are compared.
+      const named = await request(`${base}/manifests/${tag}`, { method: 'HEAD', headers: { Accept: OCI } }, signal);
+      await named.body?.cancel();
+      const advertised = named.headers.get('docker-content-digest');
+      if (advertised && advertised !== digest) throw fail();
+      if (!advertised) {
+        const check = await request(`${base}/manifests/${tag}`, { headers: { Accept: OCI } }, signal);
+        if (sha(await bounded(check, 32 * 1024 ** 2, signal)) !== digest) throw fail();
+      }
       return { digest, tag, repository: target.repository, verified: true, createdAt: new Date(createdAt).toISOString() };
     },
     /**
@@ -318,10 +360,22 @@ export function createRegistryStorage({ destination, authorize, fetcher = fetch,
       for (const tag of [...tags].sort()) {
         // Tags are mfe-<device id>-<revision>, and one device belongs to one drive, so a foreign device is read once.
         if (foreignDevices.has(tag.slice(4, 36))) continue;
-        const response = await request(`${base}/manifests/${tag}`, { headers: { Accept: OCI } }, signal);
-        const raw = await bounded(response, 32 * 1024 ** 2, signal);
-        const revision = await readRevision(sha(raw), signal);
-        metadataBytes += Buffer.byteLength(JSON.stringify(revision.snapshot)) + raw.length;
+        // A HEAD does not count as a pull. When the registry names a digest this client has already verified, the
+        // snapshot is taken from memory; otherwise the manifest is read once, checked against that name, and kept.
+        // A snapshot removed moments ago can stay in the tag list for a while; its tag already answers 404 and is skipped.
+        const head = await request(`${base}/manifests/${tag}`, { method: 'HEAD', headers: { Accept: OCI }, allowNotFound: true }, signal);
+        await head.body?.cancel();
+        if (head.status === 404) continue;
+        const advertised = head.headers.get('docker-content-digest');
+        let revision = advertised && DIGEST.test(advertised) ? cachedRevision(target.endpoint, advertised) : null;
+        if (!revision) {
+          const response = await request(`${base}/manifests/${tag}`, { headers: { Accept: OCI }, allowNotFound: true }, signal);
+          if (response.status === 404) { await response.body?.cancel(); continue; }
+          const raw = await bounded(response, 32 * 1024 ** 2, signal);
+          if (advertised && DIGEST.test(advertised) && sha(raw) !== advertised) throw fail();
+          revision = await parseRevision(sha(raw), raw, signal);
+        }
+        metadataBytes += Buffer.byteLength(JSON.stringify(revision.snapshot)) + revision.manifestBytes;
         if (metadataBytes > 64 * 1024 ** 2) throw Error('Snapshot catalogue exceeds the metadata limit.');
         if (vaultId && revision.snapshot.vaultId !== vaultId) { foreignDevices.add(tag.slice(4, 36)); continue; }
         const { files, ...summary } = revision.snapshot;

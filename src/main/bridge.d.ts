@@ -25,7 +25,7 @@ export interface AutoBackupDrive { sessionId:string;name:string;enabled:boolean;
 export interface AutoBackupStatus { settings:AutoBackupSettings;signedIn:boolean;account:string|null;online:boolean;noticeRequired:boolean;running:string|null;drives:AutoBackupDrive[] }
 export interface DriveBridge {
   autoBackupStatus():Promise<AutoBackupStatus>;autoBackupUpdate(patch:Partial<AutoBackupSettings>):Promise<AutoBackupStatus>;autoBackupSetDrive(sessionId:string,enabled:boolean):Promise<AutoBackupStatus>;
-  autoBackupNow(sessionId:string):Promise<AutoBackupStatus>;autoBackupPrune(sessionId:string):Promise<{state:string;pruned:number;failed:number;kept:number|null}>;autoBackupMove(sessionId:string):Promise<AutoBackupStatus>;
+  autoBackupNow(sessionId:string):Promise<AutoBackupStatus>;autoBackupPrune(sessionId:string):Promise<{state:string;pruned:number;failed:number;kept:number|null}>;autoBackupMove(sessionId:string):Promise<AutoBackupStatus>;autoBackupListOwn(sessionId:string):Promise<{repository:string;snapshots:{tag:string;digest:string;createdAt:string|null}[]}>;autoBackupRemove(sessionId:string,tags:string[]):Promise<{removed:number;failed:number}>;
   registryLoginStatus():Promise<RegistryLoginStatus>;recheckRegistryLogin():Promise<RegistryLoginStatus>;startRegistryLogin():Promise<RegistryLoginStatus>;
   backupAllPlan():Promise<{drives:BackupAllDrivePlan[];running:boolean}>;backupAllStart(selection:{sessionIds:string[];names?:Record<string,string>}):Promise<BackupAllStatus>;backupAllStatus():Promise<BackupAllStatus>;backupAllCancel():Promise<BackupAllStatus>;
   cancelRegistryLogin():Promise<RegistryLoginStatus>;openRegistryLoginPage():Promise<RegistryLoginStatus>;
