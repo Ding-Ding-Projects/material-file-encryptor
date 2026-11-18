@@ -24,6 +24,7 @@ import { createRegistryBackupAll } from './registry-backup-all.js';
 import { createTagDates } from './auto-backup/tag-dates.js';
 import { createAutoBackupSettings } from './auto-backup/settings.js';
 import { createAutoBackup } from './auto-backup/controller.js';
+import { finishBackupBeforeQuit } from './auto-backup/quit-flush.js';
 import { AUTO_BACKUP_METHODS, dispatchAutoBackup } from './auto-backup/ipc.js';
 import { createRegistryBackground } from './registry-background.js';
 import { createDockerImageTransport } from './vault-image-docker.js';
@@ -237,13 +238,21 @@ async function runAutoBackupDue() {
   }
   await autoBackup.tick();
 }
-/** Backs up drives with pending changes before closing, for at most two minutes, then cancels what is still running. */
+/**
+ * Backs up drives with pending changes before closing. After a short grace period a small "Finishing backup…" prompt
+ * with Quit now appears; it closes itself when the backup finishes, and the whole wait is bounded.
+ */
 async function flushAutoBackup() {
   if (!helper || verificationMode || testMode || updateInstallLease || registrySync.pending) return;
-  const deadline = Date.now() + 120000; let timer;
-  const limit = new Promise(resolve => { timer = setTimeout(resolve, 120000); });
-  try { await Promise.race([autoBackup.flush(deadline), limit]); }
-  finally { clearTimeout(timer); if (registrySync.pending && registrySync.activeSessionId) await registrySync.cancel(registrySync.activeSessionId).catch(() => {}); }
+  const deadline = Date.now() + 120000;
+  await finishBackupBeforeQuit({
+    flush: () => autoBackup.flush(deadline),
+    ask: options => { showWindow(); return uiDialog.showMessageBox(window, options); },
+    stop: async () => {
+      if (registrySync.pending && registrySync.activeSessionId) await registrySync.cancel(registrySync.activeSessionId).catch(() => {});
+      for (let waited = 0; registrySync.pending && waited < 15000; waited += 200) await new Promise(resolve => setTimeout(resolve, 200));
+    },
+  });
 }
 const inside = (parent, child) => { const rel = path.relative(parent, child); return rel === '' || (rel !== '..' && !rel.startsWith(`..${path.sep}`) && !path.isAbsolute(rel)); };
 const nativeState = value => ({ ...value, driver: { ...value.driver, checking: false } });
