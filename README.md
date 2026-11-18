@@ -12,9 +12,9 @@
 
 **Desktop icon resources:** [installed icon packaging](docs/features/desktop/installed-icons.md) documents the folder-and-lock mark, executable and shortcut resources, installer branding, and the distinction between source checks and installed verification.
 
-![Home as a status dashboard with the drives table, recent activity, needs attention, status and quick start, with the navigation tree on the left](docs/images/captures/redesign-v2-3227a1cc/home-light.png)
+![Unlocked drive with the files table, a file selected and the details pane with its encrypted parts and versions](docs/images/captures/redesign-v2-5d8d4d94/workspace-file-selected-light.png)
 
-Home in the current build, source `3227a1cc`. More captures, with a receipt for each, are in [Current captures](#current-captures); earlier captures are in the [screenshot archive](docs/screenshots-archive.md).
+Home in the current build, source `5d8d4d94`. More captures, with a receipt for each, are in [Current captures](#current-captures); earlier captures are in the [screenshot archive](docs/screenshots-archive.md).
 
 **Ordinary installed 1.823.1 verification:** Version 1.823.1 is verified in the ordinary user installation from release source `14d6e07636a1f1d62e6dd345273a0c6866664562`. All 910 payload files matched; four opened-file handles resolved to ordinary installation paths. Independent queries through the existing Explorer desktop confirmed the installation folder and Desktop/Start menu shortcut targets. The installer operation returned 0. Its original continuous observer failed, so operation exit and recorded-process absence were recovered separately and remain separate verdicts. The detailed original receipts remain preserved privately. The installed English/light initial setup screen and five native window icon handles were observed with an isolated verification profile. Both ordinary-shell shortcut icon images were separately inspected and show the green folder-lock mark with the shortcut arrow; this is extracted shell-icon evidence, not a rendered Explorer/taskbar/tray screenshot. The runtime observer failed its Python-wrapper identity handshake; separate recovery found every recorded identity absent and the hidden desktop unavailable, while replacement processes were left untouched. Console observation covers only the capture interval, not startup history. Rendered taskbar/tray icons, full workflows and a disposable fresh-machine installation remain unverified. Independent recovery is now recorded separately. Canonical capture promotion remains pending because release source 14d6e07636a1f1d62e6dd345273a0c6866664562 differs from verifier checkout edf13cba77968c81a3c7eca392fdc1f740126868. The genuine capture remains private and unpromoted; no tool-context image is presented as ordinary-installed proof.
 
@@ -186,50 +186,50 @@ Material Design 3 applies to the desktop, documentation website, extension and n
 
 ### Current captures
 
-Every image below is a genuine capture of the packaged app built from source `3227a1cc` (version 0.2.0), taken in a fresh isolated profile with a hidden window and left unedited. The [capture manifest](docs/images/captures/redesign-v2-3227a1cc/manifest.json) records each image's hash, size, viewport and theme, and lists what was not captured and why. The design decisions behind this frame are in [the version 2 decisions](design/redesign-2026-11/v2-decisions.md). Captures of earlier builds are in the [screenshot archive](docs/screenshots-archive.md).
+Every image below is a genuine capture of the packaged app built from source `5d8d4d94` (version 0.2.0), taken in a fresh isolated profile with a hidden window and left unedited. The [capture manifest](docs/images/captures/redesign-v2-5d8d4d94/manifest.json) records each image's hash, size, viewport and theme, and lists what was not captured and why. The design decisions behind this frame are in [the version 2 decisions](design/redesign-2026-11/v2-decisions.md). Captures of earlier builds are in the [screenshot archive](docs/screenshots-archive.md).
 
 <details>
-<summary>Home as a status dashboard, Home status dashboard, Drive list while the drive is locked (3)</summary>
+<summary>Unlocked drive, Unlocked drive, Home as a status dashboard (3)</summary>
 
-| Home as a status dashboard with the drives table | Home status dashboard | Drive list while the drive is locked |
+| Unlocked drive with the files table | Unlocked drive with a file selected | Home as a status dashboard with the drives table |
 |---|---|---|
-| ![Home as a status dashboard with the drives table, recent activity, needs attention, status and quick start, with the navigation tree on the left](docs/images/captures/redesign-v2-3227a1cc/home-light.png) | ![Home status dashboard, dark theme](docs/images/captures/redesign-v2-3227a1cc/home-dark.png) | ![Drive list while the drive is locked, with the inline unlock bar under the locked row and the New menu button](docs/images/captures/redesign-v2-3227a1cc/drive-list-light-1024.png) |
+| ![Unlocked drive with the files table, a file selected and the details pane with its encrypted parts and versions](docs/images/captures/redesign-v2-5d8d4d94/workspace-file-selected-light.png) | ![Unlocked drive with a file selected, dark theme](docs/images/captures/redesign-v2-5d8d4d94/workspace-file-selected-dark.png) | ![Home as a status dashboard with the drives table, recent activity, needs attention, status and quick start](docs/images/captures/redesign-v2-5d8d4d94/home-light.png) |
 
 </details>
 
 <details>
-<summary>New menu offering New drive on this PC, Local tools as a dense list grouped by category, Local tools list (3)</summary>
+<summary>Home status dashboard, Locked drive in the drive list, Inline unlock bar after a wrong password (3)</summary>
 
-| New menu offering New drive on this PC | Local tools as a dense list grouped by category with a details pane offering Open and Open in new tab | Local tools list |
+| Home status dashboard | Locked drive in the drive list with the inline unlock bar under its row: password | Inline unlock bar after a wrong password |
 |---|---|---|
-| ![New menu offering New drive on this PC, New Docker Hub drive and Open drive from Docker Hub](docs/images/captures/redesign-v2-3227a1cc/drive-new-menu-light-1024.png) | ![Local tools as a dense list grouped by category with a details pane offering Open and Open in new tab](docs/images/captures/redesign-v2-3227a1cc/local-tools-light.png) | ![Local tools list, dark theme](docs/images/captures/redesign-v2-3227a1cc/local-tools-dark.png) |
+| ![Home status dashboard, dark theme](docs/images/captures/redesign-v2-5d8d4d94/home-dark.png) | ![Locked drive in the drive list with the inline unlock bar under its row: password, Show, key file, unlock automatically and Unlock](docs/images/captures/redesign-v2-5d8d4d94/locked-unlock-bar-light.png) | ![Inline unlock bar after a wrong password, with the error under the field and the drive still locked](docs/images/captures/redesign-v2-5d8d4d94/locked-wrong-password-light.png) |
 
 </details>
 
 <details>
-<summary>Settings, Settings Backup category, Help mode on (3)</summary>
+<summary>New menu offering New drive on this PC, Local tools as a dense list grouped by category, Settings (3)</summary>
 
-| Settings with a category list and dense label and control rows | Settings Backup category with options that need backend work shown disabled and marked Coming in a later update | Help mode on: the help text of each control shown under it |
+| New menu offering New drive on this PC | Local tools as a dense list grouped by category with a details pane offering Open and Open in new tab | Settings with the category list and help mode on: the help text of each control shown under it |
 |---|---|---|
-| ![Settings with a category list and dense label and control rows](docs/images/captures/redesign-v2-3227a1cc/settings-light.png) | ![Settings Backup category with options that need backend work shown disabled and marked Coming in a later update](docs/images/captures/redesign-v2-3227a1cc/settings-backup-light.png) | ![Help mode on: the help text of each control shown under it, with no information icons](docs/images/captures/redesign-v2-3227a1cc/settings-help-mode-light.png) |
+| ![New menu offering New drive on this PC, New Docker Hub drive, Open drive from Docker Hub and Unlock existing drive](docs/images/captures/redesign-v2-5d8d4d94/drive-new-menu-light.png) | ![Local tools as a dense list grouped by category with a details pane offering Open and Open in new tab](docs/images/captures/redesign-v2-5d8d4d94/local-tools-light.png) | ![Settings with the category list and help mode on: the help text of each control shown under it, with no information icons](docs/images/captures/redesign-v2-5d8d4d94/settings-help-mode-light.png) |
 
 </details>
 
 <details>
-<summary>Help shown as a tooltip when keyboard focus reaches the New button, History page in the new frame, Recycle Bin page in the new frame (3)</summary>
+<summary>Settings Backup category, Help shown as a tooltip when keyboard focus reaches the New button, History page in the new frame (3)</summary>
 
-| Help shown as a tooltip when keyboard focus reaches the New button | History page in the new frame | Recycle Bin page in the new frame |
+| Settings Backup category with options that need backend work shown disabled and marked Coming in a later update | Help shown as a tooltip when keyboard focus reaches the New button | History page in the new frame |
 |---|---|---|
-| ![Help shown as a tooltip when keyboard focus reaches the New button](docs/images/captures/redesign-v2-3227a1cc/tooltip-focus-light-1024.png) | ![History page in the new frame](docs/images/captures/redesign-v2-3227a1cc/history-light.png) | ![Recycle Bin page in the new frame](docs/images/captures/redesign-v2-3227a1cc/recycle-bin-light.png) |
+| ![Settings Backup category with options that need backend work shown disabled and marked Coming in a later update](docs/images/captures/redesign-v2-5d8d4d94/settings-backup-light.png) | ![Help shown as a tooltip when keyboard focus reaches the New button](docs/images/captures/redesign-v2-5d8d4d94/tooltip-focus-light.png) | ![History page in the new frame](docs/images/captures/redesign-v2-5d8d4d94/history-light.png) |
 
 </details>
 
 <details>
-<summary>Drive list at 360 pixels wide, Navigation drawer at 360 pixels wide (2)</summary>
+<summary>Unlocked drive at 360 pixels wide, Settings at 360 pixels wide, Navigation drawer at 360 pixels wide (3)</summary>
 
-| Drive list at 360 pixels wide | Navigation drawer at 360 pixels wide with every tree destination |
-|---|---|
-| ![Drive list at 360 pixels wide, with the toolbar wrapping and the drive switcher, search, help and notifications in the title bar](docs/images/captures/redesign-v2-3227a1cc/drive-list-light-360.png) | ![Navigation drawer at 360 pixels wide with every tree destination](docs/images/captures/redesign-v2-3227a1cc/navigation-drawer-light-360.png) |
+| Unlocked drive at 360 pixels wide | Settings at 360 pixels wide with the categories wrapping above the rows | Navigation drawer at 360 pixels wide with every tree destination |
+|---|---|---|
+| ![Unlocked drive at 360 pixels wide](docs/images/captures/redesign-v2-5d8d4d94/workspace-light-360.png) | ![Settings at 360 pixels wide with the categories wrapping above the rows](docs/images/captures/redesign-v2-5d8d4d94/settings-light-360.png) | ![Navigation drawer at 360 pixels wide with every tree destination](docs/images/captures/redesign-v2-5d8d4d94/navigation-drawer-light-360.png) |
 
 </details>
 
