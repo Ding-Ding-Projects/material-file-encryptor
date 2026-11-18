@@ -21,6 +21,11 @@ export function createFakeRegistry(repository) {
       const bytes = Buffer.from(options.body), digest = sha(bytes); manifests.set(digest, bytes); tags.set(rest.slice(10), digest);
       return new Response('', { status: 201 });
     }
+    if (options.method === 'DELETE' && rest.startsWith('manifests/')) {
+      const digest = rest.slice(10); if (!manifests.delete(digest)) return new Response('', { status: 404 });
+      for (const [tag, value] of tags) if (value === digest) tags.delete(tag);
+      return new Response('', { status: 202 });
+    }
     if (rest.startsWith('manifests/')) { const key = rest.slice(10); const bytes = manifests.get(tags.get(key) ?? key); return bytes ? new Response(bytes) : new Response('', { status: 404 }); }
     if (rest === 'tags/list') return new Response(JSON.stringify({ name: repository, tags: [...tags.keys()].sort() }));
     return new Response('', { status: 404 });
