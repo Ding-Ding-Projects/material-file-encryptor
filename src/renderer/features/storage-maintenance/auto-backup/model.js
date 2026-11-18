@@ -1,0 +1,72 @@
+/**
+ * Pure view model for the automatic backup table: groups drives by repository, names each drive's state, and
+ * builds the summary line. Every value comes from the host's automatic backup status; nothing is invented.
+ */
+export const TAG_LIMIT = 1000;
+export const TAG_WARNING = 800;
+
+/** Percent of the running step, from bytes when known, otherwise from counted items. Null when unknown. */
+export function progressPercent(progress) {
+  if (!progress) return null;
+  const ratio = Number.isFinite(progress.totalBytes) && progress.totalBytes > 0 ? progress.completedBytes / progress.totalBytes
+    : Number.isFinite(progress.totalFiles) && progress.totalFiles > 0 ? progress.completedFiles / progress.totalFiles : null;
+  return ratio === null || !Number.isFinite(ratio) ? null : Math.max(0, Math.min(100, Math.round(ratio * 100)));
+}
+
+/** A short relative time: { key, count } where key is a copy key. */
+export function relativeTime(iso, now = Date.now()) {
+  const time = Date.parse(iso ?? '');
+  if (!Number.isFinite(time)) return { key: 'Never' };
+  const minutes = Math.floor(Math.max(0, now - time) / 60000);
+  if (minutes < 1) return { key: 'just now' };
+  if (minutes < 60) return { key: '{count} min ago', count: minutes };
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return { key: '{count} h ago', count: hours };
+  return { key: 'date', time };
+}
+
+/** One state per drive row: { key, tone, percent }. tone is ok, busy, warn, error or muted. */
+export function driveState(drive) {
+  if (drive.phase === 'unavailable') return { key: 'No encrypted storage', tone: 'muted' };
+  if (!drive.enabled) return { key: 'Backup off', tone: 'muted' };
+  if (drive.phase === 'backing-up') return { key: 'Backing up…', tone: 'busy', percent: progressPercent(drive.progress) };
+  if (drive.phase === 'paused') return { key: 'Paused while you use the drive', tone: 'busy' };
+  if (drive.phase === 'waiting-connection') return { key: 'Waiting for connection', tone: 'warn' };
+  if (drive.phase === 'needs-attention') return { key: 'Needs attention', tone: 'error' };
+  if (drive.dirty) return { key: 'Changes waiting', tone: 'busy' };
+  if (drive.lastBackup) return { key: 'Backed up', tone: 'ok' };
+  return { key: 'Waiting for the first backup', tone: 'muted' };
+}
+
+/** Repository groups, configured ones first and in name order; drives without a destination last. */
+export function groupDrives(drives = []) {
+  const groups = new Map();
+  for (const drive of drives) {
+    const key = drive.repository || '';
+    if (!groups.has(key)) groups.set(key, { repository: drive.repository || null, visibility: drive.visibility || null, drives: [], tagCount: null });
+    const group = groups.get(key);
+    group.drives.push(drive);
+    if (Number.isSafeInteger(drive.tagCount)) group.tagCount = Math.max(group.tagCount ?? 0, drive.tagCount);
+  }
+  return [...groups.values()].map(group => ({ ...group, nearLimit: Number.isSafeInteger(group.tagCount) && group.tagCount >= TAG_WARNING }))
+    .sort((a, b) => (a.repository === null) - (b.repository === null) || String(a.repository).localeCompare(String(b.repository)));
+}
+
+/** The page summary and the matching status bar text. */
+export function summary(status, now = Date.now()) {
+  if (!status) return { key: 'Loading the drive list…', tone: 'muted' };
+  if (!status.signedIn) return { key: 'Sign in to Docker Hub to back up automatically', tone: 'muted' };
+  if (status.noticeRequired) return { key: 'Read the notice below to turn on automatic backup', tone: 'warn' };
+  if (!status.settings.enabled) return { key: 'Automatic backup is off', tone: 'muted' };
+  const active = status.drives.filter(drive => drive.enabled && drive.phase !== 'unavailable');
+  const running = active.find(drive => drive.phase === 'backing-up');
+  if (running) return { key: 'Backing up… {percent}%', percent: progressPercent(running.progress), tone: 'busy' };
+  if (!status.online || active.some(drive => drive.phase === 'waiting-connection')) return { key: 'Waiting for connection', tone: 'warn' };
+  if (active.some(drive => drive.phase === 'needs-attention')) return { key: 'Needs attention', tone: 'error' };
+  const latest = active.map(drive => Date.parse(drive.lastBackup ?? '')).filter(Number.isFinite).sort((a, b) => b - a)[0];
+  if (!Number.isFinite(latest)) return { key: 'Automatic backup is on', tone: 'ok' };
+  return { key: 'Backed up {ago}', ago: relativeTime(new Date(latest).toISOString(), now), tone: 'ok' };
+}
+
+/** The first 6 characters of a device or vault id, for display beside a label. */
+export const shortId = value => typeof value === 'string' && /^[a-f0-9]{6,}$/.test(value) ? value.slice(0, 6) : '';

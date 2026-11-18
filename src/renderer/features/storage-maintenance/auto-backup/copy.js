@@ -1,0 +1,24 @@
+/** Cantonese wording for automatic backup. English source strings are the keys. */
+export const AUTO_BACKUP_COPY = Object.freeze({
+  'Docker Hub backup commands': 'Docker Hub 備份指令', 'Back up all now': '立即全部備份', 'Restore…': '還原…', 'Refresh': '重新整理', 'Backup settings': '備份設定',
+  'Drive': '磁碟', 'From': '來源', 'Last backup': '上次備份', 'Snapshots': '快照', 'Status': '狀態', 'Backup': '備份', 'This PC': '呢部電腦',
+  'Not backed up': '未備份', 'Never': '從未', 'just now': '啱啱', '{count} min ago': '{count} 分鐘前', '{count} h ago': '{count} 小時前',
+  'Backed up': '已備份', 'Backing up…': '備份緊…', 'Backup off': '備份已關閉', 'No encrypted storage': '冇加密儲存', 'Paused while you use the drive': '你用緊磁碟，暫停咗',
+  'Waiting for connection': '等緊網絡連線', 'Needs attention': '需要處理', 'Changes waiting': '有改動等緊備份', 'Waiting for the first backup': '等緊第一次備份',
+  'Public': '公開', 'Private': '私人', '{count} drives': '{count} 個磁碟', '1 drive': '1 個磁碟', '{count} of 1,000 tags': '1,000 個標籤用咗 {count} 個',
+  'Move drives to their own repositories': '將磁碟搬去各自嘅 repository',
+  'Back up now': '立即備份', 'Prune old snapshots now': '而家清走舊快照', 'Move to its own repository': '搬去自己嘅 repository', 'Stop backing up': '停止備份',
+  'Start backing up': '開始備份', 'Open this drive': '開啟呢個磁碟', 'Drive actions': '磁碟操作', 'Back up this drive': '備份呢個磁碟',
+  'Automatic backup is on': '自動備份已開啟', 'Automatic backup is off': '自動備份已關閉', 'Backed up {ago}': '{ago}備份咗', 'Backing up… {percent}%': '備份緊… {percent}%',
+  'Sign in to Docker Hub to back up automatically': '登入 Docker Hub 就可以自動備份', 'Read the notice below to turn on automatic backup': '睇完下面嘅說明就可以開啟自動備份',
+  'Loading the drive list…': '載入緊磁碟清單…', 'The drive list could not be read. The details below still work.': '讀唔到磁碟清單，下面嘅詳情仍然可以用。',
+  'changes back up {delay} after a drive goes idle': '磁碟靜咗 {delay} 之後備份改動', '1 minute': '1 分鐘', '{count} minutes': '{count} 分鐘', '{count} seconds': '{count} 秒',
+  'Kept {kept}, removed {pruned}': '保留 {kept} 個，清走 {pruned} 個', 'Some old snapshots could not be removed; they are tried again after the next backup.': '有啲舊快照清唔走，下次備份之後會再試。',
+  'Backups go to a public Docker Hub repository': '備份會放喺公開嘅 Docker Hub repository',
+  'Only encrypted data is uploaded. Anyone can see that the repository exists, how many drives and snapshots it holds, their sizes, backup times and drive labels, but never file names or contents.':
+    '只會上載加密咗嘅資料。任何人都睇到個 repository、入面有幾多個磁碟同快照、大細、備份時間同磁碟名，但係永遠睇唔到檔案名同內容。',
+  'Turn on automatic backup': '開啟自動備份',
+  'Backs up this drive automatically after changes and every hour. Turn it off to keep this drive on this PC only.': '有改動之後同每個鐘自動備份呢個磁碟。熄咗就只會留喺呢部電腦。',
+  'Number of snapshot tags in this repository. Docker Hub use by this app is limited to 1,000 tags per repository, shared by every drive in it.': '呢個 repository 入面嘅快照標籤數目。呢個程式每個 repository 最多用 1,000 個標籤，入面所有磁碟一齊用。',
+  'Removed {count} old snapshots.': '清走咗 {count} 個舊快照。', 'This drive now backs up to its own repository.': '呢個磁碟而家備份去自己嘅 repository。',
+});

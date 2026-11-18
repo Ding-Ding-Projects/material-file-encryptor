@@ -1,29 +1,49 @@
-/* Docker Hub backup overview: toolbar and the drive table grouped by repository. */
+/* Docker Hub backup overview: toolbar, summary, first-time notice and the drive table grouped by repository. */
 #view-storage{padding:0!important}
 #view-storage mfe-storage-maintenance{display:block;padding:12px 16px 24px}
 .hub-overview{border-bottom:1px solid var(--v2-line)}
 .hub-overview>.v2-toolbar{display:flex;align-items:center;gap:2px;flex-wrap:wrap;min-height:40px;padding:4px 8px;border-bottom:1px solid var(--v2-line);background:var(--v2-surface)}
 .hub-overview>.v2-toolbar #hub-backup-all{margin-inline-end:6px}
 .hub-overview>.v2-toolbar .end{margin-inline-start:auto}
+.hub-summary{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;padding:6px 12px;font-size:13px;border-bottom:1px solid var(--v2-line2)}
+.hub-summary .summary-state{font-weight:600}
+.hub-summary[data-tone=ok] .summary-state{color:var(--v2-ok)}
+.hub-summary[data-tone=warn] .summary-state{color:var(--md-sys-color-tertiary,#8a5a00)}
+.hub-summary[data-tone=error] .summary-state{color:var(--md-sys-color-error)}
+.hub-summary .muted{color:var(--v2-text2)}
+.hub-notice{display:grid;gap:6px;justify-items:start;margin:8px 12px;padding:10px 12px;border:1px solid var(--v2-line);border-radius:6px;background:var(--v2-bg);font-size:13px}
+.hub-notice p{margin:0;color:var(--v2-text2);max-width:80ch}
 .hub-overview-table{width:100%;border-collapse:collapse;table-layout:fixed}
 .hub-overview-table th{text-align:start;padding:0 12px;height:28px;font-size:12px;font-weight:600;color:var(--v2-text2);border-bottom:1px solid var(--v2-line)}
-.hub-overview-table thead th:nth-child(2){width:170px}
-.hub-overview-table thead th:nth-child(3){width:220px}
-.hub-overview-table thead th:nth-child(4){width:120px}
-.hub-overview-table thead th:nth-child(5){width:48px}
+.hub-overview-table thead th:nth-child(2){width:96px}
+.hub-overview-table thead th:nth-child(3){width:150px}
+.hub-overview-table thead th:nth-child(4){width:88px}
+.hub-overview-table thead th:nth-child(5){width:220px}
+.hub-overview-table thead th:nth-child(6){width:76px}
+.hub-overview-table thead th:nth-child(7){width:48px}
 .hub-overview-table td{padding:0 12px;height:var(--v2-row);font-size:13px;border-bottom:1px solid var(--v2-line2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.hub-overview-table td.name strong{font-weight:600}
+.hub-overview-table td.number{font-variant-numeric:tabular-nums}
+.hub-overview-table td.name .short-id{margin-inline-start:8px;font-size:11px;color:var(--v2-text3)}
 .hub-overview-table td.note{color:var(--v2-text2)}
-.hub-overview-table tr[data-state=on] td.status{color:var(--v2-ok)}
-.hub-overview-table tr[data-state=locked] td.status{color:var(--v2-text3)}
-.hub-overview-table td.menu{overflow:visible;padding:0}
+.hub-overview-table td.status .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-inline-end:8px;background:var(--v2-text3);vertical-align:middle}
+.hub-overview-table tr[data-tone=ok] td.status .dot{background:var(--v2-ok)}
+.hub-overview-table tr[data-tone=busy] td.status .dot{background:var(--md-sys-color-primary)}
+.hub-overview-table tr[data-tone=warn] td.status .dot{background:var(--md-sys-color-tertiary,#8a5a00)}
+.hub-overview-table tr[data-tone=error] td.status{color:var(--md-sys-color-error)}
+.hub-overview-table tr[data-tone=error] td.status .dot{background:var(--md-sys-color-error)}
+.hub-overview-table td.backup,.hub-overview-table td.menu{overflow:visible;padding:0 8px}
 .hub-overview-table .row-menu{width:28px;height:28px;--md-icon-button-state-layer-width:28px;--md-icon-button-state-layer-height:28px}
 .hub-overview-table .group-row th{height:30px;background:var(--v2-bg);color:var(--v2-text);border-bottom:1px solid var(--v2-line2)}
 .hub-overview-table .group-row th>*{margin-inline-end:10px}
+.hub-overview-table .group-row .group-end{float:inline-end;display:inline-flex;align-items:center;gap:8px;margin:0;font-weight:400;color:var(--v2-text2)}
+.hub-overview-table .group-row meter{width:120px;height:8px}
+.hub-overview-table .group-row[data-near-limit=true] .tag-count{color:var(--md-sys-color-tertiary,#8a5a00);font-weight:600}
 .hub-overview-table .group-row .repository{font-family:ui-monospace,Consolas,monospace;font-weight:600}
 .hub-overview-table .group-row .chip{font-size:11px;padding:1px 6px;border-radius:3px;background:var(--v2-line2);color:var(--v2-text2);font-weight:400}
 .hub-overview-table .group-row .muted{color:var(--v2-text2);font-weight:400}
 .hub-overview-note{margin:0;padding:6px 12px;font-size:12px;color:var(--v2-text3)}
+.hub-overview-note:empty{display:none}
 :root[data-max560] .hub-overview-table thead th:nth-child(2),:root[data-max560] .hub-overview-table td:nth-child(2),:root[data-max560] .hub-overview-table thead th:nth-child(4),:root[data-max560] .hub-overview-table td:nth-child(4){display:none}
 :root[data-max560] .hub-overview-table td{height:52px}
 :root[data-max560] .hub-overview-table .row-menu{width:48px;height:48px}
+:root[data-max560] .hub-overview-table .group-row .group-end{float:none;display:flex;margin-top:4px}
