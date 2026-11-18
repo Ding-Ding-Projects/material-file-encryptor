@@ -46,6 +46,8 @@ import {createRendererTiming,observeTaskPresentation} from './performance-timing
 import {mountWorkspaceChrome} from './features/shell/workspace-chrome.js';
 import {mountUnlockCard} from './features/shell/unlock-card.js';
 import {SHELL_COPY} from './features/shell/copy.js';
+import {SHARE_UI_COPY} from './features/share/copy.js';
+import {registerContextActions} from '../shared/surface/overlay.js';
 import {loadShellPreferences,saveShellPreferences,applyShellPreferences,normalizeShellPreferences} from './features/shell/shell-preferences.js';
 const rendererTiming=createRendererTiming(),timingLifetime=new AbortController();
 rendererTiming.finish(rendererTiming.begin('renderer-entry'),'settled');
@@ -167,7 +169,7 @@ document.addEventListener('scroll', event => {
  scrollTimers.set(surface, setTimeout(() => { surface.classList.remove('is-scrolling'); scrollTimers.delete(surface); }, 900));
 }, {capture:true,passive:true});
 $('view-drive').prepend($('operation'));
-const translateWorkspace=createTranslator(()=>({...effectiveLocalSettings,...preferences,school:effectiveLocalSettings.school}),{dictionary:{...SHELL_COPY,...GUIDANCE_COPY,...INFO_ICON_COPY,...COLLAPSE_COPY,...BULK_COPY,...DIMSUM_COPY,...ONBOARDING_COPY,...cantonese,...enhancedLabels}});
+const translateWorkspace=createTranslator(()=>({...effectiveLocalSettings,...preferences,school:effectiveLocalSettings.school}),{dictionary:{...SHELL_COPY,...SHARE_UI_COPY,...GUIDANCE_COPY,...INFO_ICON_COPY,...COLLAPSE_COPY,...BULK_COPY,...DIMSUM_COPY,...ONBOARDING_COPY,...cantonese,...enhancedLabels}});
 function t(source,options) { return translateWorkspace(source,options); }
 /** Quits the whole application (not just the window). Ctrl+Q, the Help and Settings menus, the New tab menu and the command palette all use this. */
 function quitApplication() { return api.quit ? api.quit() : api.windowControl('close'); }
@@ -352,7 +354,7 @@ function renderAvailability() {
  $('offline-button').disabled = !can.keepOffline;
  $('release-button').disabled = !can.releaseOffline;
  $('delete-button').disabled = !can.delete;
- $('copy-path-button').disabled = !file;$('backup-now-button').disabled = busy || !unlocked;$('new-button').disabled = busy || !api || !state;
+ $('copy-path-button').disabled = !file;$('share-button').disabled = busy || !mounted || selectedFiles().length !== 1 || !api?.shareCreate;$('backup-now-button').disabled = busy || !unlocked;$('new-button').disabled = busy || !api || !state;
  $('startup-setting').disabled = busy || !state;
  $('auto-unlock-setting').disabled = busy || !unlocked || Boolean(state?.sessionId && state.sessionId!=='main');
  $('forget-credential').disabled = busy || !state || Boolean(state?.sessionId && state.sessionId!=='main');
@@ -573,6 +575,19 @@ async function openHubDrive(mode) {
  }
  if (mode === 'open') hubDriveView.openExisting(); else hubDriveView.openCreate();
 }
+let shareView = null;
+/** The share dialog is loaded the first time it is needed: share the selected file, receive one, or list shares. */
+async function openShare(mode, detail) {
+ if (!api?.shareList) { showError(t('Docker Hub drives need the Windows desktop app.'),true); return; }
+ if (!shareView) {
+  const module = await import('./features/share/index.js');
+  shareView = module.mountShareDialog(document.body, { api, translate: t, language: preferences.language, getVaultState: () => state, clipboard: () => navigator.clipboard, confirm: text => confirmAction(t('Revoke'), text, t('Revoke')) });
+  workspaceDisposers.push(subscribeLanguage(() => shareView?.setLanguage(preferences.language)), () => { shareView?.destroy(); shareView = null; });
+ }
+ if (mode === 'share') { const files = selectedFiles(); if (files.length !== 1) { toast(t('Select one file to share.')); return; } shareView.share(files[0]); }
+ else if (mode === 'receive') shareView.receive(detail);
+ else shareView.list();
+}
 function openVaultDialog(mode) { prepareVaultForm(mode); const shown = $('vault-dialog').showModal(); $('storage-input').focus(); /* The dialog moves focus to its first control once it has opened, which is an information icon. Put it on the first field instead. */ Promise.resolve(shown).then(() => { if ($('vault-dialog').open) $('storage-input').focus(); }, () => {}); }
 /** Unlocks from the in-tab card: the saved folders and letter fill the same form the dialog uses, so both paths send identical requests. */
 async function unlockInline({mode,password,keyFilePath,autoUnlock}) {
@@ -665,6 +680,8 @@ listen('vault-form','submit',async event => {
 listen('vault-place-hub','click',() => { const unlocking = dialogMode === 'unlock'; closeVaultDialog(); void openHubDrive(unlocking ? 'open' : 'create'); });
 listen('vault-place-pc','click',() => { $('vault-place-pc').selected = true; $('vault-place-hub').selected = false; });
 listen('lock-button','click',() => run('Locking drive…',() => api.lock(),'Drive locked.'));
+listen('share-button','click',() => void openShare('share'));
+window.addEventListener('mfe:open-shared-files',() => void openShare('list'));
 window.addEventListener('mfe:open-split-storage',() => { if(!foundation)return; foundation.model.openTab({id:'split-storage',label:canonicalViewLabels['split-storage']}); foundation.shell.activate('split-storage'); });
 window.addEventListener('mfe:open-cloud-backup',() => { if(!foundation)return; const title=canonicalViewLabels.storage||'Docker Hub storage'; foundation.model.openTab({id:'storage',label:title}); foundation.shell.activate('storage'); requestAnimationFrame(()=>featureMounts.get('storage')?.focusBackup?.(false)); });
 listen('mount-button','click',() => run('Mounting drive…',() => api.mount({driveLetter:state.driveLetter || state.defaults?.driveLetter,...(normalizeDriveName(state.driveName) ? {driveName:normalizeDriveName(state.driveName)} : {})}),'Drive unlocked.'));
@@ -993,7 +1010,7 @@ function renderOperations() {
 }
 function workspaceCommands() {
  const command=(id,label,run)=>({id,label:{en:label,yue:cantonese[label]||enhancedLabels[label]||label},run});
- const commands=[command('vault:create','Create a drive',()=>openVaultDialog('create')),command('vault:unlock','Unlock existing drive',()=>openVaultDialog('unlock')),command('vault:hub-create','New Docker Hub drive',()=>void openHubDrive('create')),command('vault:hub-open','Open a drive from Docker Hub',()=>void openHubDrive('open')),command('vault:lock','Lock drive',()=>$('lock-button').click()),command('vault:import','Import files',importFiles),command('vault:sync','Sync now',()=>$('sync-button').click()),command('file:open','Open',openSelected),command('file:export','Export copy',()=>$('export-button').click()),command('file:offline','Keep offline',()=>$('offline-button').click()),command('file:release','Remove offline copy',()=>$('release-button').click()),command('history:save','Save version now',()=>$('save-version').click()),command('settings:vocabulary','Your vocabulary',()=>{foundation.shell.activate('settings');$('vocabulary-label').focus();})];
+ const commands=[command('vault:create','Create a drive',()=>openVaultDialog('create')),command('vault:unlock','Unlock existing drive',()=>openVaultDialog('unlock')),command('vault:hub-create','New Docker Hub drive',()=>void openHubDrive('create')),command('vault:hub-open','Open a drive from Docker Hub',()=>void openHubDrive('open')),{id:'file:share',label:{en:'Share via Docker Hub…',yue:SHARE_UI_COPY['Share via Docker Hub…']},disabled:!api?.shareCreate,run:()=>void openShare('share')},{id:'share:receive',label:{en:'Receive a shared file…',yue:SHARE_UI_COPY['Receive a shared file…']},disabled:!api?.shareReceive,run:()=>void openShare('receive')},{id:'share:list',label:{en:'Shared files',yue:SHARE_UI_COPY['Shared files']},disabled:!api?.shareList,run:()=>void openShare('list')},command('vault:lock','Lock drive',()=>$('lock-button').click()),command('vault:import','Import files',importFiles),command('vault:sync','Sync now',()=>$('sync-button').click()),command('file:open','Open',openSelected),command('file:export','Export copy',()=>$('export-button').click()),command('file:offline','Keep offline',()=>$('offline-button').click()),command('file:release','Remove offline copy',()=>$('release-button').click()),command('history:save','Save version now',()=>$('save-version').click()),command('settings:vocabulary','Your vocabulary',()=>{foundation.shell.activate('settings');$('vocabulary-label').focus();})];
  for(const key of ['theme','language','emoji','funnyEnglish','funnyCantonese']){const field=$(`${key}-setting`);const label=field.getAttribute('aria-label')||key;commands.push({id:`settings:${key}`,label:{en:label,yue:cantonese[label]||label},description:{en:'Application preferences',yue:'程式偏好設定'},group:{en:'Settings',yue:'設定'},control:{type:controlKind(field)==='select'?'select':['switch','checkbox'].includes(controlKind(field))?'switch':'range',min:Number(field.min)||0,max:Number(field.max)||100,options:controlKind(field)==='select'?[...field.options].map(option=>({value:option.value,label:{en:option.textContent,yue:cantonese[option.textContent]||option.textContent}})):undefined,get:()=>preferences[key],set:value=>{preferences[key]=value;savePreferences();applyPreferences();}},reveal:()=>{foundation.shell.activate('settings');field.scrollIntoView({block:'center'});field.focus();}});}
  // Every personalization setting is reachable from the palette, whichever Personalization tab is showing.
  commands.push(...personalizationSettingCommands({translate:text=>translateWorkspace(text,{language:'yue'}),open:(tab,label)=>{foundation.model.openTab({id:'personalization',label:canonicalViewLabels.personalization});foundation.shell.activate('personalization');const mounted=featureMounts.get('personalization');mounted?.open?.(tab);queueMicrotask(()=>{const root=document.getElementById('view-personalization');const wanted=t(label);const target=[...root?.querySelectorAll(CONTROL_SELECTOR+',input,select')||[]].find(node=>[node.getAttribute('aria-label'),node.label].includes(wanted)||[node.getAttribute('aria-label'),node.label].includes(label));target?.scrollIntoView?.({block:'center'});target?.focus?.();});}}));
@@ -1056,6 +1073,11 @@ function setupEnhancedWorkspace() {
  const acceptAccessibility=value=>{screenReaderActive=value?.known===true&&typeof value.enabled==='boolean'?value.enabled:null;narrationEvents.changed();};
  featureRequest('personalization','accessibilityState').then(acceptAccessibility).catch(()=>acceptAccessibility(null));
  // The desktop approved a browser request to bring the authenticator forward; no code or account detail travels with it.
+ // A share link opened from outside the app arrives as an id; the key stays in the main process.
+ let stopShareLinks=null;try{stopShareLinks=api?.onFeatureEvent?.('share',event=>{if(event?.type==='receive'&&typeof event.incomingId==='string')void openShare('receive',{incomingId:event.incomingId});else if(event?.type==='receive-invalid')void openShare('receive');});}catch{/* a bridge without share events (an older host or a test fixture) simply has no incoming links */}if(stopShareLinks)workspaceDisposers.push(stopShareLinks);
+ api?.shareStatus?.().then(status=>{if(typeof status?.incomingId==='string')void openShare('receive',{incomingId:status.incomingId});}).catch(()=>{});
+ // Right-click (or Shift+F10) on a file row offers sharing that file.
+ const fileList=$('file-list');if(fileList)workspaceDisposers.push(registerContextActions(fileList,({target})=>{const row=target?.closest?.('tr[data-file-id]');if(!row||!api?.shareCreate)return null;return{target:row,anchor:row,language:preferences.language==='zh-HK'?'yue':preferences.language,items:[{id:'file-share',label:{en:'Share via Docker Hub…',yue:SHARE_UI_COPY['Share via Docker Hub…']},disabled:!state?.mounted||state.locked!==false,run:()=>{if(!fileSelection.has(row.dataset.fileId)){fileSelection.only(row.dataset.fileId);syncSelection();}void openShare('share');}}]};}));
  const stopAuthenticatorFocus=api?.onFeatureEvent?.('access',event=>{if(event?.type!=='focusAuthenticator')return;foundation.model.openTab({id:'access',label:canonicalViewLabels.access});foundation.shell.activate('access');featureMounts.get('access')?.showAuthenticator?.();});if(stopAuthenticatorFocus)workspaceDisposers.push(stopAuthenticatorFocus);
  const stopAccessibility=api?.onFeatureEvent?.('personalization',event=>{if(event.type==='accessibilityState')acceptAccessibility(event.state);});if(stopAccessibility)workspaceDisposers.push(stopAccessibility);
  const openPalette=foundation.palette.open.bind(foundation.palette);foundation.palette.open=()=>{refreshPaletteInventory();openPalette();};const originalChangeButtons=[...document.querySelectorAll('[data-view]')];for(const button of originalChangeButtons)button.addEventListener('click',()=>{foundation.model.openTab({id:button.dataset.view,label:canonicalViewLabels[button.dataset.view]||button.dataset.view});foundation.shell.activate(button.dataset.view);});

@@ -20,7 +20,7 @@ export function squirrelEvent(argv) {
 
 export function runSquirrelLifecycle({
   argv, platform = process.platform, packaged, execPath, resourcesPath, userData,
-  exit, registerExplorer, removeExplorer, disableLogin, nativeHostEvent, spawn = nodeSpawn, watchdogMs = 6000, setTimer = setTimeout,
+  exit, registerExplorer, removeExplorer, registerProtocol = () => {}, removeProtocol = () => {}, disableLogin, nativeHostEvent, spawn = nodeSpawn, watchdogMs = 6000, setTimer = setTimeout,
 }) {
   const event = platform === 'win32' ? squirrelEvent(argv) : null;
   if (!event) return {handled: false, event: null};
@@ -36,9 +36,11 @@ export function runSquirrelLifecycle({
   if (event === '--squirrel-uninstall') {
     attempt(() => disableLogin());
     attempt(() => removeExplorer(execPath));
+    attempt(() => removeProtocol(execPath));
     shortcut = `--removeShortcut=${target}`;
   } else if (event === '--squirrel-install' || event === '--squirrel-updated') {
     attempt(() => registerExplorer(execPath));
+    attempt(() => registerProtocol(execPath));
     shortcut = `--createShortcut=${target}`;
   }
   // The host manifest comes first among the slower steps: it is what pairing depends on.

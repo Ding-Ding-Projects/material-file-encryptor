@@ -1817,3 +1817,14 @@ Decisions: the host allocates every folder, so the renderer never calls a folder
 Fixed on the way: the sign-in relay now passes real console handles to Docker 29 (STARTF_USESTDHANDLES with null handles) and the parser treats cursor moves as line breaks; the multi-drive listing filter used the vault id where tags carry the device id, so it now reads foreign devices once and keeps snapshots whose verified config matches.
 
 Open: live Docker Hub proof (organization namespace endpoint, tag listing, restore), packaged app proof and screenshots, sharing the picker with the Docker Hub storage page.
+
+## Share a file through Docker Hub, 2026-11-17
+
+Branch `ai/feature/20261117-share-via-docker-hub`, from `origin/main` 7dde79c4. Host: `src/main/share/` (`share-crypto.js` format and passphrase wrap, `share-command.js` parser, `share-registry.js` artifact upload and anonymous fetch, `share-list-store.js` protected list, `share-service.js`, `ipc.js`, `share-protocol.js`), wired in `main.js`, `validation.js` and `preload.cjs`; `registry-storage.js` gained an `artifacts` API that refuses `mfe-` tags; `vault-image-docker.js` gained `deleteShareTag` and `registryDeleteAuthorization`, both limited to `material-file-encryptor-shares`. Renderer: `src/renderer/features/share/`. Squirrel hooks call `registerShareProtocol`.
+
+Decisions: the plaintext is read from the mounted drive like Open, so sharing needs a mounted drive. The ciphertext is held in memory because the blob digest is needed before upload. A link or `--receive` argument is parsed and held in the main process; the renderer only gets an id. Revoke deletes the manifest by digest with a `pull,push,delete` token, because deleting only the tag left the untagged manifest downloadable by digest on Docker Hub (seen live), and the command is forgotten only after an anonymous 404 on both tag and digest.
+
+Live proof on the development computer with the signed-in test account: two shares of a 10-byte file whose content was `share test`, created that account's public `material-file-encryptor-shares` repository, anonymous receive decrypted to identical bytes, the first revoke attempt (tag only) left the digest at 200 and was reported unverified, the second design deleted the manifest (202) and the digest then returned 404 with no tags left. This ran the real host modules from Node, not the packaged app or its window.
+
+Open: packaged app proof, link opening from a browser, screenshots, byte progress, streaming upload near the size limit.
+

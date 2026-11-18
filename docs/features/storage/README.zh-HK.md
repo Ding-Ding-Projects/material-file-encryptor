@@ -25,3 +25,5 @@
 - [Split storage, Safety backup and mirrors](split-storage.md)
 - [唔使揀資料夾嘅 Docker Hub 磁碟](docker-hub-drive.zh-HK.md)
 - [Docker Hub drives without choosing a folder](docker-hub-drive.md)
+- [經 Docker Hub 分享檔案](share-via-docker-hub.zh-HK.md)
+- [Share a file through Docker Hub](share-via-docker-hub.md)

@@ -169,8 +169,43 @@ export function createRegistryStorage({ destination, authorize, fetcher = fetch,
     const driveName = cleanDriveNameLabel(manifest.annotations?.[DRIVE_NAME_ANNOTATION]);
     return { digest, snapshot: config, driveName };
   }
+  // Single-purpose OCI artifacts (shared files) reuse the same authorization, upload, redirect and verification
+  // rules. Their tags can never take the drive snapshot form, so drive listing never sees them.
+  const ARTIFACT_TAG = /^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$/;
+  const artifacts = Object.freeze({
+    async putBlob(bytes, mediaType, signal) {
+      if (!(bytes instanceof Uint8Array) || bytes.length > maxObjectBytes || typeof mediaType !== 'string') throw fail();
+      await authorization(signal, true);
+      return putBlob(bytes, mediaType, signal);
+    },
+    async putManifest(tag, bytes, signal) {
+      if (typeof tag !== 'string' || !ARTIFACT_TAG.test(tag) || tag.startsWith('mfe-') || !(bytes instanceof Uint8Array) || bytes.length > 1024 ** 2) throw fail();
+      await authorization(signal, true);
+      const result = await request(`${base}/manifests/${tag}`, { method: 'PUT', body: bytes, headers: { 'Content-Type': OCI } }, signal);
+      await result.body?.cancel();
+      return sha(bytes);
+    },
+    /** Reads a manifest by digest (verified against it) or by artifact tag. */
+    async getManifest(reference, signal) {
+      if (typeof reference !== 'string' || !(DIGEST.test(reference) || (ARTIFACT_TAG.test(reference) && !reference.startsWith('mfe-')))) throw fail();
+      const response = await request(`${base}/manifests/${reference}`, { headers: { Accept: OCI }, allowNotFound: true }, signal);
+      if (response.status === 404) { await response.body?.cancel(); const missing = fail(); missing.code = 'NOT_FOUND'; throw missing; }
+      const raw = await bounded(response, 1024 ** 2, signal);
+      if (DIGEST.test(reference) && sha(raw) !== reference) throw fail();
+      return raw;
+    },
+    getBlob: (item, mediaType, signal) => getBlob(item, mediaType, signal),
+    /** Asks the registry to delete a manifest by digest. Returns false when the registry refuses. */
+    async deleteManifest(digest, signal) {
+      if (typeof digest !== 'string' || !DIGEST.test(digest)) throw fail();
+      await authorization(signal, true);
+      try { const result = await request(`${base}/manifests/${digest}`, { method: 'DELETE', allowNotFound: true }, signal); await result.body?.cancel(); return true; }
+      catch { return false; }
+    },
+  });
   return {
     target,
+    artifacts,
     // known: layer digests that snapshots in this repository already reference; they are linked, never uploaded again.
     // Any other layer the registry already has (an earlier run that stopped part way) is skipped after a HEAD check.
     async publish({ vaultId, deviceId, parents = [], files, readFile, driveName, onVerifying = null, known = new Set(), onSkipped = null }, signal) {

@@ -3,7 +3,7 @@ import {createProfileAuthenticationDialog} from './profile-authentication-dialog
 import {createBrowserConfirmPrompt} from './browser-confirm-prompt.js';
 import {readRuntimeAccessibility} from './startup-photo-service.js';
 import { selectVerificationRestartContext } from './verification-restart-context.js';
-import { readFileSync } from 'node:fs';
+import { readFileSync, createReadStream } from 'node:fs';
 import { app, autoUpdater, BrowserWindow, desktopCapturer, dialog, ipcMain, Menu, powerMonitor, safeStorage, shell, Tray } from 'electron'
 import { createMaterialDialogs, materialDialogPaths } from './material-dialog.js'
 import { describePending, shutdownPrompt } from './shutdown-pending.js';
@@ -46,6 +46,9 @@ import { repairNativeHostRegistration, fixedManifestDirectory } from './browser-
 import { DEFAULT_DRIVE_NAME, normalizeDriveName } from '../shared/drive-name.js';
 import { createPairingCodes } from './browser-pairing-code.js';
 import { createSessionEnd } from './session-end.js';
+import { createShareService } from './share/share-service.js';
+import { createShareListStore, safeStorageProtection } from './share/share-list-store.js';
+import { SHARE_METHODS, dispatchShare, receiveArgument } from './share/ipc.js';
 
 import { desktopIconPath, brandedBrowserWindow } from './desktop-icons.js';
 
@@ -153,6 +156,40 @@ const splitStorage = createSplitStorageService({
   pickFolder: async () => { const picked = await uiDialog.showOpenDialog(window, { title: 'Choose a folder for split storage · 選擇分散存放嘅資料夾', properties: ['openDirectory', 'createDirectory'] }); return picked.canceled ? null : picked.filePaths[0] ?? null; },
   authorize: (repository, signal, visibility) => registryDocker.registryAuthorization(repository, signal, visibility),
   registryDestination: registryTestDestination });
+// Sharing one file through Docker Hub. The plaintext is read from the mounted drive, the same path Open uses,
+// and is never written to a temporary file; a received file is written only where the user chooses.
+const shareError = (code, message) => Object.assign(Error(message), { code });
+const shareService = createShareService({
+  docker: registryDocker,
+  store: createShareListStore({ file: path.join(app.getPath('userData'), 'shared-files.bin'), protection: safeStorageProtection(safeStorage) }),
+  testDestination: registryTestDestination,
+  readSource: async entryId => {
+    if (!helper || state.locked || state.lockVerified === false) throw shareError('LOCKED', 'Unlock the drive before sharing a file.');
+    if (!state.mounted) throw shareError('NOT_MOUNTED', 'Mount the drive before sharing a file.');
+    const entry = await helper.request('getFile', { entryId });
+    if (!entry) throw shareError('NOT_FOUND', 'Select a current file.');
+    const filename = mountedPath(entry.path), stat = await fs.stat(filename);
+    if (!stat.isFile()) throw shareError('NOT_FOUND', 'Only files can be shared.');
+    return { name: path.win32.basename(entry.path), size: stat.size, modified: stat.mtime.toISOString(), open: signal => createReadStream(filename, { signal, highWaterMark: 1024 * 1024 }) };
+  },
+  chooseSaveFile: async name => {
+    const picked = await dialog.showSaveDialog(window, { title: 'Save the shared file · 儲存分享嘅檔案', defaultPath: path.join(lastExportDirectory || app.getPath('downloads'), name) });
+    if (picked.canceled || !picked.filePath) return null;
+    const target = await safeDestination(picked.filePath, [state.storageDir, state.cacheDir]);
+    lastExportDirectory = path.dirname(target); return target;
+  },
+  driveTarget: async name => {
+    if (state.locked || !state.mounted) throw shareError('NOT_MOUNTED', 'Unlock and mount the drive to save into it.');
+    return uniqueExportName(mountedPath(), name);
+  },
+});
+/** A share link or --receive command from the command line is held here; only an id reaches the renderer. */
+function handleIncomingShare(argv) {
+  const text = receiveArgument(argv); if (!text) return false;
+  const incomingId = shareService.acceptIncoming(text);
+  if (window && !window.isDestroyed()) { showWindow(); window.webContents.send('feature:event', 'share', incomingId ? { type: 'receive', incomingId } : { type: 'receive-invalid' }); }
+  return true;
+}
 const REGISTRY_METHODS = new Set(['registryStorageStatus', 'configureRegistryStorage', 'syncRegistryStorage', 'listRegistrySnapshots', 'restoreRegistrySnapshot', 'cancelRegistryStorage']);
 const conflictRequest = createRegistryConflictRequests({
   nativeRequest: (method, params, id) => vaultSessions.request(method, params, id),
@@ -322,6 +359,10 @@ async function dispatchRequest(method, params, context) {
     if (method === 'startRegistryLogin') return registryLogin.start();
     return registryLogin.openPage();
   }
+  if (SHARE_METHODS.has(method)) {
+    if (!['shareStatus', 'shareCancel', 'shareList', 'shareReceiveDiscard'].includes(method) && (quitPending || shuttingDown || updateInstallLease)) throw Error('The application is preparing to close.');
+    return dispatchShare(shareService, method, params);
+  }
   if (HUB_DRIVE_METHODS.has(method)) {
     if (!helper || (verificationMode || testMode) && !registryTestDestination) throw Error('Docker Hub drives require the native vault helper.');
     if (!['hubCatalogStatus', 'hubCatalogCancel', 'hubRestoreStatus', 'hubRestoreCancel', 'hubShowFolder'].includes(method) && (quitPending || shuttingDown || updateInstallLease)) throw Error('The application is preparing to close.');
@@ -468,7 +509,7 @@ async function lockAllVaults() {
 async function hasActiveWork() {
   if (restartPreparation.started) return false;
   const active=await vaultSessions.operations();
-  return Boolean(operation || registryLogin.pending || registryBackupAll.pending || registrySync.pending || splitStorage.pending || vaultImages.pending || browserHandoff?.pending || await features?.pending() || active.some(item=>['queued','running','cancelling'].includes(item.state)));
+  return Boolean(operation || registryLogin.pending || registryBackupAll.pending || shareService.pending || registrySync.pending || splitStorage.pending || vaultImages.pending || browserHandoff?.pending || await features?.pending() || active.some(item=>['queued','running','cancelling'].includes(item.state)));
 }
 async function updateStatus() {
   const snapshot=updates?.status()||{state:'unavailable',reason:'NOT_INITIALIZED'};
@@ -512,7 +553,7 @@ async function acquireUpdateLease() {
 const restartPreparation=createRestartPreparation({
   verify:async()=>{if(!updateInstallLease||!vaultSessions.safelyLocked||await hasActiveWork())throw new Error('The application is not ready to restart safely.');},
   preflight:async()=>{verificationStartup?.restore();},
-  closeServices:async()=>{await closeBrowserHandoff();await localAdapter?.close();await features?.close();await registryLogin.close();hubCatalog.cancel();registrySync.close();splitStorage.close();await vaultImages.close();},
+  closeServices:async()=>{shareService.close();await closeBrowserHandoff();await localAdapter?.close();await features?.close();await registryLogin.close();hubCatalog.cancel();registrySync.close();splitStorage.close();await vaultImages.close();},
   clearMarker:()=>fs.rm(sessionMarkerPath(),{force:true}),
   disposeHelper:async()=>{helper?.dispose();},
   prepared:()=>{shuttingDown=true;}
@@ -560,14 +601,14 @@ async function quit(ownRequest = false) {
     features.beginExit();
     if (helper) await perform('unmounting', lockAllVaults);
     if (!vaultSessions.safelyLocked) throw new Error('All vaults must confirm that they are locked.');
-    await closeBrowserHandoff();await updates?.dispose();await localAdapter?.close();await features?.close();await registryLogin.close();registrySync.close();await vaultImages.close(); verificationStartup?.restore();await fs.rm(sessionMarkerPath(),{force:true});shuttingDown = true; helper?.dispose(); setImmediate(() => app.quit());
+    await closeBrowserHandoff();await updates?.dispose();await localAdapter?.close();await features?.close();await registryLogin.close();registrySync.close();shareService.close();await vaultImages.close(); verificationStartup?.restore();await fs.rm(sessionMarkerPath(),{force:true});shuttingDown = true; helper?.dispose(); setImmediate(() => app.quit());
   } catch (error) { showWindow(); await uiDialog.showMessageBox(window, { type: 'error', title: 'Application is still running', message: error.message }); }
   finally {quitPending=false;if(!shuttingDown)features.endExit();}
 }
 // Squirrel lifecycle arguments were already handled, with a bounded exit, by the first import.
 if (squirrelHandled || !app.requestSingleInstanceLock()) app.quit();
 else {
-  app.on('second-instance', (_event,args) => {if(args.includes('--registry-sync')){void runRegistryDue().catch(()=>{});return;}if(window){showWindow();void vaultSessions.run(() => handleExplorerCopy(args)).catch(() => showWindow());}});
+  app.on('second-instance', (_event,args) => {if(args.includes('--registry-sync')){void runRegistryDue().catch(()=>{});return;}if(window){showWindow();if(handleIncomingShare(args))return;void vaultSessions.run(() => handleExplorerCopy(args)).catch(() => showWindow());}});
   app.whenReady().then(async () => {
     interruptedSession=await fs.access(sessionMarkerPath()).then(()=>true,()=>false);
     await fs.mkdir(app.getPath('userData'),{recursive:true});
@@ -686,7 +727,7 @@ else {
         try { await runRegistryDue(); } finally { if (!registrySync.pending && vaultSessions.safelyLocked) await quit(); }
       }
     }
-    await handleExplorerCopy(process.argv);
+    if (!handleIncomingShare(process.argv)) await handleExplorerCopy(process.argv);
   }).catch(handleStartupFailure);
   app.on('before-quit', event => {
     if (shuttingDown || testMode) return;
