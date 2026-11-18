@@ -3,6 +3,7 @@ import {partBytes, operationProgress, activePacking} from './model.js';
 import './vault-image-panel.js';
 import './registry-panel.js';
 import './registry-conflicts-panel.js';
+import {mountHubOverview} from './hub-overview.js';
 
 const COPY = {
  title:['Storage maintenance','儲存空間維護'], splitOpen:['Split storage and mirrors','分散存放同鏡像備份'], size:['Physical part size (MiB)','實體分段大小（MiB）'], pack:['Pack current files','整理目前檔案'], refresh:['Refresh storage','重新整理儲存狀態'], cancel:['Cancel and pause queued packing','取消並暫停排隊整理'], resume:['Resume packing','繼續整理'], paused:['Packing is paused. Queued files are retained. Resume packing to continue.','整理已暫停，排隊檔案會保留。請按繼續整理以恢復。'], unavailable:['Unlock the drive to inspect storage.','請解鎖磁碟以查看儲存狀態。'],
@@ -36,4 +37,8 @@ export class StorageMaintenance extends SurfaceElement {
  destroy(){this.disposed=true;this.generation++;this.imagePanel.destroy();this.registryPanel.destroy();this.conflictsPanel.destroy();this.remove();}
 }
 register('mfe-storage-maintenance',StorageMaintenance);
-export function mountStorageMaintenance(root,options={}){const panel=element('mfe-storage-maintenance');root.replaceChildren(panel);panel.configure(options);return {focusBackup:(auto=false)=>panel.registryPanel.backupPanel.focusStart(auto),refresh:()=>Promise.all([panel.refresh(),panel.imagePanel.refresh(),panel.registryPanel.refresh(),panel.conflictsPanel.refresh()]),setVaultState:state=>panel.setVaultState(state),setLanguage:value=>panel.setLanguage(value),refreshLabels:()=>{panel.render();panel.imagePanel.render();panel.registryPanel.render();panel.conflictsPanel.render();},destroy:()=>panel.destroy()};}
+export function mountStorageMaintenance(root,options={}){const panel=element('mfe-storage-maintenance');root.replaceChildren(panel);panel.configure(options);
+ // The overview table sits above the full panels; every existing control stays below it.
+ const focusBackup=(auto=false)=>panel.registryPanel.backupPanel.focusStart(auto);
+ const overview=mountHubOverview(root,{services:options.services||{},getLanguage:()=>panel.language||options.language||'en',onBackupAll:()=>{panel.registryPanel.scrollIntoView?.({block:'start'});focusBackup(false);},onRestore:()=>options.onRestore?.(),onShowDetails:()=>panel.scrollIntoView?.({block:'start'}),onOpenDrive:id=>options.onOpenDrive?.(id),onSettings:()=>options.onSettings?.()});
+ return {overview,focusBackup:(auto=false)=>panel.registryPanel.backupPanel.focusStart(auto),refresh:()=>Promise.all([overview.refresh(),panel.refresh(),panel.imagePanel.refresh(),panel.registryPanel.refresh(),panel.conflictsPanel.refresh()]),setVaultState:state=>panel.setVaultState(state),setLanguage:value=>{panel.setLanguage(value);overview.setLanguage();},refreshLabels:()=>{panel.render();panel.imagePanel.render();panel.registryPanel.render();panel.conflictsPanel.render();},destroy:()=>{overview.destroy();panel.destroy();}};}
