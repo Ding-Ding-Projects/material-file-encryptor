@@ -252,8 +252,10 @@ test('the catalog offers an explicit Quit action in both languages when the shel
 
 test('Quit is reachable from the Help and Settings menus, the command palette and Ctrl+Q, and the stylesheet wraps the Availability cell', async () => {
   const navigation = await fs.readFile('src/renderer/features/shell/navigation.js', 'utf8');
-  assert.match(navigation, /\(id==='help'\|\|id==='settings'\)&&typeof this\.onQuit==='function'/);
-  assert.match(navigation, /rail\.configure\(\{labels,language,onActivate:activate,onQuit\}\)/);
+  // The Settings and Help tree rows open their grouped menu, with Quit, on right-click or the context-menu key.
+  assert.match(navigation, /openGroupMenu\(id,anchor,event\)\{if\(!GROUPS\[id\]\)return;.*typeof this\.onQuit==='function'/);
+  assert.match(navigation, /addEventListener\('contextmenu'/);
+  assert.match(navigation, /rail\.configure\(\{labels,language,onActivate:activate,onQuit,onAddDrive\}\)/);
   const app = await fs.readFile('src/renderer/app.js', 'utf8');
   assert.match(app, /id:'application:quit',label:\{en:'Quit application',yue:'結束程式'\},shortcut:'Control\+q',run:\(\)=>quitApplication\(\)/);
   assert.match(app, /onQuit:\(\)=>quitApplication\(\)/);

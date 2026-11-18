@@ -2,6 +2,10 @@
 
 Every capable control has its own compact information icon placed immediately before it, so it comes first in reading and keyboard order and stays attached to its control when a row wraps. The icon is a Material icon button bundled with the product, so it needs no network access. It stays closed until you open it.
 
+## In the desktop app: help without icons
+
+The desktop app no longer draws an icon in front of each control. The same help text is the control's tooltip, shown when the pointer rests on it or keyboard focus reaches it, and its accessible description, read by screen readers. The ? button in the title bar turns on help mode, which shows the text inline under every control. The full explanation and the guided steps of each control stay in the command palette as Explain and Guide commands. The website and the browser extension still use the icons described below.
+
 ## What the icon does
 
 - Opens an explanation written for that one control: its purpose, options, default, effects, an example, validation and recovery.
@@ -18,7 +22,7 @@ An icon never reads the live value of its control, never copies private text suc
 
 The inventories below cover the static markup of each page and the controls that the page code creates at start-up. A coverage check reads each page as text and fails when a capable control has neither an explanation nor a stated reason.
 
-- Desktop app (`src/renderer/index.html`): 90 explanations (1 for groups of related controls), 9 stated exemptions.
+- Desktop app (`src/renderer/index.html`): 92 explanations (1 for groups of related controls), 9 stated exemptions.
 - Split storage page (`src/renderer/features/split-storage/panel.js`): 2 explanations (0 for groups of related controls), 0 stated exemptions.
 - Docker Hub drive dialog (`src/renderer/features/docker-hub-drive/dialog.js`): 4 explanations (0 for groups of related controls), 0 stated exemptions.
 - Share via Docker Hub dialog (`src/renderer/features/share/dialog.js`): 7 explanations (0 for groups of related controls), 0 stated exemptions.
@@ -119,7 +123,7 @@ Source checks mount every icon on a document fixture and open it from the keyboa
 **Main navigation** — `mfe-navigation-rail`
 
 - Kind: navigation
-- Purpose: Switch between the six main views: My drive, Available offline, History, Recycle Bin, Settings and How it works.
+- Purpose: Go to Home, a drive and its folders, Available offline, History, Recycle Bin, Docker Hub backup, Local tools, Settings or Help from one tree.
 - Effects: Choosing a view only changes what is shown; it never opens, locks or changes a drive.
 - Default: The first destination
 - Example: Example for "Main navigation": choosing a view only changes what is shown; it never opens, locks or changes a drive.
@@ -393,6 +397,26 @@ Source checks mount every icon on a document fixture and open it from the keyboa
 - Effects: A long background job rewrites encrypted parts. Files stay readable while it runs.
 - Default: Not invoked
 - Example: Example for "Re-split existing files": a long background job rewrites encrypted parts. Files stay readable while it runs.
+
+### desktop-drive-switcher
+
+**Switch drive** — `#drive-switcher`
+
+- Kind: button
+- Purpose: Show the open drive by name and switch to another drive, or add one, from a short menu.
+- Effects: Switching only changes which drive the window shows; it never locks, unlocks or changes a drive.
+- Default: Not invoked
+- Example: Example for "Switch drive": switching only changes which drive the window shows; it never locks, unlocks or changes a drive.
+
+### desktop-help-mode-toggle
+
+**Help mode** — `#help-mode-toggle`
+
+- Kind: button
+- Purpose: Turn help mode on to show the help text under every control, or off to show it only as a tooltip when you point at or focus a control.
+- Effects: Only the help text appears or disappears; no setting, drive or file changes. The choice is remembered on this PC.
+- Default: Not invoked
+- Example: Example for "Help mode": only the help text appears or disappears; no setting, drive or file changes. The choice is remembered on this PC.
 
 ### desktop-drive-tab-add
 

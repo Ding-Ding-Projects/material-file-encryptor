@@ -22,9 +22,9 @@ export function mountPanelLayout(panel,{id,storage,language='en',registerContext
  const enter=value=>{mode=value;panel.tabIndex=-1;panel.focus();panel.setAttribute('aria-description',language==='yue'?'使用方向鍵調整，Shift 每次 40 像素，Escape 完成。':'Use arrow keys to adjust, Shift for 40 pixels, Escape to finish.');};
  const key=event=>{if(!mode||event.target!==panel)return;if(event.key==='Escape'){mode=null;panel.removeAttribute('aria-description');return;}const delta={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[event.key];if(!delta)return;event.preventDefault();const state=model.get()||normalizePanelLayout({width:panel.clientWidth,height:panel.clientHeight},bounds()),step=event.shiftKey?40:10;model.change(mode==='move'?{...state,x:state.x+delta[0]*step,y:state.y+delta[1]*step}:{...state,width:state.width+delta[0]*step,height:state.height+delta[1]*step});apply();};
  const actions=()=>[
- {id:'layout-move',label:text('Move panel with keyboard','以鍵盤移動面板'),run:()=>enter('move')},
- {id:'layout-resize',label:text('Resize panel with keyboard','以鍵盤調整面板大小'),run:()=>enter('resize')},
- {id:'layout-reset',label:text('Reset panel layout','重設面板版面'),run:()=>{model.reset();apply();}}
+ {id:'layout-move',group:'customize',label:text('Move panel with keyboard','以鍵盤移動面板'),run:()=>enter('move')},
+ {id:'layout-resize',group:'customize',label:text('Resize panel with keyboard','以鍵盤調整面板大小'),run:()=>enter('resize')},
+ {id:'layout-reset',group:'customize',label:text('Reset panel layout','重設面板版面'),run:()=>{model.reset();apply();}}
  ];
  const unregister=registerContextActions(panel,({target})=>({target,anchor:target,language,items:actions()}));
  panel.addEventListener('keydown',key);win.addEventListener('resize',apply);apply();

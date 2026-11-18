@@ -1827,4 +1827,11 @@ Decisions: the plaintext is read from the mounted drive like Open, so sharing ne
 Live proof on the development computer with the signed-in test account: two shares of a 10-byte file whose content was `share test`, created that account's public `material-file-encryptor-shares` repository, anonymous receive decrypted to identical bytes, the first revoke attempt (tag only) left the digest at 200 and was reported unverified, the second design deleted the manifest (202) and the digest then returned 404 with no tags left. This ran the real host modules from Node, not the packaged app or its window.
 
 Open: packaged app proof, link opening from a browser, screenshots, byte progress, streaming upload near the size limit.
+## Version 2 frame and pages, 2026-11-17
+
+Branch `ai/feature/20261117-redesign-v2` (issue #25). Shell: `src/renderer/features/shell/navigation.js` (navigation tree and title bar tools), `drive-list.js` and `drive-list.css` (drive list with the inline unlock bar), `v2-frame.css` (visual system), `src/shared/surface/help-hints.js` (tooltip and help mode), the hint presentation in `control-guidance.js` and `info-icon-mount.js`, and the title bar strip in `model.js` and `workspace-shell.js`. Pages: `features/home-dashboard`, `features/local-tools`, `features/settings-layout`, `features/storage-maintenance/hub-overview.js`, and the easy path and New repository row in `features/docker-hub-drive`.
+
+Decisions (also in `design/redesign-2026-11/v2-decisions.md`): pages no longer open as tabs by themselves, the tree reaches every page and the New tab catalog with Open every tab still opens them as tabs; desktop help moves from (i) icons to tooltips, accessible descriptions and help mode; comfortable density keeps 48 px rows; backup options that need backend work are disabled with "Coming in a later update".
+
+Open: packaged-build captures and README replacement (see the branch report), automatic backup and retention backends, context-menu filter removal, per-drive figures, Share and Shared files (separate lane).
 

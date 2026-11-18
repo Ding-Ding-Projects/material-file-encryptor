@@ -152,8 +152,8 @@ export function mountAppearanceEditor(root,services={}) {
   if(!admittedTarget(captured))return null;
   if(event?.type==='contextmenu'&&event.shiftKey){event.preventDefault();open(captured);return null;}
   return {target:captured,anchor:captured,language:services.getLanguage?.()||'en',items:[
-   {id:'appearance.edit',label:t('Edit appearance…'),shortcut:'Ctrl+Alt+A',run:element=>{if(!admittedTarget(element))throw Error('This control is unavailable.');return open(element);}},
-   {id:'appearance.lock',label:t('Lock this element…'),disabled:typeof services.onLock!=='function',run:element=>{if(!admittedTarget(element))throw Error('This control is unavailable.');if(typeof services.onLock!=='function')throw Error('The appearance lock adapter is unavailable.');return services.onLock(element);}}
+   {id:'appearance.edit',group:'customize',label:t('Edit appearance…'),shortcut:'Ctrl+Alt+A',run:element=>{if(!admittedTarget(element))throw Error('This control is unavailable.');return open(element);}},
+   {id:'appearance.lock',group:'customize',label:t('Lock this element…'),disabled:typeof services.onLock!=='function',run:element=>{if(!admittedTarget(element))throw Error('This control is unavailable.');if(typeof services.onLock!=='function')throw Error('The appearance lock adapter is unavailable.');return services.onLock(element);}}
   ]};
  });
  const keyboard=e=>{if(e.defaultPrevented)return;if(e.key==='Escape'&&!panel.hidden){e.preventDefault();close();}else if(e.ctrlKey&&e.altKey&&e.key.toLowerCase()==='a'){const element=(e.composedPath?.()||[e.target]).find(candidate=>candidate?.nodeType===1&&root.contains(candidate)&&!candidate.getRootNode?.().host);if(admittedTarget(element)){e.preventDefault();open(element);}}};

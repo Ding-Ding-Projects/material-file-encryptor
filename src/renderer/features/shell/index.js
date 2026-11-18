@@ -19,7 +19,7 @@ import {offerRegisteredViews} from '../../../shared/surface/view-registration.js
 if(typeof document!=='undefined')installShadowReducedMotion(document);
 
 /** Mounts reusable chrome without mutating host content or acquiring host capabilities. */
-export function mountSurfaceFoundation({host,before=null,storage,language='en',provenance,tabs=[],onActivate=()=>{},commands=[],onExport,renderText=value=>value,onNotificationAction,onNotification,onQuit,navigationHost,sounds,homeStatus,homeActivity}={}) {
+export function mountSurfaceFoundation({host,before=null,storage,language='en',provenance,tabs=[],onActivate=()=>{},commands=[],onExport,renderText=value=>value,onNotificationAction,onNotification,onQuit,onAddDrive,navigationHost,sounds,homeStatus,homeActivity,homeDashboard}={}) {
   if(!(host instanceof HTMLElement))throw new TypeError('A host element is required');
   tabs=[...tabs];
   const model=createSurfaceModel({storage,storageKey:'mfe.surface.tabs.v1',tabs:tabs.slice(0,1).map(tab=>({...tab,label:localized(tab.label,'en')}))});
@@ -33,11 +33,13 @@ export function mountSurfaceFoundation({host,before=null,storage,language='en',p
   const views=new Map();let activeLanguage=language;let hostCommands=commands;
   // Home lists every destination as a card; it is a view of the shell like any other and opens only when asked.
   const homeRoot=element('section',{class:'home-view',hidden:true});const homeGrid=element('mfe-home-grid');homeRoot.append(homeGrid);
+  // The desktop shows Home as a status dashboard; the card grid stays for surfaces that do not provide one.
+  const dashboard=typeof homeDashboard?.mount==='function'?homeDashboard.mount(homeRoot):null;if(dashboard)homeGrid.hidden=true;
   views.set(HOME_ID,{id:HOME_ID,root:homeRoot,label:HOME_LABEL,layout:false});labels.set(HOME_ID,HOME_LABEL);model.registerCanonicalTab(HOME_ID,'Home');
   let recentRows=null,recentRequest=0;
-  const renderHome=()=>{homeRoot.setAttribute('aria-label',localized(HOME_LABEL,activeLanguage));let status={};try{status=homeStatus?.()||{};}catch{status={};}homeGrid.configure({layout:'flagship',entries:flagshipEntries(labels,model.getState(),status),tools:toolsSummary(labels),recent:recentRows,language:activeLanguage,onOpen:entry=>{model.openTab({id:entry.id,label:localized(labels.get(entry.id),'en')});shell.activate(entry.id);}});};
+  const renderHome=()=>{homeRoot.setAttribute('aria-label',localized(HOME_LABEL,activeLanguage));let status={};try{status=homeStatus?.()||{};}catch{status={};}if(dashboard){try{dashboard.render({language:activeLanguage,state:homeDashboard.state?.()||null,status,recent:recentRows});}catch(error){console.error(error);}}homeGrid.configure({layout:'flagship',entries:flagshipEntries(labels,model.getState(),status),tools:toolsSummary(labels),recent:recentRows,language:activeLanguage,onOpen:entry=>{model.openTab({id:entry.id,label:localized(labels.get(entry.id),'en')});shell.activate(entry.id);}});};
   // Recent activity comes from real history and notification data, read each time Home is shown. A failed read is an empty list.
-  const refreshRecent=()=>{if(typeof homeActivity!=='function')return;const request=++recentRequest;Promise.resolve().then(()=>homeActivity()).then(rows=>Array.isArray(rows)?rows:[],()=>[]).then(rows=>{if(request!==recentRequest)return;recentRows=rows;homeGrid.setRecent(rows);});};
+  const refreshRecent=()=>{if(typeof homeActivity!=='function')return;const request=++recentRequest;Promise.resolve().then(()=>homeActivity()).then(rows=>Array.isArray(rows)?rows:[],()=>[]).then(rows=>{if(request!==recentRequest)return;recentRows=rows;homeGrid.setRecent(rows);if(dashboard&&!homeRoot.hidden)renderHome();});};
   // Every destination opens by default the first time it is offered. A tab the person closed stays closed, and a
   // destination added by a later update opens once. Offered ids are remembered so this never repeats.
   const offerViews=list=>offerRegisteredViews(model,list,view=>localized(labels.get(view.id)||view.label,'en'));
@@ -63,7 +65,10 @@ export function mountSurfaceFoundation({host,before=null,storage,language='en',p
     const sheet=new CSSStyleSheet();sheet.replaceSync(':host{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}');toolbar.shadowRoot.adoptedStyleSheets=[sheet];
     toolbar.shadowRoot.replaceChildren(element('md-outlined-button',{text:localized(text('Commands · Ctrl+Shift+F','指令 · Ctrl+Shift+F'),activeLanguage),onclick:()=>palette.open()}),element('md-outlined-button',{text:localized(text('Notifications','通知'),activeLanguage),onclick:()=>{notifications.hidden=!notifications.hidden;}}));
   };
-  host.insertBefore(shell,before);host.insertBefore(homeRoot,shell.nextSibling);host.append(live);document.body.append(palette);configure();frame=mountNavigationFrame({navigationHost,host,shell,build,toolbar,notifications,labels,language:activeLanguage,onActivate:id=>shell.activate(id),onCommands:()=>palette.open(),onNotifications:()=>{notifications.hidden=!notifications.hidden;},onQuit});frame.setActive(model.getState().activeTabId);
+  host.insertBefore(shell,before);host.insertBefore(homeRoot,shell.nextSibling);host.append(live);document.body.append(palette);configure();frame=mountNavigationFrame({navigationHost,host,shell,build,toolbar,notifications,labels,language:activeLanguage,onActivate:id=>shell.activate(id),onCommands:()=>palette.open(),onSearch:search=>openSearch(search),onAddDrive:()=>onAddDrive?.(),onNotifications:()=>{notifications.hidden=!notifications.hidden;},onQuit});frame.setActive(model.getState().activeTabId);
+  // The title bar search hands its text and its regular-expression choice to the command palette, which searches
+  // drives, pages and commands with the full regex builder beside it.
+  const openSearch=({query='',regex=false}={})=>Promise.resolve(palette.open()).then(()=>{const search=palette.search;if(!search)return;search.regex=regex===true;search.query=String(query).slice(0,512);if(search.input)search.input.value=search.query;search.emitChange?.();});
   const keydown=event=>{
     if(!(event.ctrlKey||event.metaKey))return;
     if(event.shiftKey&&event.key.toLowerCase()==='f'){event.preventDefault();palette.open();}
@@ -73,7 +78,7 @@ export function mountSurfaceFoundation({host,before=null,storage,language='en',p
     else {const match=hostCommands.find(c=>c.shortcut?.toLowerCase()===[event.ctrlKey?'control':'meta',event.shiftKey?'shift':null,event.key.toLowerCase()].filter(Boolean).join('+'));if(match&&!match.disabled){event.preventDefault();Promise.resolve(match.run()).catch(error=>api.notify({title:'Command failed',message:error.message,level:'error'}));}}
   };
   document.addEventListener('keydown',keydown);
-  const api={model,shell,home:homeGrid,palette,notifications,context,openContextMenu,closeContextMenu,
+  const api={get rail(){return frame?.rail;},model,shell,home:homeGrid,palette,notifications,context,openContextMenu,closeContextMenu,
     notify(input){const id=model.addNotification(input);if(model.getState().notificationAudio){if(sounds)sounds.play({error:'error',warning:'warning',success:'success'}[input.level]||'toggle');else audio.play();}notifications.renderEntries();live.textContent=`${renderText(input.title)}: ${renderText(input.message||'')}`;clearTimeout(messageTimer);messageTimer=setTimeout(()=>{live.textContent='';},8000);const record=model.getState().notifications.find(row=>row.id===id);onNotification?.(record,{narrate:input.narration!==false});return id;},
     /** Plays an installation cue through the sound service, or the notification beep when that service is absent. Returns false when sound is off. */
     playCue(kind){const name={success:'installSuccess',failure:'installError'}[kind]||kind;if(sounds){try{return sounds.play(name);}catch{return false;}}return model.getState().notificationAudio?audio.play():false;},

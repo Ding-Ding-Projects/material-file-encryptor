@@ -51,7 +51,7 @@ export function createSurfaceModel({ storage, storageKey = 'surface-state', tabs
   const sanitizeNotification = item => ({ progress: item.progress && Number.isFinite(Number(item.progress.value)) ? {value:Math.max(0,Math.min(100,Number(item.progress.value))),label:notificationText(item.progress.label,256)} : null, recovery: (Array.isArray(item.recovery)?item.recovery:[]).filter(action=>action&&/^[a-zA-Z0-9:_-]{1,128}$/.test(action.id)).slice(0,4).map(action=>({id:action.id,label:notificationText(action.label,256)})), id: item.id, title: notificationText(item.title, 256), message: notificationText(item.message, 4096), level: ['info', 'success', 'warning', 'error'].includes(item.level) ? item.level : 'info', read: item.read === true, createdAt: new Date(item.createdAt).toISOString() });
   const defaults = uniqueTabs(tabs);
   if (!defaults.length) defaults.push({ id: 'home', label: 'Home', group: '', pinned: false });
-  let state = { notificationFormat: 2, notificationAudio: false, droppedLegacyNotifications: 0, version: VERSION, tabs: defaults, activeTabId: defaults[0].id, closedTabs: [], closedTabIds: [], offeredTabIds: [], groups: [], notifications: [] };
+  let state = { notificationFormat: 2, notificationAudio: false, droppedLegacyNotifications: 0, version: VERSION, tabs: defaults, activeTabId: defaults[0].id, closedTabs: [], closedTabIds: [], offeredTabIds: [], stripTabIds: [], groups: [], notifications: [] };
   try {
     const raw = storage?.getItem(storageKey);
     if (raw && raw.length <= 2097152) {
@@ -66,6 +66,8 @@ export function createSurfaceModel({ storage, storageKey = 'surface-state', tabs
           state.closedTabIds = [...new Set([...(Array.isArray(saved.closedTabIds)?saved.closedTabIds:[]),...state.closedTabs.map(tab=>tab.id)])].filter(id=>validId(id)&&!restored.some(tab=>tab.id===id)).slice(-100);
           // Destinations already offered to this person. A saved state from before this list existed offers everything again once.
           state.offeredTabIds = [...new Set(Array.isArray(saved.offeredTabIds) ? saved.offeredTabIds : [])].filter(validId).slice(-500);
+          // Pages the person opened as tabs in the title bar. Every page stays reachable from the navigation tree either way.
+          state.stripTabIds = [...new Set(Array.isArray(saved.stripTabIds) ? saved.stripTabIds : [])].filter(id => validId(id) && restored.some(tab => tab.id === id)).slice(0, 100);
           const groupIds = new Set();
           state.groups = (Array.isArray(saved.groups) ? saved.groups : []).filter(group => group && validId(group.id) && !groupIds.has(group.id) && groupIds.add(group.id)).slice(0, 100).map(group => ({ id: group.id, label: text(group.label), collapsed: group.collapsed === true }));
           const notificationIds = new Set();
@@ -98,6 +100,7 @@ export function createSurfaceModel({ storage, storageKey = 'surface-state', tabs
     if (index < 0 || state.tabs.length === 1 || state.tabs[index].pinned) return false;
     state.closedTabs.push(state.tabs.splice(index, 1)[0]);
     state.closedTabIds = [...state.closedTabIds.filter(closed=>closed!==id),id].slice(-100);
+    state.stripTabIds = state.stripTabIds.filter(item => item !== id);
     state.closedTabs = state.closedTabs.slice(-20);
     if (state.activeTabId === id) state.activeTabId = state.tabs[Math.min(index, state.tabs.length - 1)].id;
     persist(); return true;
@@ -115,6 +118,16 @@ export function createSurfaceModel({ storage, storageKey = 'surface-state', tabs
       for(const tab of [...state.tabs,...state.closedTabs])if(tab.id===id)tab.label=canonical;
       persist();return true;
     },
+    /** Shows pages as tabs in the title bar strip. Opens each page first when needed. Returns the ids now in the strip. */
+    addToStrip(ids) {
+      for (const id of [...new Set(Array.isArray(ids) ? ids : [ids])]) {
+        if (!validId(id) || !tabById(id) || state.stripTabIds.includes(id) || state.stripTabIds.length >= 100) continue;
+        state.stripTabIds.push(id);
+      }
+      persist(); return [...state.stripTabIds];
+    },
+    /** Removes a page from the title bar strip. The page itself stays open and reachable from the navigation tree. */
+    removeFromStrip(id) { const before = state.stripTabIds.length; state.stripTabIds = state.stripTabIds.filter(item => item !== id); if (before === state.stripTabIds.length) return false; persist(); return true; },
     /** Records destinations as offered, so a later load opens only destinations that are new. Returns the newly recorded ids. */
     markTabsOffered(ids) {
       const added = [...new Set(Array.isArray(ids) ? ids : [])].filter(id => validId(id) && !state.offeredTabIds.includes(id));

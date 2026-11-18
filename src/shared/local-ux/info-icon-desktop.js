@@ -11,7 +11,7 @@ import {buildSurfaceInventory, exemptRow} from './info-icon-inventory.js';
  */
 const rows = [
   ['mfe-navigation-rail', 'navigation', 'Main navigation', '主要導覽',
-    'Switch between the six main views: My drive, Available offline, History, Recycle Bin, Settings and How it works.', '在六個主要檢視之間切換：我嘅磁碟、離線可用、歷史、資源回收筒、設定及使用說明。',
+    'Go to Home, a drive and its folders, Available offline, History, Recycle Bin, Docker Hub backup, Local tools, Settings or Help from one tree.', '喺同一棵導覽樹去首頁、磁碟同佢嘅資料夾、離線可用、歷史、資源回收筒、Docker Hub 備份、本機工具、設定或者說明。',
     'Choosing a view only changes what is shown; it never opens, locks or changes a drive.', '選擇檢視只會改變顯示內容，不會開啟、鎖定或更改任何磁碟。',
     {key: 'main-navigation', runtime: true, covers: ['[data-view="drive"]', '[data-view="offline"]', '[data-view="history"]', '[data-view="recycle"]', '[data-view="settings"]', '[data-view="help"]']}],
   ['#dismiss-error', 'button', 'Dismiss error', '關閉錯誤訊息',
@@ -102,6 +102,12 @@ const rows = [
   ['#resplit-button', 'button', 'Re-split existing files', '重新分割現有檔案',
     'Rewrite files that already exist so their parts follow the current part size.', '重寫已存在的檔案，使它們的分段符合目前的分段大小。',
     'A long background job rewrites encrypted parts. Files stay readable while it runs.', '背景會進行較長的重寫工作，執行期間檔案仍然可以讀取。'],
+  ['#drive-switcher', 'button', 'Switch drive', '切換磁碟',
+    'Show the open drive by name and switch to another drive, or add one, from a short menu.', '顯示目前開啟嘅磁碟名稱，並可以喺短選單入面切換去另一個磁碟或者新增磁碟。',
+    'Switching only changes which drive the window shows; it never locks, unlocks or changes a drive.', '切換只會改變視窗顯示邊個磁碟，唔會鎖定、解鎖或者更改任何磁碟。'],
+  ['#help-mode-toggle', 'button', 'Help mode', '說明模式',
+    'Turn help mode on to show the help text under every control, or off to show it only as a tooltip when you point at or focus a control.', '開啟說明模式會喺每個控制項下面顯示說明文字；關閉之後，只會喺指住或者聚焦控制項時以提示框顯示。',
+    'Only the help text appears or disappears; no setting, drive or file changes. The choice is remembered on this PC.', '只係說明文字出現或者消失，唔會改變任何設定、磁碟或者檔案。呢個選擇會記住喺呢部電腦。'],
   ['#drive-tab-add', 'button', 'Open or create a drive', '開啟或建立磁碟',
     'Add another drive tab, so you can unlock or create a second drive without closing the first.', '加入另一個磁碟分頁，無需關閉第一個磁碟就可以解鎖或建立第二個磁碟。',
     'Other drives stay mounted. The new tab starts locked until you unlock or create a drive in it.', '其他磁碟會保持掛載；新分頁會保持鎖定，直至你在其中解鎖或建立磁碟。'],

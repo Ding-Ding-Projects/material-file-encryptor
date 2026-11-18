@@ -8,9 +8,12 @@ export {INFO_ICON_COPY};
 /** Static descriptors plus the descriptors of controls created after start-up, in one inventory. */
 export const SHELL_INVENTORY = Object.freeze({...DESKTOP_INFO_ICON_INVENTORY, descriptors: Object.freeze([...DESKTOP_INFO_ICON_INVENTORY.descriptors, ...DESKTOP_DYNAMIC_INFO_ICON_INVENTORY.descriptors])});
 
-/** Mounts the desktop information icons: one compact icon immediately before each capable shell control. */
+/**
+ * Mounts the desktop control help in hint presentation: no information icon is drawn in the layout. Each control's
+ * help text becomes its tooltip and accessible description, and shows inline under it while help mode is on.
+ * The guided operation and full explanation of every control stay reachable from the command palette.
+ * The static markup is covered at start-up; controls the shell and its views create later are covered as they appear.
+ */
 export function createShellInfoIcons(root, options = {}) {
-  // Controls in a wrapping flex row keep their icon beside them. Containers whose own styles address their children are left alone.
-  // The static markup is covered at start-up. Controls the shell and its views create later are covered as they appear.
-  return createInfoIconController(root, {inventory: SHELL_INVENTORY, observe: true, pair: {skipParents: '.setting-row,.folder-input,.split-form,.password-field'}, ...options});
+  return createInfoIconController(root, {inventory: SHELL_INVENTORY, observe: true, presentation: 'hint', ...options});
 }

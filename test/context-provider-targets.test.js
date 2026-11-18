@@ -49,8 +49,9 @@ function fixture({withLayout=true,legacy=false}={}){
  vm.runInContext(appearanceSource.slice(providerStart,providerEnd),context);
  const objects=vm.runInContext('({menu,inner,control,view,root,doc,errors,opened,admissionTargets})',context);
  return {...objects,context,
-  dispatch:async(inner=true)=>{context.useInner=inner;vm.runInContext(`let composedCalls=0;const eventPath=useInner?[inner,shadow,control,view,body,html,doc,win]:[control,view,body,html,doc,win];const event={type:'contextmenu',clientX:20,clientY:20,defaultPrevented:false,composedPath(){composedCalls++;return eventPath;},preventDefault(){this.defaultPrevented=true;},stopPropagation(){}};doc.listeners.contextmenu(event);`,context);await vm.runInContext('ContextMenu.prototype.renderItems.call(menu)',context);return vm.runInContext('composedCalls',context);},
-  button:id=>{const index=objects.menu.items.findIndex(item=>item.id===id);assert.ok(index>=0,'Expected merged action '+id);return objects.menu.itemsHost.children[index];},
+  dispatch:async(inner=true)=>{context.useInner=inner;vm.runInContext(`let composedCalls=0;const eventPath=useInner?[inner,shadow,control,view,body,html,doc,win]:[control,view,body,html,doc,win];const event={type:'contextmenu',clientX:20,clientY:20,defaultPrevented:false,composedPath(){composedCalls++;return eventPath;},preventDefault(){this.defaultPrevented=true;},stopPropagation(){}};doc.listeners.contextmenu(event);`,context);await vm.runInContext('menu.customizeEpoch=menu.epoch;menu.customizeOpen=true;ContextMenu.prototype.renderItems.call(menu)',context);return vm.runInContext('composedCalls',context);},
+  // Layout and appearance tools render behind the opened Customize row, after the actions on the target.
+  button:id=>{const items=objects.menu.items,order=[...items.filter(item=>item.group!=='customize'),...(items.some(item=>item.group==='customize')?[{customizeToggle:true}]:[]),...items.filter(item=>item.group==='customize')];const index=order.findIndex(item=>item.id===id);assert.ok(index>=0,'Expected merged action '+id);return objects.menu.itemsHost.children[index];},
   async invoke(id){this.button(id).listeners.click();await Promise.resolve();await Promise.resolve();}
  };
 }
