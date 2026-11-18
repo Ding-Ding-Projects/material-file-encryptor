@@ -44,7 +44,7 @@ export const REGISTRY_COPY = {
   countOf_parts:['{done} of {total} parts','{done} / {total} 個部分'], countOf_files:['{done} of {total} files','{done} / {total} 個檔案'],
   count_parts:['{done} parts','{done} 個部分'], count_files:['{done} files','{done} 個檔案'],
   bytesOf:['{done} of {total}','{done} / {total}'], bytesOnly:['{done} processed','已處理 {done}'],
-  pendingCommits:['{n} changes still to apply','尚有 {n} 項變更待套用'],
+  pendingCommits:['Changes still to apply: {n}','尚待套用的變更：{n} 項'],
   elapsed:['Step time {time}','此步驟已用 {time}'], totalElapsed:['total {time}','合共 {time}'],
   slowStep:['This step is taking longer than usual. It is still working, and Cancel stops it safely.','這個步驟比平常需時更長，仍在進行中；按取消可以安全停止。'],
   paused:['Backup paused while you used the drive; it will resume.','你使用磁碟期間，備份已暫停，稍後會自動繼續。'],

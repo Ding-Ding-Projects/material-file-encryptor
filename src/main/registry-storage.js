@@ -69,7 +69,7 @@ export function validateRegistrySnapshot(value) {
  * Unique snapshot references preserve concurrent heads; no shared mutable tag is used.
  * authorize is main-owned, checks expected repository visibility, and returns only request headers.
  */
-export function createRegistryStorage({ destination, authorize, fetcher = fetch, maxObjectBytes = 1024 ** 3 }) {
+export function createRegistryStorage({ destination, authorize, fetcher = fetch, maxObjectBytes = 1024 ** 3, uploadConcurrency = 4 }) {
   const target = registryDestination(destination);
   if (!Number.isSafeInteger(maxObjectBytes) || maxObjectBytes < 1 || maxObjectBytes > 1024 ** 3) throw fail();
   const base = `${target.endpoint}/v2/${target.repository}`;
@@ -184,21 +184,33 @@ export function createRegistryStorage({ destination, authorize, fetcher = fetch,
       validateRegistrySnapshot(expected);
       if (expected.files.some(file => file.size > maxObjectBytes)) throw fail();
       await authorization(signal, true);
-      for (const file of frozen.files) {
+      for (const file of frozen.files)
         if (!OBJECT.test(file.path) || !Number.isSafeInteger(file.bytes) || file.bytes < 0 || file.bytes > maxObjectBytes || !/^[a-f0-9]{64}$/.test(file.sha256)) throw fail();
+      const layer = async file => {
         const digest = `sha256:${file.sha256}`;
-        if (known.has(digest)) { config.files.push({ path: file.path, mediaType: LAYER, digest, size: file.bytes }); continue; }
+        if (known.has(digest)) return { path: file.path, mediaType: LAYER, digest, size: file.bytes };
         // Every new object is read and checked before any network request about it.
         const bytes = await readFile(file.path, signal);
         if (!(bytes instanceof Uint8Array) || bytes.length !== file.bytes || sha(bytes) !== digest) throw fail();
         // Large layers left by a run that stopped part way are not sent twice; small ones are cheaper to send.
         if (file.bytes >= 1024 * 1024 && await hasBlob(digest, file.bytes, signal)) {
-          config.files.push({ path: file.path, mediaType: LAYER, digest, size: file.bytes });
           try { onSkipped?.(file); } catch { /* Progress never changes publication. */ }
-          continue;
+          return { path: file.path, mediaType: LAYER, digest, size: file.bytes };
         }
-        config.files.push({ path: file.path, ...await putBlob(bytes, LAYER, signal) });
-      }
+        return { path: file.path, ...await putBlob(bytes, LAYER, signal) };
+      };
+      // A few layers travel at once: thousands of small objects are otherwise one slow round trip each.
+      // The first failure stops new work; the manifest keeps the original object order.
+      const layers = new Array(frozen.files.length); let next = 0, failure = null;
+      const worker = async () => {
+        while (!failure && next < frozen.files.length) {
+          const index = next++;
+          try { layers[index] = await layer(frozen.files[index]); } catch (error) { failure ??= error; }
+        }
+      };
+      await Promise.all(Array.from({ length: Math.max(1, Math.min(uploadConcurrency, frozen.files.length)) }, worker));
+      if (failure) throw failure;
+      config.files.push(...layers);
       validateRegistrySnapshot(config);
       // Every layer is uploaded; what remains is writing and reading back the manifest.
       try { onVerifying?.(); } catch { /* A progress listener never changes publication. */ }

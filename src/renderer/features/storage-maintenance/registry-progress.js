@@ -43,8 +43,12 @@ export function progressView(progress, nowMs = Date.now()) {
   const bytesDone = count(progress.completedBytes) ? progress.completedBytes : null;
   const bytesTotal = count(progress.totalBytes) && progress.totalBytes > 0 ? progress.totalBytes : null;
   let fraction = null;
-  if (bytesTotal !== null && bytesDone !== null) fraction = Math.min(1, bytesDone / bytesTotal);
-  else if (total !== null && done !== null) fraction = Math.min(1, done / total);
+  // Many small objects take as long as a few large ones, so with both totals the bar averages files and bytes;
+  // a bar driven by bytes alone sits still while thousands of small objects are sent.
+  const byFiles = total !== null && done !== null ? Math.min(1, done / total) : null;
+  const byBytes = bytesTotal !== null && bytesDone !== null ? Math.min(1, bytesDone / bytesTotal) : null;
+  if (byFiles !== null && byBytes !== null) fraction = (byFiles + byBytes) / 2;
+  else fraction = byBytes ?? byFiles;
   const started = Number.isFinite(progress.stepStartedAt) ? progress.stepStartedAt : null;
   const elapsedMs = started === null ? null : Math.max(0, nowMs - started);
   const totalElapsedMs = Number.isFinite(progress.startedAt) ? Math.max(0, nowMs - progress.startedAt) : null;
