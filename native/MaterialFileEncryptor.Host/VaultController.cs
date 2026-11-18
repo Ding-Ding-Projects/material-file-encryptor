@@ -302,6 +302,18 @@ internal sealed partial class VaultController : IDisposable
         { throw new InvalidOperationException("Connect to private storage to retrieve unavailable historical content."); }
         finally { lock (gate) --activePreparedOperations; }
     }
+    /// <summary>
+    /// Moves a history folder left behind by a drive that no longer exists out of the way of a new drive at the
+    /// same storage path. It is renamed, never deleted, so nothing is lost; when the rename fails the folder stays
+    /// where it is and the earlier behaviour applies.
+    /// </summary>
+    internal static string? SetAsideOrphanedHistory(string historyRoot)
+    {
+        if (!Directory.Exists(historyRoot)) return null;
+        string aside = historyRoot + ".orphaned-" + DateTimeOffset.UtcNow.ToString("yyyyMMddHHmmss") + "-" + Guid.NewGuid().ToString("N")[..8];
+        try { Directory.Move(historyRoot, aside); return aside; }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException) { return null; }
+    }
     private void Open(JsonElement args, bool create, bool automatic)
     {
         if (vault is not null) throw new InvalidOperationException("Lock the current vault before opening another.");
@@ -329,6 +341,11 @@ internal sealed partial class VaultController : IDisposable
         else
         {
             selectedBackend = new FolderVaultTransport(options.StorageRoot);
+            // The history folder is keyed by the storage path, not by the drive. A new drive created in a folder
+            // that once held another (since deleted) drive would otherwise inherit that drive's history and fail
+            // every synchronization with an immutable ciphertext collision.
+            if (create && !File.Exists(System.IO.Path.Combine(options.StorageRoot, "vault.json")) && !File.Exists(System.IO.Path.Combine(options.CacheRoot, "vault.json")))
+                SetAsideOrphanedHistory(historyRoot);
             selectedHistory = new GitVaultHistory(options.CacheRoot, historyRoot);
         }
         bool establishedLocalVault = File.Exists(System.IO.Path.Combine(options.StorageRoot, "vault.json")) || File.Exists(System.IO.Path.Combine(options.CacheRoot, "vault.json"));
