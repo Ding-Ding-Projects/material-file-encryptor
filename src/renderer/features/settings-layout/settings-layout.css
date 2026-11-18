@@ -31,3 +31,13 @@
 :root[data-max839] .settings-content{padding:8px 12px 16px}
 :root[data-max560] .settings-content .setting-row{grid-template-columns:minmax(0,1fr)}
 :root[data-max560] .settings-section-actions{margin:0 0 8px;justify-content:flex-start}
+
+/* Material text buttons centre their label; the category label fills the button so it reads left-aligned. */
+.settings-categories{container-type:inline-size;min-height:calc(100dvh - 66px);box-sizing:border-box}
+.settings-category>span{display:block;width:calc(100cqi - 16px);text-align:start;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.settings-content:not([data-searching]) .settings-category-title{display:none}
+.settings-content:not([data-searching])>.settings-section>h2{font-size:15px;font-weight:600;color:var(--v2-text);margin:4px 0 8px}
+.settings-content .setting-row>*{justify-self:start;max-width:100%}
+.settings-content .setting-row>md-outlined-button,.settings-content .setting-row>md-text-button{width:auto}
+:root[data-max839] .settings-category>span{width:auto}
+:root[data-max839] .settings-categories{min-height:0}

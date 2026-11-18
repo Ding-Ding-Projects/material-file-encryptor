@@ -19,17 +19,18 @@ export function mountDriveList({doc = document, translate, getLanguage, hooks}) 
   const listen = (target, type, handler) => { if (!target) return; target.addEventListener(type, handler); disposers.push(() => target.removeEventListener(type, handler)); };
   const node = (tag, props = {}, children = []) => { const el = doc.createElement(tag); for (const [key, value] of Object.entries(props)) { if (key === 'text') el.textContent = value; else if (key === 'class') el.className = value; else el.setAttribute(key, value); } el.append(...children); return el; };
 
+  const slotIcon = name => { const glyph = icon(name); glyph.setAttribute('slot', 'icon'); return glyph; };
   host.classList.add('drive-list-view');
   const toolbar = node('div', {class: 'v2-toolbar', role: 'toolbar', 'aria-label': t('Drive commands')});
-  const newButton = node('md-filled-button', {id: 'drive-new-menu', 'aria-haspopup': 'menu', type: 'button'});
+  const newButton = node('md-filled-button', {id: 'drive-new-menu', 'aria-haspopup': 'menu', type: 'button', 'has-icon': ''});
   const newLabel = node('span', {text: t('New')});
-  newButton.append(icon('add'), newLabel, node('span', {class: 'caret', 'aria-hidden': 'true', text: '▾'}));
+  newButton.append(slotIcon('add'), newLabel, node('span', {class: 'caret', 'aria-hidden': 'true', text: '▾'}));
   const secondary = card.querySelector('.unlock-secondary');
-  const settingsButton = node('md-text-button', {id: 'drive-list-settings', type: 'button'});
+  const settingsButton = node('md-text-button', {id: 'drive-list-settings', type: 'button', 'has-icon': ''});
   const settingsLabel = node('span', {text: t('Drive settings')});
-  settingsButton.append(icon('settings'), settingsLabel);
+  settingsButton.append(slotIcon('settings'), settingsLabel);
   toolbar.append(newButton);
-  if (secondary) toolbar.append(...secondary.children);
+  if (secondary) for (const button of [...secondary.children]) { const glyph = button.querySelector(':scope > [data-icon]'); if (glyph) { glyph.slot = 'icon'; button.setAttribute('has-icon', ''); } toolbar.append(button); }
   toolbar.append(settingsButton);
   secondary?.remove();
   const summary = node('p', {class: 'drive-list-summary', role: 'status'});
@@ -47,7 +48,7 @@ export function mountDriveList({doc = document, translate, getLanguage, hooks}) 
   host.prepend(toolbar, layout);
   card.classList.add('unlock-bar');
 
-  let state = null;
+  let state = null, lastSignature = '';
   const sessions = () => state?.sessions?.length ? state.sessions : state ? [{sessionId: state.sessionId, driveName: state.driveName, driveLetter: state.driveLetter, locked: state.locked, mounted: state.mounted}] : [];
   const stateLabel = session => t(session.recoveryRequired ? 'Recovery required' : session.operation ? 'Working…' : session.locked ? 'Locked' : session.mounted ? 'Mounted' : 'Unlocked · not mounted');
 
@@ -111,8 +112,9 @@ export function mountDriveList({doc = document, translate, getLanguage, hooks}) 
   ]}));
   listen(settingsButton, 'click', () => hooks.openSettings());
   return {
-    update(next) { state = next; render(); },
-    setLanguage() { newLabel.textContent = t('New'); settingsLabel.textContent = t('Drive settings'); toolbar.setAttribute('aria-label', t('Drive commands')); table.setAttribute('aria-label', t('Drives')); headCells.forEach((cell, index) => { cell.textContent = t(columns[index][1]); }); details.setAttribute('aria-label', t('Details')); render(); },
+    // Rows animate in, so they are rebuilt only when what they show changes, not on every state tick.
+    update(next) { state = next; const signature = JSON.stringify([state?.sessionId, state?.storageDir, state?.cacheDir, sessions().map(session => [session.sessionId, session.driveName, session.driveLetter, session.locked, session.mounted, Boolean(session.operation), Boolean(session.recoveryRequired)])]); if (signature === lastSignature) return; lastSignature = signature; render(); },
+    setLanguage() { lastSignature = ''; newLabel.textContent = t('New'); settingsLabel.textContent = t('Drive settings'); toolbar.setAttribute('aria-label', t('Drive commands')); table.setAttribute('aria-label', t('Drives')); headCells.forEach((cell, index) => { cell.textContent = t(columns[index][1]); }); details.setAttribute('aria-label', t('Details')); render(); },
     destroy() { for (const dispose of disposers.splice(0)) dispose(); }
   };
 }

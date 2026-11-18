@@ -93,6 +93,7 @@ export function mountSettingsLayout(view, {getLanguage = () => 'en', openView = 
     for (const section of all) section.classList.toggle('settings-category-hidden', !searching && section.dataset.settingsCategory !== active);
     const current = categories().find(category => category.id === active);
     categoryTitle.textContent = searching ? L('Search results') : current?.label || '';
+    if (searching) content.dataset.searching = ''; else delete content.dataset.searching;
     for (const button of list.querySelectorAll('.settings-category')) button.setAttribute('aria-selected', String(!searching && button.dataset.category === active));
   }
   function select(id) { active = id; apply(); content.scrollTop = 0; }

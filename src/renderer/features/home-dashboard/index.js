@@ -24,7 +24,12 @@ export function mountHomeDashboard(root, {hooks}) {
     const head = el('tr', {}, columns.map(column => el('th', {scope: 'col', text: L(column)})));
     return el('table', {class: 'home-table', 'aria-label': label}, [el('thead', {}, [head]), el('tbody', {}, rows)]);
   };
+  let lastSignature = '';
   function render({language: next = 'en', state = null, status = {}, recent = null} = {}) {
+    // Table rows animate in, so the view is rebuilt only when what it shows has changed.
+    const signature = JSON.stringify([next, state?.sessionId, state?.offlineCount, (state?.sessions || []).map(session => [session.sessionId, session.driveName, session.driveLetter, session.locked, session.mounted, Boolean(session.recoveryRequired)]), state?.locked, state?.mounted, state?.driveName, status, recent]);
+    if (signature === lastSignature) return;
+    lastSignature = signature;
     language = next;
     const sessions = state?.sessions?.length ? state.sessions : state ? [{sessionId: state.sessionId, driveName: state.driveName, driveLetter: state.driveLetter, locked: state.locked, mounted: state.mounted}] : [];
     const unlocked = sessions.filter(session => !session.locked).length;

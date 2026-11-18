@@ -59,3 +59,11 @@
 :root[data-max1100] .drive-list-details{display:none}
 :root[data-max560] .drive-list-table th:nth-child(n+3),:root[data-max560] .drive-list-table td:nth-child(n+3){display:none}
 :root[data-max560] .drive-list-table tr[data-session-id]>td{height:52px}
+
+/* The drive panel's file-table column rules are id-scoped; the drive list resets them for its own table. */
+#view-drive .drive-list-table th,#view-drive .drive-list-table td{width:auto}
+#view-drive .drive-list-table thead{position:static;width:auto;height:auto;overflow:visible;clip:auto}
+#view-drive .drive-list-table th[data-column=letter]{width:110px}
+#view-drive .drive-list-table th[data-column=state]{width:180px}
+#view-drive .drive-list-table th{position:sticky;top:0;background:var(--v2-surface)}
+.v2-toolbar .icon,.v2-toolbar svg{display:inline-block;width:16px;height:16px;vertical-align:-3px}

@@ -13,6 +13,7 @@ import { runCreateFlow, runOpenFlow, validateNewDrive, validateOpenDrive, sugges
 const STYLE = `
 dialog,mfe-dialog{--md-dialog-container-shape:20px}
 .frame{display:grid;grid-template-columns:200px minmax(0,1fr);gap:0;min-width:min(900px,92vw);max-width:96vw;min-height:520px}
+.frame.direct{grid-template-columns:minmax(0,1fr);min-width:min(640px,92vw);min-height:0}
 .steps{margin:0;padding:12px 8px;list-style:none;display:flex;flex-direction:column;gap:4px;background:var(--md-sys-color-surface-container-low,#f7f8fb);border-radius:14px}
 .steps li{padding:10px 12px;border-radius:10px;color:var(--md-sys-color-on-surface-variant,#4a4c5c)}
 .steps li[aria-current=step]{background:var(--md-sys-color-secondary-container,#e6e8ff);color:var(--md-sys-color-on-secondary-container,#26318f);font-weight:700}
@@ -87,13 +88,14 @@ export class HubDriveDialog extends SurfaceElement {
   }
   get available() { return typeof this.api.hubCatalogStart === 'function' && typeof this.api.hubDriveFolders === 'function'; }
   /** Opens the dialog. mode is 'create' or 'open'. Returns once it is shown. */
-  open(mode = 'create') {
-    this.reset(); this.mode = mode; this.stage = mode === 'open' ? 'repository' : 'choose';
+  open(mode = 'create', {direct = false} = {}) {
+    this.reset(); this.mode = mode; this.direct = mode === 'create' && direct === true; this.stage = mode === 'open' ? 'repository' : 'choose';
     this.picker.configure({ services: this.api, mode, translate: this.translateText, language: this.language });
     this.loginPanel.configure(this.api);
     const letters = this.letters(); this.draft = { driveName: 'Drive', driveLetter: letters[0] ?? 'M', credentialMode: 'password', password: '', confirmPassword: '', keyFilePath: '' };
     this.render(); const shown = this.dialog.showModal?.(); Promise.resolve(shown).then(() => this.focusFirst(), () => {});
     if (mode === 'open') this.enterRepositoryStep();
+    else if (this.direct) void this.afterWhere();
   }
   /** The dialog would otherwise focus an information icon and pop its tooltip. Focus the first real control instead. */
   focusFirst() {
@@ -114,7 +116,16 @@ export class HubDriveDialog extends SurfaceElement {
   enterRepositoryStep() {
     this.stage = 'repository'; this.account = this.signedInAccount ?? this.account;
     this.picker.configure({ services: this.api, mode: this.mode, account: this.account, translate: this.translateText, language: this.language });
-    this.render(); void this.picker.load(false);
+    this.render();
+    // The easy path preselects <account>/material-file-encryptor-storage and goes straight to the one details screen;
+    // Change repository brings the full chooser back.
+    const loaded = this.picker.load(false);
+    if (this.direct && this.mode === 'create' && !this.draft.repository && this.account) {
+      const suggestion = suggestedRepository(this.account, this.picker.snapshot?.repositories ?? []);
+      this.selected = { repository: suggestion.repository, visibility: suggestion.visibility, driveCount: suggestion.driveCount };
+      this.draft.repository = suggestion.repository; this.stage = 'details'; this.render();
+    }
+    void loaded;
   }
   chosen(detail) {
     if (this.mode === 'open') {
@@ -145,9 +156,9 @@ export class HubDriveDialog extends SurfaceElement {
     const title = this.t(this.mode === 'open' ? 'openTitle' : 'createTitle');
     const close = element('md-icon-button', { 'aria-label': this.t('close'), text: '×' }); close.addEventListener('click', () => { if (!this.running) this.close(); });
     const head = element('div', { class: 'head' }, [element('h2', { id: 'hub-drive-title', text: title }), element('span', { class: 'pill', text: this.t('stepCount', { n: at + 1, total: items.length }) }), close]);
-    const list = element('ol', { class: 'steps', 'aria-label': title }, items.map(([key, label], index) => element('li', { 'aria-current': index === at ? 'step' : 'false', 'data-done': String(index < at), text: `${index + 1} ${this.t(label)}` })));
+    const list = element('ol', { class: 'steps', hidden: this.direct === true, 'aria-label': title }, items.map(([key, label], index) => element('li', { 'aria-current': index === at ? 'step' : 'false', 'data-done': String(index < at), text: `${index + 1} ${this.t(label)}` })));
     const body = element('div', { class: 'body' }, this[`stage_${this.stage}`]?.() ?? []);
-    this.dialog.replaceChildren(element('div', {}, [head, element('div', { class: 'frame' }, [list, body])]));
+    this.dialog.replaceChildren(element('div', {}, [head, element('div', { class: this.direct ? 'frame direct' : 'frame' }, [list, body])]));
     // A new step starts at its top, whatever the previous step was scrolled to.
     if (this.lastStage !== this.stage) { this.lastStage = this.stage; const scroller = this.shadowRoot.querySelector?.('.body'); if (scroller) scroller.scrollTop = 0; }
   }
@@ -168,11 +179,9 @@ export class HubDriveDialog extends SurfaceElement {
     const out = [];
     if (this.account) out.push(element('p', { class: 'ok', text: this.t('signedIn', { account: this.account }) }));
     else if (this.mode === 'open') out.push(element('h3', { text: this.t('signInTitle') }), this.loginPanel.root);
-    const info = this.button('i', () => { this.infoOpen = !this.infoOpen; this.render(); });
-    info.setAttribute('aria-label', this.t('info')); info.setAttribute('aria-expanded', String(this.infoOpen));
-    out.push(this.picker);
-    if (this.infoOpen) out.push(element('p', { class: 'note', text: this.t('pickerHelp') + ' ' + this.t('nameVisible') }));
-    out.push(this.actions([...(this.mode === 'create' ? [this.button(this.t('back'), () => { this.stage = 'choose'; this.render(); })] : []), info]));
+    // The help that used to hide behind a bare (i) button is a plain caption under the list.
+    out.push(this.picker, element('p', { class: 'note', text: this.t('pickerHelp') + ' ' + this.t('nameVisible') }));
+    out.push(this.actions([...(this.mode === 'create' ? [this.button(this.t('back'), () => { this.stage = this.direct && this.draft.repository ? 'details' : 'choose'; this.render(); })] : [])]));
     return out;
   }
   actions(nodes) { return element('div', { class: 'actions' }, nodes); }

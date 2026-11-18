@@ -174,3 +174,12 @@ test('without host support the picker says so instead of inventing repositories'
   picker.configure({ services: {}, mode: 'open' }); await picker.load();
   assert.equal(picker.refreshButton.disabled, true); assert.deepEqual(names(picker), []);
 });
+
+test('the suggested repository is listed once, and a new repository name follows the Docker Hub naming rule', async () => {
+  const { validRepositoryName } = await import('../src/renderer/features/docker-hub-drive/picker.js');
+  const { picker } = await fixture({ mode: 'create' });
+  const listed = names(picker);
+  assert.equal(listed.filter(name => name === 'pat/material-file-encryptor-storage').length, 1, 'no proposal plus found duplicate');
+  for (const good of ['ab', 'family-backups', 'a.b_c', 'x9']) assert.equal(validRepositoryName(good), true, good);
+  for (const bad of ['a', 'Upper', '-start', 'end-', 'a..b', 'with space', 'x'.repeat(256)]) assert.equal(validRepositoryName(bad), false, bad);
+});
