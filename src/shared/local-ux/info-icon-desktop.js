@@ -11,7 +11,7 @@ import {buildSurfaceInventory, exemptRow} from './info-icon-inventory.js';
  */
 const rows = [
   ['mfe-navigation-rail', 'navigation', 'Main navigation', '主要導覽',
-    'Switch between the six main views: My drive, Available offline, History, Recycle Bin, Settings and How it works.', '在六個主要檢視之間切換：我嘅磁碟、離線可用、歷史、資源回收筒、設定及使用說明。',
+    'Go to Home, a drive and its folders, Available offline, History, Recycle Bin, Docker Hub backup, Local tools, Settings or Help from one tree.', '喺同一棵導覽樹去首頁、磁碟同佢嘅資料夾、離線可用、歷史、資源回收筒、Docker Hub 備份、本機工具、設定或者說明。',
     'Choosing a view only changes what is shown; it never opens, locks or changes a drive.', '選擇檢視只會改變顯示內容，不會開啟、鎖定或更改任何磁碟。',
     {key: 'main-navigation', runtime: true, covers: ['[data-view="drive"]', '[data-view="offline"]', '[data-view="history"]', '[data-view="recycle"]', '[data-view="settings"]', '[data-view="help"]']}],
   ['#dismiss-error', 'button', 'Dismiss error', '關閉錯誤訊息',

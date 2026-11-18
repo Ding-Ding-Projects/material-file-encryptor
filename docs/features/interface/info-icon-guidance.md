@@ -122,7 +122,7 @@ Source checks mount every icon on a document fixture and open it from the keyboa
 **Main navigation** — `mfe-navigation-rail`
 
 - Kind: navigation
-- Purpose: Switch between the six main views: My drive, Available offline, History, Recycle Bin, Settings and How it works.
+- Purpose: Go to Home, a drive and its folders, Available offline, History, Recycle Bin, Docker Hub backup, Local tools, Settings or Help from one tree.
 - Effects: Choosing a view only changes what is shown; it never opens, locks or changes a drive.
 - Default: The first destination
 - Example: Example for "Main navigation": choosing a view only changes what is shown; it never opens, locks or changes a drive.

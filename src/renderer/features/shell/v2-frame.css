@@ -12,7 +12,7 @@
   --v2-hover:color-mix(in srgb,var(--v2-text) 6%,transparent);
   --v2-selected:color-mix(in srgb,var(--v2-accent) 11%,var(--v2-surface));
   --v2-selected-line:color-mix(in srgb,var(--v2-accent) 45%,var(--v2-surface));
-  --v2-row:28px;--v2-control:32px;--v2-radius:4px;--v2-bar:40px;--v2-status:24px;
+  --v2-row:28px;--v2-nav-row:30px;--v2-control:32px;--v2-radius:4px;--v2-bar:40px;--v2-status:24px;
   /* The earlier tokens map onto the version 2 palette so every existing surface follows it. */
   --primary:var(--v2-accent);--on-primary:var(--v2-on-accent);
   --primary-container:color-mix(in srgb,var(--v2-accent) 14%,var(--v2-surface));--on-primary-container:color-mix(in srgb,var(--v2-accent) 70%,#000);
@@ -45,7 +45,7 @@
 @media (prefers-color-scheme:dark){:root:not([data-theme=light]):not([data-theme=dark])[data-theme-follow=system]{--v2-bg:#16181C}}
 :root[data-contrast=high]{--v2-line:#5E6370;--v2-line2:#8E929C;--v2-text2:#2F323A;--v2-text3:#454952;--v2-hover:color-mix(in srgb,var(--v2-text) 12%,transparent)}
 :root[data-theme=dark][data-contrast=high]{--v2-line:#A6AAB3;--v2-line2:#7D828C;--v2-text2:#E1E3E8;--v2-text3:#C9CCD3}
-:root[data-density=comfortable]{--v2-row:48px;--v2-control:40px;--row-height:var(--v2-row)}
+:root[data-density=comfortable]{--v2-row:48px;--v2-nav-row:36px;--v2-control:40px;--row-height:var(--v2-row)}
 
 html,body{background:var(--v2-bg);color:var(--v2-text)}
 body{font-size:13px;line-height:1.35}
@@ -82,7 +82,7 @@ mfe-titlebar .window-brand .brand-name{position:absolute;width:1px;height:1px;ov
 /* ---------- panes ---------- */
 body>.app-shell{grid-template-columns:236px minmax(0,1fr);gap:0;background:var(--v2-bg)}
 .app-shell>.sidebar{background:var(--v2-side);border-inline-end:1px solid var(--v2-line);padding:0;overflow:auto}
-.sidebar mfe-navigation-rail{flex:1 1 auto;min-height:0;border:0}
+.sidebar mfe-navigation-rail{flex:1 1 auto;min-height:0;border:0;overflow:auto}
 .sidebar mfe-build-provenance{font-size:11px;color:var(--v2-text3);padding:6px 12px 8px;border-top:1px solid var(--v2-line2)}
 .app-shell mfe-main-workspace{background:var(--v2-surface)}
 mfe-main-workspace>mfe-top-bar{display:none}
