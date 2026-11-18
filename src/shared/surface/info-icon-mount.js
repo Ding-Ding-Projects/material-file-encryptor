@@ -14,16 +14,18 @@ import {assertPracticeCoverage} from './guidance-playground.js';
  * The result reports what was mounted, what has no target on this page and
  * what failed, so a missing target is visible instead of silently skipped.
  */
-export function mountInfoIcons(root, {inventory, t = value => value, query = (scope, selector) => scope.querySelector(selector), registerHelp, registerCommands, openHelp, onOpen, onClose, pair = false} = {}) {
+export function mountInfoIcons(root, {inventory, t = value => value, query = (scope, selector) => scope.querySelector(selector), registerHelp, registerCommands, openHelp, onOpen, onClose, pair = false, presentation = 'icon'} = {}) {
+  const hint = presentation === 'hint';
   if (!inventory?.descriptors) throw Error('An information icon inventory is required.');
   const mounted = [], missing = [], errors = [], modules = [], wrappers = [];
   for (const descriptor of inventory.descriptors) {
     const target = query(root, descriptor.selector);
     if (!target) { missing.push(descriptor.id); continue; }
-    if (target.previousElementSibling?.dataset?.guidanceId === descriptor.id) { mounted.push(descriptor.id); continue; }
+    const existing = hint ? target.nextElementSibling : target.previousElementSibling;
+    if (existing?.dataset?.guidanceId === descriptor.id) { mounted.push(descriptor.id); continue; }
     try {
-      if (pair && !descriptor.noPair) { const wrapper = pairWithTarget(target, pair); if (wrapper) wrappers.push({wrapper, target}); }
-      const module = mountControlGuidance(target, {descriptor, t, registerHelp, registerCommands, openHelp, onOpen, onClose});
+      if (pair && !hint && !descriptor.noPair) { const wrapper = pairWithTarget(target, pair); if (wrapper) wrappers.push({wrapper, target}); }
+      const module = mountControlGuidance(target, {descriptor, t, registerHelp, registerCommands, openHelp, onOpen, onClose, presentation});
       module.host.setAttribute?.('data-info-icon', descriptor.surface);
       modules.push(module); mounted.push(descriptor.id);
     } catch (error) { errors.push({id: descriptor.id, message: String(error?.message || error)}); }
@@ -117,6 +119,55 @@ export function probeInfoIcons(root, {inventory, query = (scope, selector) => sc
     const target = query(root, descriptor.selector);
     if (!target) { problems.push({code: 'target-missing', id: descriptor.id}); continue; }
     problems.push(...probeInfoIcon(target, descriptor, {t, commands}));
+  }
+  return problems;
+}
+
+/**
+ * Independent behavioural probe of one control in hint presentation, where no information icon is drawn.
+ * The help must be reachable from the control itself: its accessible description and tooltip text carry the
+ * explanation, the inline help-mode text exists beside it, the full explanation opens from the keyboard command and
+ * closes with Escape. Each problem carries a stable code.
+ */
+export function probeHelpHint(target, descriptor, {t = value => value, commands = [], lookup} = {}) {
+  const problems = [];
+  const host = target.nextElementSibling;
+  if (!host || String(host.tagName).toLowerCase() !== 'mfe-control-guidance' || host.dataset?.presentation !== 'hint') return [{code: 'help-missing', id: descriptor.id}];
+  if (host.dataset?.guidanceId !== descriptor.id) problems.push({code: 'target-binding', id: descriptor.id});
+  const purpose = t(descriptor.purpose), label = t(descriptor.label);
+  const tooltip = String(target.getAttribute?.('data-help-text') ?? '');
+  if (!tooltip.includes(purpose) || !tooltip.includes(label)) problems.push({code: 'tooltip-text', id: descriptor.id});
+  const described = String(target.getAttribute?.('aria-describedby') ?? '').split(/\s+/).filter(Boolean);
+  const inline = (host.children || []).find(node => node.classList?.contains?.('control-help-text') || node.attributes?.class === 'control-help-text' || node.className === 'control-help-text');
+  const findText = id => (typeof lookup === 'function' ? lookup(id) : null) || (inline && (inline.id === id || inline.attributes?.id === id) ? inline : null);
+  const descriptions = described.map(findText).filter(Boolean);
+  if (!descriptions.some(node => textOf(node).includes(purpose))) problems.push({code: 'accessible-description', id: descriptor.id});
+  if (!inline || !textOf(inline).includes(purpose)) problems.push({code: 'help-mode-text', id: descriptor.id});
+  const panel = (host.shadowRoot?.children || []).find(node => String(node.tagName).toLowerCase() === 'section');
+  if (!panel) problems.push({code: 'contextual-panel', id: descriptor.id});
+  const owned = new Map((commands || []).map(command => [command.id, command]));
+  const explain = owned.get(`explanation:${descriptor.id}`);
+  if (!owned.has(`guidance:${descriptor.id}`) || !explain) problems.push({code: 'keyboard-action', id: descriptor.id});
+  if (!panel || !explain) return problems;
+  try {
+    explain.run();
+    const body = textOf(panel);
+    if (panel.hidden !== false || !body.includes(label) || !body.includes(purpose)) problems.push({code: 'contextual-panel', id: descriptor.id});
+    pressEscape(host.shadowRoot);
+    if (panel.hidden !== true) problems.push({code: 'keyboard-action', id: descriptor.id});
+  } finally {
+    if (panel.hidden === false) pressEscape(host.shadowRoot);
+  }
+  return problems;
+}
+
+/** Probes every descriptor of an inventory in hint presentation and returns the problems found. */
+export function probeHelpHints(root, {inventory, query = (scope, selector) => scope.querySelector(selector), t = value => value, commands = [], lookup} = {}) {
+  const problems = [];
+  for (const descriptor of inventory.descriptors) {
+    const target = query(root, descriptor.selector);
+    if (!target) { problems.push({code: 'target-missing', id: descriptor.id}); continue; }
+    problems.push(...probeHelpHint(target, descriptor, {t, commands, lookup}));
   }
   return problems;
 }

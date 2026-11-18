@@ -91,11 +91,64 @@ export function mountWorkspaceChrome({doc = document, translate, getLanguage, ho
         fragment.append(tab);
       });
       tabsHost.replaceChildren(fragment);
+      renderTreeDrives(sessions);
+      renderSwitcher(sessions);
     }
     const remove = $('drive-tab-remove');
     const removeSource = $('remove-vault-session');
     if (remove && removeSource) remove.hidden = removeSource.disabled !== false;
   }
+  /* ---------- drives in the navigation tree and the title bar drive switcher ---------- */
+  const switcher = $('drive-switcher');
+  let treeDrives = null;
+  const sessionName = (session, index) => session.driveName || `${t('Vault')} ${index + 1}`;
+  const sessionStatus = session => t(session.recoveryRequired ? 'Recovery required' : session.operation ? 'Working…' : session.locked ? 'Locked' : session.mounted ? 'Mounted' : 'Unlocked · not mounted');
+  function renderTreeDrives(sessions) {
+    if (!treeSection) return;
+    if (!treeDrives) { treeDrives = doc.createElement('div'); treeDrives.className = 'tree-drives'; treeDrives.setAttribute('role', 'list'); treeSection.prepend(treeDrives); }
+    const {state} = snapshot;
+    const fragment = doc.createDocumentFragment();
+    sessions.forEach((session, index) => {
+      const active = session.sessionId === state?.sessionId;
+      const row = doc.createElement('button');
+      row.type = 'button'; row.className = 'tree-drive'; row.setAttribute('role', 'listitem');
+      row.dataset.sessionId = session.sessionId; row.dataset.state = sessionTabState(session);
+      if (active) row.setAttribute('aria-current', 'true');
+      const letter = driveLetterLabel(session.driveLetter), name = sessionName(session, index), status = sessionStatus(session);
+      row.setAttribute('aria-label', [letter, name, status].filter(Boolean).join(' · '));
+      row.title = row.getAttribute('aria-label');
+      const label = doc.createElement('span'); label.className = 'tree-drive-name';
+      if (letter) { const strong = doc.createElement('strong'); strong.textContent = letter; label.append(strong, ' '); }
+      label.append(name);
+      const badge = doc.createElement('span'); badge.className = 'tree-drive-state'; badge.textContent = session.locked ? '🔒' : session.mounted ? '●' : '○'; badge.setAttribute('aria-hidden', 'true');
+      row.append(icon('drive'), label, badge);
+      fragment.append(row);
+    });
+    treeDrives.replaceChildren(fragment);
+    // The open drive's folders sit right under its row.
+    const current = treeDrives.querySelector('[aria-current=true]');
+    if (treeHost) { if (current) current.after(treeHost); else treeDrives.after(treeHost); }
+  }
+  function renderSwitcher(sessions) {
+    if (!switcher) return;
+    const {state} = snapshot;
+    const index = sessions.findIndex(session => session.sessionId === state?.sessionId);
+    const session = sessions[index];
+    const nameNode = switcher.querySelector('.drive-switcher-name');
+    const letter = driveLetterLabel(session?.driveLetter);
+    const label = session ? [letter, sessionName(session, index)].filter(Boolean).join(' ') : t('Drives');
+    if (nameNode) nameNode.textContent = label;
+    switcher.setAttribute('aria-label', `${t('Switch drive')}: ${label}`);
+  }
+  const showDriveView = () => doc.querySelector('mfe-navigation-rail')?.onActivate?.('drive');
+  listen(switcher, 'click', event => {
+    const {state} = snapshot;
+    const sessions = state?.sessions?.length ? state.sessions : state ? [{sessionId: state.sessionId, driveName: state.driveName, driveLetter: state.driveLetter, locked: state.locked, mounted: state.mounted}] : [];
+    menu(switcher, event, [
+      ...sessions.map((session, index) => ({id: `drive:${session.sessionId}`, label: [driveLetterLabel(session.driveLetter), sessionName(session, index), '·', sessionStatus(session)].filter(Boolean).join(' '), yue: [driveLetterLabel(session.driveLetter), sessionName(session, index), '·', sessionStatus(session)].filter(Boolean).join(' '), run: () => { if (session.sessionId !== state?.sessionId) hooks.selectSession(session.sessionId); showDriveView(); }})),
+      {id: 'drive:add', label: 'Add a drive', run: () => hooks.addSession()}
+    ]);
+  });
   listen(tabsHost, 'click', event => {
     const tab = event.target.closest?.('[role=tab]');
     if (tab && tab.dataset.sessionId !== snapshot.state?.sessionId) hooks.selectSession(tab.dataset.sessionId);
@@ -129,7 +182,15 @@ export function mountWorkspaceChrome({doc = document, translate, getLanguage, ho
     treeTitle = doc.createElement('p'); treeTitle.id = 'folder-pane-title'; treeTitle.className = 'pane-label';
     treeHost = doc.createElement('div'); treeHost.id = 'folder-tree'; treeHost.className = 'folder-tree'; treeHost.setAttribute('role', 'tree');
     treeSection.append(treeTitle, treeHost);
-    sidebar.prepend(treeSection);
+    // The drives and their folders live inside the navigation tree when it is there.
+    const rail = doc.querySelector('mfe-navigation-rail');
+    if (rail) { treeSection.slot = 'drives'; rail.append(treeSection); } else sidebar.prepend(treeSection);
+    listen(treeSection, 'click', event => {
+      const row = event.target.closest?.('.tree-drive');
+      if (!row) return;
+      if (row.dataset.sessionId !== snapshot.state?.sessionId) hooks.selectSession(row.dataset.sessionId);
+      showDriveView();
+    });
     listen(treeHost, 'click', event => {
       const row = event.target.closest?.('[role=treeitem]');
       if (!row) return;

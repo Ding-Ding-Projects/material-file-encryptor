@@ -6,7 +6,7 @@ import {mountInfoIcons} from './info-icon-mount.js';
  * the active language. Command registration is batched so a command palette
  * is configured once for the whole set instead of once per icon.
  */
-export function createInfoIconController(root, {inventory, t = value => value, registerCommands, openHelp, getLanguage = () => 'en', query, pair = false, onReport = () => {}, observe = false, ObserverImpl = globalThis.MutationObserver, schedule = callback => setTimeout(callback, 50), cancel = id => clearTimeout(id)} = {}) {
+export function createInfoIconController(root, {inventory, t = value => value, registerCommands, openHelp, getLanguage = () => 'en', query, pair = false, presentation = 'icon', onReport = () => {}, observe = false, ObserverImpl = globalThis.MutationObserver, schedule = callback => setTimeout(callback, 50), cancel = id => clearTimeout(id)} = {}) {
   if (!inventory?.descriptors) throw Error('An information icon inventory is required.');
   let mounted = null, disposeCommands = null, language = null, destroyed = false, observer = null, timer = null;
   const late = [];
@@ -22,7 +22,7 @@ export function createInfoIconController(root, {inventory, t = value => value, r
     const commands = [];
     language = getLanguage();
     mounted = mountInfoIcons(root, {
-      inventory, t, openHelp, pair, ...(query ? {query} : {}),
+      inventory, t, openHelp, pair, presentation, ...(query ? {query} : {}),
       registerCommands: rows => { commands.push(...rows); return () => {}; }
     });
     if (commands.length && typeof registerCommands === 'function') disposeCommands = registerCommands(commands);
@@ -38,7 +38,7 @@ export function createInfoIconController(root, {inventory, t = value => value, r
     if (destroyed) return 0;
     const commands = [];
     const batch = mountInfoIcons(root, {
-      inventory, t, openHelp, pair, ...(query ? {query} : {}),
+      inventory, t, openHelp, pair, presentation, ...(query ? {query} : {}),
       registerCommands: rows => { commands.push(...rows); return () => {}; }
     });
     const added = batch.modules.length;

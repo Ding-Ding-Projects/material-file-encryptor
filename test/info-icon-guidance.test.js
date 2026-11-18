@@ -7,7 +7,7 @@ import {SITE_INFO_ICON_INVENTORY} from '../src/shared/local-ux/info-icon-site.js
 import {EXTENSION_POPUP_INFO_ICON_INVENTORY, EXTENSION_OPTIONS_INFO_ICON_INVENTORY} from '../src/shared/local-ux/info-icon-extension.js';
 import {INFO_ICON_COPY, buildSurfaceInventory, infoIconDescriptor} from '../src/shared/local-ux/info-icon-inventory.js';
 import {GUIDANCE_COPY} from '../src/shared/surface/control-guidance.js';
-import {mountInfoIcons, probeInfoIcons, assertInventory} from '../src/shared/surface/info-icon-mount.js';
+import {mountInfoIcons, probeInfoIcons, probeHelpHints, assertInventory} from '../src/shared/surface/info-icon-mount.js';
 import {createInfoIconController} from '../src/shared/surface/info-icon-controller.js';
 import {infoIconDom} from './helpers/info-icon-dom.js';
 import {extractControls, selectorMatches, uncoveredControls, unmatchedSelectors} from './helpers/info-icon-sources.js';
@@ -65,6 +65,31 @@ for (const surface of SURFACES) {
       assert.equal(row.sourceId, 'docs/features/interface/info-icon-guidance.md');
     }
     for (const exemption of surface.inventory.exemptions) assert.ok(exemption.reason && Object.hasOwn(INFO_ICON_COPY, exemption.reason), `${exemption.selector}: stated reason`);
+  });
+
+  if (surface.name === 'desktop') test('desktop: every control has reachable help text with no icon in the layout: tooltip, accessible description, help mode and the keyboard explanation', () => {
+    const {root, target} = infoIconDom();
+    const commands = [];
+    const descriptors = [...surface.inventory.descriptors, ...DESKTOP_DYNAMIC_INFO_ICON_INVENTORY.descriptors];
+    const inventory = {descriptors};
+    const nodes = descriptors.map(row => target(row.selector));
+    const query = (scope, selector) => scope.querySelector(selector);
+    const report = mountInfoIcons(root, {inventory, query, presentation: 'hint', registerCommands: rows => { commands.push(...rows); return () => {}; }});
+    assert.deepEqual(report.errors, []);
+    assert.deepEqual(report.missing, []);
+    assert.equal(report.mounted.length, descriptors.length);
+    descriptors.forEach((row, index) => {
+      const host = nodes[index].nextElementSibling;
+      assert.equal(String(host.tagName), 'mfe-control-guidance', row.id);
+      assert.equal(host.dataset.presentation, 'hint', `${row.id}: hint presentation`);
+      assert.ok(!host.shadowRoot.children.some(node => node.tagName === 'md-icon-button'), `${row.id}: no information icon is drawn`);
+      assert.ok(nodes[index].getAttribute('data-help-text').length > 10, `${row.id}: tooltip text`);
+    });
+    assert.deepEqual(probeHelpHints(root, {inventory, query, commands}), []);
+    assert.equal(commands.length, descriptors.length * 2);
+    report.destroy();
+    assert.equal(root.children.length, nodes.length, 'destroying the help leaves only the original controls');
+    assert.ok(nodes.every(node => node.getAttribute('data-help-text') === null && node.getAttribute('aria-describedby') === null), 'destroying restores the controls');
   });
 
   test(`${surface.name}: each icon sits immediately before its own target, opens its panel and closes from the keyboard`, () => {
@@ -351,11 +376,63 @@ test('the late-control inventory names real ids and does not repeat the static i
 });
 
 test('every late-control selector is assigned by the renderer source, so the inventory cannot name a control that never exists', async () => {
-  const app = await read('src/renderer/app.js');
+  const app = (await read('src/renderer/app.js')) + (await read('src/renderer/features/shell/drive-list.js'));
   for (const row of DESKTOP_DYNAMIC_INFO_ICON_INVENTORY.descriptors) {
     const id = row.selector.slice(1);
     assert.ok(app.includes(`'${id}'`) || app.includes(`"${id}"`), `${id} is created by the renderer`);
   }
   const shell = await read('src/renderer/features/shell/info-icons.js');
   assert.match(shell, /observe: true/);
+});
+
+// ---------------------------------------------------------------- hint presentation guard
+
+function mountHint(row, {commands = true} = {}) {
+  const {root, target, Node} = infoIconDom();
+  const node = target(row.selector);
+  const registered = [];
+  const report = mountInfoIcons(root, {inventory: {descriptors: [row]}, presentation: 'hint', registerCommands: commands ? rows => { registered.push(...rows); return () => {}; } : undefined});
+  return {root, node, report, registered, host: node.nextElementSibling, Node, inventory: {descriptors: [row]}};
+}
+const hintCodes = context => [...new Set(probeHelpHints(context.root, {inventory: context.inventory, commands: context.registered}).map(problem => problem.code))].sort();
+
+test('guard: intact help reports nothing, and removing the help, its tooltip text, its description, its inline text, its panel or its commands each turns it red', () => {
+  const row = DESKTOP_INFO_ICON_INVENTORY.descriptors.find(item => item.selector === '#sync-button');
+  assert.deepEqual(hintCodes(mountHint(row)), [], 'baseline');
+
+  const gone = mountHint(row); gone.host.remove();
+  assert.deepEqual(hintCodes(gone), ['help-missing']);
+
+  const noTooltip = mountHint(row); noTooltip.node.removeAttribute('data-help-text');
+  assert.deepEqual(hintCodes(noTooltip), ['tooltip-text']);
+
+  const noDescription = mountHint(row); noDescription.node.removeAttribute('aria-describedby');
+  assert.deepEqual(hintCodes(noDescription), ['accessible-description']);
+
+  const noInline = mountHint(row); noInline.host.children.splice(0);
+  assert.deepEqual(hintCodes(noInline), ['accessible-description', 'help-mode-text']);
+
+  const noPanel = mountHint(row); const shadow = noPanel.host.shadowRoot;
+  shadow.children.splice(shadow.children.findIndex(node => node.tagName === 'section'), 1);
+  assert.deepEqual(hintCodes(noPanel), ['contextual-panel']);
+
+  assert.deepEqual(hintCodes(mountHint(row, {commands: false})), ['keyboard-action']);
+});
+
+test('guard: help text that names another control is reported', () => {
+  const row = DESKTOP_INFO_ICON_INVENTORY.descriptors.find(item => item.selector === '#sync-button');
+  const other = DESKTOP_INFO_ICON_INVENTORY.descriptors.find(item => item.selector === '#lock-button');
+  const context = mountHint(row);
+  const found = [...new Set(probeHelpHints(context.root, {inventory: {descriptors: [{...row, purpose: other.purpose}]}, commands: context.registered}).map(problem => problem.code))].sort();
+  assert.ok(found.includes('tooltip-text') && found.includes('accessible-description'));
+});
+
+test('the desktop shell mounts its help in hint presentation, and the title bar carries the help-mode toggle and tooltip', async () => {
+  const shell = await read('src/renderer/features/shell/info-icons.js');
+  assert.match(shell, /presentation: 'hint'/);
+  const app = await read('src/renderer/app.js');
+  assert.match(app, /installHelpTooltip\(document\)/);
+  assert.match(app, /createHelpMode\(/);
+  const html = await read('src/renderer/index.html');
+  assert.match(html, /id="help-mode-toggle"/);
 });

@@ -18,7 +18,7 @@ An icon never reads the live value of its control, never copies private text suc
 
 The inventories below cover the static markup of each page and the controls that the page code creates at start-up. A coverage check reads each page as text and fails when a capable control has neither an explanation nor a stated reason.
 
-- Desktop app (`src/renderer/index.html`): 89 explanations (1 for groups of related controls), 9 stated exemptions.
+- Desktop app (`src/renderer/index.html`): 91 explanations (1 for groups of related controls), 9 stated exemptions.
 - Split storage page (`src/renderer/features/split-storage/panel.js`): 2 explanations (0 for groups of related controls), 0 stated exemptions.
 - Docker Hub drive dialog (`src/renderer/features/docker-hub-drive/dialog.js`): 4 explanations (0 for groups of related controls), 0 stated exemptions.
 - Website (`docs/site/index.html`): 22 explanations (0 for groups of related controls), 7 stated exemptions.
@@ -392,6 +392,26 @@ Source checks mount every icon on a document fixture and open it from the keyboa
 - Effects: A long background job rewrites encrypted parts. Files stay readable while it runs.
 - Default: Not invoked
 - Example: Example for "Re-split existing files": a long background job rewrites encrypted parts. Files stay readable while it runs.
+
+### desktop-drive-switcher
+
+**Switch drive** — `#drive-switcher`
+
+- Kind: button
+- Purpose: Show the open drive by name and switch to another drive, or add one, from a short menu.
+- Effects: Switching only changes which drive the window shows; it never locks, unlocks or changes a drive.
+- Default: Not invoked
+- Example: Example for "Switch drive": switching only changes which drive the window shows; it never locks, unlocks or changes a drive.
+
+### desktop-help-mode-toggle
+
+**Help mode** — `#help-mode-toggle`
+
+- Kind: button
+- Purpose: Turn help mode on to show the help text under every control, or off to show it only as a tooltip when you point at or focus a control.
+- Effects: Only the help text appears or disappears; no setting, drive or file changes. The choice is remembered on this PC.
+- Default: Not invoked
+- Example: Example for "Help mode": only the help text appears or disappears; no setting, drive or file changes. The choice is remembered on this PC.
 
 ### desktop-drive-tab-add
 

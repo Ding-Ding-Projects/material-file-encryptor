@@ -10,6 +10,7 @@ import {createNotificationNarration} from './features/shell/notification-narrati
 import {control,prepareControl,controlKind,CONTROL_SELECTOR,setControlLanguage} from '../shared/surface/controls.js';
 import {resolveGuidanceArticle,GUIDANCE_COPY} from '../shared/surface/control-guidance.js';
 import {createShellInfoIcons,INFO_ICON_COPY} from './features/shell/info-icons.js';
+import {installHelpTooltip,createHelpMode} from '../shared/surface/help-hints.js';
 import {createCollapsibleSection,renderStatistics,activeFilterText,COLLAPSE_COPY} from '../shared/surface/collapsible-section.js';
 import {createBulkSelection,runBulk,summarizeBulk,mountBulkBar,bulkLabels,BULK_COPY} from '../shared/surface/bulk-actions.js';
 import {personalizationSettingCommands} from './features/personalization/settings-index.js';
@@ -44,6 +45,7 @@ import { TOOLBOX_DESTINATIONS, TOOLBOX_VIEW_LABELS } from '../shared/surface/too
 import {createRendererTiming,observeTaskPresentation} from './performance-timing.js';
 import {mountWorkspaceChrome} from './features/shell/workspace-chrome.js';
 import {mountUnlockCard} from './features/shell/unlock-card.js';
+import {mountDriveList} from './features/shell/drive-list.js';
 import {SHELL_COPY} from './features/shell/copy.js';
 import {loadShellPreferences,saveShellPreferences,applyShellPreferences,normalizeShellPreferences} from './features/shell/shell-preferences.js';
 const rendererTiming=createRendererTiming(),timingLifetime=new AbortController();
@@ -116,7 +118,7 @@ function reportDriverInstalled(){if(!driverInstall||state?.driver?.available!==t
 render = (baseRender => function (...args) { if (state) reportDriverInstalled(); return baseRender.apply(this, args); })(render);
 const getInstallTakeover=()=>installTakeover??=createInstallationTakeover({doc:document,translate:(source,options)=>t(source,options),preference:takeoverPreference,notify:input=>foundation?.notify(input),playCue:kind=>foundation?.playCue?.(kind)});
 const sinceMs=started=>started>0?Math.max(0,Date.now()-started):undefined;
-let chrome=null,unlockCard=null,shellPreferences=loadShellPreferences(localStorage),shellPersisted=true;
+let chrome=null,unlockCard=null,driveList=null,shellPreferences=loadShellPreferences(localStorage),shellPersisted=true;
 let foundation=null,fileDetails=null,fileSearch=null,renderedFilesKey='',pagedFiles=null,fileNextCursor=null,filePageRevision=null,filePageRequest=0;
 const featureMounts=new Map(),featureRoots=new Map(),workspaceDisposers=[];
 const operationNotifications=new Map();
@@ -205,7 +207,7 @@ function updateChrome() {
  if(!chrome||!state)return;
  const files=currentFiles();
  chrome.update({state,files,selected:files.find(file=>file.id===selected)||null,busy,hasMore:Boolean(fileNextCursor)});
- unlockCard?.update(state);
+ unlockCard?.update(state);driveList?.update(state);
 }
 let shellInfoIcons=null;
 function applyPreferences() {
@@ -1030,7 +1032,7 @@ async function homeActivityRows() {
  return rows.filter(row=>!Number.isNaN(new Date(row.time).getTime())).sort((a,b)=>new Date(b.time)-new Date(a.time)).slice(0,6);
 }
 function setupEnhancedWorkspace() {
- const main=document.querySelector('mfe-main-workspace');foundation=mountSurfaceFoundation({host:main,before:main.firstChild,storage:localStorage,sounds,language:preferences.language,tabs:[{id:'drive',label:'My drive',labelYue:'我嘅磁碟'},{id:'offline',label:'Available offline',labelYue:'可離線使用'},{id:'history',label:'History',labelYue:'歷史記錄'},{id:'recycle',label:'Recycle Bin',labelYue:'資源回收筒'},{id:'settings',label:'Settings',labelYue:'設定'},{id:'help',label:'How it works',labelYue:'使用方法'}],onActivate:changeView,homeStatus:homeStatusRows,homeActivity:homeActivityRows,commands:workspaceCommands(),onExport:exportText,renderText:t,onNotification:(record,options)=>narrationEvents.notify(record,options),onQuit:()=>quitApplication(),onNotificationAction:async action=>{if(action==='retry-files'){filePageRevision=null;return loadFilePage();}if(action.startsWith('cancel-operation:'))return api.cancelOperation(action.slice('cancel-operation:'.length));if(action==='open-operations'){foundation.shell.activate('drive');$('active-operations').scrollIntoView({block:'center'});return;}throw Error('This recovery action is no longer available.');}});
+ const main=document.querySelector('mfe-main-workspace');foundation=mountSurfaceFoundation({host:main,before:main.firstChild,storage:localStorage,sounds,language:preferences.language,tabs:[{id:'drive',label:'My drive',labelYue:'我嘅磁碟'},{id:'offline',label:'Available offline',labelYue:'可離線使用'},{id:'history',label:'History',labelYue:'歷史記錄'},{id:'recycle',label:'Recycle Bin',labelYue:'資源回收筒'},{id:'settings',label:'Settings',labelYue:'設定'},{id:'help',label:'How it works',labelYue:'使用方法'}],onActivate:changeView,homeStatus:homeStatusRows,homeActivity:homeActivityRows,commands:workspaceCommands(),onExport:exportText,renderText:t,onNotification:(record,options)=>narrationEvents.notify(record,options),onQuit:()=>quitApplication(),onAddDrive:()=>changeVaultSession('add'),onNotificationAction:async action=>{if(action==='retry-files'){filePageRevision=null;return loadFilePage();}if(action.startsWith('cancel-operation:'))return api.cancelOperation(action.slice('cancel-operation:'.length));if(action==='open-operations'){foundation.shell.activate('drive');$('active-operations').scrollIntoView({block:'center'});return;}throw Error('This recovery action is no longer available.');}});
  // Offline filtering reuses the drive panel and its persisted layout.
  for(const id of ['drive','history','recycle','settings','help'])foundation.registerPanel(id,$(`view-${id}`));
  for(const [id,label]of Object.entries(canonicalViewLabels))foundation.model.registerCanonicalTab(id,label);
@@ -1054,10 +1056,12 @@ function setupEnhancedWorkspace() {
   formatBytes,getTextScale:()=>shellPreferences.textScale/100
  }});
  unlockCard=mountUnlockCard({doc:document,translate:t,hooks:{isBusy:()=>busy,chooseKeyFile:()=>api.chooseKeyFile(),unlock:unlockInline}});
- foundation.chrome=chrome;foundation.updateChrome=updateChrome;foundation.refreshChrome=()=>{unlockCard?.update(state);chrome?.refreshOverflow();};
+ driveList=mountDriveList({doc:document,translate:t,getLanguage:()=>preferences.language,hooks:{selectSession:id=>{const picker=$('vault-session');picker.value=id;picker.dispatchEvent(new Event('change'));},newOnThisPc:()=>openVaultDialog('create'),newHubDrive:()=>openHubDrive('create'),openHubDrive:()=>openHubDrive('open'),openSettings:()=>{foundation.model.openTab({id:'settings',label:canonicalViewLabels.settings||'Settings'});foundation.shell.activate('settings');}}});driveList.update(state);
+ foundation.chrome=chrome;foundation.updateChrome=updateChrome;foundation.refreshChrome=()=>{unlockCard?.update(state);driveList?.update(state);chrome?.refreshOverflow();};
  workspaceDisposers.push(subscribeLanguage(()=>{updateChrome();syncShellControls();}));
  applyShellPreferences(document.documentElement,shellPreferences);syncShellControls();chrome.refreshViewport();
- workspaceDisposers.push(()=>{chrome?.destroy();unlockCard?.destroy();});
+ workspaceDisposers.push(()=>{chrome?.destroy();unlockCard?.destroy();driveList?.destroy();});
+ workspaceDisposers.push(subscribeLanguage(()=>driveList?.setLanguage()));
  const forceLockButton=document.createElement('md-outlined-button');forceLockButton.id='force-lock-button';forceLockButton.textContent=t('Force lock');forceLockButton.onclick=async()=>{if(await superConfirm('desktop.force-lock'))return run('Locking drive…',()=>api.forceLock(forceLockOptions()));};$('lock-button').after(forceLockButton);
  const fileHost=document.createElement('mfe-search');fileHost.setAttribute('data-compact','');fileHost.setAttribute('label',t('Search files'));fileHost.setAttribute('scope','drive-files');fileHost.language=preferences.language;const old=$('file-search');old.closest('.search-box').hidden=true;old.closest('.search-box').after(fileHost);fileSearch=fileHost;fileHost.addEventListener('search-change',()=>{old.value=fileHost.query;renderFiles();});
  const pager=document.createElement('div');pager.className='file-page-actions';const more=document.createElement('md-outlined-button');more.id='load-more-files';more.textContent=t('Load more files');more.hidden=true;more.onclick=()=>loadFilePage(true);const retry=document.createElement('md-text-button');retry.id='retry-files';retry.textContent=t('Retry loading files');retry.onclick=()=>{filePageRevision=null;loadFilePage();};pager.append(more,retry);$('file-list').closest('.table-scroll').after(pager);
@@ -1065,7 +1069,12 @@ function setupEnhancedWorkspace() {
  const details=addFeatureRoot('details','File details','檔案詳情');const detailContent=document.createElement('div');details.append(detailContent);fileDetails=mountFileDetails(detailContent,{translate:t,language:preferences.language,services:{listVersions:id=>api.listVersions?api.listVersions(id):api.history({entryId:id}),listActivity:query=>api.listActivity?api.listActivity(query):Promise.reject(new Error('File activity bridge is unavailable.')),previewVersion:id=>api.previewVersion(id),labelVersion:(id,label)=>api.labelVersion(id,label),exportVersion:id=>api.exportVersion(id),restoreVersion:async id=>{if(await superConfirm('desktop.restore-version'))return api.restoreVersion(id);}}});
  const detailsButton=document.createElement('md-text-button');detailsButton.id='file-details-button';detailsButton.textContent=t('File details');detailsButton.onclick=()=>{const file=currentFiles().find(f=>f.id===selected);if(file)fileDetails.selectEntry(file);foundation.model.openTab({id:'details',label:'File details'});foundation.shell.activate('details');};document.querySelector('.file-actions').append(detailsButton);
  const settingsSearch=control('input');settingsSearch.type='search';settingsSearch.id='settings-local-search';settingsSearch.setAttribute('aria-label',t('Search settings'));$('view-settings').children[0].after(settingsSearch);workspaceDisposers.push(attachEnhancedSearch(settingsSearch,$('view-settings')));
- // Every capable shell control gets its own compact information icon immediately before it; the icons never start the real operation.
+ // Every capable shell control carries its help as a tooltip and accessible description, with no icon in the layout.
+ // Help mode (the ? button in the title bar) shows the same text under every control. Neither starts the real operation.
+ const helpTooltip=installHelpTooltip(document);workspaceDisposers.push(()=>helpTooltip.destroy());
+ const helpToggle=$('help-mode-toggle');
+ const helpMode=createHelpMode({doc:document,storage:localStorage,onChange:on=>{if(!helpToggle)return;helpToggle.selected=on;helpToggle.setAttribute('aria-pressed',String(on));helpToggle.setAttribute('title',t(on?'Help mode is on':'Help mode'));}});
+ helpToggle?.addEventListener('click',()=>helpMode.toggle());
  const openInfoHelp=async descriptor=>{const catalog=await featureRequest('documentation','catalog');const row=resolveGuidanceArticle(catalog,descriptor,{language:preferences.language,restricted:effectiveLocalSettings.school.enabled});const reader=featureMounts.get('documentation');if(!row||!reader)throw Error('Guidance documentation is unavailable.');foundation.model.openTab({id:'documentation',label:'Documentation'});foundation.shell.activate('documentation');if(!reader.open(row.id,descriptor.concept))throw Error('Guidance documentation is unavailable.');};
  shellInfoIcons=createShellInfoIcons(document.body,{t:source=>t(source),openHelp:openInfoHelp,registerCommands:value=>foundation.registerCommands(value),getLanguage:()=>preferences.language});workspaceDisposers.push(()=>shellInfoIcons?.destroy());
  const confirmFeature=async({title,message,requiredText,destructiveId})=>{

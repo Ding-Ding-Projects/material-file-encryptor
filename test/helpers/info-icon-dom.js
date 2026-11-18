@@ -15,6 +15,7 @@ export function infoIconDom() {
     }
     get isConnected() { return !!this.parentNode?.isConnected || this.root === true; }
     get previousElementSibling() { const siblings = this.parentNode?.children || []; return siblings[siblings.indexOf(this) - 1] || null; }
+    get nextElementSibling() { const siblings = this.parentNode?.children || []; const index = siblings.indexOf(this); return index < 0 ? null : siblings[index + 1] || null; }
     append(...nodes) { for (const node of nodes) { if (typeof node === 'string') { this.textContent += node; continue; } node.remove(); node.parentNode = this; this.children.push(node); } }
     replaceChildren(...nodes) { for (const node of this.children) node.parentNode = null; this.children = []; this.append(...nodes); }
     attachShadow() { this.shadowRoot = new Node('shadow'); this.shadowRoot.root = true; }
