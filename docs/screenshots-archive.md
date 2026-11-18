@@ -6,6 +6,31 @@ Current captures and their receipts are in the [README](../README.md#current-cap
 
 ## Original captions and provenance
 
+### Version 2 build b6949943, 2026-11-18 (partly replaced in the README on 2026-11-18)
+
+These captures of the packaged app built from source `b6949943` (version 0.2.0) were replaced after the interface fixes in source `6b35600d`: the details pane, the Availability column, the keyboard file menu, the backup page, the new drive's last step and Settings > Updates. The grey bar under the part size field in the backed-up frames is a screenshot mask that matched account text hidden on the page, not part of the app. The [capture manifest](images/captures/v2-full-b6949943/manifest.json) records each image's hash, size, viewport and masks.
+
+<details>
+<summary>Replaced captures (10)</summary>
+
+| Unlocked drive with a file selected | Unlocked drive with a file selected, dark theme | Unlocked drive with a file selected, in Cantonese |
+|---|---|---|
+| ![Unlocked drive with a file selected: details pane with its encrypted part and versions](images/captures/v2-full-b6949943/workspace-file-selected-light-en-1440.png) | ![Unlocked drive with a file selected, dark theme](images/captures/v2-full-b6949943/workspace-file-selected-dark-en-1440.png) | ![Unlocked drive with a file selected, in Cantonese](images/captures/v2-full-b6949943/workspace-file-selected-light-yue-1440.png) |
+
+| Unlocked drive with a file selected, in English and Cantonese | Context menu opened with Shift+F10, with its filter box and Customize | Backed up just now, with the repository row and its tag count |
+|---|---|---|
+| ![Unlocked drive with a file selected, in English and Cantonese](images/captures/v2-full-b6949943/workspace-file-selected-light-bilingual-1440.png) | ![Context menu opened with Shift+F10, with its filter box and Customize](images/captures/v2-full-b6949943/context-menu-light-en-1440.png) | ![Backed up just now, with the repository row and its tag count](images/captures/v2-full-b6949943/hub-backup-backed-up-light-en-1440.png) |
+
+| Backed up, dark theme | Drive created | Settings, Updates |
+|---|---|---|
+| ![Backed up, dark theme](images/captures/v2-full-b6949943/hub-backup-backed-up-dark-en-1440.png) | ![Drive created: every step done and the first encrypted sync finished](images/captures/v2-full-b6949943/hub-create-done-light-en-1440.png) | ![Settings, Updates](images/captures/v2-full-b6949943/settings-updates-light-en-1440.png) |
+
+| Updates page |
+|---|
+| ![Updates page](images/captures/v2-full-b6949943/updates-light-en-1440.png) |
+
+</details>
+
 ### Version 2 build 5d8d4d94, 2026-11-17 (replaced in the README on 2026-11-18)
 
 Every image below is a genuine capture of the packaged app built from source `5d8d4d94` (version 0.2.0), taken in a fresh isolated profile with a hidden window and left unedited. The [capture manifest](images/captures/redesign-v2-5d8d4d94/manifest.json) records each image's hash, size, viewport and theme, and lists what was not captured and why. The design decisions behind this frame are in [the version 2 decisions](../design/redesign-2026-11/v2-decisions.md). Captures of earlier builds are in the [screenshot archive](screenshots-archive.md).
