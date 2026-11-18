@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>File hosting status and links</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..800&amp;family=Roboto+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+@keyframes rise{from{transform:translateY(10px);opacity:0}to{transform:none;opacity:1}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+[data-motion=off] *{animation:none!important;transition:none!important}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+button{font:inherit;color:inherit}
+</style>
+</helmet>
+<div data-motion="{{motion}}" style="width:1440px;height:960px;font-family:'Roboto Flex',system-ui,sans-serif;font-size:14px;color:#1A1B24;background:#E9EBF2;overflow:hidden;display:flex;flex-direction:column">
+<div aria-hidden="true" style="height:40px;background:#DADDE8;flex:none"></div>
+<div style="flex:1;display:flex;min-height:0">
+<nav aria-label="App sections" style="flex:0 0 232px;background:#F7F8FB;border-right:1px solid #DCDEE8;padding:16px 12px;display:flex;flex-direction:column;gap:4px">
+<a href="#" style="padding:12px 14px;border-radius:24px;color:#1A1B24;text-decoration:none">Drives</a>
+<a href="#" style="padding:12px 14px;border-radius:24px;color:#1A1B24;text-decoration:none">Docker Hub storage</a>
+<a href="#" style="padding:12px 14px;border-radius:24px;color:#1A1B24;text-decoration:none">Shared files</a>
+<a href="#" aria-current="page" style="padding:12px 14px;border-radius:24px;background:{{accentSoft}};font-weight:650;color:#1A1B24;text-decoration:none">File hosting</a>
+<a href="#" style="padding:12px 14px;border-radius:24px;color:#1A1B24;text-decoration:none">Settings</a>
+</nav>
+<main style="flex:1;padding:28px 36px;overflow:auto;display:flex;flex-direction:column;gap:18px">
+<header style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+<h1 style="margin:0;font-size:26px;font-weight:650;flex:1">File hosting</h1>
+<button type="button" style="min-height:48px;padding:0 20px;border-radius:24px;border:1px solid #74768A;background:#FFFFFF">Add another instance</button>
+<button type="button" style="min-height:48px;padding:0 22px;border-radius:24px;border:0;background:{{accent}};color:#FFFFFF;font-weight:650">Create link</button>
+</header>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px">
+<section style="background:#FFFFFF;border-radius:20px;padding:18px 20px;display:flex;flex-direction:column;gap:8px;animation:rise 260ms both">
+<h2 style="margin:0;font-size:15px;color:#454652;font-weight:600">file-hosting · this computer</h2>
+<div style="display:flex;align-items:center;gap:10px"><span style="width:12px;height:12px;border-radius:6px;background:#1D6B3A;animation:pulse 2.4s infinite"></span><strong style="font-size:18px">Healthy</strong></div>
+<span style="color:#454652">Checked 14:41 · version 1.0.0 · up 3 h 12 min</span>
+<a href="#" style="font-family:'Roboto Mono',monospace;font-size:13px;color:{{accent}}">http://192.168.50.24:8790/</a>
+<a href="#" style="font-family:'Roboto Mono',monospace;font-size:13px;color:{{accent}}">https://calm-river-4821.trycloudflare.com/</a>
+</section>
+<section style="background:#FFFFFF;border-radius:20px;padding:18px 20px;display:flex;flex-direction:column;gap:10px;animation:rise 300ms both">
+<h2 style="margin:0;font-size:15px;color:#454652;font-weight:600">Encrypted cache</h2>
+<strong style="font-size:18px">1.3 GB of 10 GB</strong>
+<div aria-hidden="true" style="height:10px;border-radius:5px;background:#E3E5EE;overflow:hidden"><div style="width:13%;height:100%;background:{{accent}}"></div></div>
+<span style="color:#454652">4 files cached · oldest removed first when full</span>
+</section>
+<section style="background:#FFFFFF;border-radius:20px;padding:18px 20px;display:flex;flex-direction:column;gap:10px;animation:rise 340ms both">
+<h2 style="margin:0;font-size:15px;color:#454652;font-weight:600">Instance</h2>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<button type="button" style="min-height:44px;padding:0 16px;border-radius:22px;border:1px solid #74768A;background:#FFFFFF">Restart</button>
+<button type="button" style="min-height:44px;padding:0 16px;border-radius:22px;border:1px solid #74768A;background:#FFFFFF">Update</button>
+<button type="button" style="min-height:44px;padding:0 16px;border-radius:22px;border:1px solid #74768A;background:#FFFFFF">Logs</button>
+<button type="button" style="min-height:44px;padding:0 16px;border-radius:22px;border:1px solid #B3261E;color:#B3261E;background:#FFFFFF">Stop</button>
+</div>
+<span style="color:#454652">Remove deletes the containers and its cache, never your Docker Hub shares.</span>
+</section>
+</div>
+<section aria-labelledby="links" style="background:#FFFFFF;border-radius:20px;padding:18px 20px;display:flex;flex-direction:column;gap:12px;min-height:0">
+<h2 id="links" style="margin:0;font-size:18px">Download links</h2>
+<div style="overflow-x:auto">
+<table style="width:100%;border-collapse:collapse;min-width:860px">
+<thead><tr style="text-align:left;color:#454652;font-size:13px"><th style="padding:10px">File</th><th style="padding:10px">Expires</th><th style="padding:10px">Downloads</th><th style="padding:10px">State</th><th style="padding:10px;text-align:right">Actions</th></tr></thead>
+<tbody>
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="4">
+<tr style="border-top:1px solid #ECEDF3"><td style="padding:12px 10px;font-weight:600">{{r.name}}</td><td style="padding:12px 10px">{{r.expires}}</td><td style="padding:12px 10px">{{r.count}}</td><td style="padding:12px 10px"><span style="{{r.badge}}">{{r.state}}</span></td>
+<td style="padding:8px 10px;text-align:right;white-space:nowrap"><button type="button" style="min-height:40px;padding:0 14px;border-radius:20px;border:1px solid #74768A;background:#FFFFFF">Copy</button> <button type="button" style="min-height:40px;padding:0 14px;border-radius:20px;border:1px solid #74768A;background:#FFFFFF">QR</button> <button type="button" onClick="{{r.end}}" style="min-height:40px;padding:0 14px;border-radius:20px;border:1px solid #B3261E;color:#B3261E;background:#FFFFFF">End now</button></td></tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+</section>
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#3F51B5","options":["#3F51B5","#1D6B3A","#9C4A00","#6B3FA0"]},"motion":{"editor":"enum","options":["on","off"],"default":"on"},"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  constructor(p){ super(p); this.state = { ended: {} }; }
+  renderVals() {
+    const accent = this.props.accent ?? '#3F51B5';
+    const base = [
+      { id: 'a', name: 'Quarterly report.pdf', expires: '25 Nov 2026, 14:05', count: '2 of 10', state: 'Active' },
+      { id: 'b', name: 'Holiday photos.zip', expires: '19 Nov 2026, 09:30', count: '0, no limit', state: 'Active' },
+      { id: 'c', name: 'Contract draft.docx', expires: '17 Nov 2026, 18:00', count: '1 of 1', state: 'Used up' },
+      { id: 'd', name: 'Floor plan.dwg', expires: '16 Nov 2026, 12:00', count: '4, no limit', state: 'Expired' }
+    ];
+    const badge = state => 'padding:4px 10px;border-radius:8px;font-size:12px;font-weight:700;' + (state === 'Active' ? 'background:#CDEFE3;color:#063D31' : 'background:#ECEDF3;color:#454652');
+    return {
+      accent, accentSoft: accent + '22', motion: this.props.motion ?? 'on',
+      rows: base.map(r => { const state = this.state.ended[r.id] ? 'Ended' : r.state; return { ...r, state, badge: badge(state), end: () => this.setState({ ended: { ...this.state.ended, [r.id]: true } }) }; })
+    };
+  }
+}
+</script>
+</body>
+</html>
