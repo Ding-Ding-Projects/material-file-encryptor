@@ -72,6 +72,11 @@ export function parseVocabulary(source) {
   return Object.freeze({ version: 1, replacements: Object.freeze(replacements.map(entry => Object.freeze({ ...entry }))), ...(displayName === undefined ? {} : { displayName }) });
 }
 const matchers = new WeakMap();
+const wordCharacter = /[\p{L}\p{N}\p{M}]/u;
+const cjkCharacter = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u;
+// Two neighbouring characters belong to one word when both are letters or digits, except that CJK text needs no spaces between words.
+const joinsWord = (left, right) => wordCharacter.test(left) && wordCharacter.test(right) && !cjkCharacter.test(left) && !cjkCharacter.test(right);
+const lastCharacter = (text, index) => { const low = text.charCodeAt(index - 1); return index > 1 && low >= 0xdc00 && low <= 0xdfff ? text.slice(index - 2, index) : text[index - 1]; };
 export const RENDER_LIMITS = Object.freeze({ inputCodeUnits: 65536, outputCodeUnits: 262144, trieSteps: 1000000 });
 function compiledTrie(vocabulary) {
   let root = matchers.get(vocabulary);
@@ -130,13 +135,16 @@ export function replaceVocabulary(text, vocabulary) {
     let position = 0;
     while (position < part.length) {
       let node = root, cursor = position, end = position, replacement;
-      while (cursor < part.length) {
+      // A key only matches as a whole word or phrase: never from the middle of a word, never into the start of the next.
+      const startsInsideWord = position > 0 && joinsWord(lastCharacter(part, position), String.fromCodePoint(part.codePointAt(position)));
+      while (!startsInsideWord && cursor < part.length) {
         if (++steps > RENDER_LIMITS.trieSteps) return original;
         const character = String.fromCodePoint(part.codePointAt(cursor));
         node = node.children.get(character);
         if (!node) break;
         cursor += character.length;
-        if (Object.hasOwn(node, 'replacement')) { replacement = node.replacement; end = cursor; }
+        const endsInsideWord = cursor < part.length && joinsWord(character, String.fromCodePoint(part.codePointAt(cursor)));
+        if (Object.hasOwn(node, 'replacement') && !endsInsideWord) { replacement = node.replacement; end = cursor; }
       }
       if (replacement !== undefined) {
         if (!append(replacement)) return original;
