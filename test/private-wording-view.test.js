@@ -94,3 +94,20 @@ test('recorded text mutations only revisit the changed subtree',async()=>{
  f.observers[0].callback([{type:'characterData',target:f.label.children[0]}]);await Promise.resolve();
  assert.equal(calls-before,1);assert.equal(f.label.children[0].nodeValue,'Synthetic updated');projection.destroy();
 });
+
+test('component label attributes, shadow content and late-rendered dialogs are all projected and restored',async()=>{
+ const f=fixture();let active=true;
+ const projection=createPrivateWordingView({root:f.root,isActive:()=>active,replace:value=>value.replaceAll('Canonical','Synthetic')});
+ const field=f.make('md-outlined-text-field');field.setAttribute('label','Canonical field');field.setAttribute('supporting-text','Canonical help');field.setAttribute('error-text','Canonical error');
+ const dialog=f.make('md-dialog');dialog.setAttribute('headline','Canonical headline');dialog.append(f.make('span','Canonical dialog body'));
+ const lateHost=f.make('div');const lateShadow=f.make('shadow');lateShadow.host=lateHost;lateShadow.ownerDocument=f.document;lateHost.shadowRoot=lateShadow;
+ const lateLabel=f.make('span','Canonical picker row');lateShadow.append(lateLabel);
+ f.root.append(field);f.root.append(dialog);f.root.append(lateHost);
+ f.observers[0].callback();await Promise.resolve();
+ assert.equal(field.getAttribute('label'),'Synthetic field');assert.equal(field.getAttribute('supporting-text'),'Synthetic help');assert.equal(field.getAttribute('error-text'),'Synthetic error');
+ assert.equal(dialog.getAttribute('headline'),'Synthetic headline');assert.equal(dialog.children.at(-1).children[0].nodeValue,'Synthetic dialog body');
+ assert.equal(lateLabel.children[0].nodeValue,'Synthetic picker row');
+ active=false;projection.refresh();
+ assert.equal(field.getAttribute('label'),'Canonical field');assert.equal(dialog.getAttribute('headline'),'Canonical headline');assert.equal(lateLabel.children[0].nodeValue,'Canonical picker row');
+ projection.destroy();
+});

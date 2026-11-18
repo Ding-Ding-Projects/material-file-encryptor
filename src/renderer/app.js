@@ -21,6 +21,7 @@ import { deletedDescendantCandidates } from './recycle-selection.js';
 import { createScopedSearch } from './scoped-search.js';
 import { preferenceChangeScope } from './preference-scope.js';
 import { createFileSelection, bulkAvailability, runForEach } from './file-selection.js';
+import { createWholeLabelMapper } from './wording-labels.js';
 import { parsePartSize, displayPartSize, parseVocabulary, replaceVocabulary, loadSettings } from './preferences.js';
 import { serializeVocabulary } from '../shared/personal-vocabulary.js';
 import { icon, initializeIcons } from './icons.js';
@@ -167,10 +168,13 @@ document.addEventListener('scroll', event => {
 }, {capture:true,passive:true});
 $('view-drive').prepend($('operation'));
 const translateWorkspace=createTranslator(()=>({...effectiveLocalSettings,...preferences,school:effectiveLocalSettings.school}),{dictionary:{...SHELL_COPY,...GUIDANCE_COPY,...INFO_ICON_COPY,...COLLAPSE_COPY,...BULK_COPY,...DIMSUM_COPY,...ONBOARDING_COPY,...cantonese,...enhancedLabels}});
-function t(source,options) { return translateWorkspace(source,options); }
+/** A label that the personal wording file maps exactly wins in every language (see wording-labels.js). */
+const mappedWholeLabel=createWholeLabelMapper({getVocabulary:()=>preferences.vocabulary,isActive:()=>wordingActive()});
+function t(source,options) { return mappedWholeLabel(source) ?? translateWorkspace(source,options); }
 /** Quits the whole application (not just the window). Ctrl+Q, the Help and Settings menus, the New tab menu and the command palette all use this. */
 function quitApplication() { return api.quit ? api.quit() : api.windowControl('close'); }
-const wordingActive=()=>featureMounts.get('access')?.authenticated===true&&!effectiveLocalSettings.school.enabled;
+// The wording file is the person's own, stored on this device, so it applies as soon as it is loaded; only restricted school mode turns it off.
+const wordingActive=()=>!effectiveLocalSettings.school.enabled;
 const privateWordingView=createPrivateWordingView({root:document.body,replace:value=>replaceVocabulary(value,preferences.vocabulary),isActive:wordingActive});
 /** Personal wording for text that is not DOM text, such as native form validation messages. Same rule as the page projection. */
 function displayWording(value) { return wordingActive() ? replaceVocabulary(value, preferences.vocabulary) : value; }

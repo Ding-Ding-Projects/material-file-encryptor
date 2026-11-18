@@ -16,7 +16,7 @@ export function createPrivateWordingView({root=globalThis.document?.body,replace
  function restoreAll(){for(const node of tracked)restore(node);tracked.clear();}
  function finish(result){work=null;if(resolve){resolve(result);resolve=null;}return result;}
  function stop(reason){if(task!==null)cancelTask(task);task=null;return finish({projected:false,reason});}
- function observe(scope){if(!Observer||observers.has(scope))return;const observer=new Observer(changed);observers.set(scope,observer);observer.observe(scope,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['aria-label','aria-description','title','placeholder','alt','data-private-wording-ignore','contenteditable']});}
+ function observe(scope){if(!Observer||observers.has(scope))return;const observer=new Observer(changed);observers.set(scope,observer);observer.observe(scope,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['aria-label','aria-description','title','placeholder','alt','label','supporting-text','error-text','headline','data-private-wording-ignore','contenteditable']});}
  function* visit(node){
   yield node;
   // Iterating live child links avoids eagerly materializing a whole document.
@@ -32,7 +32,7 @@ export function createPrivateWordingView({root=globalThis.document?.body,replace
    const rendered=String(replace(canonical));originals.set(node,{canonical,rendered});if(current!==rendered)tracked.add(node);if(current!==rendered)node.nodeValue=rendered;
   }else if(element){
    if(node.closest('script,style,code,pre,[data-private-wording-ignore]')){restore(node);tracked.delete(node);return;}
-   for(const name of ['aria-label','aria-description','title','placeholder','alt'])if(node.hasAttribute(name)){
+   for(const name of ['aria-label','aria-description','title','placeholder','alt','label','supporting-text','error-text','headline'])if(node.hasAttribute(name)){
     const current=node.getAttribute(name),prior=attributes.get(node)?.get(name),canonical=prior&&current===prior.rendered?prior.canonical:current;
     const rendered=String(replace(canonical));let records=attributes.get(node);if(!records){records=new Map();attributes.set(node,records);}records.set(name,{canonical,rendered});if(current!==rendered)tracked.add(node);if(current!==rendered)node.setAttribute(name,rendered);
    }
