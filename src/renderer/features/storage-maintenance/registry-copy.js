@@ -48,6 +48,7 @@ export const REGISTRY_COPY = {
   elapsed:['Step time {time}','此步驟已用 {time}'], totalElapsed:['total {time}','合共 {time}'],
   slowStep:['This step is taking longer than usual. It is still working, and Cancel stops it safely.','這個步驟比平常需時更長，仍在進行中；按取消可以安全停止。'],
   paused:['Backup paused while you used the drive; it will resume.','你使用磁碟期間，備份已暫停，稍後會自動繼續。'],
+  syncCancelled:['Synchronization was cancelled. Nothing incomplete was published; run it again when you are ready.','同步已取消，沒有發佈未完成的內容；準備好後可以再次執行。'],
   releaseUnverified:['The drive has not yet confirmed that its snapshot was released. Press Cancel to release it before starting again.','磁碟尚未確認已釋放快照。請先按取消釋放，再重新開始。'],
   recoveryComplete:['Restored copy is ready at this location. Unlock it separately.','還原副本已在以下位置準備好，請另外解鎖。'],
   recoveryIncomplete:['An incomplete restored copy was retained here. Keep the original vault and retry into a new folder.','未完成的還原副本保留在以下位置。請保留原有保管庫，並重試還原至新資料夾。'],

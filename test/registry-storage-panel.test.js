@@ -190,3 +190,21 @@ test('another background owner is selected through the existing session route wi
   await f.panel.selectOperationOwner();await tick();assert.equal(f.panel.buttons.cancel.disabled,false);await f.panel.cancel();
   assert.deepEqual(calls,[['select','secondary'],['cancel','secondary']]);
 });
+
+test('a cancelled or paused synchronization is described plainly instead of as a failure, with progress and a local next run', async () => {
+  let state = 'idle';
+  const status = () => ({ sessionId: 'main', source: vault().storageDir, configured: true, configuration: configuration(), state, nextDue: 1794964530876,
+    progress: state === 'uploading' ? { step: 'uploading', unit: 'files', completedFiles: 5, totalFiles: 10, completedBytes: 512, totalBytes: 1024, stepStartedAt: Date.now() - 65000, startedAt: Date.now() - 125000 } : null,
+    activeOperation: state === 'uploading' ? { sessionId: 'main', state } : null });
+  const { panel } = await fixture({ registryStorageStatus: async () => status(),
+    syncRegistryStorage: async () => { state = 'cancelled'; throw Error('Registry synchronization is incomplete.'); } });
+  await panel.sync();
+  assert.match(panel.statusText.textContent, /Synchronization was cancelled/); assert.equal(panel.error.hidden, true);
+  assert.doesNotMatch(panel.metrics.nextDue.value.textContent, /1794964530876/);
+  const paused = await fixture({ registryStorageStatus: async () => ({ ...status(), state: 'paused' }), syncRegistryStorage: async () => { throw Error("Error invoking remote method 'vault:request': Error: Backup paused while you used the drive; it will resume."); } });
+  await paused.panel.sync();
+  assert.match(paused.panel.statusText.textContent, /Backup paused while you used the drive/);
+  state = 'uploading'; await panel.refresh();
+  assert.match(panel.progressText.textContent, /Uploading encrypted objects · 5 of 10 files · 512 B of 1\.0 KB · Step time 1:0\d, total 2:0\d/);
+  assert.equal(panel.progress.indeterminate, false); assert.equal(panel.progress.value, 0.5);
+});

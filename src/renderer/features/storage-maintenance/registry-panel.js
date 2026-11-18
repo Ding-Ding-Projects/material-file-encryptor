@@ -166,9 +166,13 @@ export class RegistryStoragePanel extends SurfaceElement {
       try { result = await this.services.syncRegistryStorage(); }
       catch (error) {
         // A backup that paused because the drive was used is not a failure; it resumes by itself.
-        if (!/Backup paused while you used the drive/.test(String(error?.message || ''))) throw error;
-        if (this.isCurrent(row)) { row.message = 'paused'; await this.readStatus(row, id, source); }
-        return;
+        const paused = /Backup paused while you used the drive/.test(String(error?.message || ''));
+        if (!this.isCurrent(row)) return;
+        await this.readStatus(row, id, source).catch(() => {});
+        // Cancel is an answer, not a failure: say what happened instead of showing an error.
+        if (paused) { row.message = 'paused'; return; }
+        if (row.status?.state === 'cancelled') { row.message = 'syncCancelled'; return; }
+        throw error;
       }
       if (!this.isCurrent(row)) return;
       row.message = result?.verified === true && DIGEST.test(result.digest) ? 'verified' : 'unverified';
