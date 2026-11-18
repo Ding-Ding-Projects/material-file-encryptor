@@ -266,5 +266,5 @@ test('Quit is reachable from the Help and Settings menus, the command palette an
   assert.match(main, /label:'Quit',click:\(\)=>void quit\(\)/, 'the tray menu keeps Quit');
   assert.match(main, /hideWindow: \(\) => \{ window\.hide\(\); void trayNotice\.maybeShow\(\); \}/);
   const css = await fs.readFile('src/renderer/modern.css', 'utf8');
-  assert.match(css, /#file-list>tr>td\.availability\{white-space:normal;overflow:visible;text-overflow:clip/);
+  assert.match(css, /#file-list>tr>td\.availability\{white-space:nowrap;overflow:visible;text-overflow:clip/);
 });

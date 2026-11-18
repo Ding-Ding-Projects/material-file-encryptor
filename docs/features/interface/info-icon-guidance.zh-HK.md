@@ -570,13 +570,13 @@
 
 ### desktop-inspector-backup-settings
 
-**備份設定** — `#inspector-backup-settings`
+**開啟 Docker Hub 備份** — `#inspector-backup-settings`
 
 - 類型: button
-- 用途: 開啟儲存分頁，嗰度可以設定雲端備份。
+- 用途: 開啟 Docker Hub 備份頁，嗰度會顯示同更改呢個磁碟嘅自動備份。
 - 影響: 開啟分頁不會更改任何設定。
 - 預設值: 尚未執行
-- 例子: 「備份設定」例子：開啟分頁不會更改任何設定。
+- 例子: 「開啟 Docker Hub 備份」例子：開啟分頁不會更改任何設定。
 
 ### desktop-density-setting
 

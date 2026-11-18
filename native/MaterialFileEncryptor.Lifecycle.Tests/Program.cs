@@ -19,6 +19,7 @@ if (args.Length == 1 && args[0] == "--priority-only") { BackgroundPriorityRegres
 if (args.Length == 1 && args[0] == "--large-background-only") { await LargeManagedImportRegression.Run(true);return; }
 if (args.Length == 1 && args[0] == "--large-managed-only") { await LargeManagedImportRegression.Run();return; }
 if (args.Length == 1 && args[0] == "--large-import-only") { LargeImportRegression.Run();return; }
+if (args.Length == 1 && args[0] == "--orphaned-history-only") { OrphanedHistoryRegression.Run();return; }
 
 OptionalParameterRegression.Run();
 FilenameCaseRegression.Run();
@@ -32,6 +33,7 @@ await ForceLockRegression.Run();
 await TransferPhaseRegression.Run();
 StorageStageRegression.Run();
 ImportJournalRegression.Run();
+OrphanedHistoryRegression.Run();
 
 var type = Assembly.Load("MaterialFileEncryptor.Host").GetType("MaterialFileEncryptor.Host.VaultController", true)!;
 object Make() => Activator.CreateInstance(type)!;

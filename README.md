@@ -12,9 +12,9 @@
 
 **Desktop icon resources:** [installed icon packaging](docs/features/desktop/installed-icons.md) documents the folder-and-lock mark, executable and shortcut resources, installer branding, and the distinction between source checks and installed verification.
 
-![Unlocked drive with a file selected: details pane with its encrypted part and versions](docs/images/captures/v2-full-b6949943/workspace-file-selected-light-en-1440.png)
+![Unlocked drive with a file selected: details pane with its encrypted part, versions and automatic backup state, and one-line Availability labels](docs/images/captures/leftovers-6b35600d/workspace-file-selected-light-en-1440.png)
 
-The current build, source `b6949943`. More captures, with a receipt for each, are in [Current captures](#current-captures); earlier captures are in the [screenshot archive](docs/screenshots-archive.md).
+The current build: source `6b35600d` for the workspace, the Docker Hub backup page, new Docker Hub drives and Settings > Updates, and source `b6949943` for the rest. More captures, with a receipt for each, are in [Current captures](#current-captures); earlier captures are in the [screenshot archive](docs/screenshots-archive.md).
 
 **Ordinary installed 1.823.1 verification:** Version 1.823.1 is verified in the ordinary user installation from release source `14d6e07636a1f1d62e6dd345273a0c6866664562`. All 910 payload files matched; four opened-file handles resolved to ordinary installation paths. Independent queries through the existing Explorer desktop confirmed the installation folder and Desktop/Start menu shortcut targets. The installer operation returned 0. Its original continuous observer failed, so operation exit and recorded-process absence were recovered separately and remain separate verdicts. The detailed original receipts remain preserved privately. The installed English/light initial setup screen and five native window icon handles were observed with an isolated verification profile. Both ordinary-shell shortcut icon images were separately inspected and show the green folder-lock mark with the shortcut arrow; this is extracted shell-icon evidence, not a rendered Explorer/taskbar/tray screenshot. The runtime observer failed its Python-wrapper identity handshake; separate recovery found every recorded identity absent and the hidden desktop unavailable, while replacement processes were left untouched. Console observation covers only the capture interval, not startup history. Rendered taskbar/tray icons, full workflows and a disposable fresh-machine installation remain unverified. Independent recovery is now recorded separately. Canonical capture promotion remains pending because release source 14d6e07636a1f1d62e6dd345273a0c6866664562 differs from verifier checkout edf13cba77968c81a3c7eca392fdc1f740126868. The genuine capture remains private and unpromoted; no tool-context image is presented as ordinary-installed proof.
 
@@ -186,7 +186,7 @@ Material Design 3 applies to the desktop, documentation website, extension and n
 
 ### Current captures
 
-Every image below is a genuine capture of the packaged app (version 0.2.0), taken on 2026-11-18 in a fresh isolated profile with a hidden window, inspected by eye and left unedited apart from masks. Most frames come from source `b6949943`; the signed-out sign-in, sharing, receiving, command palette and wording celebration frames come from source `fbee1bc9`, which adds only the sign-in wording fix. Grey boxes cover the signed-in Docker Hub account name, repository names that contain it, share commands and profile folder paths. The [capture manifest](docs/images/captures/v2-full-b6949943/manifest.json) records each image's source, hash, size, viewport, theme, language and masks, and lists what was not captured and why. Captures of earlier builds are in the [screenshot archive](docs/screenshots-archive.md).
+Every image below is a genuine capture of the packaged app (version 0.2.0), taken on 2026-11-18 in a fresh isolated profile with a hidden window, inspected by eye and left unedited apart from masks. Most frames come from source `b6949943`; the signed-out sign-in, sharing, receiving, command palette and wording celebration frames come from source `fbee1bc9`, which adds only the sign-in wording fix. Grey boxes cover the signed-in Docker Hub account name, repository names that contain it, share commands and profile folder paths. The [capture manifest](docs/images/captures/v2-full-b6949943/manifest.json) records each image's source, hash, size, viewport, theme, language and masks, and lists what was not captured and why. The workspace, keyboard file menu, Docker Hub backup page, new Docker Hub drive, quit prompt and Settings > Updates frames were retaken from source `6b35600d` after the interface fixes for issue #39; their [capture manifest](docs/images/captures/leftovers-6b35600d/manifest.json) records the same details. Captures of earlier builds are in the [screenshot archive](docs/screenshots-archive.md).
 
 <details>
 <summary>Home and finding your way (8)</summary>
@@ -223,32 +223,32 @@ A drive on this PC is created from the New menu. A locked drive unlocks inline u
 </details>
 
 <details>
-<summary>Working with files (10)</summary>
+<summary>Working with files (11)</summary>
 
-The unlocked workspace: folder tree, command bar, file table and a details pane with the encrypted part bar and versions. Right-click or Shift+F10 opens the context menu with Customize.
+The unlocked workspace: folder tree, command bar, file table and a details pane with the encrypted part bar, versions and the drive's automatic backup state. Availability reads Online only or On this PC on one line. Right-click or Shift+F10 opens the same file menu, with Share via Docker Hub, and the list refreshes without closing it.
 
 | Unlocked drive with a file selected | Unlocked drive with a file selected | Unlocked drive with a file selected |
 |---|---|---|
-| ![Unlocked drive with a file selected: details pane with its encrypted part and versions](docs/images/captures/v2-full-b6949943/workspace-file-selected-light-en-1440.png) | ![Unlocked drive with a file selected, dark theme](docs/images/captures/v2-full-b6949943/workspace-file-selected-dark-en-1440.png) | ![Unlocked drive with a file selected, in Cantonese](docs/images/captures/v2-full-b6949943/workspace-file-selected-light-yue-1440.png) |
+| ![Unlocked drive with a file selected: details pane with its encrypted part, versions and automatic backup state, and one-line Availability labels](docs/images/captures/leftovers-6b35600d/workspace-file-selected-light-en-1440.png) | ![Unlocked drive with a file selected, dark theme](docs/images/captures/leftovers-6b35600d/workspace-file-selected-dark-en-1440.png) | ![Unlocked drive with a file selected, in Cantonese](docs/images/captures/leftovers-6b35600d/workspace-file-selected-light-yue-1440.png) |
 
-| Unlocked drive with a file selected | Context menu opened with Shift+F10 | Context menu with Customize expanded |
+| Unlocked drive with a file selected | File menu opened with Shift+F10 | Context menu with Customize expanded |
 |---|---|---|
-| ![Unlocked drive with a file selected, in English and Cantonese](docs/images/captures/v2-full-b6949943/workspace-file-selected-light-bilingual-1440.png) | ![Context menu opened with Shift+F10, with its filter box and Customize](docs/images/captures/v2-full-b6949943/context-menu-light-en-1440.png) | ![Context menu with Customize expanded: Edit appearance and Lock this element](docs/images/captures/v2-full-b6949943/context-menu-customize-light-en-1440.png) |
+| ![Unlocked drive with a file selected, in English and Cantonese](docs/images/captures/leftovers-6b35600d/workspace-file-selected-light-bilingual-1440.png) | ![File menu opened with Shift+F10 on a focused row: Share via Docker Hub and Customize](docs/images/captures/leftovers-6b35600d/keyboard-file-menu-light-en-1440.png) | ![Context menu with Customize expanded: Edit appearance and Lock this element](docs/images/captures/v2-full-b6949943/context-menu-customize-light-en-1440.png) |
 
 | Available offline | History | History |
 |---|---|---|
 | ![Available offline: the file kept on this PC](docs/images/captures/v2-full-b6949943/offline-light-en-1440.png) | ![History: saved versions with Restore as new version](docs/images/captures/v2-full-b6949943/history-light-en-1440.png) | ![History, dark theme](docs/images/captures/v2-full-b6949943/history-dark-en-1440.png) |
 
-| Recycle Bin with a deleted file |
-|---|
-| ![Recycle Bin with a deleted file](docs/images/captures/v2-full-b6949943/recycle-light-en-1440.png) |
+| Recycle Bin with a deleted file | The list refreshes in place |
+|---|---|
+| ![Recycle Bin with a deleted file](docs/images/captures/v2-full-b6949943/recycle-light-en-1440.png) | ![The file menu stays open and the file stays selected while the list refreshes](docs/images/captures/leftovers-6b35600d/refresh-menu-still-open-light-en-1440.png) |
 
 </details>
 
 <details>
-<summary>Docker Hub backup (11)</summary>
+<summary>Docker Hub backup (14)</summary>
 
-One table for every drive: where it backs up, the last backup, snapshots and state. The status bar shows the same state. The one-time notice explains what a public repository shows; the older destination and restore tools are folded under Advanced.
+One table for every drive: where it backs up, the last backup, snapshots and state. The status bar and the details pane show the same state. The one-time notice explains what a public repository shows; the older destination and restore tools and storage maintenance are folded under Advanced. Quitting with a backup still running shows a small Finishing backup prompt.
 
 | Docker Hub backup with the one-time public repository notice | Docker Hub backup notice | Docker Hub backup notice in Cantonese |
 |---|---|---|
@@ -256,15 +256,19 @@ One table for every drive: where it backs up, the last backup, snapshots and sta
 
 | Docker Hub backup notice in English and Cantonese | Backed up just now | Backing up |
 |---|---|---|
-| ![Docker Hub backup notice in English and Cantonese](docs/images/captures/v2-full-b6949943/backup-notice-light-bilingual-1440.png) | ![Backed up just now, with the repository row and its tag count](docs/images/captures/v2-full-b6949943/hub-backup-backed-up-light-en-1440.png) | ![Backing up: the drive row and the status bar both say Backing up](docs/images/captures/v2-full-b6949943/hub-backup-backing-up-light-en-1440.png) |
+| ![Docker Hub backup notice in English and Cantonese](docs/images/captures/v2-full-b6949943/backup-notice-light-bilingual-1440.png) | ![Backed up just now, with the repository row and its tag count; storage maintenance is folded under Advanced](docs/images/captures/leftovers-6b35600d/hub-backup-backed-up-light-en-1440.png) | ![Backing up: the drive row and the status bar both say Backing up](docs/images/captures/v2-full-b6949943/hub-backup-backing-up-light-en-1440.png) |
 
 | Backed up | Needs attention | Status bar on the drive page |
 |---|---|---|
-| ![Backed up, dark theme](docs/images/captures/v2-full-b6949943/hub-backup-backed-up-dark-en-1440.png) | ![Needs attention, in the summary, the drive row and the status bar](docs/images/captures/v2-full-b6949943/hub-backup-needs-attention-light-en-1440.png) | ![Status bar on the drive page: Backed up just now](docs/images/captures/v2-full-b6949943/workspace-status-backed-up-light-en-1440.png) |
+| ![Backed up, dark theme](docs/images/captures/leftovers-6b35600d/hub-backup-backed-up-dark-en-1440.png) | ![Needs attention, in the summary, the drive row and the status bar](docs/images/captures/v2-full-b6949943/hub-backup-needs-attention-light-en-1440.png) | ![Status bar on the drive page: Backed up just now](docs/images/captures/v2-full-b6949943/workspace-status-backed-up-light-en-1440.png) |
 
-| Advanced section opened | Settings |
+| Advanced section opened | Settings | Storage maintenance under Advanced |
+|---|---|---|
+| ![Advanced section opened: sign-in, one-off backup to separate repositories and destinations](docs/images/captures/v2-full-b6949943/backup-advanced-open-light-en-1440.png) | ![Settings, Backup: automatic backup, timing, repository layout and snapshots kept](docs/images/captures/v2-full-b6949943/settings-backup-light-en-1440.png) | ![Advanced opened at Storage maintenance: sizes in MB and KB and a Material part size field](docs/images/captures/leftovers-6b35600d/hub-backup-advanced-maintenance-light-en-1440.png) |
+
+| Details pane on a Docker Hub drive | Finishing backup on quit |
 |---|---|
-| ![Advanced section opened: sign-in, one-off backup to separate repositories and destinations](docs/images/captures/v2-full-b6949943/backup-advanced-open-light-en-1440.png) | ![Settings, Backup: automatic backup, timing, repository layout and snapshots kept](docs/images/captures/v2-full-b6949943/settings-backup-light-en-1440.png) |
+| ![Details pane on a Docker Hub drive: its automatic backup state, with Open Docker Hub backup](docs/images/captures/leftovers-6b35600d/workspace-hub-file-selected-light-en-1440.png) | ![Finishing backup prompt on quit, with Quit now](docs/images/captures/leftovers-6b35600d/quit-finishing-backup-light-en-dialog.png) |
 
 </details>
 
@@ -279,7 +283,7 @@ A drive that lives on Docker Hub needs no folder. Signed out, the dialog starts 
 
 | Drive created | Home with the new Docker Hub drive mounted | Open drive from Docker Hub |
 |---|---|---|
-| ![Drive created: every step done and the first encrypted sync finished](docs/images/captures/v2-full-b6949943/hub-create-done-light-en-1440.png) | ![Home with the new Docker Hub drive mounted](docs/images/captures/v2-full-b6949943/home-hub-drive-light-en-1440.png) | ![Open drive from Docker Hub: the repository with its drive card](docs/images/captures/v2-full-b6949943/hub-open-drive-cards-light-en-1440.png) |
+| ![Drive created: every step done, with automatic backup turned on](docs/images/captures/leftovers-6b35600d/hub-create-done-light-en-1440.png) | ![Home with the new Docker Hub drive mounted](docs/images/captures/v2-full-b6949943/home-hub-drive-light-en-1440.png) | ![Open drive from Docker Hub: the repository with its drive card](docs/images/captures/v2-full-b6949943/hub-open-drive-cards-light-en-1440.png) |
 
 | Snapshots of the drive | Restored and verified |
 |---|---|
@@ -303,7 +307,7 @@ Share one file through Docker Hub: the share command opens it, and Shared files 
 </details>
 
 <details>
-<summary>Split storage, tools and settings (16)</summary>
+<summary>Split storage, tools and settings (17)</summary>
 
 Split storage spreads encrypted parts across places and keeps mirrors. Local tools is a dense list. Settings has a category list with search.
 
@@ -325,11 +329,11 @@ Split storage spreads encrypted parts across places and keeps mirrors. Local too
 
 | Settings | Settings | Personalization |
 |---|---|---|
-| ![Settings, Your vocabulary](docs/images/captures/v2-full-b6949943/settings-section-6-light-en-1440.png) | ![Settings, Updates](docs/images/captures/v2-full-b6949943/settings-updates-light-en-1440.png) | ![Personalization](docs/images/captures/v2-full-b6949943/personalization-light-en-1440.png) |
+| ![Settings, Your vocabulary](docs/images/captures/v2-full-b6949943/settings-section-6-light-en-1440.png) | ![Settings, Updates: the full update panel, the only Updates page](docs/images/captures/leftovers-6b35600d/settings-updates-light-en-1440.png) | ![Personalization](docs/images/captures/v2-full-b6949943/personalization-light-en-1440.png) |
 
-| Updates page |
-|---|
-| ![Updates page](docs/images/captures/v2-full-b6949943/updates-light-en-1440.png) |
+| Settings | Settings |
+|---|---|
+| ![Settings, Updates, in Cantonese](docs/images/captures/leftovers-6b35600d/settings-updates-light-yue-1440.png) | ![Settings, Updates, in English and Cantonese](docs/images/captures/leftovers-6b35600d/settings-updates-light-bilingual-1440.png) |
 
 </details>
 

@@ -147,6 +147,7 @@ mfe-main-workspace>mfe-top-bar{display:none}
 .status-bar .badge:before{width:6px;height:6px}
 .status-bar #status-sync[data-tone=warn]{color:var(--v2-warn)}
 .status-bar #status-sync[data-tone=error]{color:var(--v2-bad)}
+.backup-status[data-tone=ok]{color:var(--v2-ok)}.backup-status[data-tone=warn]{color:var(--v2-warn)}.backup-status[data-tone=error]{color:var(--v2-bad)}
 
 /* ---------- help without icons ---------- */
 mfe-control-guidance[data-presentation=hint]{display:none}

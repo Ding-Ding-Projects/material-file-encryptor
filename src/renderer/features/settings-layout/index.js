@@ -13,7 +13,7 @@ import {SETTINGS_LAYOUT_COPY as C} from './copy.js';
  */
 const IDLE = [30, 60, 120, 300, 600, 1800];
 const INTERVALS = [15, 30, 60, 120, 360, 720, 1440];
-export function mountSettingsLayout(view, {getLanguage = () => 'en', openView = () => {}, getBackupStatus = async () => null, backupService = {}} = {}) {
+export function mountSettingsLayout(view, {getLanguage = () => 'en', openView = () => {}, getBackupStatus = async () => null, backupService = {}, embedUpdates = false} = {}) {
   let backupMessage = '';
   const doc = view.ownerDocument;
   const L = key => localized(text(key, C[key] ?? key), getLanguage());
@@ -23,6 +23,8 @@ export function mountSettingsLayout(view, {getLanguage = () => 'en', openView = 
   const sections = [...view.querySelectorAll(':scope > .settings-section')];
   const backup = el('div', {class: 'settings-section settings-generated', id: 'backup-settings', 'data-settings-category': 'backup'});
   const updates = el('div', {class: 'settings-section settings-generated', id: 'updates-settings', 'data-settings-category': 'updates'});
+  // The full update panel lives in this category, so there is one Updates place instead of a page and a category.
+  const updatesHost = el('div', {class: 'settings-updates-panel', id: 'settings-updates-panel'});
   const nav = el('nav', {class: 'settings-categories'});
   const list = el('div', {class: 'settings-category-list', role: 'tablist', 'aria-orientation': 'vertical'});
   const content = el('div', {class: 'settings-content'});
@@ -127,7 +129,7 @@ export function mountSettingsLayout(view, {getLanguage = () => 'en', openView = 
     open.addEventListener('click', () => openView('updates'));
     updates.replaceChildren(
       el('h2', {text: L('Updates')}),
-      row(L('Check for updates'), L('See the installed version, check for a new one and choose when it installs.'), open),
+      embedUpdates ? updatesHost : row(L('Check for updates'), L('See the installed version, check for a new one and choose when it installs.'), open),
       row(L('Signature'), L('This app is not code-signed, so Windows may ask before the first launch of an update.'), el('span', {class: 'setting-value muted', text: L('Unsigned')}))
     );
   }
@@ -159,5 +161,5 @@ export function mountSettingsLayout(view, {getLanguage = () => 'en', openView = 
   function render() { renderBackup(); renderUpdates(); renderNav(); apply(); }
   render();
   void refreshBackup();
-  return {setLanguage: render, select, destroy() { layout.remove(); }};
+  return {setLanguage: render, select, updatesHost, destroy() { layout.remove(); }};
 }

@@ -3,7 +3,7 @@ import {text} from '../../../shared/surface/registry.js';
 import {control} from '../../../shared/surface/controls.js';
 import {icon} from '../../icons.js';
 import {SHELL_COPY} from './copy.js';
-import {statusBarState} from '../storage-maintenance/auto-backup/model.js';
+import {statusBarState, detailsPaneState} from '../storage-maintenance/auto-backup/model.js';
 import {applyViewportClasses, effectiveWidth} from './viewport.js';
 import {buildFolderTree, flattenFolderTree, ancestorFolders, fileInFolder, relativeName, breadcrumbs, sortFiles, SORT_KEYS} from './folder-tree.js';
 
@@ -428,7 +428,7 @@ export function mountWorkspaceChrome({doc = document, translate, getLanguage, ho
     if (!name) return;
     name.textContent = file ? relativeName(file, '') : t('Select a file to see its details.');
     const sizeText = file && Number.isFinite(file.size) ? hooks.formatBytes(file.size) : '';
-    meta.textContent = file ? [sizeText, formatDate(file.modified), t(file.offline ? 'Available offline' : 'Encrypted storage only')].filter(Boolean).join(' · ') : '';
+    meta.textContent = file ? [sizeText, formatDate(file.modified), t(file.offline ? 'On this PC' : 'Online only')].filter(Boolean).join(' · ') : '';
     const partsSection = $('inspector-parts-section'), grid = $('inspector-parts'), label = $('inspector-parts-label');
     const shape = partMapShape(file?.partCount);
     partsSection.hidden = shape.count === 0;
@@ -477,6 +477,16 @@ export function mountWorkspaceChrome({doc = document, translate, getLanguage, ho
     const host = $('inspector-backup');
     const state = snapshot.state;
     if (!host) return;
+    // Automatic backup covers most drives; its live state wins over the older per-drive destination.
+    const automatic = state ? detailsPaneState(autoBackupStatus, state.sessionId) : null;
+    if (automatic) {
+      backupKey = ''; backupToken++;
+      backupText = backupLine(automatic);
+      host.dataset.tone = automatic.tone;
+      if (host.textContent !== backupText) host.textContent = backupText;
+      return;
+    }
+    host.dataset.tone = '';
     const key = state?.sessionId + '|' + (state?.sync?.lastSync ?? '') + '|' + getLanguage();
     if (key === backupKey) { host.textContent = backupText; return; }
     backupKey = key;
@@ -513,7 +523,7 @@ export function mountWorkspaceChrome({doc = document, translate, getLanguage, ho
   async function refreshBackupStatus() {
     if (!hooks.autoBackupStatus) return;
     try { autoBackupStatus = await hooks.autoBackupStatus(); } catch { autoBackupStatus = null; }
-    if (!disposed) renderStatus();
+    if (!disposed) { renderStatus(); void renderBackup(); }
   }
   if (hooks.autoBackupStatus) {
     const view = doc.defaultView;
