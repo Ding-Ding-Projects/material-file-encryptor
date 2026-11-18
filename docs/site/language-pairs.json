@@ -625,8 +625,8 @@
     {
       "source": "docs/features/storage/README.md",
       "translation": "docs/features/storage/README.zh-HK.md",
-      "sourceSha256": "7ffd3027146fd0a2e8451c43c4efe6e6ff9da5b4c479dd8638f49f7f0252dc83",
-      "translationSha256": "e2ac20e4ae3af3a95360951ba922a0dddb3aaf8a4b9c1dab23ff5f4025620d1d"
+      "sourceSha256": "a12db0427b5d3474fb760f20fe92879059d5851dc776123ba3b8e77e1fe020bd",
+      "translationSha256": "fbe9cbdf224be828fd34e922aef00a2ebbf1251535d4d2a0adc491042b6723ee"
     },
     {
       "source": "docs/features/storage/transfer-lifecycle.md",
@@ -639,6 +639,12 @@
       "translation": "docs/features/storage/registry-sync.zh-HK.md",
       "sourceSha256": "fbcad778e104f30b058507f74e5d6bbd63d687e8928181244a35a7a7374ab0d7",
       "translationSha256": "1d5520509780d94e85df04931f60d5e0d18ca1682619796f739de0a4776978aa"
+    },
+    {
+      "source": "docs/features/storage/share-via-docker-hub.md",
+      "translation": "docs/features/storage/share-via-docker-hub.zh-HK.md",
+      "sourceSha256": "d223c273d2e657496fb64814e5972b1d2d51057338b7555ef190b29822a25bbb",
+      "translationSha256": "93a6a155ed1fe29decca4e3e6f66fa2b82d87b31f1658792147aa2b4e454b899"
     },
     {
       "source": "docs/features/storage/split-storage.md",

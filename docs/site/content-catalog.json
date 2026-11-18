@@ -218,6 +218,8 @@
     "docs/features/storage/split-storage-internals.zh-HK.md",
     "docs/features/storage/registry-sync.md",
     "docs/features/storage/registry-sync.zh-HK.md",
+    "docs/features/storage/share-via-docker-hub.md",
+    "docs/features/storage/share-via-docker-hub.zh-HK.md",
     "docs/features/storage/split-storage.md",
     "docs/features/storage/split-storage.zh-HK.md",
     "docs/features/storage/transfer-lifecycle.md",
