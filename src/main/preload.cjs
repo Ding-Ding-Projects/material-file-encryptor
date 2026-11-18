@@ -6,6 +6,8 @@ const sessionRequest = (method, params) => invoke(method, params).then(acceptSta
 const api = {
   registryLoginStatus: () => invoke('registryLoginStatus'), recheckRegistryLogin: () => invoke('recheckRegistryLogin'), startRegistryLogin: () => invoke('startRegistryLogin'),
   backupAllPlan: () => invoke('backupAllPlan'), backupAllStart: selection => invoke('backupAllStart', selection), backupAllStatus: () => invoke('backupAllStatus'), backupAllCancel: () => invoke('backupAllCancel'),
+  autoBackupStatus: () => invoke('autoBackupStatus'), autoBackupUpdate: patch => invoke('autoBackupUpdate', patch), autoBackupSetDrive: (sessionId, enabled) => invoke('autoBackupSetDrive', { sessionId, enabled }),
+  autoBackupNow: sessionId => invoke('autoBackupNow', { sessionId }), autoBackupPrune: sessionId => invoke('autoBackupPrune', { sessionId }), autoBackupMove: sessionId => invoke('autoBackupMove', { sessionId }),
   cancelRegistryLogin: () => invoke('cancelRegistryLogin'), openRegistryLoginPage: () => invoke('openRegistryLoginPage'),
   hubDriveFolders: () => invoke('hubDriveFolders'), hubDriveFoldersDiscard: driveId => invoke('hubDriveFoldersDiscard', { driveId }),
   hubCatalogStart: (options = {}) => invoke('hubCatalogStart', options), hubCatalogStatus: () => invoke('hubCatalogStatus'), hubCatalogCancel: () => invoke('hubCatalogCancel'),

@@ -3,6 +3,7 @@ import { REGISTRY_CONFLICT_METHODS, validateRegistryConflictRequest } from './re
 import {ACCESS_HOST_ACTIONS,validateAccessHostRequest} from './access-host.js';
 import {normalizeDriveName} from '../shared/drive-name.js';
 import { SPLIT_STORAGE_METHODS, validateSplitStorageRequest } from './split-storage/ipc.js';
+import { AUTO_BACKUP_METHODS, validateAutoBackupRequest } from './auto-backup/ipc.js';
 import { SHARE_METHODS, validateShareRequest } from './share/ipc.js';
 
 // Managed-server (flavor, container and SSH target) requests. Only fixed identifiers and bounded plain values are accepted: no
@@ -119,6 +120,7 @@ export function validateFeatureRequest(feature, action, payload, { browser = fal
 export function validateRequest(method, value = {}) {
   if (!object(value)) throw new Error('Invalid request.');
   if (SPLIT_STORAGE_METHODS.has(method)) return validateSplitStorageRequest(method, value);
+  if (AUTO_BACKUP_METHODS.has(method)) return validateAutoBackupRequest(method, value);
   if (SHARE_METHODS.has(method)) return validateShareRequest(method, value);
   if (REGISTRY_CONFLICT_METHODS.has(method)) return validateRegistryConflictRequest(method, value);
   if (method === 'configureRegistryStorage') {
