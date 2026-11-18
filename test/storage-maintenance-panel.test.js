@@ -7,10 +7,14 @@ class Node {
 globalThis.HTMLElement=Node;globalThis.CSSStyleSheet=class{replaceSync(){}};globalThis.customElements={map:new Map(),get(key){return this.map.get(key);},define(key,value){this.map.set(key,value);}};globalThis.document={createElement:tag=>customElements.get(tag)?new (customElements.get(tag))():new Node(tag)};
 const {StorageMaintenance}=await import('../src/renderer/features/storage-maintenance/index.js');
 const diagnostics={targetPartSizeBytes:83886080,pendingPackingFiles:2,activeWriters:1,packingRunning:false,packingError:null,currentReferencedParts:5,currentReferencedBytes:400,historicalOnlyParts:3,historicalOnlyBytes:200,temporaryFiles:0,temporaryBytes:0};
-test('registry tools stay reachable, folded once into Advanced before packing even without an unlocked vault',()=>{
+test('registry tools and storage maintenance stay reachable, folded once into Advanced even without an unlocked vault',()=>{
  const panel=new StorageMaintenance();
  const children=panel.shadowRoot.children;
- assert.ok(children.indexOf(panel.advanced)>=0&&children.indexOf(panel.advanced)<children.indexOf(panel.heading));
+ assert.ok(children.indexOf(panel.advanced)>=0);
+ assert.equal(children.includes(panel.heading),false,'packing no longer sits under the backup table');
+ assert.equal(panel.advanced.children.at(-1),panel.maintenance,'packing is the last folded section');
+ assert.ok(panel.maintenance.children.includes(panel.heading));
+ assert.equal(panel.size.localName,'md-outlined-text-field','a Material field, not a raw number input with a stray track');
  assert.equal(panel.advanced.localName,'details');assert.notEqual(panel.advanced.open,true,'the advanced tools start folded');
  const folded=panel.advanced.children;
  assert.equal(folded[0],panel.advancedLabel);assert.equal(panel.advancedLabel.localName,'summary');assert.match(panel.advancedLabel.textContent,/Advanced/);
@@ -44,4 +48,16 @@ test('durable pause preserves queued counts and Resume clears it through a new p
  panel.services={storageDiagnostics:async()=>({...diagnostics,packingPaused:!resumed}),operations:async()=>[{kind:'packing',operationId:'old',state:'cancelled',phase:'packing'}],startPacking:async value=>{submitted=value;resumed=true;}};
  await panel.refresh();assert.equal(panel.pack.textContent,'Resume packing');assert.match(panel.message.textContent,/Queued files are retained/);assert.equal(panel.rows.pending.value.textContent,'2');assert.equal(panel.pack.disabled,false);
  panel.setLanguage('yue');assert.equal(panel.pack.textContent,'繼續整理');assert.match(panel.message.textContent,/排隊檔案會保留/);await panel.start();assert.deepEqual(submitted,{partSizeBytes:83886080});assert.equal(panel.diagnostics.packingPaused,false);assert.equal(panel.pack.textContent,'整理目前檔案');
+});
+
+test('sizes read in human units in both languages and carry help text',async()=>{
+ const panel=new StorageMaintenance();
+ panel.services={storageDiagnostics:async()=>({...diagnostics,currentReferencedParts:2,currentReferencedBytes:131144}),operations:async()=>[]};
+ await panel.refresh();
+ assert.equal(panel.rows.target.value.textContent,'80 MB');
+ assert.equal(panel.rows.current.value.textContent,'2 parts · 128 KB');
+ assert.doesNotMatch(panel.rows.target.value.textContent,/bytes|MiB|83886080/);
+ assert.match(panel.size.attributes['data-help-text'],/85\.8 MB/);assert.equal(panel.size.attributes['suffix-text'],'MB');
+ panel.setLanguage('yue');assert.equal(panel.rows.current.value.textContent,'2 個分段 · 128 KB');assert.match(panel.pack.attributes['data-help-text'],/分段/);
+ panel.setLanguage('bilingual');assert.match(panel.heading.textContent,/Storage maintenance · 儲存空間維護/);
 });
