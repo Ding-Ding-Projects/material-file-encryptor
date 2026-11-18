@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { createRegistryStorage } from './registry-storage.js';
 import { restoreSnapshotToFolder, restoreFolderName } from './registry-restore.js';
+import { snapshotReaders } from './auto-backup/read-guard.js';
 
 export const HUB_DRIVE_METHODS = new Set(['hubDriveFolders', 'hubDriveFoldersDiscard', 'hubCatalogStart', 'hubCatalogStatus', 'hubCatalogCancel', 'hubEnsureRepository', 'hubRestoreSnapshot', 'hubRestoreStatus', 'hubRestoreCancel', 'hubShowFolder']);
 const REPOSITORY = /^[a-z0-9][a-z0-9_-]{1,38}\/[a-z0-9]+(?:(?:[._]|__|-+)[a-z0-9]+)*$/;
@@ -39,8 +40,13 @@ export function createHubDriveRequests({ locations, catalog, docker, workRoot, c
         await fs.mkdir(storageDir, { mode: 0o700 }); created = storageDir;
       } else { allocation = await locations.allocate(); storageDir = allocation.storageDir; }
       job.state = 'downloading';
-      const outcome = await restoreSnapshotToFolder({ client, digest: job.digest, storageDir, workRoot, signal: job.controller.signal,
-        onProgress: progress => Object.assign(job, progress) });
+      // Pruning on this computer leaves the snapshot alone while it is being read.
+      const releaseRead = snapshotReaders.hold(repository.id, job.digest);
+      let outcome;
+      try {
+        outcome = await restoreSnapshotToFolder({ client, digest: job.digest, storageDir, workRoot, signal: job.controller.signal,
+          onProgress: progress => Object.assign(job, progress) });
+      } finally { releaseRead(); }
       if (outcome.vaultId !== drive.id) throw fail('MISMATCH', 'The restored snapshot does not belong to the drive you chose.');
       job.state = 'done'; known.set(allocation.driveId, storageDir);
       job.result ={ driveId: allocation.driveId, storageDir, cacheDir: allocation.cacheDir, vaultId: outcome.vaultId, driveName: outcome.driveName ?? drive.name ?? null, repository: repository.id, visibility: repository.visibility, ownerOnly: allocation.ownerOnly };

@@ -314,6 +314,26 @@ export function createDockerImageTransport({ platform = process.platform, progra
       return { state: 'unavailable', reason: 'provider-unavailable' };
     } finally { if (credentials) credentials.secret = ''; token = ''; }
   }
+  /** Docker Hub has served tag deletion at two paths; the current one is tried first. A tag already gone counts as removed. */
+  async function removeHubTag(target, signal, denied) {
+    const { token, credentials } = await hubToken(signal); credentials.secret = '';
+    const paths = [`/v2/namespaces/${target.namespace}/repositories/${target.name}/tags/${target.tag}`, `/v2/repositories/${target.namespace}/${target.name}/tags/${target.tag}/`];
+    let missing = 0;
+    for (const pathname of paths) {
+      checkCancellation(signal);
+      let response;
+      try {
+        response = await fetcher(HUB + pathname, { method: 'DELETE', redirect: 'error', cache: 'no-store', headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
+          signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(20000)]) : AbortSignal.timeout(20000) });
+      } catch { checkCancellation(signal); const error = Error(HUB_ERROR); error.code = 'PROVIDER_UNAVAILABLE'; throw error; }
+      await response.body?.cancel().catch(() => {});
+      if (response.ok) return { removed: true };
+      if ([401, 403].includes(response.status)) { const error = Error(denied); error.code = 'AUTHENTICATION_REQUIRED'; throw error; }
+      if ([404, 405].includes(response.status)) { missing++; continue; }
+      const error = Error(HUB_ERROR); error.code = 'PROVIDER_UNAVAILABLE'; throw error;
+    }
+    return { removed: missing === paths.length, alreadyGone: true };
+  }
   return {
     inspectRegistrySignIn: signInState,
     ensurePublicRepository,
@@ -335,23 +355,22 @@ export function createDockerImageTransport({ platform = process.platform, progra
     async deleteShareTag(repository, tag, signal) {
       const target = imageTarget(`${repository}:${tag}`);
       if (target.name !== 'material-file-encryptor-shares' || !/^share-[a-f0-9]{32}$/.test(target.tag)) throw Error('Only shared-file tags can be removed.');
-      const { token, credentials } = await hubToken(signal); credentials.secret = '';
-      const paths = [`/v2/namespaces/${target.namespace}/repositories/${target.name}/tags/${target.tag}`, `/v2/repositories/${target.namespace}/${target.name}/tags/${target.tag}/`];
-      let missing = 0;
-      for (const pathname of paths) {
-        checkCancellation(signal);
-        let response;
-        try {
-          response = await fetcher(HUB + pathname, { method: 'DELETE', redirect: 'error', cache: 'no-store', headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
-            signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(20000)]) : AbortSignal.timeout(20000) });
-        } catch { checkCancellation(signal); const error = Error(HUB_ERROR); error.code = 'PROVIDER_UNAVAILABLE'; throw error; }
-        await response.body?.cancel().catch(() => {});
-        if (response.ok) return { removed: true };
-        if ([401, 403].includes(response.status)) { const error = Error('Docker Hub did not allow this account to remove the shared file.'); error.code = 'AUTHENTICATION_REQUIRED'; throw error; }
-        if ([404, 405].includes(response.status)) { missing++; continue; }
-        const error = Error(HUB_ERROR); error.code = 'PROVIDER_UNAVAILABLE'; throw error;
-      }
-      return { removed: missing === paths.length, alreadyGone: true };
+      return removeHubTag(target, signal, 'Docker Hub did not allow this account to remove the shared file.');
+    },
+    /**
+     * Removes one drive snapshot tag that is still listed after its manifest was deleted. Only
+     * mfe-<device>-<revision> tags are accepted, and never in the shared-files repository.
+     */
+    async deleteSnapshotTag(repository, tag, signal) {
+      const target = imageTarget(`${repository}:${tag}`);
+      if (target.name === 'material-file-encryptor-shares' || !/^mfe-[a-f0-9]{32}-[a-f0-9]{32}$/.test(target.tag)) throw Error('Only drive snapshot tags can be removed.');
+      return removeHubTag(target, signal, 'Docker Hub did not allow this account to remove the old snapshot.');
+    },
+    /** Delete permission for removing a drive's own old snapshots. The shared-files repository is refused. */
+    async registryBackupDeleteAuthorization(repository, signal, visibility = 'public') {
+      const target = imageTarget(`${repository}:authorization`);
+      if (target.name === 'material-file-encryptor-shares') throw Error('Shared files are removed from the shared files page.');
+      return this.registryAuthorization(repository, signal, visibility === 'private' ? 'private' : 'public', 'pull,push,delete');
     },
     /** A pull-only registry token for any repository the account may read, public or private. No write permission is implied. */
     async registryPullAuthorization(repository, signal) {

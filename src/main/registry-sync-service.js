@@ -6,19 +6,24 @@ import { createRegistryStorage, registryDestination } from './registry-storage.j
 import { createVaultImageSnapshot, inspectVaultConfiguration, describeStorageObject, openStorageObject, inspectStorageObject, checkContentAddress } from './vault-image-snapshot.js';
 import { planRegistrySnapshot } from './registry-snapshot-plan.js';
 import { validateRegistrySchedule, nextRegistryRun, registryOccurrence } from './registry-schedule.js';
+import { pruneDriveSnapshots } from './auto-backup/prune.js';
+import { DEFAULT_RETENTION, validateRetention } from './auto-backup/retention.js';
+import { snapshotReaders } from './auto-backup/read-guard.js';
 
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 const identity = stat => `${stat.dev}:${stat.ino}`;
 const ERROR = 'Registry synchronization is incomplete. Local encrypted data was retained. Review the destination and retry.';
 // Each step a person can see while synchronization runs. Row state and progress.step use these names.
 const PHASES = { discovering: 'checking the destination', 'waiting-drive': 'waiting for the drive to be ready', downloading: 'downloading snapshots from other devices',
-  applying: 'applying downloaded history to the drive', preparing: 'preparing the encrypted snapshot', uploading: 'uploading', verifying: 'verifying the upload', restoring: 'restoring' };
+  applying: 'applying downloaded history to the drive', preparing: 'preparing the encrypted snapshot', uploading: 'uploading', verifying: 'verifying the upload', pruning: 'removing old snapshots', restoring: 'restoring' };
 const STALLED = 'The drive stopped making progress while preparing the snapshot. Nothing was uploaded.';
 const RELEASE_TIMEOUT = 'The drive did not confirm that it was released in time.';
 const BUSY = 'The drive stayed busy with other work. Retry when it has finished.';
+const NOT_BACKED_UP = 'Back up this drive once before removing old snapshots.';
 export const PAUSED = 'Backup paused while you used the drive; it will resume.';
-const SAFE_REASONS = new Set(['The destination contains a different vault.', 'Snapshot catalogue exceeds this client limit. Narrow the repository before retrying.', 'Snapshot catalogue exceeds the metadata limit.', 'Native synchronization did not settle.', 'Native synchronization needs attention.', STALLED, RELEASE_TIMEOUT, BUSY]);
-const sleep = ms => new Promise(resolve => setTimeout(resolve, ms).unref?.());
+const SAFE_REASONS = new Set(['The destination contains a different vault.', 'Snapshot catalogue exceeds this client limit. Narrow the repository before retrying.', 'Snapshot catalogue exceeds the metadata limit.', 'Native synchronization did not settle.', 'Native synchronization needs attention.', STALLED, RELEASE_TIMEOUT, BUSY, NOT_BACKED_UP]);
+const summary = value => value ? { state: value.state, at: value.at, pruned: value.pruned, failed: value.failed, kept: value.kept } : null;
+const sleep = ms =>new Promise(resolve => setTimeout(resolve, ms).unref?.());
 /** Rejects as soon as the signal aborts. The underlying native request keeps running and is settled by its owner. */
 function abortable(promise, signal) {
   if (!signal) return promise;
@@ -57,7 +62,9 @@ export async function createFile(root, relative, bytes) {
 }
 
 /** Main-process orchestration. No registry endpoint or filesystem path is accepted from a renderer. */
-export function createRegistrySyncService({ root, contexts, nativeRequest, authorize, chooseRestore, backgroundRegistration = async () => {}, storageFactory = createRegistryStorage, testDestination = null, now = Date.now, leaseRetryMs = 15 * 60000, nativeStallMs = 10 * 60000, releaseTimeoutMs = 30000, yieldWaitMs = 30000, resumeDelayMs = 60000, lateLeaseWaitMs = 20000, progressPollMs = 500, onChanged = () => {} }) {
+export function createRegistrySyncService({ root, contexts, nativeRequest, authorize, chooseRestore, backgroundRegistration = async () => {}, storageFactory = createRegistryStorage, testDestination = null, now = Date.now, leaseRetryMs = 15 * 60000, nativeStallMs = 10 * 60000, releaseTimeoutMs = 30000, yieldWaitMs = 30000, resumeDelayMs = 60000, lateLeaseWaitMs = 20000, progressPollMs = 500, onChanged = () => {},
+  // Pruning: a delete-scoped authorization, an optional tag removal fallback, older snapshot dates and the rules.
+  authorizeDelete = null, deleteTag = null, tagDates = null, retention = () => DEFAULT_RETENTION, readers = snapshotReaders, timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC' }) {
   let rows = {}, loaded = false, loading = null, configuring = false, ticking = false, saving = Promise.resolve(), active = null;
   const file = path.join(root, 'registry-sync.json');
   async function readState() {
@@ -102,11 +109,36 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
     });
     return saving;
   }
-  function storage(row) { return storageFactory({ destination: testDestination ? { ...testDestination, repository: row.repository, visibility: row.visibility } : { repository: row.repository, visibility: row.visibility }, authorize }); }
+  function storage(row, authorizer = authorize) { return storageFactory({ destination: testDestination ? { ...testDestination, repository: row.repository, visibility: row.visibility } : { repository: row.repository, visibility: row.visibility }, authorize: authorizer }); }
+  /**
+   * Removes this drive's own old snapshots after a verified backup. It never fails the backup: a problem is
+   * recorded on the row and the same snapshots are simply tried again after the next backup.
+   */
+  async function prune(row, revisions, vaultId, newest, signal) {
+    if (typeof authorizeDelete !== 'function' && !testDestination) { row.lastPrune = { state: 'unavailable', at: new Date(now()).toISOString(), pruned: 0, failed: 0, kept: null }; return row.lastPrune; }
+    step(row, 'pruning', { unit: 'snapshots', totalFiles: null });
+    try {
+      const policy = validateRetention(retention(row));
+      let dates = null;
+      if (typeof tagDates === 'function' && revisions.some(item => !Number.isFinite(item.createdAt))) { try { dates = await tagDates(row.repository, signal); } catch { dates = null; } }
+      const client = storage(row, (name, authSignal) => authorizeDelete(name, authSignal, row.visibility));
+      const outcome = await pruneDriveSnapshots({ client, revisions, deviceId: row.deviceId, vaultId, newest, policy, timeZone, signal, now,
+        protect: readers.heldDigests(row.repository), isHeld: digest => readers.isHeld(row.repository, digest), tagDates: dates,
+        deleteTag: typeof deleteTag === 'function' ? (tag, tagSignal) => deleteTag(row.repository, tag, tagSignal) : null });
+      row.lastPrune = { state: outcome.state, at: outcome.at, pruned: outcome.pruned, failed: outcome.failed, kept: outcome.kept, keep: outcome.keep.slice(0, 200) };
+      if (Number.isSafeInteger(row.tagCount)) row.tagCount = Math.max(0, row.tagCount - outcome.pruned);
+      row.snapshotCount = Math.max(0, (row.snapshotCount ?? 0) - outcome.pruned);
+    } catch (error) {
+      row.lastPrune = { state: signal.aborted ? 'interrupted' : 'failed', at: new Date(now()).toISOString(), pruned: 0, failed: 0, kept: null };
+      void error;
+    }
+    return row.lastPrune;
+  }
   async function status(id) {
     await load(); const current = context(id, false), row = rows[current.key];
     return structuredClone({ activeOperation: active ? { sessionId: active.id, state: rows[active.key]?.state || 'incomplete' } : null, sessionId: id, source: current.storageDir, configured: Boolean(row), configuration: row ? { repository: row.repository, visibility: row.visibility, schedule: row.schedule } : null,
-      state: row?.state || 'unconfigured', progress: row?.progress || null, nextDue: row?.nextDue || null, lastResult: row?.lastResult || null, restoreRecovery: row?.restoreRecovery || null, lastError: row?.lastError || null });
+      state: row?.state || 'unconfigured', progress: row?.progress || null, nextDue: row?.nextDue || null, lastResult: row?.lastResult || null, restoreRecovery: row?.restoreRecovery || null, lastError: row?.lastError || null,
+      lastPrune: row?.lastPrune || null, tagCount: Number.isSafeInteger(row?.tagCount) ? row.tagCount : null, snapshotCount: Number.isSafeInteger(row?.snapshotCount) ? row.snapshotCount : null, deviceId: row?.deviceId || null });
   }
   async function exclusive(id, action, requireSource = true, kind = 'other') {
     await load(); const current = context(id, requireSource), row = rows[current.key]; if (!row) throw Error('Save a registry destination first.');
@@ -395,8 +427,11 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
           } finally { if (lease) await release(id, lease); }
           if (plan.manifest.vaultId !== ownVaultId) throw Error('The destination contains a different vault.');
           const fingerprint = hash(Buffer.from(JSON.stringify(plan.manifest.files)));
+          row.tagCount = Number.isSafeInteger(revisions.tagCount) ? revisions.tagCount : null; row.snapshotCount = revisions.length;
           if (row.lastResult?.fingerprint === fingerprint && revisions.some(item => item.digest === row.lastResult.digest)) {
-            row.state = 'verified'; return row.lastResult = { ...row.lastResult, downloaded, replayDeferred, published: false, verifiedAt: new Date(now()).toISOString() };
+            const unchanged = { ...row.lastResult, downloaded, replayDeferred, published: false, verifiedAt: new Date(now()).toISOString() };
+            await prune(row, revisions, ownVaultId, unchanged.digest, signal);
+            row.state = 'verified'; return row.lastResult = { ...unchanged, prune: summary(row.lastPrune) };
           }
           step(row, 'uploading', { phase: 'preparing-upload', totalFiles: plan.upload.length, totalBytes: plan.uploadBytes });
           const result = await client.publish({ vaultId: plan.manifest.vaultId, deviceId: row.deviceId, driveName: current.driveName,
@@ -405,19 +440,37 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
             onVerifying: () => step(row, 'verifying', { totalFiles: null }),
             // Each new object counts once it is read; a large one the registry already had is then not sent again.
             readFile: async name => { const bytes = await plan.read(name, signal); row.progress.completedFiles++; row.progress.completedBytes += bytes.length; return bytes; } }, signal);
-          row.state = 'verified'; return row.lastResult = { ...result, fingerprint, downloaded, replayDeferred, published: true, uploadedFiles: plan.upload.length, uploadedBytes: plan.uploadBytes, verifiedAt: new Date(now()).toISOString() };
+          const published = { ...result, fingerprint, downloaded, replayDeferred, published: true, uploadedFiles: plan.upload.length, uploadedBytes: plan.uploadBytes, verifiedAt: new Date(now()).toISOString() };
+          // The verified snapshot is recorded before pruning, so an interrupted prune never loses it.
+          row.lastResult = published; row.snapshotCount++; if (Number.isSafeInteger(row.tagCount)) row.tagCount++;
+          if (typeof result?.tag === 'string' && typeof result?.digest === 'string')
+            await prune(row, [...revisions, { digest: result.digest, tag: result.tag, snapshot: { vaultId: ownVaultId }, createdAt: Date.parse(result.createdAt ?? '') }], ownVaultId, result.digest, signal);
+          row.state = 'verified'; return row.lastResult = { ...published, prune: summary(row.lastPrune) };
         } finally { if (plan) await plan.dispose(); }
       }, true, 'sync');
     },
     /** Called before the drive itself is locked, unlocked, mounted or changed. A running backup pauses rather than holding the drive. */
     async yieldForDrive() {
       const operation = active;
-      if (!operation || operation.kind !== 'sync') return { yielded: false };
+      if (!operation || !['sync', 'prune'].includes(operation.kind)) return { yielded: false };
       operation.yielded = true; operation.controller.abort();
       const end = Date.now() + yieldWaitMs;
       while (active === operation && Date.now() < end) await sleep(50);
       if (active === operation) throw Error('The backup is still releasing the drive. Retry in a moment.');
       return { yielded: true };
+    },
+    /** Applies the retention rules now, without a new backup. The last verified snapshot must still be listed. */
+    pruneNow(id) {
+      return exclusive(id, async (current, row, signal) => {
+        step(row, 'discovering', { totalFiles: null });
+        const ownVaultId = JSON.parse(await fs.readFile(path.join(current.storageDir, 'vault.json'), 'utf8')).VaultId;
+        const revisions = await storage(row).list(signal, { vaultId: ownVaultId });
+        row.tagCount = Number.isSafeInteger(revisions.tagCount) ? revisions.tagCount : null; row.snapshotCount = revisions.length;
+        const newest = row.lastResult?.digest;
+        if (typeof newest !== 'string' || !revisions.some(item => item.digest === newest)) { row.state = 'idle'; throw Error(NOT_BACKED_UP); }
+        const outcome = await prune(row, revisions, ownVaultId, newest, signal);
+        row.state = 'idle'; return summary(outcome);
+      }, true, 'prune');
     },
     list(id) { return exclusive(id, async (_current, row, signal) => { row.state = 'discovering'; const value = await storage(row).list(signal); row.state = 'idle'; return value; }, false); },
     restore(id, digest) {
@@ -426,7 +479,9 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
         const selected = await chooseRestore(); if (!selected) { row.state = 'idle'; return { cancelled: true }; }
         signal.throwIfAborted(); await physical(selected); row.state = 'restoring';
         step(row, 'restoring', { phase: 'downloading-restore' });
-        const staged = await stageRevision(storage(row), digest, signal, row);
+        // Pruning anywhere in this process leaves a snapshot alone while it is being restored.
+        const releaseRead = readers.hold(row.repository, digest);
+        let staged; try { staged = await stageRevision(storage(row), digest, signal, row); } finally { releaseRead(); }
         const restoredVaultId = staged.revision.snapshot.vaultId;
         const destination = path.join(selected, `restored-vault-${randomUUID().slice(0, 8)}`);
         try {

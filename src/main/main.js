@@ -21,6 +21,7 @@ import { createVaultImageService } from './vault-image-service.js';
 import { createRegistrySyncService } from './registry-sync-service.js';
 import { createRegistryLogin } from './registry-login.js';
 import { createRegistryBackupAll } from './registry-backup-all.js';
+import { createTagDates } from './auto-backup/tag-dates.js';
 import { createRegistryBackground } from './registry-background.js';
 import { createDockerImageTransport } from './vault-image-docker.js';
 import { registryVerificationDestination } from './registry-verification.js';
@@ -134,6 +135,10 @@ const registrySync = createRegistrySyncService({ root: registryRoot, onChanged: 
   contexts: id => id === undefined ? [...vaultSessions.rows] : (() => { const row = vaultSessions.rows.get(id); return row && { storageDir: row.state.storageDir || row.preferences.storageDir, transport: row.preferences.transport || 'folder', driveName: row.state.driveName || row.preferences.driveName }; })(),
   nativeRequest: (method, params, id) => vaultSessions.request(method, params, id),
   authorize: (repository, signal, visibility) => registryDocker.registryAuthorization(repository, signal, visibility),
+  // Old snapshots of a drive are removed after each verified backup, by digest, with a delete-scoped token.
+  authorizeDelete: (repository, signal, visibility) => registryDocker.registryBackupDeleteAuthorization(repository, signal, visibility),
+  deleteTag: (repository, tag, signal) => registryDocker.deleteSnapshotTag(repository, tag, signal),
+  tagDates: createTagDates((pathname, signal) => registryDocker.hubGet(pathname, signal)),
   chooseRestore: () => chooseRestoreParent(),
   backgroundRegistration: createRegistryBackground({ root: registryRoot, executable: process.execPath, packaged: app.isPackaged && !verificationMode && Boolean(fixedManifestDirectory(process.execPath)) }) });
 async function chooseRestoreParent() { const result = await uiDialog.showOpenDialog(window, { title: 'Choose a parent folder for a new restored vault · 選擇還原磁碟嘅上層資料夾', properties: ['openDirectory', 'createDirectory'] }); if (result.canceled) return null; return safeDestination(result.filePaths[0], [...vaultSessions.rows.values()].flatMap(row => [row.state.storageDir, row.preferences.storageDir, row.state.cacheDir, row.preferences.cacheDir])); }
