@@ -21,6 +21,8 @@
 
 - [加密儲存庫備份、還原及同步](registry-sync.zh-HK.md)
 - [Encrypted registry backup, restore and synchronization](registry-sync.md)
+- [自動 Docker Hub 備份同快照保留](automatic-backup.zh-HK.md)
+- [Automatic Docker Hub backup and snapshot retention](automatic-backup.md)
 - [分散存放、安全備份及鏡像備份](split-storage.zh-HK.md)
 - [Split storage, Safety backup and mirrors](split-storage.md)
 - [唔使揀資料夾嘅 Docker Hub 磁碟](docker-hub-drive.zh-HK.md)

@@ -1,3 +1,18 @@
+## Seamless Docker Hub backup and retention, 2026-11-18
+
+Issues #26 and #27. Ticks mean implemented with focused tests passing; live proof is stated per item.
+
+- [x] Retention per drive: latest 10, 1 per day for 7 days, 1 per week for 8 weeks, all adjustable; applied after every verified backup and on demand. Proven live against Docker Hub through the production sync service with two synthetic drives in one repository: only the first drive's old snapshots were removed, the second drive's stayed, a deleted digest returned 404, and the newest snapshot restored intact.
+- [x] Pruning removes only this computer's snapshots of the drive, keeps the newest verified one and any snapshot a restore is reading, deletes by digest with a delete-scoped token, verifies 404 on digest and tag, and retries failures after the next backup.
+- [x] New snapshots carry a created time; older ones are dated from the Docker Hub tag list.
+- [x] Automatic backup controller: on by default once signed in and the public notice is acknowledged, 1 minute after idle, hourly check, on lock, on close with pending changes (bounded to 2 minutes), on reconnect, retry 1, 5, 15 minutes then hourly, per-drive switch, shared repository `<account>/material-file-encryptor-storage` or one per drive.
+- [x] Docker Hub backup page: summary line, one-time public notice, drive table grouped by repository with the tag meter (amber at 800 with Move drives to their own repositories), per-drive switch and row menu (Back up now, Restore, Prune old snapshots now, Move to its own repository, Stop or Start backing up, Open this drive).
+- [x] Settings > Backup: automatic on or off, idle delay, periodic check, back up on lock, repository layout, default repository, retention numbers.
+- [ ] Packaged-app proof with real drives: automatic backup after a change, pruning in the window, and screenshots of the page and Settings.
+- [ ] Back up while the app is closed (needs the scheduled task decision; shown disabled).
+- [ ] Drives backed up from another computer shown read-only in the table, Rename label, Remove this drive's backups with the exact tag list, a size column, and the status bar backup text.
+- [ ] Command palette entries for Back up now and Prune old snapshots now.
+
 ## Share a file through Docker Hub, 2026-11-17
 
 Branch `ai/feature/20261117-share-via-docker-hub`. Ticks mean implemented with focused tests passing; live proof is stated per item.
@@ -25,7 +40,7 @@ Branch `ai/feature/20261117-share-via-docker-hub`. Ticks mean implemented with f
 - [ ] New Docker Hub drive easy path with the default repository preselected; repository chooser lists each repository once and has a New repository row (public only). Implemented with source tests; packaged-build proof pending.
 - [ ] Context menus fold panel layout and appearance tools into Customize. Implemented with source tests; packaged-build proof pending.
 - [ ] Packaged-build captures of every page at 1440 by 900 light and dark and at 360 px, compared with the boards, replacing the README captures.
-- [ ] Automatic backup, backup on lock, retention, pruning, the tag meter and moving a drive to its own repository (backend lanes; shown disabled today).
+- [ ] Automatic backup, backup on lock, retention, pruning, the tag meter and moving a drive to its own repository. Implemented with tests; see "Seamless Docker Hub backup and retention" for the live proof state.
 - [ ] Remove the filter field and regex button from context menus while keeping type-to-filter.
 - [ ] Per-drive size, snapshot count and last-opened figures in the drive list and Home.
 - [ ] Share, Receive and Shared files pages (separate lane; the tree shows Shared files when that feature registers).
