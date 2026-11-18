@@ -6,6 +6,156 @@ Current captures and their receipts are in the [README](../README.md#current-cap
 
 ## Original captions and provenance
 
+### Redesign build dc166dc9, 2026-11-16 (replaced in the README on 2026-11-17)
+
+Every image below is a genuine capture of the packaged app built from source `dc166dc9` (version 0.2.0). Each was taken in its own isolated profile with neutral test files, inspected by eye, and left unedited. The [capture manifest](images/captures/redesign-dc166dc9/manifest.json) records every image's hash, size, viewport, theme, language and capture method, and lists what could not be captured. Captures of earlier builds are kept in the [screenshot archive](screenshots-archive.md).
+
+#### Home and navigation
+
+The Home page opens on a card for each part of the app. The New tab catalog and the navigation menus each carry their own search box and Regex builder.
+
+<details>
+<summary>Home, New tab catalog and Settings menu (6)</summary>
+
+| Home, drive locked | Home, drive mounted | Home, dark |
+|---|---|---|
+| ![Home with flagship cards for the drive, offline files, history, Recycle Bin, Docker Hub storage, local access and Local tools, drive locked, light, English](images/captures/redesign-dc166dc9/home-locked-light-en.png) | ![Home with a mounted drive, card status lines and recent activity, light, English](images/captures/redesign-dc166dc9/home-mounted-light-en.png) | ![Home with a mounted drive, dark, English](images/captures/redesign-dc166dc9/home-mounted-dark-en.png) |
+
+| Home, English and Cantonese | New tab catalog | Settings menu |
+|---|---|---|
+| ![Home with a mounted drive, light, English and Cantonese together](images/captures/redesign-dc166dc9/home-mounted-light-bilingual.png) | ![New tab catalog listing every page, tool and setting with its own search box and Regex builder button](images/captures/redesign-dc166dc9/new-tab-catalog-light-en.png) | ![Settings menu opened from the navigation rail with a scoped filter, a Regex builder button and the settings destinations](images/captures/redesign-dc166dc9/settings-menu-light-en.png) |
+
+</details>
+
+#### Drive, history and recovery
+
+A mounted drive shows the folder tree, command bar, file list and a details panel with the encrypted part map and versions.
+
+<details>
+<summary>Locked drive, creating a drive, files, details, History and Recycle Bin (10)</summary>
+
+| Drive, locked | Create a drive | Drive, files |
+|---|---|---|
+| ![Drive page with the locked card offering Unlock existing drive and Create a drive, light, English](images/captures/redesign-dc166dc9/drive-locked-light-en.png) | ![Create a drive dialog with the encrypted storage folder, cache folder and drive letter filled in with neutral folders](images/captures/redesign-dc166dc9/create-drive-dialog-light-en.png) | ![Mounted drive with a folder tree, command bar, file list, details panel and mounted drive panel, light, English](images/captures/redesign-dc166dc9/drive-files-light-en.png) |
+
+| Drive, one file selected | Command bar overflow menu | Drive, files, dark |
+|---|---|---|
+| ![Mounted drive with one file selected, showing the encrypted part map, its versions and cloud backup status in the details panel](images/captures/redesign-dc166dc9/drive-file-selected-light-en.png) | ![Drive command bar overflow menu with a filter box, a Regex builder button and the actions that do not fit on the bar](images/captures/redesign-dc166dc9/drive-command-bar-overflow-light-en.png) | ![Mounted drive file list, dark, English](images/captures/redesign-dc166dc9/drive-files-dark-en.png) |
+
+| Drive, dark, bilingual | History | Recycle Bin |
+|---|---|---|
+| ![Mounted drive file list, dark, English and Cantonese together](images/captures/redesign-dc166dc9/drive-files-dark-bilingual.png) | ![History page listing saved versions with Restore as new version actions](images/captures/redesign-dc166dc9/history-light-en.png) | ![Recycle Bin page with its actions, search box and an empty table](images/captures/redesign-dc166dc9/recycle-bin-light-en.png) |
+
+| Available offline |
+|---|
+| ![Available offline page with its empty state and the same details panel](images/captures/redesign-dc166dc9/available-offline-light-en.png) |
+
+</details>
+
+#### Local tools
+
+Thirteen tools sit behind one launcher with its own search and Regex builder.
+
+<details>
+<summary>Tool launcher, regex builder, Base64, type generator, virtual disks, charts, sketch board and world generator (14)</summary>
+
+| Local tools | Local tools, dark | Local tools, dark, bilingual |
+|---|---|---|
+| ![Local tools page with a search box, a Regex builder button, category filters and tool tiles](images/captures/redesign-dc166dc9/local-tools-light-en.png) | ![Local tools page, dark, English](images/captures/redesign-dc166dc9/local-tools-dark-en.png) | ![Local tools page, dark, English and Cantonese together](images/captures/redesign-dc166dc9/local-tools-dark-bilingual.png) |
+
+| Regex builder | Regex builder, expression | Base64 toolkit |
+|---|---|---|
+| ![Regex builder panel beside the Local tools search box with the regular expression switch off](images/captures/redesign-dc166dc9/regex-builder-closed-light-en.png) | ![Regex builder with the regular expression switch on, an expression, a valid verdict and test text; the tool list is filtered to three matches](images/captures/redesign-dc166dc9/regex-builder-expression-light-en.png) | ![Base64 toolkit with options, input and output areas and file actions](images/captures/redesign-dc166dc9/tool-base64-light-en.png) |
+
+| Type generator | Virtual disks | Live charts |
+|---|---|---|
+| ![Type generator with a JSON sample, target language and inference options](images/captures/redesign-dc166dc9/tool-type-generator-light-en.png) | ![Virtual disks page with attached disks, selected file and a create form](images/captures/redesign-dc166dc9/tool-virtual-disks-light-en.png) | ![Live charts page with the drive used space chart for a mounted drive](images/captures/redesign-dc166dc9/tool-live-charts-mounted-light-en.png) |
+
+| Sketch board | Server preparation | World generator, options |
+|---|---|---|
+| ![Sketch board with pen, shape and text tools above an empty canvas](images/captures/redesign-dc166dc9/tool-sketch-board-light-en.png) | ![Server preparation page with the four server targets and the create server form](images/captures/redesign-dc166dc9/tool-server-preparation-light-en.png) | ![World generator form with version loading, seed, difficulty and game mode](images/captures/redesign-dc166dc9/world-generator-options-light-en.png) |
+
+| World generator, area | World generator, output |
+|---|---|
+| ![World generator area picker with its chunk grid and size summary](images/captures/redesign-dc166dc9/world-generator-area-light-en.png) | ![World generator output options with the licence checkbox and Generate the world button](images/captures/redesign-dc166dc9/world-generator-output-light-en.png) |
+
+</details>
+
+#### Narrow layout at 390 by 844
+
+At 390 pixels wide the navigation moves into a drawer, cards stack and the file table becomes a list of cards.
+
+<details>
+<summary>Home, navigation drawer, tools and drive on a narrow window (6)</summary>
+
+| Home | Navigation drawer | Local tools |
+|---|---|---|
+| ![Home at 390 by 844 pixels with the cards stacked in one column](images/captures/redesign-dc166dc9/home-390x844-light-en.png) | ![Navigation drawer at 390 by 844 pixels opened from the menu button](images/captures/redesign-dc166dc9/navigation-drawer-390x844-light-en.png) | ![Local tools at 390 by 844 pixels with category chips and tool tiles](images/captures/redesign-dc166dc9/local-tools-390x844-light-en.png) |
+
+| Drive | Command bar overflow | Home, dark, bilingual |
+|---|---|---|
+| ![Mounted drive file list at 390 by 844 pixels as cards](images/captures/redesign-dc166dc9/drive-files-390x844-light-en.png) | ![Drive command bar overflow menu at 390 by 844 pixels](images/captures/redesign-dc166dc9/drive-command-bar-overflow-390x844-light-en.png) | ![Home at 390 by 844 pixels, dark, English and Cantonese together](images/captures/redesign-dc166dc9/home-390x844-dark-bilingual.png) |
+
+</details>
+
+#### Settings, personalization and local access
+
+Appearance, language, text size, high contrast, sound and animation controls, in light and dark themes and in English, Cantonese or both.
+
+<details>
+<summary>Settings, high contrast and text size, languages, personalization and animation editor (9)</summary>
+
+| Settings, startup and storage | Settings, appearance and language | High contrast and 130 percent text |
+|---|---|---|
+| ![Settings page with its search box, startup and unlocking switches and encrypted part size](images/captures/redesign-dc166dc9/settings-startup-storage-light-en.png) | ![Settings appearance and language section with theme, row density, text size, high contrast and language](images/captures/redesign-dc166dc9/settings-appearance-light-en.png) | ![Settings with high contrast on and text size at 130 percent, which enlarges the whole interface](images/captures/redesign-dc166dc9/settings-high-contrast-text-130-light-en.png) |
+
+| Settings, bilingual | Settings, dark, bilingual | Personalization, language and voice |
+|---|---|---|
+| ![Settings appearance section, light, English and Cantonese together](images/captures/redesign-dc166dc9/settings-appearance-light-bilingual.png) | ![Settings appearance section, dark, English and Cantonese together](images/captures/redesign-dc166dc9/settings-appearance-dark-bilingual.png) | ![Personalization page, Language and voice tab, with its search box and Regex builder](images/captures/redesign-dc166dc9/personalization-language-light-en.png) |
+
+| Personalization, appearance | Animation and transitions | Local access |
+|---|---|---|
+| ![Personalization page, Appearance tab, with theme, density and accent colour](images/captures/redesign-dc166dc9/personalization-appearance-light-en.png) | ![Animation and transitions editor with the Calm, Standard, Expressive and Playful profiles](images/captures/redesign-dc166dc9/motion-editor-profiles-light-en.png) | ![Local access page, Local profile tab, with its search box and Regex builder](images/captures/redesign-dc166dc9/local-access-light-en.png) |
+
+</details>
+
+#### Docker Hub drive, no folders
+
+These captures show creating a drive on Docker Hub without choosing any folder, and opening a backed-up drive from Docker Hub, as the packaged app rendered them on source `a2581b24` (the [capture manifest](images/captures/docker-hub-drive/manifest.json) names what was left out for privacy). The signed-in account is real and its name is only the public repository namespace.
+
+<details>
+<summary>Docker Hub drive, no folders (7)</summary>
+
+| Create: where | Create: repository picker | Create: details |
+|---|---|---|
+| ![Create a drive dialog, step 1 Where, with two choice cards: On this computer (choose a folder) and Docker Hub (no folder to choose)](images/captures/docker-hub-drive/create-where-light-en.png) | ![Create a drive dialog, step 3 Repository, showing the signed-in account, the search box with Regex builder and Refresh, the filter chips and repository rows with drive cards](images/captures/docker-hub-drive/create-repository-picker-light-en.png) | ![Create a drive dialog, step 4 Details, with the chosen repository, name, letter, password fields, the public warning and where the local copy lives](images/captures/docker-hub-drive/create-details-light-en.png) |
+
+| Docker Hub storage after backup | Open: drive cards | Open: snapshots |
+|---|---|---|
+| ![Docker Hub storage page with the saved destination, public visibility, last verified digest and the snapshot controls](images/captures/docker-hub-drive/docker-hub-storage-after-backup-light-en.png) | ![Open a drive from Docker Hub dialog, step 1 Drive, with filter chips and a repository holding nine detected drives as cards](images/captures/docker-hub-drive/open-picker-drive-cards-light-en.png) | ![Open a drive from Docker Hub dialog, step 2 Snapshot, with the latest snapshot selected, restore into the app's own folder, drive letter and Advanced: choose folder](images/captures/docker-hub-drive/open-snapshots-light-en.png) |
+
+| Open: unlock |
+|---|
+| ![Open a drive from Docker Hub dialog, step 4 Unlock, after the snapshot was restored and verified](images/captures/docker-hub-drive/open-unlock-light-en.png) |
+
+</details>
+
+#### Docker Hub backup
+
+No account was signed in for these captures. They show the page as the app renders it with no saved account, and after the guided sign-in could not reach the service.
+
+<details>
+<summary>Docker Hub storage before sign-in and after an unfinished sign-in (2)</summary>
+
+| Docker Hub, before sign-in | Docker Hub, sign-in did not finish |
+|---|---|
+| ![Docker Hub storage page before any sign-in, with the guided sign-in steps and the drive list empty](images/captures/redesign-dc166dc9/docker-hub-initial-light-en.png) | ![Docker Hub storage page after Start guided sign-in on a computer with no connection, offering Retry guided sign-in](images/captures/redesign-dc166dc9/docker-hub-sign-in-unfinished-light-en.png) |
+
+</details>
+
+Earlier builds' captures, with their original dates and provenance, are in the [screenshot archive](screenshots-archive.md).
+
+
 ### Setup guide, local packaged 0.2.0
 
 Local packaged 0.2.0 at source `ca91b0209c3aa0bf0f378f62a60cefc778ef869a`, captured on 2026-10-17 at 03:45:42.410 UTC. This is the initial setup welcome screen at 1180 × 850, English, light theme, renderer scale 1. Native window icon handles were checked separately; this image does not establish an installed copy, rendered tray or taskbar icons, setup completion, or full workflows. [Capture inventory](evidence/installed-icons-ca91b020-inventory.json). Earlier captures retain their original provenance.
