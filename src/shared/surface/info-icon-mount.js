@@ -1,4 +1,4 @@
-import {mountControlGuidance, assertGuidanceCoverage} from './control-guidance.js';
+import {mountControlGuidance, assertGuidanceCoverage, hintAnchor} from './control-guidance.js';
 import {assertPracticeCoverage} from './guidance-playground.js';
 
 /**
@@ -21,7 +21,7 @@ export function mountInfoIcons(root, {inventory, t = value => value, query = (sc
   for (const descriptor of inventory.descriptors) {
     const target = query(root, descriptor.selector);
     if (!target) { missing.push(descriptor.id); continue; }
-    const existing = hint ? target.nextElementSibling : target.previousElementSibling;
+    const existing = hint ? hintAnchor(target).nextElementSibling : target.previousElementSibling;
     if (existing?.dataset?.guidanceId === descriptor.id) { mounted.push(descriptor.id); continue; }
     try {
       if (pair && !hint && !descriptor.noPair) { const wrapper = pairWithTarget(target, pair); if (wrapper) wrappers.push({wrapper, target}); }
@@ -131,7 +131,7 @@ export function probeInfoIcons(root, {inventory, query = (scope, selector) => sc
  */
 export function probeHelpHint(target, descriptor, {t = value => value, commands = [], lookup} = {}) {
   const problems = [];
-  const host = target.nextElementSibling;
+  const host = hintAnchor(target).nextElementSibling;
   if (!host || String(host.tagName).toLowerCase() !== 'mfe-control-guidance' || host.dataset?.presentation !== 'hint') return [{code: 'help-missing', id: descriptor.id}];
   if (host.dataset?.guidanceId !== descriptor.id) problems.push({code: 'target-binding', id: descriptor.id});
   const purpose = t(descriptor.purpose), label = t(descriptor.label);

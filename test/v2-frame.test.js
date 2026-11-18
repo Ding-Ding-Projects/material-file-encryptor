@@ -81,3 +81,21 @@ test('the version 2 frame loads its stylesheets last and declares density, dark 
   for (const selector of [':root[data-theme=dark]', ':root[data-contrast=high]', ':root[data-density=comfortable]', ':root[data-help-mode=on]', '@media (prefers-reduced-motion:reduce)']) assert.ok(css.includes(selector), selector);
   assert.doesNotMatch(css, /url\(\s*['"]?https?:/, 'no network assets');
 });
+
+test('help text for a control wrapped in a label goes after the label, never inside it', async () => {
+  const {infoIconDom} = await import('./helpers/info-icon-dom.js');
+  const {mountInfoIcons, probeHelpHints} = await import('../src/shared/surface/info-icon-mount.js');
+  const {DESKTOP_INFO_ICON_INVENTORY} = await import('../src/shared/local-ux/info-icon-desktop.js');
+  const {root, doc} = infoIconDom();
+  const row = DESKTOP_INFO_ICON_INVENTORY.descriptors.find(item => item.selector === '#startup-setting');
+  const label = doc.createElement('label'); root.append(label);
+  const control = doc.createElement('md-switch'); control.dataset.sel = row.selector; label.append(control);
+  const commands = [];
+  const report = mountInfoIcons(root, {inventory: {descriptors: [row]}, presentation: 'hint', registerCommands: rows => { commands.push(...rows); return () => {}; }});
+  assert.deepEqual(report.errors, []);
+  assert.equal(label.children.length, 1, 'nothing was added inside the label');
+  assert.equal(label.nextElementSibling?.dataset?.presentation, 'hint');
+  assert.deepEqual(probeHelpHints(root, {inventory: {descriptors: [row]}, commands}), []);
+  report.destroy();
+  assert.equal(root.children.length, 1);
+});
