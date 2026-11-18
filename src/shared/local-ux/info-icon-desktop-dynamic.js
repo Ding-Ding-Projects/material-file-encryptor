@@ -7,6 +7,18 @@ import {buildSurfaceInventory} from './info-icon-inventory.js';
  * the control.
  */
 const rows = [
+  ['#drive-new-menu', 'button', 'New drive menu', '新增磁碟選單',
+    'Open the menu of ways to get a drive: a new drive on this PC, a new Docker Hub drive, or a drive opened from Docker Hub.', '開啟取得磁碟嘅方法選單：喺呢部電腦新增磁碟、新增 Docker Hub 磁碟，或者從 Docker Hub 開啟磁碟。',
+    'Only the menu opens. Each choice starts its own guided steps, and nothing is created until you confirm there.', '只會開啟選單。每個選擇都有自己嘅引導步驟，喺嗰度確認之前唔會建立任何嘢。'],
+  ['#unlock-show-password', 'button', 'Show password', '顯示密碼',
+    'Show the password you are typing in the unlock bar, or hide it again.', '顯示你喺解鎖列輸入緊嘅密碼，或者再隱藏佢。',
+    'Only the field display changes. Nothing is saved and the drive stays locked until you press Unlock.', '只係改變欄位顯示，唔會儲存任何嘢，撳「解鎖」之前磁碟都會保持鎖定。'],
+  ['#unlock-choose-storage', 'button', 'Choose storage folder', '選擇儲存資料夾',
+    'Choose the encrypted storage folder of this drive when it does not have one yet, so it can be unlocked.', '呢個磁碟仲未有加密儲存資料夾時，揀返佢嘅資料夾，咁先可以解鎖。',
+    'A dialog opens to pick the folder and enter the password. Nothing changes until you confirm there.', '會開一個對話框揀資料夾同輸入密碼，喺嗰度確認之前唔會改變任何嘢。'],
+  ['#drive-list-settings', 'button', 'Drive settings', '磁碟設定',
+    'Go to Settings for the options that apply to drives, such as unlocking at sign-in and the encrypted part size.', '去設定修改適用於磁碟嘅選項，例如登入時解鎖同埋加密分段大小。',
+    'Only the page changes. No drive is locked, unlocked or changed.', '只會轉頁，唔會鎖定、解鎖或者更改任何磁碟。'],
   ['#save-version', 'button', 'Save version now', '立即儲存版本',
     'Record the current state of the drive as a version you can return to later.', '把磁碟目前嘅狀態記錄成一個版本，之後可以返轉頭。',
     'A new entry appears in the history list. Existing versions and files are not changed.', '歷史清單會多一個新項目，現有版本同檔案唔會改變。'],

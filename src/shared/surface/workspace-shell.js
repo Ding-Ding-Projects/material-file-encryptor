@@ -17,7 +17,7 @@ export class WorkspaceShell extends SurfaceElement {
     this.manager=element('mfe-group-manager');this.manager.model=this.model;this.manager.language=this.language;this.manager.changed=()=>this.renderTabs();
     this.previous=element('md-icon-button',{'aria-label':this.t('Scroll workspace tabs left','向左捲動工作區分頁'),title:this.t('Scroll workspace tabs left','向左捲動工作區分頁'),onclick:()=>this.scrollTabs(-1)});
     this.next=element('md-icon-button',{'aria-label':this.t('Scroll workspace tabs right','向右捲動工作區分頁'),title:this.t('Scroll workspace tabs right','向右捲動工作區分頁'),onclick:()=>this.scrollTabs(1)});this.previous.append(controlIcon('chevron-left',document));this.next.append(controlIcon('chevron-right',document));
-    this.homeButton=element('md-icon-button',{class:'home-button','aria-label':this.t('Home','首頁'),title:this.t('Home: every section in one place','首頁：所有區段集中一頁'),onclick:()=>this.openHome()});this.homeButton.append(homeGlyph(HOME_ID));
+    this.homeButton=element('md-icon-button',{class:'home-button',hidden:true,'aria-label':this.t('Home','首頁'),title:this.t('Home: every section in one place','首頁：所有區段集中一頁'),onclick:()=>this.openHome()});this.homeButton.append(homeGlyph(HOME_ID));
     this.newButton=element('md-icon-button',{class:'new-tab','aria-label':this.t('New tab','新分頁'),title:this.t('New tab (Ctrl+T)','新分頁 (Ctrl+T)'),'aria-haspopup':'dialog','aria-keyshortcuts':'Control+T',onclick:event=>this.openNewTab(event.currentTarget,event)});this.newButton.append(homeGlyph('add'));
     this.tabsHost.addEventListener('scroll',()=>this.updateOverflow());
     this.catalog=element('mfe-new-tab-catalog');this.catalog.language=this.language;
@@ -55,8 +55,9 @@ export class WorkspaceShell extends SurfaceElement {
     return entries;
   }
   chooseCatalogEntry(entry){
-    if(entry.destination===HOME_ID)return this.openHome();
-    if(entry.destination)return this.activateView({id:entry.destination});
+    // A page chosen in the New tab catalog opens as a tab in the title bar; the tree keeps every page one click away.
+    if(entry.destination===HOME_ID){const done=this.openHome();this.model.addToStrip?.([HOME_ID]);this.renderTabs();return done;}
+    if(entry.destination){const done=this.activateView({id:entry.destination});this.model.addToStrip?.([entry.destination]);this.renderTabs();return done;}
     try{Promise.resolve(entry.run?.()).catch(error=>this.onCommandError?.(error));}catch(error){this.onCommandError?.(error);}
   }
   /** Opens every destination that is not open yet and keeps the current tab selected. */
@@ -66,6 +67,7 @@ export class WorkspaceShell extends SurfaceElement {
       if(this.model.getState().tabs.some(tab=>tab.id===id))continue;
       const label=this.labels?.get(id);if(label&&this.model.openTab({id,label:localized(label,'en')}))opened++;
     }
+    this.model.addToStrip?.(destinationsToOpen(this.catalogEntries()));
     this.model.activateTab(active);this.renderTabs();
     return opened;
   }
@@ -80,7 +82,10 @@ export class WorkspaceShell extends SurfaceElement {
     if(!this.model||!this.tabsHost)return;
     const state=this.model.getState(),offset=this.tabsHost.scrollLeft;
     const tabs=element('md-tabs',{'aria-label':this.t('Open workspace tabs','已開啟工作區分頁')});
+    // Only pages the person opened as tabs appear here. Pages are reached from the navigation tree.
+    const strip=new Set(state.stripTabIds||[]);
     for(const tab of this.viewRows(state)){
+      if(Array.isArray(state.stripTabIds)&&!strip.has(tab.id))continue;
       if(state.groups.find(group=>group.id===tab.group)?.collapsed&&tab.id!==state.activeTabId)continue;
       const label=this.label(tab),name=element('span',{class:'tab-name',text:`${tab.pinned?'● ':''}${this.selected.has(tab.id)?'✓ ':''}${label}`});
       const node=element('md-primary-tab',{active:tab.id===state.activeTabId,'aria-label':label,title:label},[name]);
@@ -103,7 +108,7 @@ export class WorkspaceShell extends SurfaceElement {
   }
   openTabMenu(tab,anchor,event){this.onContext?.({anchor,event,target:tab,language:this.language,items:[
     {label:tab.pinned?text('Unpin tab','取消固定分頁'):text('Pin tab','固定分頁'),run:()=>{this.model.pinTab(tab.id,!tab.pinned);this.render();}},
-    {label:text('Close tab','關閉分頁'),shortcut:tab.id===this.model.getState().activeTabId?'Control+w':undefined,disabled:tab.pinned||this.model.getState().tabs.length<2,run:()=>{this.model.closeTab(tab.id);this.onActivate?.(this.model.getState().activeTabId);this.render();}},
+    {label:text('Close tab','關閉分頁'),disabled:tab.pinned,run:()=>{this.model.removeFromStrip?.(tab.id);this.render();}},
     {label:text('Restore closed tab','還原已關閉分頁'),shortcut:'Control+Shift+t',disabled:!this.model.getState().closedTabs.length,run:()=>{const id=this.model.restoreTab();if(id)this.activate(id);}},
     {label:text('Select or deselect tab','選取或取消選取分頁'),run:()=>{if(this.selected.has(tab.id))this.selected.delete(tab.id);else this.selected.add(tab.id);this.renderTabs();}},
     {label:text('Move tab left','將分頁向左移'),run:()=>{this.model.moveTab(tab.id,this.model.getState().tabs.findIndex(t=>t.id===tab.id)-1);this.render();}},

@@ -56,6 +56,7 @@ test('the grid pair and the navigation information icon have stylesheet composit
   assert.match(css, /\.local-ux-field:has\(>mfe-control-guidance:not\(\[data-open\]\)\)>\[data-choice-search-pair\]\{grid-column:1\}/);
   assert.match(css, /\.sidebar>mfe-control-guidance\[data-info-icon\]\{position:absolute;inset-block-start:12px;inset-inline-end:8px;z-index:2\}/);
   assert.match(css, /\.sidebar>mfe-control-guidance\[data-info-icon\]\[data-open\]\{inset-inline-start:8px;inline-size:auto;flex:none/);
-  const navigation = await read('src/renderer/features/shell/navigation.js');
-  assert.match(navigation, /\.brand\{[^}]*padding-inline-end:56px\}/);
+  // The desktop no longer draws an icon beside the navigation tree; in help mode its inline text stays out of the tree.
+  const frame = await read('src/renderer/features/shell/v2-frame.css');
+  assert.match(frame, /:root\[data-help-mode=on\] \.sidebar>mfe-control-guidance\[data-presentation=hint\]:not\(\[data-open=true\]\)\{display:none\}/);
 });

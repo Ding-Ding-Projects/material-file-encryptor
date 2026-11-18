@@ -1,0 +1,76 @@
+/* Drive list with the inline unlock bar (shown while the open drive is locked). */
+#locked-state.drive-list-view{display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:0;min-height:0;height:100%;padding:0;margin:0;border:0}
+.drive-list-view>.v2-toolbar{display:flex;align-items:center;gap:2px;flex-wrap:wrap;min-height:40px;padding:4px 8px;border-bottom:1px solid var(--v2-line);background:var(--v2-surface)}
+.drive-list-view>.v2-toolbar>*{flex:none}
+.drive-list-view>.v2-toolbar #drive-new-menu{margin-inline-end:6px}
+.drive-list-view>.v2-toolbar #drive-new-menu .caret{margin-inline-start:4px;font-size:10px}
+.drive-list-view>.v2-toolbar .icon{width:16px;height:16px}
+.drive-list-view>.v2-toolbar md-outlined-button{--md-outlined-button-outline-width:0px}
+.drive-list-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;flex:1 1 auto;min-height:0}
+.drive-list-main{display:flex;flex-direction:column;min-width:0;min-height:0}
+.drive-list-summary{margin:0;padding:8px 12px;font-size:13px;font-weight:600;color:var(--v2-text);border-bottom:1px solid var(--v2-line2)}
+.drive-list-scroll{overflow:auto;min-height:0}
+.drive-list-table{width:100%;border-collapse:collapse;table-layout:fixed}
+.drive-list-table th{text-align:start;padding:0 12px;position:sticky;top:0;z-index:1}
+.drive-list-table th[data-column=letter]{width:110px}
+.drive-list-table th[data-column=state]{width:180px}
+.drive-list-table td{padding:0 12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.drive-list-table tr[data-session-id]{cursor:pointer;transition:background-color var(--md-sys-motion-duration-short4,200ms) var(--md-sys-motion-easing-standard)}
+.drive-list-table tr[data-session-id]:hover{background:var(--v2-hover)}
+.drive-list-table tr[data-session-id]:focus-visible{outline:2px solid var(--v2-accent);outline-offset:-2px}
+.drive-list-table tr.selected{background:var(--v2-selected);box-shadow:inset 3px 0 0 var(--v2-accent)}
+.drive-list-table td .icon{display:inline-block;width:15px;height:15px;vertical-align:-3px;margin-inline-end:8px;color:var(--v2-text2)}
+.drive-list-table td.drive-name strong{font-weight:600}
+.drive-list-table td.drive-state[data-state=mounted],.drive-list-table td.drive-state[data-state=unlocked]{color:var(--v2-ok)}
+.drive-list-table td.drive-state[data-state=recovery]{color:var(--v2-bad)}
+.drive-list-table td.drive-folder{color:var(--v2-text2)}
+.unlock-bar-row>td{padding:0;white-space:normal;overflow:visible;height:auto;background:var(--v2-selected);border-bottom:1px solid var(--v2-selected-line);box-shadow:inset 3px 0 0 var(--v2-accent)}
+.drive-list-details{border-inline-start:1px solid var(--v2-line);padding:10px 12px;overflow:auto;background:var(--v2-surface)}
+.drive-list-details .inspector-name{font-weight:600;margin:6px 0 2px}
+.drive-list-details .muted{margin:0 0 10px;color:var(--v2-text2);font-size:12px}
+.drive-list-facts{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 12px;margin:0;font-size:12px}
+.drive-list-facts dt{color:var(--v2-text2)}
+.drive-list-facts dd{margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* The unlock card becomes one row: title, credential, key file choice, auto-unlock and the single Unlock primary. */
+.unlock-card.unlock-bar{display:flex;flex-direction:row;align-items:center;flex-wrap:wrap;gap:8px 16px;max-width:none;width:auto;margin:0;padding:8px 12px 8px 15px;border:0;border-radius:0;background:transparent;box-shadow:none}
+.unlock-bar .unlock-head{display:flex;align-items:center;gap:8px;flex:0 0 auto;margin:0}
+.unlock-bar .unlock-badge{width:auto;height:auto;background:none;padding:0}
+.unlock-bar .unlock-badge .icon{width:16px;height:16px}
+.unlock-bar .unlock-head h2{font-size:13px;font-weight:600;margin:0}
+.unlock-bar .unlock-head p{display:none}
+.unlock-bar .unlock-credentials{display:flex;flex-direction:row;align-items:center;flex-wrap:wrap;gap:8px 16px;flex:1 1 420px;margin:0}
+.unlock-bar .unlock-modes{display:flex;align-items:center;gap:8px;border:0;padding:0;margin:0}
+.unlock-bar .unlock-modes legend{float:left;font-size:12px;color:var(--v2-text2);margin-inline-end:4px;padding:0}
+.unlock-bar .unlock-modes label{display:flex;align-items:center;gap:4px;padding:0;background:none;font-size:13px}
+.unlock-bar #unlock-password-fields,.unlock-bar #unlock-key-fields{flex:1 1 220px;min-width:200px;max-width:360px}
+.unlock-bar .unlock-credentials md-outlined-text-field{width:100%;--md-outlined-text-field-container-color:var(--v2-surface)}
+.unlock-bar .unlock-auto{display:flex;align-items:center;gap:6px;font-size:13px}
+.unlock-bar .unlock-actions{margin:0;flex:none}
+.unlock-bar .unlock-note{flex:1 0 100%;margin:0;font-size:12px;color:var(--v2-text2)}
+.unlock-bar #unlock-error{flex:1 0 100%;margin:0}
+.unlock-card.unlock-bar[data-state=failed]{animation:unlock-bar-shake var(--md-sys-motion-duration-short4,300ms) var(--md-sys-motion-easing-standard)}
+@keyframes unlock-bar-shake{0%,100%{transform:none}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+@media (prefers-reduced-motion:reduce){.unlock-card.unlock-bar[data-state=failed]{animation:none}}
+:root[data-motion=reduced] .unlock-card.unlock-bar[data-state=failed],:root[data-low-stimulation=true] .unlock-card.unlock-bar[data-state=failed]{animation:none}
+
+/* Narrow windows: the details pane folds away and the table keeps its first two columns. */
+:root[data-max1100] .drive-list-layout{grid-template-columns:minmax(0,1fr)}
+:root[data-max1100] .drive-list-details{display:none}
+:root[data-max560] .drive-list-table th:nth-child(n+3),:root[data-max560] .drive-list-table td:nth-child(n+3){display:none}
+:root[data-max560] .drive-list-table tr[data-session-id]>td{height:52px}
+
+/* The drive panel's file-table column rules are id-scoped; the drive list resets them for its own table. */
+#view-drive .drive-list-table th,#view-drive .drive-list-table td{width:auto}
+#view-drive .drive-list-table thead{position:static;width:auto;height:auto;overflow:visible;clip:auto}
+#view-drive .drive-list-table th[data-column=letter]{width:110px}
+#view-drive .drive-list-table th[data-column=state]{width:180px}
+#view-drive .drive-list-table th{position:sticky;top:0;background:var(--v2-surface)}
+.v2-toolbar .icon,.v2-toolbar svg{display:inline-block;width:16px;height:16px;vertical-align:-3px}
+
+/* No storage folder yet: offer to choose one instead of a password field. */
+.unlock-bar .unlock-missing{display:flex;align-items:center;gap:12px;flex:1 1 auto;font-size:13px;color:var(--v2-text2)}
+.unlock-bar .unlock-missing[hidden]{display:none}
+.unlock-bar #unlock-password-fields{display:flex;align-items:center;gap:4px}
+.unlock-bar #unlock-show-password{flex:none}
+.drive-list-hidden-actions{display:none}

@@ -13,6 +13,8 @@ export function mountHubDriveDialog(root, options = {}) {
   dialog.configure(options);
   return {
     openCreate: () => dialog.open('create'),
+    /** The easy path: Docker Hub is already chosen, so it goes to sign-in (when needed) and then one details screen. */
+    openCreateDirect: () => dialog.open('create', {direct: true}),
     openExisting: () => dialog.open('open'),
     setLanguage: value => dialog.setLanguage(value),
     onUseThisComputer: listener => dialog.addEventListener('hub-use-this-computer', listener),

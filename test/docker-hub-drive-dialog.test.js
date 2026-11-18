@@ -204,3 +204,22 @@ test('Cantonese and bilingual wording reach the dialog', async () => {
   dialog.setLanguage('yue'); assert.ok(textOf(dialog.dialog).includes('喺呢部電腦'));
   dialog.setLanguage('bilingual'); assert.ok(textOf(dialog.dialog).includes('On this computer · 喺呢部電腦'));
 });
+
+test('the easy path skips the where step and the step list and lands on one details screen with the default repository preselected', async () => {
+  const { dialog, calls } = fixture();
+  dialog.open('create', { direct: true });
+  await settle(() => dialog.stage === 'details');
+  assert.equal(dialog.stage, 'details');
+  assert.equal(dialog.draft.repository, 'pat/material-file-encryptor-storage');
+  assert.equal(all(dialog.dialog, node => node.localName === 'ol' && (node.className === 'steps' || node.attributes?.class === 'steps' || node.attributes?.['aria-label']))[0]?.hidden, true, 'no step sidebar on the easy path');
+  assert.ok(byText(dialog, 'Change'), 'Change repository brings the chooser back');
+  assert.equal(calls.some(call => call[0] === 'chooseFolder'), false);
+});
+
+test('signed out, the easy path asks for sign-in first and never shows the where choice', async () => {
+  const { dialog } = fixture({ signedIn: false });
+  dialog.open('create', { direct: true });
+  await settle(() => dialog.stage === 'signin');
+  assert.equal(dialog.stage, 'signin');
+  assert.ok(!textOf(dialog.dialog).includes('No folder to choose'));
+});

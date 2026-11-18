@@ -38,6 +38,8 @@ md-linear-progress{width:100%}
  * repository is proposed first; in open mode the drive cards are the choice. The host does the scanning; this
  * element only draws the snapshot it is given and never invents a drive.
  */
+/** Docker Hub repository names: 2 to 255 lowercase letters, digits and single separators, starting and ending with a letter or digit. */
+export function validRepositoryName(value) { return typeof value === 'string' && value.length >= 2 && value.length <= 255 && /^[a-z0-9]+(?:(?:[._]|__|-+)[a-z0-9]+)*$/.test(value); }
 export class HubRepositoryPicker extends SurfaceElement {
   constructor() {
     super();
@@ -47,7 +49,10 @@ export class HubRepositoryPicker extends SurfaceElement {
     this.help = element('p', { class: 'meta' });
     this.search = element('mfe-search'); this.search.addEventListener('search-change', event => { this.query = event.detail || this.query; void this.applySearch(); });
     this.refreshButton = element('md-outlined-button'); this.refreshButton.addEventListener('click', () => { void this.load(true); });
-    this.infoButton = element('button', { type: 'button', class: 'info', id: 'hub-picker-info', text: 'i' });
+    // The help text is always shown as a caption, so the bare (i) toggle stays hidden.
+    this.infoButton = element('button', { type: 'button', class: 'info', id: 'hub-picker-info', text: 'i', hidden: true });
+    this.newButton = element('md-outlined-button', { id: 'hub-new-repository' }); this.newButton.addEventListener('click', () => { this.newOpen = !this.newOpen; this.renderNewRow(); if (this.newOpen) this.newName?.focus?.(); });
+    this.newRow = element('div', { class: 'new-repo', hidden: true });
     this.chipsGroup = element('md-chip-set', { class: 'chips', role: 'group' });
     this.status = element('p', { class: 'meta', role: 'status', 'aria-live': 'polite' });
     this.progress = element('md-linear-progress', { indeterminate: true });
@@ -58,7 +63,7 @@ export class HubRepositoryPicker extends SurfaceElement {
     this.list = element('ul', { class: 'list', role: 'listbox' });
     this.empty = element('p', { class: 'meta', role: 'status' });
     this.visibility = element('p', { class: 'meta' });
-    this.shadowRoot.append(element('div', { class: 'stack' }, [this.help, element('div', { class: 'bar' }, [this.search, this.refreshButton, this.infoButton]), this.chipsGroup, this.status, this.progress, this.problem, this.notes, this.list, this.empty, this.visibility]));
+    this.shadowRoot.append(element('div', { class: 'stack' }, [this.help, element('div', { class: 'bar' }, [this.search, this.newButton, this.refreshButton, this.infoButton]), this.newRow, this.chipsGroup, this.status, this.progress, this.problem, this.notes, this.list, this.empty, this.visibility]));
     this.list.addEventListener('keydown', event => this.keyboard(event));
   }
   configure({ services = {}, mode = 'create', account = null, translate = value => value, language = 'en' } = {}) {
@@ -113,6 +118,7 @@ export class HubRepositoryPicker extends SurfaceElement {
     this.help.textContent = this.t('pickerHelp');
     this.search.setAttribute('label', this.t('searchLabel')); this.search.language = this.language === 'zh-HK' ? 'yue' : this.language; this.search.setLanguage?.(this.search.language);
     this.refreshButton.textContent = this.t(busy ? 'refreshing' : 'refresh'); this.refreshButton.disabled = busy || !this.available;
+    this.newButton.textContent = this.t('newRepository'); this.newButton.hidden = this.mode !== 'create' || !this.account; this.renderNewRow();
     this.infoButton.setAttribute('aria-label', this.t('info')); this.infoButton.title = this.t('info');
     this.chipsGroup.setAttribute('aria-label', this.t('filterGroup'));
     const counts = chipCounts(snapshot?.repositories ?? []);
@@ -134,13 +140,33 @@ export class HubRepositoryPicker extends SurfaceElement {
     this.visibility.textContent = this.t('nameVisible');
     this.renderList();
   }
+  /** The inline New repository row: a name, Public, and Use this repository. Docker Hub creates it when the drive is created. */
+  renderNewRow() {
+    if (!this.newRow) return;
+    this.newRow.hidden = !this.newOpen || this.mode !== 'create' || !this.account;
+    if (this.newRow.hidden) return;
+    const name = this.newName ||= element('input', { id: 'hub-new-repository-name', maxLength: 255, autocomplete: 'off', spellcheck: false });
+    name.label = this.t('newRepositoryName'); name.setAttribute?.('aria-label', this.t('newRepositoryName'));
+    const use = element('md-filled-button', { id: 'hub-new-repository-use', text: this.t('newRepositoryUse') });
+    const error = element('p', { class: 'meta error', role: 'alert', hidden: true });
+    use.addEventListener('click', () => {
+      const value = String(name.value ?? '').trim();
+      if (!validRepositoryName(value)) { error.textContent = this.t('newRepositoryInvalid'); error.hidden = false; return; }
+      this.newOpen = false;
+      this.choose({ id: `${this.account}/${value}`, visibility: 'public', drives: [] });
+      this.renderNewRow();
+    });
+    this.newRow.replaceChildren(element('div', { class: 'bar' }, [name, element('span', { class: 'pill', text: this.t('newRepositoryPublic') }), use]), error, element('p', { class: 'meta', text: this.t('newRepositoryNote') }));
+  }
   renderList() {
     const repositories = visibleRepositories(this.snapshot?.repositories ?? [], this.chip, this.matchedIds);
     const items = [];
-    if (this.mode === 'create' && this.account) items.push(this.suggestedItem());
-    for (const repository of repositories) items.push(this.repositoryItem(repository));
+    // The suggested repository is listed once: as the first row, never again as a found row below it.
+    const suggestion = this.mode === 'create' && this.account ? suggestedRepository(this.account, this.snapshot?.repositories ?? []) : null;
+    if (suggestion) items.push(this.suggestedItem());
+    for (const repository of repositories) if (repository.id !== suggestion?.repository) items.push(this.repositoryItem(repository));
     this.list.replaceChildren(...items);
-    const shown = items.length - (this.mode === 'create' && this.account ? 1 : 0);
+    const shown = items.length - (suggestion && !repositories.some(item => item.id === suggestion.repository) ? 1 : 0);
     this.empty.hidden = shown > 0 || catalogBusy(this.snapshot) || Boolean(catalogProblem(this.snapshot));
     this.empty.textContent = shown > 0 ? '' : (this.snapshot?.repositories ?? []).length ? this.t('nothingShown') : this.t('noRepositories');
   }

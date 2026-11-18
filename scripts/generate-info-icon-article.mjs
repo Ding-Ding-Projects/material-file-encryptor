@@ -34,6 +34,10 @@ export function articleText(locale) {
   lines.push(pick(
     'Every capable control has its own compact information icon placed immediately before it, so it comes first in reading and keyboard order and stays attached to its control when a row wraps. The icon is a Material icon button bundled with the product, so it needs no network access. It stays closed until you open it.',
     '每個有功能的控制項，緊接在前面都有自己的精簡資訊圖示，所以在閱讀和鍵盤次序上排在控制項之前，換行時亦會跟住自己的控制項。圖示是隨產品附帶的 Material 圖示按鈕，不需要網絡連線，在你開啟之前都會保持關閉。'), '');
+  lines.push(pick('## In the desktop app: help without icons', '## 桌面程式：冇圖示嘅說明'), '');
+  lines.push(pick(
+    'The desktop app no longer draws an icon in front of each control. The same help text is the control\'s tooltip, shown when the pointer rests on it or keyboard focus reaches it, and its accessible description, read by screen readers. The ? button in the title bar turns on help mode, which shows the text inline under every control. The full explanation and the guided steps of each control stay in the command palette as Explain and Guide commands. The website and the browser extension still use the icons described below.',
+    '桌面程式唔再喺每個控制項前面畫圖示。同一段說明文字變成控制項嘅提示框，指標停喺上面或者鍵盤聚焦時就會顯示，亦係螢幕閱讀器會讀出嘅無障礙描述。標題列嘅 ? 按鈕可以開啟說明模式，喺每個控制項下面直接顯示說明。每個控制項嘅完整解說同逐步指引仍然喺指令面板，叫做「解說」同「指引」。網站同瀏覽器擴充功能仍然用下面講嘅圖示。'), '');
   lines.push(pick('## What the icon does', '## 圖示的作用'), '');
   lines.push(pick(
     '- Opens an explanation written for that one control: its purpose, options, default, effects, an example, validation and recovery.',
