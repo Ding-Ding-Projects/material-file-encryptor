@@ -4,7 +4,7 @@ import {createBrowserConfirmPrompt} from './browser-confirm-prompt.js';
 import {readRuntimeAccessibility} from './startup-photo-service.js';
 import { selectVerificationRestartContext } from './verification-restart-context.js';
 import { readFileSync, createReadStream } from 'node:fs';
-import { app, autoUpdater, BrowserWindow, desktopCapturer, dialog, ipcMain, Menu, powerMonitor, safeStorage, shell, Tray } from 'electron'
+import { app, autoUpdater, BrowserWindow, desktopCapturer, dialog, ipcMain, Menu, net, powerMonitor, safeStorage, shell, Tray } from 'electron'
 import { createMaterialDialogs, materialDialogPaths } from './material-dialog.js'
 import { describePending, shutdownPrompt } from './shutdown-pending.js';
 import { createTrayNotice } from './tray-notice.js';
@@ -22,6 +22,9 @@ import { createRegistrySyncService } from './registry-sync-service.js';
 import { createRegistryLogin } from './registry-login.js';
 import { createRegistryBackupAll } from './registry-backup-all.js';
 import { createTagDates } from './auto-backup/tag-dates.js';
+import { createAutoBackupSettings } from './auto-backup/settings.js';
+import { createAutoBackup } from './auto-backup/controller.js';
+import { AUTO_BACKUP_METHODS, dispatchAutoBackup } from './auto-backup/ipc.js';
 import { createRegistryBackground } from './registry-background.js';
 import { createDockerImageTransport } from './vault-image-docker.js';
 import { registryVerificationDestination } from './registry-verification.js';
@@ -130,7 +133,9 @@ const imageRequest = createVaultImageRequests({ service: vaultImages, confirm: o
 const registryRoot = path.join(app.getPath('userData'), 'RegistrySync');
 const registryDocker = createDockerImageTransport();
 const registryLogin = createRegistryLogin({ transport: registryDocker, openPage: url => shell.openExternal(url), packaged: app.isPackaged, resourcesPath: process.resourcesPath });
+const autoBackupSettings = createAutoBackupSettings({ file: path.join(registryRoot, 'auto-backup.json') });
 const registrySync = createRegistrySyncService({ root: registryRoot, onChanged: () => hubCatalog.invalidate(),
+  retention: () => autoBackupSettings.peek().retention,
   testDestination: registryTestDestination,
   contexts: id => id === undefined ? [...vaultSessions.rows] : (() => { const row = vaultSessions.rows.get(id); return row && { storageDir: row.state.storageDir || row.preferences.storageDir, transport: row.preferences.transport || 'folder', driveName: row.state.driveName || row.preferences.driveName }; })(),
   nativeRequest: (method, params, id) => vaultSessions.request(method, params, id),
@@ -152,6 +157,22 @@ const registryBackupAll = createRegistryBackupAll({ docker: registryDocker, sync
   drives: () => [...vaultSessions.rows].map(([sessionId, { state: row, preferences: saved }]) => ({ sessionId, locked: row.locked !== false,
     name: (row.locked !== false ? saved.driveName || row.driveName : row.driveName || saved.driveName) || '', letter: (row.locked !== false ? saved.driveLetter || row.driveLetter : row.driveLetter) || '',
     storageDir: row.storageDir || saved.storageDir || '', transport: saved.transport || 'folder' })) });
+// Automatic backup decides when each drive backs up; the registry sync service above does the work.
+const autoBackup = createAutoBackup({ sync: registrySync, docker: registryDocker, settings: autoBackupSettings,
+  drives: () => [...vaultSessions.rows].map(([sessionId, { state: row, preferences: saved }]) => ({ sessionId,
+    name: (row.locked !== false ? saved.driveName || row.driveName : row.driveName || saved.driveName) || '', storageDir: row.storageDir || saved.storageDir || '', transport: saved.transport || 'folder' })),
+  online: () => net.isOnline(), busy: () => registryBackupAll.pending || splitStorage.pending || shareService.pending });
+// The native status carries a write revision per drive; a higher revision means the drive changed.
+const driveRevisions = new Map();
+function noteDriveStatus(sessionId, result) {
+  if (!sessionId || !result || typeof result.locked !== 'boolean') return;
+  const previous = driveRevisions.get(sessionId);
+  const revision = Number.isSafeInteger(result.revision) ? result.revision : -1;
+  driveRevisions.set(sessionId, { revision, locked: result.locked });
+  if (!previous) return;
+  if (!result.locked && revision > previous.revision && previous.revision >= 0) void autoBackup.noteChange(sessionId).catch(() => {});
+  if (result.locked && previous.locked === false) void autoBackup.noteLock(sessionId).catch(() => {});
+}
 const splitContext = row => row && { storageDir: row.state.storageDir || row.preferences.storageDir, cacheDir: row.state.cacheDir || row.preferences.cacheDir,
   transport: row.preferences.transport || 'folder', locked: row.state.locked !== false, mountedDrive: row.state.mounted ? row.state.driveLetter : null,
   busy: Boolean(row.state.sync?.running || row.state.operation || (row.state.operations || []).some(item => ['queued', 'running', 'cancelling'].includes(item.state))) };
@@ -205,6 +226,15 @@ const conflictRequest = createRegistryConflictRequests({
 });
 let registryTimer;
 async function runRegistryDue() { if (helper && (!verificationMode || registryTestDestination) && !testMode && !shuttingDown && !quitPending && !updateInstallLease) await registrySync.tick(); }
+async function runAutoBackupDue() { if (helper && (!verificationMode || registryTestDestination) && !testMode && !shuttingDown && !quitPending && !updateInstallLease) await autoBackup.tick(); }
+/** Backs up drives with pending changes before closing, for at most two minutes, then cancels what is still running. */
+async function flushAutoBackup() {
+  if (!helper || verificationMode || testMode || updateInstallLease || registrySync.pending) return;
+  const deadline = Date.now() + 120000; let timer;
+  const limit = new Promise(resolve => { timer = setTimeout(resolve, 120000); });
+  try { await Promise.race([autoBackup.flush(deadline), limit]); }
+  finally { clearTimeout(timer); if (registrySync.pending && registrySync.activeSessionId) await registrySync.cancel(registrySync.activeSessionId).catch(() => {}); }
+}
 const inside = (parent, child) => { const rel = path.relative(parent, child); return rel === '' || (rel !== '..' && !rel.startsWith(`..${path.sep}`) && !path.isAbsolute(rel)); };
 const nativeState = value => ({ ...value, driver: { ...value.driver, checking: false } });
 const snapshot = () => ({
@@ -383,6 +413,11 @@ async function dispatchRequest(method, params, context) {
     if (method === 'syncRegistryStorage') return registrySync.sync(id);
     if (method === 'listRegistrySnapshots') return registrySync.list(id);
     if (method === 'restoreRegistrySnapshot') return registrySync.restore(id, params.digest);
+  }
+  if (AUTO_BACKUP_METHODS.has(method)) {
+    if (!helper || (verificationMode || testMode) && !registryTestDestination) throw Error('Automatic backup requires the native vault helper.');
+    if (method !== 'autoBackupStatus' && (quitPending || shuttingDown || updateInstallLease)) throw Error('The application is preparing to close.');
+    return dispatchAutoBackup({ auto: autoBackup, sync: registrySync }, method, params);
   }
   if (SPLIT_STORAGE_METHODS.has(method)) {
     if (!helper) throw Error('Split storage requires the Windows helper.');
@@ -590,6 +625,8 @@ async function quit(ownRequest = false) {
   }
   if (quitPending || shuttingDown) return;
   quitPending=true;await browserHandoff?.revoke('exit');
+  // Drives with changes that are not backed up yet get one bounded chance before the app closes.
+  if (autoBackup.pendingChanges().length) { try { await flushAutoBackup(); } catch { /* closing continues; the backup runs at the next start */ } }
   try {
     let active=await vaultSessions.operations();
     if (operation || registrySync.pending || await features.pending() || active.some(item=>['queued','running','cancelling'].includes(item.state))) {
@@ -714,6 +751,7 @@ else {
       nativeClient.on('status', (result, sessionId) => {
         if (result && typeof result.locked === 'boolean') {
           if (result.locked === false) splitStorage.noteActivity(sessionId);
+          noteDriveStatus(sessionId, result);
           if (vaultSessions.accept(sessionId, nativeState(result))) state = vaultSessions.selected.state;
           publish();
         }
@@ -728,6 +766,8 @@ else {
       catch { sessionSettingsError = 'Registry schedule settings could not be read safely. The original configuration was retained for recovery.'; publish(); }
       if (!process.argv.includes('--registry-sync')) void runRegistryDue().catch(() => {});
       registryTimer = setInterval(() => { void runRegistryDue().catch(() => {}); }, 30000); registryTimer.unref();
+      void autoBackupSettings.get().catch(() => {});
+      const autoBackupTimer = setInterval(() => { void runAutoBackupDue().catch(() => {}); }, 10000); autoBackupTimer.unref();
       if (process.argv.includes('--registry-sync')) {
         try { await runRegistryDue(); } finally { if (!registrySync.pending && vaultSessions.safelyLocked) await quit(); }
       }
