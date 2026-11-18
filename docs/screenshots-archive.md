@@ -6,6 +6,59 @@ Current captures and their receipts are in the [README](../README.md#current-cap
 
 ## Original captions and provenance
 
+### Version 2 build 5d8d4d94, 2026-11-17 (replaced in the README on 2026-11-18)
+
+Every image below is a genuine capture of the packaged app built from source `5d8d4d94` (version 0.2.0), taken in a fresh isolated profile with a hidden window and left unedited. The [capture manifest](images/captures/redesign-v2-5d8d4d94/manifest.json) records each image's hash, size, viewport and theme, and lists what was not captured and why. The design decisions behind this frame are in [the version 2 decisions](../design/redesign-2026-11/v2-decisions.md). Captures of earlier builds are in the [screenshot archive](screenshots-archive.md).
+
+<details>
+<summary>Unlocked drive, Unlocked drive, Home as a status dashboard (3)</summary>
+
+| Unlocked drive with the files table | Unlocked drive with a file selected | Home as a status dashboard with the drives table |
+|---|---|---|
+| ![Unlocked drive with the files table, a file selected and the details pane with its encrypted parts and versions](images/captures/redesign-v2-5d8d4d94/workspace-file-selected-light.png) | ![Unlocked drive with a file selected, dark theme](images/captures/redesign-v2-5d8d4d94/workspace-file-selected-dark.png) | ![Home as a status dashboard with the drives table, recent activity, needs attention, status and quick start](images/captures/redesign-v2-5d8d4d94/home-light.png) |
+
+</details>
+
+<details>
+<summary>Home status dashboard, Locked drive in the drive list, Inline unlock bar after a wrong password (3)</summary>
+
+| Home status dashboard | Locked drive in the drive list with the inline unlock bar under its row: password | Inline unlock bar after a wrong password |
+|---|---|---|
+| ![Home status dashboard, dark theme](images/captures/redesign-v2-5d8d4d94/home-dark.png) | ![Locked drive in the drive list with the inline unlock bar under its row: password, Show, key file, unlock automatically and Unlock](images/captures/redesign-v2-5d8d4d94/locked-unlock-bar-light.png) | ![Inline unlock bar after a wrong password, with the error under the field and the drive still locked](images/captures/redesign-v2-5d8d4d94/locked-wrong-password-light.png) |
+
+</details>
+
+<details>
+<summary>New menu offering New drive on this PC, Local tools as a dense list grouped by category, Settings (3)</summary>
+
+| New menu offering New drive on this PC | Local tools as a dense list grouped by category with a details pane offering Open and Open in new tab | Settings with the category list and help mode on: the help text of each control shown under it |
+|---|---|---|
+| ![New menu offering New drive on this PC, New Docker Hub drive, Open drive from Docker Hub and Unlock existing drive](images/captures/redesign-v2-5d8d4d94/drive-new-menu-light.png) | ![Local tools as a dense list grouped by category with a details pane offering Open and Open in new tab](images/captures/redesign-v2-5d8d4d94/local-tools-light.png) | ![Settings with the category list and help mode on: the help text of each control shown under it, with no information icons](images/captures/redesign-v2-5d8d4d94/settings-help-mode-light.png) |
+
+</details>
+
+<details>
+<summary>Settings Backup category, Help shown as a tooltip when keyboard focus reaches the New button, History page in the new frame (3)</summary>
+
+| Settings Backup category with options that need backend work shown disabled and marked Coming in a later update | Help shown as a tooltip when keyboard focus reaches the New button | History page in the new frame |
+|---|---|---|
+| ![Settings Backup category with options that need backend work shown disabled and marked Coming in a later update](images/captures/redesign-v2-5d8d4d94/settings-backup-light.png) | ![Help shown as a tooltip when keyboard focus reaches the New button](images/captures/redesign-v2-5d8d4d94/tooltip-focus-light.png) | ![History page in the new frame](images/captures/redesign-v2-5d8d4d94/history-light.png) |
+
+</details>
+
+<details>
+<summary>Unlocked drive at 360 pixels wide, Settings at 360 pixels wide, Navigation drawer at 360 pixels wide (3)</summary>
+
+| Unlocked drive at 360 pixels wide | Settings at 360 pixels wide with the categories wrapping above the rows | Navigation drawer at 360 pixels wide with every tree destination |
+|---|---|---|
+| ![Unlocked drive at 360 pixels wide](images/captures/redesign-v2-5d8d4d94/workspace-light-360.png) | ![Settings at 360 pixels wide with the categories wrapping above the rows](images/captures/redesign-v2-5d8d4d94/settings-light-360.png) | ![Navigation drawer at 360 pixels wide with every tree destination](images/captures/redesign-v2-5d8d4d94/navigation-drawer-light-360.png) |
+
+</details>
+
+
+Earlier builds' captures, with their original dates and provenance, are in the [screenshot archive](screenshots-archive.md).
+
+
 ### Redesign build dc166dc9, 2026-11-16 (replaced in the README on 2026-11-17)
 
 Every image below is a genuine capture of the packaged app built from source `dc166dc9` (version 0.2.0). Each was taken in its own isolated profile with neutral test files, inspected by eye, and left unedited. The [capture manifest](images/captures/redesign-dc166dc9/manifest.json) records every image's hash, size, viewport, theme, language and capture method, and lists what could not be captured. Captures of earlier builds are kept in the [screenshot archive](screenshots-archive.md).

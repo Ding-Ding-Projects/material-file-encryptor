@@ -12,9 +12,9 @@
 
 **Desktop icon resources:** [installed icon packaging](docs/features/desktop/installed-icons.md) documents the folder-and-lock mark, executable and shortcut resources, installer branding, and the distinction between source checks and installed verification.
 
-![Unlocked drive with the files table, a file selected and the details pane with its encrypted parts and versions](docs/images/captures/redesign-v2-5d8d4d94/workspace-file-selected-light.png)
+![Unlocked drive with a file selected: details pane with its encrypted part and versions](docs/images/captures/v2-full-b6949943/workspace-file-selected-light-en-1440.png)
 
-Home in the current build, source `5d8d4d94`. More captures, with a receipt for each, are in [Current captures](#current-captures); earlier captures are in the [screenshot archive](docs/screenshots-archive.md).
+The current build, source `b6949943`. More captures, with a receipt for each, are in [Current captures](#current-captures); earlier captures are in the [screenshot archive](docs/screenshots-archive.md).
 
 **Ordinary installed 1.823.1 verification:** Version 1.823.1 is verified in the ordinary user installation from release source `14d6e07636a1f1d62e6dd345273a0c6866664562`. All 910 payload files matched; four opened-file handles resolved to ordinary installation paths. Independent queries through the existing Explorer desktop confirmed the installation folder and Desktop/Start menu shortcut targets. The installer operation returned 0. Its original continuous observer failed, so operation exit and recorded-process absence were recovered separately and remain separate verdicts. The detailed original receipts remain preserved privately. The installed English/light initial setup screen and five native window icon handles were observed with an isolated verification profile. Both ordinary-shell shortcut icon images were separately inspected and show the green folder-lock mark with the shortcut arrow; this is extracted shell-icon evidence, not a rendered Explorer/taskbar/tray screenshot. The runtime observer failed its Python-wrapper identity handshake; separate recovery found every recorded identity absent and the hidden desktop unavailable, while replacement processes were left untouched. Console observation covers only the capture interval, not startup history. Rendered taskbar/tray icons, full workflows and a disposable fresh-machine installation remain unverified. Independent recovery is now recorded separately. Canonical capture promotion remains pending because release source 14d6e07636a1f1d62e6dd345273a0c6866664562 differs from verifier checkout edf13cba77968c81a3c7eca392fdc1f740126868. The genuine capture remains private and unpromoted; no tool-context image is presented as ordinary-installed proof.
 
@@ -186,55 +186,174 @@ Material Design 3 applies to the desktop, documentation website, extension and n
 
 ### Current captures
 
-Every image below is a genuine capture of the packaged app built from source `5d8d4d94` (version 0.2.0), taken in a fresh isolated profile with a hidden window and left unedited. The [capture manifest](docs/images/captures/redesign-v2-5d8d4d94/manifest.json) records each image's hash, size, viewport and theme, and lists what was not captured and why. The design decisions behind this frame are in [the version 2 decisions](design/redesign-2026-11/v2-decisions.md). Captures of earlier builds are in the [screenshot archive](docs/screenshots-archive.md).
+Every image below is a genuine capture of the packaged app (version 0.2.0), taken on 2026-11-18 in a fresh isolated profile with a hidden window, inspected by eye and left unedited apart from masks. Most frames come from source `b6949943`; the signed-out sign-in, sharing, receiving, command palette and wording celebration frames come from source `fbee1bc9`, which adds only the sign-in wording fix. Grey boxes cover the signed-in Docker Hub account name, repository names that contain it, share commands and profile folder paths. The [capture manifest](docs/images/captures/v2-full-b6949943/manifest.json) records each image's source, hash, size, viewport, theme, language and masks, and lists what was not captured and why. Captures of earlier builds are in the [screenshot archive](docs/screenshots-archive.md).
 
 <details>
-<summary>Unlocked drive, Unlocked drive, Home as a status dashboard (3)</summary>
+<summary>Home and finding your way (8)</summary>
 
-| Unlocked drive with the files table | Unlocked drive with a file selected | Home as a status dashboard with the drives table |
+Home is a status dashboard. The New menu starts every kind of drive, help mode puts each control's help under it, and the same help shows as a tooltip on hover or keyboard focus.
+
+| Home as a status dashboard | Home | Home in Cantonese |
 |---|---|---|
-| ![Unlocked drive with the files table, a file selected and the details pane with its encrypted parts and versions](docs/images/captures/redesign-v2-5d8d4d94/workspace-file-selected-light.png) | ![Unlocked drive with a file selected, dark theme](docs/images/captures/redesign-v2-5d8d4d94/workspace-file-selected-dark.png) | ![Home as a status dashboard with the drives table, recent activity, needs attention, status and quick start](docs/images/captures/redesign-v2-5d8d4d94/home-light.png) |
+| ![Home as a status dashboard: drives table, recent activity, needs attention, status and quick start](docs/images/captures/v2-full-b6949943/home-light-en-1440.png) | ![Home, dark theme](docs/images/captures/v2-full-b6949943/home-dark-en-1440.png) | ![Home in Cantonese](docs/images/captures/v2-full-b6949943/home-light-yue-1440.png) |
+
+| Home in English and Cantonese together | New menu | Help shown as a tooltip when the pointer rests on Lock drive |
+|---|---|---|
+| ![Home in English and Cantonese together](docs/images/captures/v2-full-b6949943/home-light-bilingual-1440.png) | ![New menu: New drive on this PC, New Docker Hub drive, Open drive from Docker Hub and Unlock existing drive](docs/images/captures/v2-full-b6949943/drive-new-menu-light-en-1440.png) | ![Help shown as a tooltip when the pointer rests on Lock drive](docs/images/captures/v2-full-b6949943/tooltip-hover-light-en-1440.png) |
+
+| Settings with help mode on | Command palette searching for Receive a shared file |
+|---|---|
+| ![Settings with help mode on: each control's help shown under it](docs/images/captures/v2-full-b6949943/settings-help-mode-light-en-1440.png) | ![Command palette searching for Receive a shared file](docs/images/captures/v2-full-b6949943/command-palette-light-en-1440.png) |
 
 </details>
 
 <details>
-<summary>Home status dashboard, Locked drive in the drive list, Inline unlock bar after a wrong password (3)</summary>
+<summary>Creating and unlocking drives (4)</summary>
 
-| Home status dashboard | Locked drive in the drive list with the inline unlock bar under its row: password | Inline unlock bar after a wrong password |
+A drive on this PC is created from the New menu. A locked drive unlocks inline under its row, and a wrong password says so under the field.
+
+| Create a drive dialog with drive letter | Locked drive with the inline unlock bar under its row | Inline unlock bar |
 |---|---|---|
-| ![Home status dashboard, dark theme](docs/images/captures/redesign-v2-5d8d4d94/home-dark.png) | ![Locked drive in the drive list with the inline unlock bar under its row: password, Show, key file, unlock automatically and Unlock](docs/images/captures/redesign-v2-5d8d4d94/locked-unlock-bar-light.png) | ![Inline unlock bar after a wrong password, with the error under the field and the drive still locked](docs/images/captures/redesign-v2-5d8d4d94/locked-wrong-password-light.png) |
+| ![Create a drive dialog with drive letter, name and password](docs/images/captures/v2-full-b6949943/create-dialog-light-en-1440.png) | ![Locked drive with the inline unlock bar under its row](docs/images/captures/v2-full-b6949943/locked-unlock-bar-light-en-1440.png) | ![Inline unlock bar, dark theme](docs/images/captures/v2-full-b6949943/locked-unlock-bar-dark-en-1440.png) |
+
+| Inline unlock bar after a wrong password |
+|---|
+| ![Inline unlock bar after a wrong password, with the error under the field](docs/images/captures/v2-full-b6949943/locked-wrong-password-light-en-1440.png) |
 
 </details>
 
 <details>
-<summary>New menu offering New drive on this PC, Local tools as a dense list grouped by category, Settings (3)</summary>
+<summary>Working with files (10)</summary>
 
-| New menu offering New drive on this PC | Local tools as a dense list grouped by category with a details pane offering Open and Open in new tab | Settings with the category list and help mode on: the help text of each control shown under it |
+The unlocked workspace: folder tree, command bar, file table and a details pane with the encrypted part bar and versions. Right-click or Shift+F10 opens the context menu with Customize.
+
+| Unlocked drive with a file selected | Unlocked drive with a file selected | Unlocked drive with a file selected |
 |---|---|---|
-| ![New menu offering New drive on this PC, New Docker Hub drive, Open drive from Docker Hub and Unlock existing drive](docs/images/captures/redesign-v2-5d8d4d94/drive-new-menu-light.png) | ![Local tools as a dense list grouped by category with a details pane offering Open and Open in new tab](docs/images/captures/redesign-v2-5d8d4d94/local-tools-light.png) | ![Settings with the category list and help mode on: the help text of each control shown under it, with no information icons](docs/images/captures/redesign-v2-5d8d4d94/settings-help-mode-light.png) |
+| ![Unlocked drive with a file selected: details pane with its encrypted part and versions](docs/images/captures/v2-full-b6949943/workspace-file-selected-light-en-1440.png) | ![Unlocked drive with a file selected, dark theme](docs/images/captures/v2-full-b6949943/workspace-file-selected-dark-en-1440.png) | ![Unlocked drive with a file selected, in Cantonese](docs/images/captures/v2-full-b6949943/workspace-file-selected-light-yue-1440.png) |
+
+| Unlocked drive with a file selected | Context menu opened with Shift+F10 | Context menu with Customize expanded |
+|---|---|---|
+| ![Unlocked drive with a file selected, in English and Cantonese](docs/images/captures/v2-full-b6949943/workspace-file-selected-light-bilingual-1440.png) | ![Context menu opened with Shift+F10, with its filter box and Customize](docs/images/captures/v2-full-b6949943/context-menu-light-en-1440.png) | ![Context menu with Customize expanded: Edit appearance and Lock this element](docs/images/captures/v2-full-b6949943/context-menu-customize-light-en-1440.png) |
+
+| Available offline | History | History |
+|---|---|---|
+| ![Available offline: the file kept on this PC](docs/images/captures/v2-full-b6949943/offline-light-en-1440.png) | ![History: saved versions with Restore as new version](docs/images/captures/v2-full-b6949943/history-light-en-1440.png) | ![History, dark theme](docs/images/captures/v2-full-b6949943/history-dark-en-1440.png) |
+
+| Recycle Bin with a deleted file |
+|---|
+| ![Recycle Bin with a deleted file](docs/images/captures/v2-full-b6949943/recycle-light-en-1440.png) |
 
 </details>
 
 <details>
-<summary>Settings Backup category, Help shown as a tooltip when keyboard focus reaches the New button, History page in the new frame (3)</summary>
+<summary>Docker Hub backup (11)</summary>
 
-| Settings Backup category with options that need backend work shown disabled and marked Coming in a later update | Help shown as a tooltip when keyboard focus reaches the New button | History page in the new frame |
+One table for every drive: where it backs up, the last backup, snapshots and state. The status bar shows the same state. The one-time notice explains what a public repository shows; the older destination and restore tools are folded under Advanced.
+
+| Docker Hub backup with the one-time public repository notice | Docker Hub backup notice | Docker Hub backup notice in Cantonese |
 |---|---|---|
-| ![Settings Backup category with options that need backend work shown disabled and marked Coming in a later update](docs/images/captures/redesign-v2-5d8d4d94/settings-backup-light.png) | ![Help shown as a tooltip when keyboard focus reaches the New button](docs/images/captures/redesign-v2-5d8d4d94/tooltip-focus-light.png) | ![History page in the new frame](docs/images/captures/redesign-v2-5d8d4d94/history-light.png) |
+| ![Docker Hub backup with the one-time public repository notice](docs/images/captures/v2-full-b6949943/backup-notice-light-en-1440.png) | ![Docker Hub backup notice, dark theme](docs/images/captures/v2-full-b6949943/backup-notice-dark-en-1440.png) | ![Docker Hub backup notice in Cantonese](docs/images/captures/v2-full-b6949943/backup-notice-light-yue-1440.png) |
+
+| Docker Hub backup notice in English and Cantonese | Backed up just now | Backing up |
+|---|---|---|
+| ![Docker Hub backup notice in English and Cantonese](docs/images/captures/v2-full-b6949943/backup-notice-light-bilingual-1440.png) | ![Backed up just now, with the repository row and its tag count](docs/images/captures/v2-full-b6949943/hub-backup-backed-up-light-en-1440.png) | ![Backing up: the drive row and the status bar both say Backing up](docs/images/captures/v2-full-b6949943/hub-backup-backing-up-light-en-1440.png) |
+
+| Backed up | Needs attention | Status bar on the drive page |
+|---|---|---|
+| ![Backed up, dark theme](docs/images/captures/v2-full-b6949943/hub-backup-backed-up-dark-en-1440.png) | ![Needs attention, in the summary, the drive row and the status bar](docs/images/captures/v2-full-b6949943/hub-backup-needs-attention-light-en-1440.png) | ![Status bar on the drive page: Backed up just now](docs/images/captures/v2-full-b6949943/workspace-status-backed-up-light-en-1440.png) |
+
+| Advanced section opened | Settings |
+|---|---|
+| ![Advanced section opened: sign-in, one-off backup to separate repositories and destinations](docs/images/captures/v2-full-b6949943/backup-advanced-open-light-en-1440.png) | ![Settings, Backup: automatic backup, timing, repository layout and snapshots kept](docs/images/captures/v2-full-b6949943/settings-backup-light-en-1440.png) |
 
 </details>
 
 <details>
-<summary>Unlocked drive at 360 pixels wide, Settings at 360 pixels wide, Navigation drawer at 360 pixels wide (3)</summary>
+<summary>Docker Hub drives (8)</summary>
 
-| Unlocked drive at 360 pixels wide | Settings at 360 pixels wide with the categories wrapping above the rows | Navigation drawer at 360 pixels wide with every tree destination |
+A drive that lives on Docker Hub needs no folder. Signed out, the dialog starts with sign-in; signed in, it goes straight to the details, with Change to pick or create a repository. Open drive from Docker Hub finds drives in a repository, lists their snapshots, restores one and unlocks it.
+
+| New Docker Hub drive | Repository chooser with the New repository row filled in | Details |
 |---|---|---|
-| ![Unlocked drive at 360 pixels wide](docs/images/captures/redesign-v2-5d8d4d94/workspace-light-360.png) | ![Settings at 360 pixels wide with the categories wrapping above the rows](docs/images/captures/redesign-v2-5d8d4d94/settings-light-360.png) | ![Navigation drawer at 360 pixels wide with every tree destination](docs/images/captures/redesign-v2-5d8d4d94/navigation-drawer-light-360.png) |
+| ![New Docker Hub drive, signed out: the sign-in step](docs/images/captures/v2-full-b6949943/hub-create-sign-in-light-en-1440.png) | ![Repository chooser with the New repository row filled in](docs/images/captures/v2-full-b6949943/hub-create-new-repository-light-en-1440.png) | ![Details: drive name, drive letter and password](docs/images/captures/v2-full-b6949943/hub-create-details-light-en-1440.png) |
+
+| Drive created | Home with the new Docker Hub drive mounted | Open drive from Docker Hub |
+|---|---|---|
+| ![Drive created: every step done and the first encrypted sync finished](docs/images/captures/v2-full-b6949943/hub-create-done-light-en-1440.png) | ![Home with the new Docker Hub drive mounted](docs/images/captures/v2-full-b6949943/home-hub-drive-light-en-1440.png) | ![Open drive from Docker Hub: the repository with its drive card](docs/images/captures/v2-full-b6949943/hub-open-drive-cards-light-en-1440.png) |
+
+| Snapshots of the drive | Restored and verified |
+|---|---|
+| ![Snapshots of the drive, newest first, with Restore](docs/images/captures/v2-full-b6949943/hub-open-snapshots-light-en-1440.png) | ![Restored and verified, ready to unlock](docs/images/captures/v2-full-b6949943/hub-open-unlock-light-en-1440.png) |
 
 </details>
 
+<details>
+<summary>Sharing (5)</summary>
 
-Earlier builds' captures, with their original dates and provenance, are in the [screenshot archive](docs/screenshots-archive.md).
+Share one file through Docker Hub: the share command opens it, and Shared files lists what this PC shared and can revoke it.
+
+| Share via Docker Hub | Shared | Shared files with Copy command |
+|---|---|---|
+| ![Share via Docker Hub: size limit, optional passphrase and the public repository note](docs/images/captures/v2-full-b6949943/share-options-light-en-1440.png) | ![Shared: the command, masked, with Copy command, Copy link and Copy command line](docs/images/captures/v2-full-b6949943/share-ready-light-en-1440.png) | ![Shared files with Copy command, Revoke and Revoke all](docs/images/captures/v2-full-b6949943/shared-files-light-en-1440.png) |
+
+| Receive a shared file with the pasted command | Ready to save |
+|---|---|
+| ![Receive a shared file with the pasted command, masked](docs/images/captures/v2-full-b6949943/share-receive-paste-light-en-1440.png) | ![Ready to save: the received file checked, with Save into the drive and Save as](docs/images/captures/v2-full-b6949943/share-receive-preview-light-en-1440.png) |
+
+</details>
+
+<details>
+<summary>Split storage, tools and settings (16)</summary>
+
+Split storage spreads encrypted parts across places and keeps mirrors. Local tools is a dense list. Settings has a category list with search.
+
+| Split storage and mirrors | Local tools grouped by category with a details pane | Local tools |
+|---|---|---|
+| ![Split storage and mirrors](docs/images/captures/v2-full-b6949943/split-storage-light-en-1440.png) | ![Local tools grouped by category with a details pane](docs/images/captures/v2-full-b6949943/local-tools-light-en-1440.png) | ![Local tools, dark theme](docs/images/captures/v2-full-b6949943/local-tools-dark-en-1440.png) |
+
+| Settings | Settings | Settings |
+|---|---|---|
+| ![Settings, Startup and unlocking](docs/images/captures/v2-full-b6949943/settings-section-0-light-en-1440.png) | ![Settings, Encrypted storage: part size](docs/images/captures/v2-full-b6949943/settings-storage-settings-light-en-1440.png) | ![Settings, Appearance and language](docs/images/captures/v2-full-b6949943/settings-section-2-light-en-1440.png) |
+
+| Settings | Settings | Settings |
+|---|---|---|
+| ![Settings, Appearance and language, dark theme](docs/images/captures/v2-full-b6949943/settings-section-2-dark-en-1440.png) | ![Settings, Appearance and language, in Cantonese](docs/images/captures/v2-full-b6949943/settings-section-2-light-yue-1440.png) | ![Settings, Appearance and language, in English and Cantonese](docs/images/captures/v2-full-b6949943/settings-section-2-light-bilingual-1440.png) |
+
+| Settings | Settings | Settings |
+|---|---|---|
+| ![Settings, Transfer responsiveness](docs/images/captures/v2-full-b6949943/settings-section-3-light-en-1440.png) | ![Settings, A little personality](docs/images/captures/v2-full-b6949943/settings-section-4-light-en-1440.png) | ![Settings, Sound effects](docs/images/captures/v2-full-b6949943/settings-sound-settings-light-en-1440.png) |
+
+| Settings | Settings | Personalization |
+|---|---|---|
+| ![Settings, Your vocabulary](docs/images/captures/v2-full-b6949943/settings-section-6-light-en-1440.png) | ![Settings, Updates](docs/images/captures/v2-full-b6949943/settings-updates-light-en-1440.png) | ![Personalization](docs/images/captures/v2-full-b6949943/personalization-light-en-1440.png) |
+
+| Updates page |
+|---|
+| ![Updates page](docs/images/captures/v2-full-b6949943/updates-light-en-1440.png) |
+
+</details>
+
+<details>
+<summary>Personal wording (2)</summary>
+
+Dropping a wording file on the window applies it and shows a short celebration. These frames use a synthetic file that renames Drives, History and Recycle Bin.
+
+| Personal wording applied | After the drop |
+|---|---|
+| ![Personal wording applied: the celebration headline over the window](docs/images/captures/v2-full-b6949943/wording-celebration-light-en-1440.png) | ![After the drop: Shelves, Timeline and Undo bin in the navigation](docs/images/captures/v2-full-b6949943/wording-applied-light-en-1440.png) |
+
+</details>
+
+<details>
+<summary>Narrow window (3)</summary>
+
+At 360 pixels wide the navigation moves into a drawer, the file table becomes cards and the Settings categories wrap above the rows.
+
+| Unlocked drive at 360 pixels wide | Navigation drawer at 360 pixels wide | Settings at 360 pixels wide |
+|---|---|---|
+| ![Unlocked drive at 360 pixels wide](docs/images/captures/v2-full-b6949943/workspace-light-en-360.png) | ![Navigation drawer at 360 pixels wide](docs/images/captures/v2-full-b6949943/drawer-light-en-360.png) | ![Settings at 360 pixels wide](docs/images/captures/v2-full-b6949943/settings-light-en-360.png) |
+
+</details>
 
 ## Build, package and verify
 

@@ -1,6 +1,6 @@
 import { SurfaceElement, element, localized, register } from '../../../shared/surface/registry.js';
 import { RegistryLoginPanel } from '../storage-maintenance/registry-login-panel.js';
-import { REGISTRY_LOGIN_COPY } from '../storage-maintenance/registry-login-copy.js';
+import { registryLoginText } from '../storage-maintenance/registry-login-text.js';
 import { createInfoIconController } from '../../../shared/surface/info-icon-controller.js';
 import { SHARE_INFO_ICON_INVENTORY } from '../../../shared/local-ux/info-icon-share.js';
 import { SHARE_COPY } from './copy.js';
@@ -37,7 +37,6 @@ label.switch{display:flex;align-items:center;gap:12px;min-height:48px}
 :host-context([data-motion=reduced]) *,:host-context([data-low-stimulation=true]) *{animation:none!important;transition:none!important}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}`;
 
-const LOGIN_TEXT = (key, language) => { const pair = REGISTRY_LOGIN_COPY[key]; return pair ? localized({ en: pair[0], yue: pair[1] }, language) : key; };
 
 /**
  * One dialog with three modes: share a selected file through Docker Hub, receive a shared file, and the list of
@@ -53,7 +52,7 @@ export class ShareDialog extends SurfaceElement {
     this.dialog = element('dialog', { 'aria-labelledby': 'share-title' });
     this.dialog.addEventListener('close', () => this.closed());
     this.shadowRoot.append(this.dialog);
-    this.loginPanel = new RegistryLoginPanel({ translate: key => LOGIN_TEXT(key, this.language === 'zh-HK' ? 'yue' : this.language), onSignedIn: () => this.render() });
+    this.loginPanel = new RegistryLoginPanel({ translate: key => registryLoginText(key, this.language), onSignedIn: () => this.render() });
     this.loginPanel.onSignedInChange?.(() => this.render());
     this.infoIcons = infoIconFactory(this.shadowRoot, { inventory: SHARE_INFO_ICON_INVENTORY, getLanguage: () => this.language, observe: true });
   }
