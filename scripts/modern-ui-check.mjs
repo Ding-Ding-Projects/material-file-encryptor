@@ -21,6 +21,11 @@ function plan(launch,receipt,steps,purpose='runtime') {
 }
 const poll = (id,expression) => ({id,op:'poll',expression,equals:true,intervalMs:100});
 const click = (id,selector) => ({id,op:'click',selector});
+// The create dialog opens from the drive list's New menu. The menu lives in a shadow root the plain click step cannot
+// reach, so its New drive on this PC item is activated by a polled expression that reports true once it has clicked.
+const NEW_ON_THIS_PC="(()=>{const menu=document.querySelector('mfe-context-menu');const item=[...(menu?.shadowRoot?.querySelectorAll('md-menu-item')||[])].find(node=>/New drive on this PC|喺呢部電腦新增磁碟/.test(node.getAttribute('aria-label')||''));if(!item||item.disabled)return false;item.click();return true;})()";
+const NEW_READY="!document.querySelector('#locked-state').hidden && !document.querySelector('#drive-new-menu').disabled";
+const openNewDrive = (steps,id) => steps.push(click(id,'#drive-new-menu'),poll(id+'-new-on-pc',NEW_ON_THIS_PC));
 const type = (id,selector,text) => ({id,op:'type',selector,text,clear:true});
 function selectView(steps,view,id) {
  steps.push(click(id,`[data-view="${view}"]`),poll(id+'-visible',`!document.querySelector('#view-${view==='offline'?'drive':view}').hidden && document.querySelector('[data-view="${view}"]').getAttribute('aria-current') === 'page'`));
@@ -60,9 +65,9 @@ export function makeWorkspacePlan({launch,receipt,tuple}) {
 
 // Caller must first lock its test-owned drive through the ordinary UI and verify it.
 export function makeDialogPlan({launch,receipt,tuple}) {
- const id=tupleId(tuple)+'-dialog',steps=[poll(id+'-locked',"!document.querySelector('#locked-state').hidden && !document.querySelector('#create-button').disabled")];
+ const id=tupleId(tuple)+'-dialog',steps=[poll(id+'-locked',NEW_READY)];
  prepareTuple(steps,tuple,id);selectView(steps,'drive',id+'-drive');
- steps.push(click(id+'-open','#create-button'),poll(id+'-opened',"document.querySelector('#vault-dialog').open"));
+ openNewDrive(steps,id+'-open');steps.push(poll(id+'-opened',"document.querySelector('#vault-dialog').open"));
  captureAndMeasure(steps,launch,id+'-password','#vault-dialog');
  steps.push(click(id+'-key-mode','.credential-selector label:has(input[value="keyFile"])'),poll(id+'-key-ready',"!document.querySelector('#key-fields').hidden"));
  captureAndMeasure(steps,launch,id+'-keyFile','#vault-dialog');
@@ -91,7 +96,7 @@ export function makeClearPlan({launch,receipt,phase,tuple}) {
   selectView(steps,'recycle','clear-recycle');clearSteps(steps,launch,'#recycle-search-host input[type="search"]','Runtime','clear-recycle-search','#recycle-search-host > .clearable-field');
  } else {
   assert.equal(phase,'dialog');selectView(steps,'drive','clear-dialog-drive');
-  steps.push(poll('clear-dialog-ready',"!document.querySelector('#locked-state').hidden && !document.querySelector('#create-button').disabled"),click('clear-dialog-open','#create-button'),poll('clear-dialog-opened',"document.querySelector('#vault-dialog').open && document.querySelector('#password-input').type==='password'"));
+  steps.push(poll('clear-dialog-ready',NEW_READY));openNewDrive(steps,'clear-dialog-open');steps.push(poll('clear-dialog-opened',"document.querySelector('#vault-dialog').open && document.querySelector('#password-input').type==='password'"));
   for(const [selector,sample,id] of [['#storage-input','Example storage','storage'],['#cache-input','Example cache','cache'],['#drive-letter','M:','letter'],['#password-input','Synthetic example only','password'],['#confirm-password','Synthetic example only','confirm'],['#create-split-value','10','creation-size']])clearSteps(steps,launch,selector,sample,'clear-'+id);
   steps.push(click('clear-key-mode','.credential-selector label:has(input[value="keyFile"])'));clearSteps(steps,launch,'#key-path','Example.key','clear-key-path');
   steps.push(type('clear-private-mode','#transport-mode','privateGit'));clearSteps(steps,launch,'#remote-repository','example/verification','clear-repository');

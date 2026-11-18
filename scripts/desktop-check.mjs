@@ -12,6 +12,12 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
 import { randomBytes } from 'node:crypto';
+
+/** Opens the create dialog the way people do: the drive list's New menu, then New drive on this PC. */
+async function openNewDriveOnThisPc(page) {
+  await page.click('#drive-new-menu');
+  await page.locator('mfe-context-menu md-menu-item').filter({ hasText: /New drive on this PC|喺呢部電腦新增磁碟/ }).first().click();
+}
 const evidenceDirectory = path.resolve(process.env.MFE_DESKTOP_EVIDENCE_DIR || 'out/evidence');
 const evidencePath = name => path.join(evidenceDirectory, name);
 await fs.mkdir(evidenceDirectory, { recursive: true });
@@ -53,7 +59,7 @@ try {
     await page.screenshot({ path: evidencePath(name), fullPage: false });
   };
   page.on('pageerror', error => errors.push(errorType(error)));
-  await page.waitForSelector('#create-button');
+  await page.waitForSelector('#drive-new-menu');
   assert.equal(await evaluatePage(() => typeof window.require), 'undefined');
   assert.equal(await evaluatePage(() => typeof window.drive.status), 'function');
   const security = await evaluateApplication(({ BrowserWindow }) => { const preferences = BrowserWindow.getAllWindows()[0].webContents.getLastWebPreferences(); return { sandbox: preferences.sandbox, contextIsolation: preferences.contextIsolation, nodeIntegration: preferences.nodeIntegration }; });
@@ -87,7 +93,7 @@ try {
   await checkpoint('locked-and-settings-captures');
   await settle();
   await capture('desktop-locked.png');
-  await page.click('#create-button');
+  await openNewDriveOnThisPc(page);
   await page.waitForSelector('#vault-dialog[open]');
   await page.fill('#storage-input', '');
   await page.fill('#cache-input', ''); // Clear previous fixture/default paths through the actual form before capture.
@@ -117,7 +123,7 @@ try {
     await fs.mkdir(storageDir); await fs.mkdir(cacheDir);
     const driveLetter = status.availableDriveLetters.includes('M:') ? 'M:' : status.availableDriveLetters[0];
     assert.ok(driveLetter, 'A free drive letter is required.');
-    await page.click('[data-view="drive"]'); await page.click('#create-button');
+    await page.click('[data-view="drive"]'); await openNewDriveOnThisPc(page);
     await page.fill('#storage-input', storageDir); await page.fill('#cache-input', cacheDir); await page.click('#drive-letter-toggle'); await page.getByRole('option', { name: driveLetter, exact: true }).click();
     const password = randomBytes(24).toString('base64url');
     await page.fill('#password-input', password); await page.fill('#confirm-password', password); await page.click('#dialog-submit');
