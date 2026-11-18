@@ -36,3 +36,13 @@ test('every status bar state has Cantonese wording and the old sync wording no l
   assert.match(chrome, /set\('status-sync', backup \? backupLine\(backup\) :/);
   assert.match(readFileSync(new URL('../src/renderer/app.js', import.meta.url), 'utf8'), /autoBackupStatus:api\?\.autoBackupStatus\?\(\)=>api\.autoBackupStatus\(\):null/);
 });
+
+test('Back up all now backs up through automatic backup and the one-off tools only open before it is ready', () => {
+  const page = readFileSync(new URL('../src/renderer/features/storage-maintenance/hub-overview.js', import.meta.url), 'utf8');
+  assert.match(page, /backupAll\.addEventListener\('click', \(\) => void backUpAll\(\)\)/);
+  const body = page.slice(page.indexOf('async function backUpAll()'), page.indexOf('function render()'));
+  assert.match(body, /services\.autoBackupNow\(drive\.sessionId\)/);
+  assert.match(body, /noticeRequired[^\n]*onBackupAll\(\)/);
+  const copy = readFileSync(new URL('../src/renderer/features/storage-maintenance/backup-all-copy.js', import.meta.url), 'utf8');
+  assert.doesNotMatch(copy, /Each drive becomes its own repository, and an hourly sync/);
+});
