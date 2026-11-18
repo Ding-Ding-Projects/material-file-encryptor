@@ -8,7 +8,7 @@ export const HUB_OVERVIEW_COPY = Object.freeze({
   'Backup settings': '備份設定', 'Drive': '磁碟', 'Last backup': '上次備份', 'Status': '狀態', 'Backup': '備份',
   'Not backed up': '未備份', 'Never': '從未', 'Backup on': '備份已開啟', 'Backup off': '備份已關閉', 'Locked': '已鎖定',
   'No encrypted storage': '冇加密儲存', 'Not a folder drive': '唔係資料夾磁碟', 'Backed up': '已備份', 'Waiting for the first backup': '等緊第一次備份',
-  'Public': '公開', 'Private': '私人', '{count} drives': '{count} 個磁碟', 'Back up now': '立即備份', 'Open this drive': '開啟呢個磁碟',
+  'Public': '公開', 'Private': '私人', '{count} drives': '{count} 個磁碟', '1 drive': '1 個磁碟', 'Back up now': '立即備份', 'Open this drive': '開啟呢個磁碟',
   'Show storage details': '顯示儲存詳情', 'Drive actions': '磁碟操作',
   'The drive list could not be read. The details below still work.': '讀唔到磁碟清單，下面嘅詳情仍然可以用。',
   'Loading the drive list…': '載入緊磁碟清單…', 'Retention, pruning and the tag count arrive in a later update.': '保留規則、清理同標籤數量會喺之後嘅更新推出。'
@@ -65,7 +65,7 @@ export function mountHubOverview(host, {services = {}, getLanguage = () => 'en',
       for (const drive of plan.drives) { const key = drive.configured?.repository || ''; if (!groups.has(key)) groups.set(key, []); groups.get(key).push(drive); }
       for (const [repository, drives] of [...groups].sort((a, b) => (a[0] === '') - (b[0] === '') || a[0].localeCompare(b[0]))) {
         const visibility = drives[0].configured?.visibility;
-        body.append(el('tr', {class: 'group-row'}, [el('th', {scope: 'colgroup', colspan: '5'}, [el('span', {class: repository ? 'repository' : '', text: repository || L('Not backed up')}), ...(repository ? [el('span', {class: 'chip', text: L(visibility === 'private' ? 'Private' : 'Public')})] : []), el('span', {class: 'muted', text: L('{count} drives').replace('{count}', String(drives.length))})])]));
+        body.append(el('tr', {class: 'group-row'}, [el('th', {scope: 'colgroup', colspan: '5'}, [el('span', {class: repository ? 'repository' : '', text: repository || L('Not backed up')}), ...(repository ? [el('span', {class: 'chip', text: L(visibility === 'private' ? 'Private' : 'Public')})] : []), el('span', {class: 'muted', text: drives.length === 1 ? L('1 drive') : L('{count} drives').replace('{count}', String(drives.length))})])]));
         for (const drive of drives) body.append(driveRow(drive));
       }
     }

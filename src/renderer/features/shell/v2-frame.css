@@ -74,7 +74,9 @@ mfe-titlebar .window-brand .brand-name{position:absolute;width:1px;height:1px;ov
 .titlebar-tools{display:flex;align-items:center;gap:4px;flex:none;margin-inline-start:auto;-webkit-app-region:no-drag}
 .titlebar-tools mfe-top-bar{border:0;min-height:0;padding:0}
 .help-mode-toggle{width:32px;height:32px;--md-icon-button-icon-size:18px;--md-icon-button-selected-icon-color:var(--v2-on-accent)}
-.help-mode-toggle[aria-pressed=true]{background:var(--v2-accent);color:var(--v2-on-accent);border-radius:4px}
+.help-mode-toggle[aria-pressed=true]{background-color:var(--v2-accent)!important;color:var(--v2-on-accent);border-radius:4px;--md-icon-button-icon-color:var(--v2-on-accent);--md-icon-button-hover-icon-color:var(--v2-on-accent);--md-icon-button-focus-icon-color:var(--v2-on-accent);--md-icon-button-pressed-icon-color:var(--v2-on-accent)}
+/* The navigation tree explains itself through its tooltip; its inline help would sit on top of the tree. */
+:root[data-help-mode=on] .sidebar>mfe-control-guidance[data-presentation=hint]:not([data-open=true]){display:none}
 .help-mode-toggle .icon{width:18px;height:18px}
 .window-controls{flex:none;align-self:stretch;display:flex}
 .window-controls md-icon-button{height:var(--v2-bar);width:46px}

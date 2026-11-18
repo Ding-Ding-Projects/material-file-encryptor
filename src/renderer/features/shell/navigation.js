@@ -60,7 +60,9 @@ export class TopBar extends SurfaceElement {
     const drawer=element('md-icon-button',{class:'icon drawer','aria-label':this.t('Open navigation','開啟導覽'),title:this.t('Open navigation','開啟導覽'),onclick:this.onDrawer},[glyphIcon('menu')]);
     this.input=element('md-outlined-text-field',{class:'field',type:'text',placeholder:this.t('Search all drives','搜尋所有磁碟'),'aria-label':this.t('Search all drives and commands','搜尋所有磁碟及指令')});this.input.setAttribute('data-no-clear','');this.input.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();this.submit();}});
     this.regex=element('md-text-button',{class:'regex','aria-pressed':'false','aria-label':this.t('Use a regular expression','使用正則表達式'),title:this.t('Use a regular expression','使用正則表達式'),text:'.*',onclick:()=>{const on=this.regex.getAttribute('aria-pressed')!=='true';this.regex.setAttribute('aria-pressed',String(on));}});
-    const search=element('div',{class:'search',title:this.t('Search · Ctrl+Shift+F','搜尋 · Ctrl+Shift+F'),onclick:event=>{if(event.target===search&&getComputedStyle(this.input).display==='none')this.submit();}},[glyphIcon('search'),this.input,element('span',{class:'hint',text:'Ctrl+Shift+F'}),this.regex]);
+    const search=element('div',{class:'search',title:this.t('Search · Ctrl+Shift+F','搜尋 · Ctrl+Shift+F'),onclick:event=>{if(event.target===search&&getComputedStyle(this.input).display==='none')this.submit();}},[glyphIcon('search'),this.input,element('span',{class:'hint',text:'Ctrl+Shift+F'})]);
+    // The .* toggle lives inside the field, as its trailing control.
+    this.regex.slot='trailing-icon';this.input.append(this.regex);
     const bell=element('md-icon-button',{class:'icon','aria-label':this.t('Notifications','通知'),title:this.t('Notifications','通知'),onclick:this.onNotifications},[glyphIcon('notifications')]);
     this.shadowRoot.append(drawer,this.titleNode,search,element('slot'),bell);
   }
