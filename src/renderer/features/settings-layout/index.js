@@ -35,10 +35,10 @@ export function mountSettingsLayout(view, {getLanguage = () => 'en', openView = 
   let active = sections[0]?.dataset.settingsCategory || 'backup', searching = false, status = null;
   const categories = () => [
     ...sections.map(section => ({id: section.dataset.settingsCategory, label: section.querySelector('h2')?.textContent?.trim() || section.id})),
-    {id: 'backup', label: L('Backup')}, {id: 'updates', label: L('Updates')},
-    {id: 'link:personalization', label: L('Personalization'), view: 'personalization'},
-    {id: 'link:access', label: L('Local access'), view: 'access'}
+    {id: 'backup', label: L('Backup')}, {id: 'updates', label: L('Updates')}
   ];
+  // Personalization and Local access are pages of their own, reached from the tree under Settings, so they are not
+  // repeated here as categories that leave the page.
   function row(label, description, control, {comingLater = false} = {}) {
     const copy = el('div', {class: 'setting-copy'}, [el('span', {class: 'setting-label', text: label})]);
     if (description) copy.append(el('span', {class: 'setting-description', text: description}));

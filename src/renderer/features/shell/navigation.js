@@ -40,7 +40,10 @@ export class NavigationRail extends SurfaceElement {
     this.setActive(this.active||'drive');this.setOfflineCount(this.offlineCount||0);
   }
   setOfflineCount(value){this.offlineCount=Number.isFinite(Number(value))?Math.max(0,Math.floor(Number(value))):0;if(!this.offlineBadge)return;this.offlineBadge.textContent=String(this.offlineCount);const button=this.nodes.get('offline');button.setAttribute('aria-label',this.t('Available offline','可離線使用')+': '+this.offlineCount);}
-  navigate(id,anchor,event){if(id==='quit'&&typeof this.onQuit==='function'){this.onQuit();return;}this.onActivate(id);void anchor;void event;}
+  navigate(id,anchor,event){if(id==='quit'&&typeof this.onQuit==='function'){this.onQuit();return;}
+    // Updates under Settings opens the Settings Updates category, the same place its category row selects.
+    if(id==='updates'&&this.labels?.has('settings')){this.onActivate('settings');queueMicrotask(()=>this.ownerDocument?.querySelector?.('.settings-category[data-category="updates"]')?.click());this.setActive('updates');return;}
+    this.onActivate(id);void anchor;void event;}
   /** Opens the old grouped menu for Settings or Help, with Quit, for a keyboard or context-menu request on that row. */
   openGroupMenu(id,anchor,event){if(!GROUPS[id])return;const ids=GROUPS[id].filter(key=>this.labels.has(key));openContextMenu({anchor,event,target:this,language:this.language,items:[...ids.map(key=>({id:key,label:this.labels.get(key),run:()=>this.onActivate(key)})),...(typeof this.onQuit==='function'?[{id:'quit',label:text('Quit Material File Encryptor','結束 Material File Encryptor'),description:text('Close the application completely instead of hiding it in the tray.','完全結束程式，而唔係收埋入系統匣。'),shortcut:'Ctrl+Q',run:()=>this.onQuit()}]:[])]});}
   setActive(id){this.active=id;const key=this.nodes?.has(id)?id:(TOOL_MEMBERS.has(id)?'tools':Object.keys(GROUPS).find(group=>GROUPS[group].includes(id))||id);for(const [node,button]of this.nodes||[]){const on=node===key;button.classList.toggle('active',on);if(on)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current');}}

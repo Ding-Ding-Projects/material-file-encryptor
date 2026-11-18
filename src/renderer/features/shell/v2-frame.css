@@ -54,7 +54,7 @@ md-outlined-text-field,md-outlined-select{--md-outlined-field-top-space:6px;--md
 :focus-visible{outline-color:var(--v2-accent)}
 
 /* ---------- title bar ---------- */
-mfe-titlebar.titlebar{display:flex;align-items:center;gap:8px;flex:0 0 var(--v2-bar);height:var(--v2-bar);padding-inline-start:8px;background:var(--v2-bg);border-bottom:1px solid var(--v2-line);overflow:hidden}
+mfe-titlebar.titlebar{display:block;flex:0 0 var(--v2-bar);height:var(--v2-bar);padding-inline-start:8px;background:var(--v2-bg);border-bottom:1px solid var(--v2-line);overflow:hidden}
 mfe-titlebar .window-brand{display:flex;align-items:center;flex:none;gap:0;padding:0}
 mfe-titlebar .window-brand>[data-icon]{width:24px;height:24px;border-radius:4px;background:var(--v2-accent);color:var(--v2-on-accent)}
 mfe-titlebar .window-brand>[data-icon] .icon{width:16px;height:16px;color:var(--v2-on-accent)}
@@ -69,9 +69,13 @@ mfe-titlebar .window-brand .brand-name{position:absolute;width:1px;height:1px;ov
 .drive-tab{height:auto;align-self:stretch;margin-top:6px;padding:0 12px;gap:6px;border-radius:6px 6px 0 0;font-size:13px;color:var(--v2-text2);max-width:200px}
 .drive-tab[aria-selected=true]{background:var(--v2-surface);color:var(--v2-text);box-shadow:0 0 0 1px var(--v2-line)}
 .drive-tab-dot{width:7px;height:7px}
-.drive-tab-add,.drive-tab-remove{width:28px;height:28px}
+.drive-tab-remove{width:28px;height:28px}
+/* One + in the title bar: the New tab catalog. Adding a drive lives in the tree (+), the drive switcher and New. */
+.drive-tabs-host>.drive-tab-add{display:none}
 .titlebar mfe-workspace-shell{flex:1 1 auto;min-width:0;align-self:stretch;-webkit-app-region:no-drag}
-.titlebar-tools{display:flex;align-items:center;gap:4px;flex:none;margin-inline-start:auto;-webkit-app-region:no-drag}
+.titlebar-tools{display:flex;align-items:center;gap:4px;flex:none;margin-inline-start:auto;margin-inline-end:4px;-webkit-app-region:no-drag}
+mfe-titlebar .window-brand{margin-inline-start:8px}
+.drive-switcher{margin-inline-start:6px}
 .titlebar-tools mfe-top-bar{border:0;min-height:0;padding:0}
 .help-mode-toggle{width:32px;height:32px;--md-icon-button-icon-size:18px;--md-icon-button-selected-icon-color:var(--v2-on-accent)}
 .help-mode-toggle[aria-pressed=true]{background-color:var(--v2-accent)!important;color:var(--v2-on-accent);border-radius:4px;--md-icon-button-icon-color:var(--v2-on-accent);--md-icon-button-hover-icon-color:var(--v2-on-accent);--md-icon-button-focus-icon-color:var(--v2-on-accent);--md-icon-button-pressed-icon-color:var(--v2-on-accent)}

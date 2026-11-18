@@ -30,9 +30,14 @@ export function mountDriveList({doc = document, translate, getLanguage, hooks}) 
   const settingsLabel = node('span', {text: t('Drive settings')});
   settingsButton.append(slotIcon('settings'), settingsLabel);
   toolbar.append(newButton);
-  if (secondary) for (const button of [...secondary.children]) { const glyph = button.querySelector(':scope > [data-icon]'); if (glyph) { glyph.slot = 'icon'; button.setAttribute('has-icon', ''); } toolbar.append(button); }
+  // Unlock existing drive and Create a drive stay as the real controls their dialogs are wired to, but the toolbar shows
+  // only New: its menu reaches both, so the toolbar keeps one primary and no duplicates.
+  const hiddenActions = node('div', {class: 'drive-list-hidden-actions', hidden: ''});
+  if (secondary) hiddenActions.append(...secondary.children);
   toolbar.append(settingsButton);
   secondary?.remove();
+  host.append(hiddenActions);
+  const unlockExisting = () => $('unlock-button')?.click();
   const summary = node('p', {class: 'drive-list-summary', role: 'status'});
   const table = node('table', {class: 'drive-list-table', 'aria-label': t('Drives')});
   const head = node('thead');
@@ -47,6 +52,21 @@ export function mountDriveList({doc = document, translate, getLanguage, hooks}) 
   const layout = node('div', {class: 'drive-list-layout'}, [main, details]);
   host.prepend(toolbar, layout);
   card.classList.add('unlock-bar');
+  const missing = node('div', {class: 'unlock-missing', hidden: ''});
+  const chooseStorage = node('md-outlined-button', {id: 'unlock-choose-storage', type: 'button'});
+  const chooseLabel = node('span', {text: t('Choose storage folder…')});
+  chooseStorage.append(chooseLabel);
+  const missingNote = node('span', {class: 'unlock-missing-note', text: t('or use New to make a drive.')});
+  missing.append(chooseStorage, missingNote);
+  card.querySelector('.unlock-head')?.after(missing);
+  listen(chooseStorage, 'click', () => unlockExisting());
+  // Show or hide the password while typing it.
+  const passwordField = $('unlock-password');
+  const showPassword = node('md-text-button', {id: 'unlock-show-password', type: 'button', 'aria-pressed': 'false'});
+  const showLabel = node('span', {text: t('Show')});
+  showPassword.append(showLabel);
+  passwordField?.after(showPassword);
+  listen(showPassword, 'click', () => { const shown = passwordField.type === 'text'; passwordField.type = shown ? 'password' : 'text'; showPassword.setAttribute('aria-pressed', String(!shown)); showLabel.textContent = t(shown ? 'Show' : 'Hide'); });
 
   let state = null, lastSignature = '';
   const sessions = () => state?.sessions?.length ? state.sessions : state ? [{sessionId: state.sessionId, driveName: state.driveName, driveLetter: state.driveLetter, locked: state.locked, mounted: state.mounted}] : [];
@@ -79,6 +99,7 @@ export function mountDriveList({doc = document, translate, getLanguage, hooks}) 
       }
     });
     if (!rows.some(session => session.sessionId === state?.sessionId && session.locked) && card.parentNode !== host) host.append(card);
+    missing.hidden = Boolean(state?.storageDir) || !state?.locked;
     renderDetails(rows.find(session => session.sessionId === state?.sessionId));
   }
   function renderDetails(session) {
@@ -108,13 +129,14 @@ export function mountDriveList({doc = document, translate, getLanguage, hooks}) 
   listen(newButton, 'click', event => openContextMenu({anchor: newButton, event, target: newButton, language: getLanguage(), items: [
     {id: 'new:pc', label: text('New drive on this PC', SHELL_COPY['New drive on this PC']), description: text('Encrypted folder on this computer.', SHELL_COPY['Encrypted folder on this computer.']), run: () => hooks.newOnThisPc()},
     {id: 'new:hub', label: text('New Docker Hub drive', SHELL_COPY['New Docker Hub drive']), description: text('No folder to choose; backed up to Docker Hub.', SHELL_COPY['No folder to choose; backed up to Docker Hub.']), run: () => hooks.newHubDrive()},
-    {id: 'new:open', label: text('Open drive from Docker Hub', SHELL_COPY['Open drive from Docker Hub']), description: text('Restore a drive that is already on Docker Hub.', SHELL_COPY['Restore a drive that is already on Docker Hub.']), run: () => hooks.openHubDrive()}
+    {id: 'new:open', label: text('Open drive from Docker Hub', SHELL_COPY['Open drive from Docker Hub']), description: text('Restore a drive that is already on Docker Hub.', SHELL_COPY['Restore a drive that is already on Docker Hub.']), run: () => hooks.openHubDrive()},
+    {id: 'new:existing', label: text('Unlock existing drive', SHELL_COPY['Unlock existing drive'] || '解鎖現有磁碟'), description: text('Choose the encrypted storage folder of a drive made earlier.', SHELL_COPY['Choose the encrypted storage folder of a drive made earlier.']), run: unlockExisting}
   ]}));
   listen(settingsButton, 'click', () => hooks.openSettings());
   return {
     // Rows animate in, so they are rebuilt only when what they show changes, not on every state tick.
     update(next) { state = next; const signature = JSON.stringify([state?.sessionId, state?.storageDir, state?.cacheDir, sessions().map(session => [session.sessionId, session.driveName, session.driveLetter, session.locked, session.mounted, Boolean(session.operation), Boolean(session.recoveryRequired)])]); if (signature === lastSignature) return; lastSignature = signature; render(); },
-    setLanguage() { lastSignature = ''; newLabel.textContent = t('New'); settingsLabel.textContent = t('Drive settings'); toolbar.setAttribute('aria-label', t('Drive commands')); table.setAttribute('aria-label', t('Drives')); headCells.forEach((cell, index) => { cell.textContent = t(columns[index][1]); }); details.setAttribute('aria-label', t('Details')); render(); },
+    setLanguage() { lastSignature = ''; chooseLabel.textContent = t('Choose storage folder…'); missingNote.textContent = t('or use New to make a drive.'); showLabel.textContent = t(passwordField?.type === 'text' ? 'Hide' : 'Show'); newLabel.textContent = t('New'); settingsLabel.textContent = t('Drive settings'); toolbar.setAttribute('aria-label', t('Drive commands')); table.setAttribute('aria-label', t('Drives')); headCells.forEach((cell, index) => { cell.textContent = t(columns[index][1]); }); details.setAttribute('aria-label', t('Details')); render(); },
     destroy() { for (const dispose of disposers.splice(0)) dispose(); }
   };
 }

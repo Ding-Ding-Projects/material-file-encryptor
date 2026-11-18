@@ -67,3 +67,10 @@
 #view-drive .drive-list-table th[data-column=state]{width:180px}
 #view-drive .drive-list-table th{position:sticky;top:0;background:var(--v2-surface)}
 .v2-toolbar .icon,.v2-toolbar svg{display:inline-block;width:16px;height:16px;vertical-align:-3px}
+
+/* No storage folder yet: offer to choose one instead of a password field. */
+.unlock-bar .unlock-missing{display:flex;align-items:center;gap:12px;flex:1 1 auto;font-size:13px;color:var(--v2-text2)}
+.unlock-bar .unlock-missing[hidden]{display:none}
+.unlock-bar #unlock-password-fields{display:flex;align-items:center;gap:4px}
+.unlock-bar #unlock-show-password{flex:none}
+.drive-list-hidden-actions{display:none}

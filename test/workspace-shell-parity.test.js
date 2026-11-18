@@ -18,7 +18,7 @@ const NARROW = {width: 360, height: 740};
 const STATE_DEPENDENT = new Set(['#mount-button', '#upgrade-vault', '#drive-tab-remove']);
 
 const ACTIONS = [
-  '#drive-tab-add', '#drive-tab-remove', '[data-window=minimize]', '[data-window=maximize]', '[data-window=close]',
+  '#drive-tab-remove', '[data-window=minimize]', '[data-window=maximize]', '[data-window=close]',
   '#new-button', '#import-button', '#open-button', '#export-button', '#copy-path-button', '#offline-button', '#release-button',
   '#delete-button', '#resplit-button', '#sync-button', '#lock-button', '#force-lock-button', '#backup-now-button', '#file-details-button',
   '#filter-button', '#select-all-files', '#inspector-backup-settings', '#explorer-button', '#mount-button', '#upgrade-vault',
@@ -81,6 +81,13 @@ async function reach(page, narrow) {
     let how = (await railVisible(destination)) ? 'visible' : null;
     if (!how && narrow) { await openDrawer(); if (await railVisible(destination)) how = 'navigation drawer'; }
     result.set('rail:' + destination, how);
+  }
+  // Adding a drive moved from a title bar + to the navigation tree's Drives heading.
+  {
+    const add = 'mfe-navigation-rail [data-action="add-drive"]';
+    let how = (await visible(add)) ? 'visible' : null;
+    if (!how && narrow) { await openDrawer(); if (await visible(add)) how = 'navigation drawer'; }
+    result.set('add-drive', how);
   }
   for (const path of treeKeys) {
     let how = (await treeVisible(path)) ? 'visible' : null;
