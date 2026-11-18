@@ -162,12 +162,13 @@ const autoBackup = createAutoBackup({ sync: registrySync, docker: registryDocker
   drives: () => [...vaultSessions.rows].map(([sessionId, { state: row, preferences: saved }]) => ({ sessionId,
     name: (row.locked !== false ? saved.driveName || row.driveName : row.driveName || saved.driveName) || '', storageDir: row.storageDir || saved.storageDir || '', transport: saved.transport || 'folder' })),
   online: () => net.isOnline(), busy: () => registryBackupAll.pending || splitStorage.pending || shareService.pending });
-// The native status carries a write revision per drive; a higher revision means the drive changed.
+// The native status carries a history revision per drive that grows with every saved change (the general revision
+// also moves when the drive commits to storage on its own, so it would trigger backups that change nothing).
 const driveRevisions = new Map();
 function noteDriveStatus(sessionId, result) {
   if (!sessionId || !result || typeof result.locked !== 'boolean') return;
   const previous = driveRevisions.get(sessionId);
-  const revision = Number.isSafeInteger(result.revision) ? result.revision : -1;
+  const revision = Number.isSafeInteger(result.historyRevision) ? result.historyRevision : -1;
   driveRevisions.set(sessionId, { revision, locked: result.locked });
   if (!previous) return;
   if (!result.locked && revision > previous.revision && previous.revision >= 0) void autoBackup.noteChange(sessionId).catch(() => {});
@@ -226,7 +227,16 @@ const conflictRequest = createRegistryConflictRequests({
 });
 let registryTimer;
 async function runRegistryDue() { if (helper && (!verificationMode || registryTestDestination) && !testMode && !shuttingDown && !quitPending && !updateInstallLease) await registrySync.tick(); }
-async function runAutoBackupDue() { if (helper && (!verificationMode || registryTestDestination) && !testMode && !shuttingDown && !quitPending && !updateInstallLease) await autoBackup.tick(); }
+async function runAutoBackupDue() {
+  if (!helper || verificationMode && !registryTestDestination || testMode || shuttingDown || quitPending || updateInstallLease) return;
+  // Status events are not pushed for every write, so each open drive's cached summary is read here. It is skipped
+  // while a backup runs, because any native request briefly delays the backup's snapshot lease.
+  if (!registrySync.pending) for (const [sessionId, row] of vaultSessions.rows) {
+    if (row.state.locked !== false) { noteDriveStatus(sessionId, { locked: true }); continue; }
+    try { noteDriveStatus(sessionId, await vaultSessions.request('statusSummary', {}, sessionId)); } catch { /* the next check reads it again */ }
+  }
+  await autoBackup.tick();
+}
 /** Backs up drives with pending changes before closing, for at most two minutes, then cancels what is still running. */
 async function flushAutoBackup() {
   if (!helper || verificationMode || testMode || updateInstallLease || registrySync.pending) return;
