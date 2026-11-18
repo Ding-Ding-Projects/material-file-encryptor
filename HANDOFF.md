@@ -1817,3 +1817,12 @@ Decisions: the host allocates every folder, so the renderer never calls a folder
 Fixed on the way: the sign-in relay now passes real console handles to Docker 29 (STARTF_USESTDHANDLES with null handles) and the parser treats cursor moves as line breaks; the multi-drive listing filter used the vault id where tags carry the device id, so it now reads foreign devices once and keeps snapshots whose verified config matches.
 
 Open: live Docker Hub proof (organization namespace endpoint, tag listing, restore), packaged app proof and screenshots, sharing the picker with the Docker Hub storage page.
+
+## Version 2 frame and pages, 2026-11-17
+
+Branch `ai/feature/20261117-redesign-v2` (issue #25). Shell: `src/renderer/features/shell/navigation.js` (navigation tree and title bar tools), `drive-list.js` and `drive-list.css` (drive list with the inline unlock bar), `v2-frame.css` (visual system), `src/shared/surface/help-hints.js` (tooltip and help mode), the hint presentation in `control-guidance.js` and `info-icon-mount.js`, and the title bar strip in `model.js` and `workspace-shell.js`. Pages: `features/home-dashboard`, `features/local-tools`, `features/settings-layout`, `features/storage-maintenance/hub-overview.js`, and the easy path and New repository row in `features/docker-hub-drive`.
+
+Decisions (also in `design/redesign-2026-11/v2-decisions.md`): pages no longer open as tabs by themselves, the tree reaches every page and the New tab catalog with Open every tab still opens them as tabs; desktop help moves from (i) icons to tooltips, accessible descriptions and help mode; comfortable density keeps 48 px rows; backup options that need backend work are disabled with "Coming in a later update".
+
+Open: packaged-build captures and README replacement (see the branch report), automatic backup and retention backends, context-menu filter removal, per-drive figures, Share and Shared files (separate lane).
+
