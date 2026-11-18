@@ -18,7 +18,7 @@ test('listing for one drive finds its snapshots from several devices and skips o
   assert.equal(own.length, 2);
   assert.ok(own.every(item => item.snapshot.vaultId === mine));
   // A foreign device is read once: its second tag is skipped without a manifest request.
-  const foreignManifests = registry.requests.filter(line => line.includes('/manifests/mfe-' + otherDevice));
+  const foreignManifests = registry.requests.filter(line => line.startsWith('GET ') && line.includes('/manifests/mfe-' + otherDevice));
   assert.equal(foreignManifests.length, 1);
   assert.equal((await storage.list()).length, 4, 'without a drive id every snapshot is listed');
 });

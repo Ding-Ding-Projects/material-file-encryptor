@@ -1,3 +1,11 @@
+# Seamless Docker Hub backup, 2026-11-18
+
+- Drives back up to Docker Hub on their own once you are signed in and have read the public repository notice once: about 1 minute after changes, every hour, on lock and on app close with changes waiting, and when the connection returns. Failures retry after 1, 5 and 15 minutes, then hourly. Each drive has its own switch.
+- New drives share one repository, `<account>/material-file-encryptor-storage`, created as public if missing; Settings can switch to one repository per drive.
+- Old snapshots are removed after every verified backup: each drive keeps its latest 10, one per day for 7 days and one per week for 8 weeks. Only that drive's own snapshots from this PC are touched, and the newest one is always kept. Pruning was proven against Docker Hub with two drives in one repository.
+- The Docker Hub backup page shows each repository's tag count against the 1,000 tag limit, and Settings > Backup has real controls instead of placeholders.
+- Backing up while the app is closed is not available yet. See ROADMAP.md for what is still open.
+
 # Share a file through Docker Hub, 2026-11-17
 
 - Share via Docker Hub encrypts one file from an unlocked drive with a new key, uploads it to your public `material-file-encryptor-shares` repository and gives you one command, a link and a ready command line. The recipient needs the app but no Docker Hub account.

@@ -625,14 +625,20 @@
     {
       "source": "docs/features/storage/README.md",
       "translation": "docs/features/storage/README.zh-HK.md",
-      "sourceSha256": "a12db0427b5d3474fb760f20fe92879059d5851dc776123ba3b8e77e1fe020bd",
-      "translationSha256": "fbe9cbdf224be828fd34e922aef00a2ebbf1251535d4d2a0adc491042b6723ee"
+      "sourceSha256": "bf3a3ea312e407212f1ff47c9748145133a3562422b021acbe79d7da6982a010",
+      "translationSha256": "dd0bf99e9a83f27ec37e83adab05a5343cfd643ab060c25c9e1de7f2b2743672"
     },
     {
       "source": "docs/features/storage/transfer-lifecycle.md",
       "translation": "docs/features/storage/transfer-lifecycle.zh-HK.md",
       "sourceSha256": "9cb211ea77b0c6365bd655776d083924f5d1224cf5046449619fdda1ba9d7f6a",
       "translationSha256": "089e13b74a9e121a291b4f8efa388e31a03bbcc64b0bf9217345c68670106a05"
+    },
+    {
+      "source": "docs/features/storage/automatic-backup.md",
+      "translation": "docs/features/storage/automatic-backup.zh-HK.md",
+      "sourceSha256": "7b48b954aacb440b221f7e66dbdfc6872ed18b7786fb6e857454d75bf95e6e2c",
+      "translationSha256": "5a95590e2015ea3f5f98169cfc471fe94fdc1c249e7706d15e6126ac48c5fd27"
     },
     {
       "source": "docs/features/storage/registry-sync.md",

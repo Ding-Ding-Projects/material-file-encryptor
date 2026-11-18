@@ -5,7 +5,7 @@ import { selectRetention, validateRetention, DEFAULT_RETENTION, retentionCeiling
 import { pruneDriveSnapshots } from '../src/main/auto-backup/prune.js';
 import { createSnapshotReadGuard } from '../src/main/auto-backup/read-guard.js';
 import { createTagDates } from '../src/main/auto-backup/tag-dates.js';
-import { createRegistryStorage } from '../src/main/registry-storage.js';
+import { createRegistryStorage, createRevisionCache } from '../src/main/registry-storage.js';
 import { createFakeRegistry } from './helpers/fake-hub-registry.js';
 
 const HOUR = 3600000, DAY = 24 * HOUR;
@@ -151,6 +151,44 @@ test('a tag left behind after its manifest is gone is removed through the fallba
   const stuckClient = createRegistryStorage({ destination: again.registry.destination, fetcher: stuckFetcher });
   const reported = await pruneDriveSnapshots({ client: stuckClient, revisions: await stuckClient.list(undefined, { vaultId: VAULT_A }), deviceId: THIS_PC, vaultId: VAULT_A, newest: again.mine[0].digest, policy: { keepLatest: 10, keepDaily: 0, keepWeekly: 0 } });
   assert.equal(reported.pruned, 0); assert.equal(reported.failed, 2);
+});
+
+test('a removed snapshot still shown in the tag list is skipped instead of failing the whole listing', async () => {
+  const { registry, mine } = await sharedRepository();
+  const stale = mine[3];
+  const fetcher = async (input, options = {}) => {
+    const url = new URL(input);
+    if (url.pathname.endsWith('/tags/list')) return new Response(JSON.stringify({ name: registry.destination.repository, tags: [...new Set([...registry.tags.keys(), stale.tag])].sort() }));
+    return registry.fetcher(input, options);
+  };
+  const client = createRegistryStorage({ destination: registry.destination, fetcher });
+  await client.deleteSnapshot({ digest: stale.digest, tag: stale.tag });
+  const listed = await client.list(undefined, { vaultId: VAULT_A });
+  assert.equal(listed.length, 13); assert.ok(!listed.some(item => item.tag === stale.tag));
+});
+
+test('a snapshot verified once is not pulled again: later listings use HEAD only', async () => {
+  const { registry } = await sharedRepository();
+  const revisionCache = createRevisionCache();
+  const client = createRegistryStorage({ destination: registry.destination, fetcher: registry.fetcher, revisionCache });
+  await client.list(undefined, { vaultId: VAULT_A });
+  registry.requests.length = 0;
+  const again = await client.list(undefined, { vaultId: VAULT_A });
+  assert.equal(again.length, 14);
+  const pulls = registry.requests.filter(line => line.startsWith('GET ') && line.includes('/manifests/'));
+  assert.deepEqual(pulls, [], 'no manifest GET, which is what Docker Hub counts as a pull');
+  assert.ok(registry.requests.some(line => line.startsWith('HEAD ') && line.includes('/manifests/mfe-')));
+});
+
+test('a tag whose advertised digest does not match its bytes is refused', async () => {
+  const { registry, mine } = await sharedRepository();
+  const fetcher = async (input, options = {}) => {
+    const response = await registry.fetcher(input, options);
+    if (new URL(input).pathname.endsWith(mine[0].tag)) return new Response(options.method === 'HEAD' ? null : await response.arrayBuffer(), { status: response.status, headers: { 'Docker-Content-Digest': 'sha256:' + 'f'.repeat(64) } });
+    return response;
+  };
+  const client = createRegistryStorage({ destination: { ...registry.destination, endpoint: 'http://127.0.0.1:15222' }, fetcher: (input, options) => fetcher(String(input).replace(':15222', ':15221'), options) });
+  await assert.rejects(client.list(undefined, { vaultId: VAULT_A }));
 });
 
 test('the delete request refuses anything that is not a drive snapshot reference', async () => {

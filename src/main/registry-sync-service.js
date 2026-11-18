@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { constants } from 'node:fs';
 import { createHash, randomUUID } from 'node:crypto';
-import { createRegistryStorage, registryDestination } from './registry-storage.js';
+import { createRegistryStorage, registryDestination, createRevisionCache } from './registry-storage.js';
 import { createVaultImageSnapshot, inspectVaultConfiguration, describeStorageObject, openStorageObject, inspectStorageObject, checkContentAddress } from './vault-image-snapshot.js';
 import { planRegistrySnapshot } from './registry-snapshot-plan.js';
 import { validateRegistrySchedule, nextRegistryRun, registryOccurrence } from './registry-schedule.js';
@@ -20,8 +20,9 @@ const STALLED = 'The drive stopped making progress while preparing the snapshot.
 const RELEASE_TIMEOUT = 'The drive did not confirm that it was released in time.';
 const BUSY = 'The drive stayed busy with other work. Retry when it has finished.';
 const NOT_BACKED_UP = 'Back up this drive once before removing old snapshots.';
+const REMOVE_INVALID = "Only this drive's own snapshots from this computer can be removed. Refresh the list and try again.";
 export const PAUSED = 'Backup paused while you used the drive; it will resume.';
-const SAFE_REASONS = new Set(['The destination contains a different vault.', 'Snapshot catalogue exceeds this client limit. Narrow the repository before retrying.', 'Snapshot catalogue exceeds the metadata limit.', 'Native synchronization did not settle.', 'Native synchronization needs attention.', STALLED, RELEASE_TIMEOUT, BUSY, NOT_BACKED_UP]);
+const SAFE_REASONS = new Set(['The destination contains a different vault.', 'Snapshot catalogue exceeds this client limit. Narrow the repository before retrying.', 'Snapshot catalogue exceeds the metadata limit.', 'Native synchronization did not settle.', 'Native synchronization needs attention.', STALLED, RELEASE_TIMEOUT, BUSY, NOT_BACKED_UP, REMOVE_INVALID]);
 const summary = value => value ? { state: value.state, at: value.at, pruned: value.pruned, failed: value.failed, kept: value.kept } : null;
 const sleep = ms =>new Promise(resolve => setTimeout(resolve, ms).unref?.());
 /** Rejects as soon as the signal aborts. The underlying native request keeps running and is settled by its owner. */
@@ -109,7 +110,9 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
     });
     return saving;
   }
-  function storage(row, authorizer = authorize) { return storageFactory({ destination: testDestination ? { ...testDestination, repository: row.repository, visibility: row.visibility } : { repository: row.repository, visibility: row.visibility }, authorize: authorizer }); }
+  // One verified-snapshot cache for every client of this service, so repeated listings do not spend Docker Hub pulls.
+  const revisionCache = createRevisionCache();
+  function storage(row, authorizer = authorize) { return storageFactory({ destination: testDestination ? { ...testDestination, repository: row.repository, visibility: row.visibility } : { repository: row.repository, visibility: row.visibility }, authorize: authorizer, revisionCache }); }
   /**
    * Removes this drive's own old snapshots after a verified backup. It never fails the backup: a problem is
    * recorded on the row and the same snapshots are simply tried again after the next backup.
@@ -471,6 +474,48 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
         const outcome = await prune(row, revisions, ownVaultId, newest, signal);
         row.state = 'idle'; return summary(outcome);
       }, true, 'prune');
+    },
+    /** This computer's own snapshots of the drive, newest first, for a removal the person confirms tag by tag. */
+    listOwnSnapshots(id) {
+      return exclusive(id, async (current, row, signal) => {
+        step(row, 'discovering', { totalFiles: null });
+        const ownVaultId = JSON.parse(await fs.readFile(path.join(current.storageDir, 'vault.json'), 'utf8')).VaultId;
+        const own = (await storage(row).list(signal, { vaultId: ownVaultId })).filter(item => item.tag.slice(4, 36) === row.deviceId);
+        row.state = 'idle';
+        return { repository: row.repository, snapshots: own.map(item => ({ tag: item.tag, digest: item.digest, createdAt: Number.isFinite(item.createdAt) ? new Date(item.createdAt).toISOString() : null })).sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt))) };
+      }, true, 'remove');
+    },
+    /**
+     * Removes exactly the confirmed tags, each of which must still be one of this computer's snapshots of this drive.
+     * Snapshots of other drives and other computers can never be named here. Each removal is verified by a 404.
+     */
+    removeOwnSnapshots(id, tags) {
+      return exclusive(id, async (current, row, signal) => {
+        if (!Array.isArray(tags) || !tags.length || tags.length > 1000 || new Set(tags).size !== tags.length) throw Error(REMOVE_INVALID);
+        if (typeof authorizeDelete !== 'function' && !testDestination) throw Error(REMOVE_INVALID);
+        step(row, 'pruning', { unit: 'snapshots', totalFiles: tags.length });
+        const ownVaultId = JSON.parse(await fs.readFile(path.join(current.storageDir, 'vault.json'), 'utf8')).VaultId;
+        const own = new Map((await storage(row).list(signal, { vaultId: ownVaultId })).filter(item => item.tag.slice(4, 36) === row.deviceId).map(item => [item.tag, item]));
+        if (tags.some(tag => !own.has(tag))) throw Error(REMOVE_INVALID);
+        const client = storage(row, (name, authSignal) => authorizeDelete(name, authSignal, row.visibility));
+        let removed = 0, failed = 0;
+        for (const tag of tags) {
+          signal.throwIfAborted();
+          const item = own.get(tag);
+          if (readers.isHeld(row.repository, item.digest)) { failed++; continue; }
+          let outcome = null;
+          try {
+            outcome = await client.deleteSnapshot({ digest: item.digest, tag }, signal);
+            if (outcome.digestGone && !outcome.tagGone && typeof deleteTag === 'function') { try { await deleteTag(row.repository, tag, signal); } catch { /* readback decides */ } outcome = await client.snapshotGone({ digest: item.digest, tag }, signal); }
+          } catch (error) { if (signal.aborted) throw error; }
+          if (outcome?.removed) { removed++; row.progress.completedFiles++; } else failed++;
+        }
+        row.snapshotCount = Math.max(0, (row.snapshotCount ?? own.size) - removed);
+        if (Number.isSafeInteger(row.tagCount)) row.tagCount = Math.max(0, row.tagCount - removed);
+        // With the verified snapshot gone, the next backup publishes a fresh one instead of reusing it.
+        if (row.lastResult?.tag && tags.includes(row.lastResult.tag) && !failed) row.lastResult = null;
+        row.state = 'idle'; return { removed, failed };
+      }, true, 'remove');
     },
     list(id) { return exclusive(id, async (_current, row, signal) => { row.state = 'discovering'; const value = await storage(row).list(signal); row.state = 'idle'; return value; }, false); },
     restore(id, digest) {
