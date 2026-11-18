@@ -1,7 +1,7 @@
 // One-click backup of every drive to Docker Hub. Pairs are [English, Cantonese].
 export const BACKUP_ALL_COPY = {
-  backupTitle: ['Back up to Docker Hub', '備份到 Docker Hub'],
-  backupIntro: ['Back up your drives in one step. Each drive becomes its own repository, and an hourly sync keeps it current while the app is open.', '一鍵備份你嘅磁碟。每個磁碟會有自己嘅儲存庫，程式開啟期間每小時自動同步。'],
+  backupTitle: ['One-off backup to separate repositories', '單次備份去獨立嘅 repository'],
+  backupIntro: ['Automatic backup above already keeps every drive current in one shared repository. Use this only for a separate copy: each chosen drive gets its own repository, which then also syncs hourly while the app is open.', '上面嘅自動備份已經將每個磁碟保持喺一個共用 repository 入面。呢度只係用嚟另外備份一份：每個揀咗嘅磁碟會有自己嘅 repository，之後程式開住嗰陣每個鐘同步一次。'],
   backupDrives: ['Drives on this PC', '呢部電腦上嘅磁碟'],
   backupNoDrives: ['No drives are available yet. Unlock or create a drive first.', '暫時冇可用磁碟，請先解鎖或建立磁碟。'],
   backupRepositoryName: ['Repository name', '儲存庫名稱'],
@@ -55,5 +55,5 @@ export const BACKUP_ALL_COPY = {
   'backupError-INVALID_NAME': ['Check the repository name for this drive.', '請檢查呢個磁碟嘅儲存庫名稱。'],
   backupBusy: ['Backing up…', '備份中…'],
   backupStartFailed: ['The backup could not start. Check the drive list and repository names, then retry.', '備份未能開始。請檢查磁碟清單及儲存庫名稱，然後重試。'],
-  backupFocusHint: ['Back up to Docker Hub', '備份到 Docker Hub'],
+  backupFocusHint: ['One-off backup to separate repositories', '單次備份去獨立嘅 repository'],
 };

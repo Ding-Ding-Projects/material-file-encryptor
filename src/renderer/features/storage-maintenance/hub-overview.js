@@ -18,7 +18,7 @@ export function mountHubOverview(host, {services = {}, getLanguage = () => 'en',
   const help = (node, key) => { const value = L(key); node.setAttribute('data-help-text', value); node.setAttribute('aria-description', value); return node; };
   const root = el('div', {class: 'hub-overview'});
   host.prepend(root);
-  let status = null, failed = false, generation = 0, message = '', timer = null, disposed = false, settled = false, lastJson = '', removal = null;
+  let status = null, backingUpAll = false, failed = false, generation = 0, message = '', timer = null, disposed = false, settled = false, lastJson = '', removal = null;
   const when = value => { const relative = relativeTime(value, now()); if (relative.key === 'date') return new Date(relative.time).toLocaleString(getLanguage() === 'yue' ? 'zh-HK' : 'en', {month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'}); return L(relative.key, {count: relative.count}); };
   const delayText = seconds => seconds === 60 ? L('1 minute') : seconds % 60 === 0 ? L('{count} minutes', {count: seconds / 60}) : L('{count} seconds', {count: seconds});
 
@@ -99,10 +99,27 @@ export function mountHubOverview(host, {services = {}, getLanguage = () => 'en',
       el('p', {text: L('Only encrypted data is uploaded. Anyone can see that the repository exists, how many drives and snapshots it holds, their sizes, backup times and drive labels, but never file names or contents.')}),
       turnOn]);
   }
+  /**
+   * Backs up every drive automatic backup covers, one after another, through the same path as each row's Back up now.
+   * Before automatic backup is ready (signed out, notice unread, switched off) it opens the one-off backup tools instead.
+   */
+  async function backUpAll() {
+    if (backingUpAll) return;
+    if (!status?.signedIn || status.noticeRequired || !status.settings?.enabled || typeof services.autoBackupNow !== 'function') { onBackupAll(); return; }
+    const drives = status.drives.filter(drive => drive.enabled && drive.phase !== 'unavailable');
+    backingUpAll = true; lastJson = ''; render();
+    try {
+      await act(async () => {
+        let done = 0, failed = 0;
+        for (const drive of drives) { if (disposed) break; try { await services.autoBackupNow(drive.sessionId); done++; } catch { failed++; } }
+        return {done, failed};
+      }, result => result.failed ? L('Backed up {done} drives; {failed} need attention.', result) : L('Backed up {done} drives.', result));
+    } finally { backingUpAll = false; lastJson = ''; if (!disposed) render(); }
+  }
   function render() {
     const toolbar = el('div', {class: 'v2-toolbar', role: 'toolbar', 'aria-label': L('Docker Hub backup commands')});
-    const backupAll = el('md-filled-button', {id: 'hub-backup-all', type: 'button'}, [el('span', {text: L('Back up all now')})]);
-    backupAll.addEventListener('click', () => onBackupAll());
+    const backupAll = el('md-filled-button', {id: 'hub-backup-all', type: 'button', disabled: backingUpAll}, [el('span', {text: L('Back up all now')})]);
+    backupAll.addEventListener('click', () => void backUpAll());
     const restore = el('md-text-button', {id: 'hub-restore', type: 'button'}, [el('span', {text: L('Restore…')})]);
     restore.addEventListener('click', () => onRestore());
     const refresh = el('md-text-button', {id: 'hub-refresh', type: 'button'}, [el('span', {text: L('Refresh')})]);
@@ -139,5 +156,5 @@ export function mountHubOverview(host, {services = {}, getLanguage = () => 'en',
   // While anything is moving the table refreshes itself; the poll stops with the page.
   const poll = () => { if (disposed) return; timer = setTimeout(async () => { if (!doc.hidden) await load().catch(() => {}); poll(); }, POLL_MS); };
   render(); void load(); poll();
-  return {refresh: load, setLanguage: render, destroy() { disposed = true; generation++; clearTimeout(timer); root.remove(); }};
+  return {refresh: load, backUpAll, setLanguage: render, destroy() { disposed = true; generation++; clearTimeout(timer); root.remove(); }};
 }

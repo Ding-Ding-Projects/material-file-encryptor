@@ -3,6 +3,7 @@ import {text} from '../../../shared/surface/registry.js';
 import {control} from '../../../shared/surface/controls.js';
 import {icon} from '../../icons.js';
 import {SHELL_COPY} from './copy.js';
+import {statusBarState} from '../storage-maintenance/auto-backup/model.js';
 import {applyViewportClasses, effectiveWidth} from './viewport.js';
 import {buildFolderTree, flattenFolderTree, ancestorFolders, fileInFolder, relativeName, breadcrumbs, sortFiles, SORT_KEYS} from './folder-tree.js';
 
@@ -36,6 +37,8 @@ export function partMapShape(partCount) {
  * the transfers strip and the status bar. It renders from the same state the file table already uses and holds
  * no vault data of its own beyond what is needed to draw the current frame.
  */
+const BACKUP_POLL_MS = 5000;
+
 export function mountWorkspaceChrome({doc = document, translate, getLanguage, hooks}) {
   const $ = id => doc.getElementById(id);
   const t = (source, values) => translate(source, values ? {values} : undefined);
@@ -45,6 +48,7 @@ export function mountWorkspaceChrome({doc = document, translate, getLanguage, ho
   let snapshot = {state: null, files: [], selected: null, busy: false, hasMore: false};
   let treeSignature = '', versionsToken = 0, backupToken = 0, backupKey = '', backupText = '';
   let treeSection = null, treeHost = null, treeTitle = null;
+  let autoBackupStatus = null, disposed = false;
   const disposers = [];
   const listen = (target, type, handler, options) => {
     if (!target) return;
@@ -494,6 +498,29 @@ export function mountWorkspaceChrome({doc = document, translate, getLanguage, ho
   }
 
   /* ---------- status bar ---------- */
+  /** One automatic backup state as text; in bilingual mode each language renders its own relative time. */
+  function backupLine(line) {
+    const render = language => {
+      const ago = !line.ago ? '' : line.ago.key === 'date'
+        ? new Date(line.ago.time).toLocaleString(language === 'yue' ? 'zh-HK' : 'en', {month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'})
+        : translate(line.ago.key, {language, values: {count: line.ago.count}});
+      return translate(line.key, {language, values: {percent: line.percent, ago}});
+    };
+    const language = getLanguage();
+    if (language === 'bilingual') { const en = render('en'), yue = render('yue'); return en === yue ? en : `${en} · ${yue}`; }
+    return render(language === 'yue' || language === 'zh-HK' ? 'yue' : 'en');
+  }
+  async function refreshBackupStatus() {
+    if (!hooks.autoBackupStatus) return;
+    try { autoBackupStatus = await hooks.autoBackupStatus(); } catch { autoBackupStatus = null; }
+    if (!disposed) renderStatus();
+  }
+  if (hooks.autoBackupStatus) {
+    const view = doc.defaultView;
+    const timer = view.setInterval(() => { if (!doc.hidden) void refreshBackupStatus(); }, BACKUP_POLL_MS);
+    disposers.push(() => view.clearInterval(timer));
+    void refreshBackupStatus();
+  }
   function renderStatus() {
     const {state, files} = snapshot;
     const mountedLetter = driveLetterLabel(state?.driveLetter);
@@ -502,7 +529,10 @@ export function mountWorkspaceChrome({doc = document, translate, getLanguage, ho
     const total = files.reduce((sum, file) => sum + (Number(file.size) || 0), 0);
     set('status-used', state && !state.locked ? `${snapshot.hasMore ? t('{count} files (more available)', {count: files.length}) : t('{count} files', {count: files.length})} · ${t('{size} used', {size: hooks.formatBytes(total) || '0 B'})}` : '');
     const sync = state?.sync;
-    set('status-sync', !state || state.locked ? '' : hooks.backingUp?.() ? t('Backing up…') : sync?.running ? t('Syncing') : state.transport?.pendingSynchronization || sync?.pendingCommits ? t('Sync pending') : sync?.lastSync ? t('Synchronized') : t('Not synced yet'));
+    // Automatic backup owns this line for every drive it covers; other drives keep their storage wording.
+    const backup = state ? statusBarState(autoBackupStatus, state.sessionId) : null;
+    const syncNode = $('status-sync'); if (syncNode) syncNode.dataset.tone = backup?.tone ?? '';
+    set('status-sync', backup ? backupLine(backup) : !state || state.locked ? '' : hooks.backingUp?.() ? t('Backing up…') : sync?.running ? t('Syncing') : state.transport?.pendingSynchronization || sync?.pendingCommits ? t('Sync pending') : sync?.lastSync ? t('Synchronized') : t('Not synced yet'));
     set('status-cipher', t('Encrypted with AES-GCM'));
     const language = getLanguage();
     set('status-language', t('Language: {language}', {language: language === 'yue' ? '廣東話' : language === 'bilingual' ? 'English + 廣東話' : 'English'}));
@@ -533,6 +563,6 @@ export function mountWorkspaceChrome({doc = document, translate, getLanguage, ho
     scopeKey: () => JSON.stringify(scope),
     getScope: () => ({folder: scope.folder, availability: scope.availability, sort: {...scope.sort}}),
     refreshOverflow: renderOverflow,
-    destroy() { for (const dispose of disposers.splice(0)) dispose(); treeSection?.remove(); }
+    destroy() { disposed = true; for (const dispose of disposers.splice(0)) dispose(); treeSection?.remove(); }
   };
 }
