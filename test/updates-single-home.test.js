@@ -23,4 +23,7 @@ test('every route to the old Updates page lands on Settings > Updates', () => {
   assert.match(app, /label:t\('Open Updates'\),run:\(\)=>openUpdatesSettings\(\)/);
   assert.doesNotMatch(app, /openTab\(\{id:'updates'/);
   assert.match(nav, /if\(id==='updates'&&this\.labels\?\.has\('settings'\)\)\{this\.onActivate\('settings'\);/);
+  // The tree keeps its Updates row under Settings although no Updates page is registered any more.
+  assert.match(nav, /hasChild\(id\)\{return Boolean\(this\.labels\?\.has\(id\)\|\|\(id==='updates'&&this\.labels\?\.has\('settings'\)\)\);\}/);
+  assert.match(nav, /for\(const child of GROUPS\[group\]\.slice\(1\)\)if\(this\.hasChild\(child\)\)/);
 });

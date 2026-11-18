@@ -68,7 +68,7 @@ test('context menus put actions on the target first and fold layout and appearan
 test('the navigation tree keeps every page one click away, with Settings and Help sub-pages as child rows', async () => {
   const source = await read('src/renderer/features/shell/navigation.js');
   for (const id of ['home', 'drive', 'offline', 'history', 'recycle', 'storage', 'tools', 'settings', 'help']) assert.ok(source.includes(`'${id}'`), id);
-  assert.match(source, /for\(const child of GROUPS\[group\]\.slice\(1\)\)if\(this\.labels\?\.has\(child\)\)/);
+  assert.match(source, /for\(const child of GROUPS\[group\]\.slice\(1\)\)if\(this\.hasChild\(child\)\)/);
   assert.match(source, /element\('slot',\{name:'drives'\}\)/, 'drives and their folders are slotted into the tree');
 });
 
