@@ -145,6 +145,8 @@ mfe-main-workspace>mfe-top-bar{display:none}
 .status-bar{height:var(--v2-status);min-height:var(--v2-status);padding:0 10px;gap:16px;font-size:12px;background:var(--v2-bg);color:var(--v2-text2);border-top:1px solid var(--v2-line)}
 .status-bar .badge{background:transparent;padding:0;font-size:12px;color:var(--v2-text2)}
 .status-bar .badge:before{width:6px;height:6px}
+.status-bar #status-sync[data-tone=warn]{color:var(--v2-warn)}
+.status-bar #status-sync[data-tone=error]{color:var(--v2-bad)}
 
 /* ---------- help without icons ---------- */
 mfe-control-guidance[data-presentation=hint]{display:none}

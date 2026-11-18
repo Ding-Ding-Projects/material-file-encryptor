@@ -1116,6 +1116,7 @@ function setupEnhancedWorkspace() {
   openView:id=>{foundation.model.openTab({id,label:canonicalViewLabels[id]||id});foundation.shell.activate(id);},
   listVersions:id=>api?.listVersions?api.listVersions(id):Promise.resolve([]),
   backupStatus:()=>api?.registryStorageStatus?api.registryStorageStatus():Promise.resolve(null),
+  autoBackupStatus:api?.autoBackupStatus?()=>api.autoBackupStatus():null,
   formatBytes,backingUp:()=>Date.now()<backupBusyUntil,getTextScale:()=>shellPreferences.textScale/100
  }});
  unlockCard=mountUnlockCard({doc:document,translate:t,hooks:{isBusy:()=>busy,chooseKeyFile:()=>api.chooseKeyFile(),unlock:unlockInline}});

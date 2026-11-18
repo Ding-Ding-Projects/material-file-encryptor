@@ -70,3 +70,24 @@ export function summary(status, now = Date.now()) {
 
 /** The first 6 characters of a device or vault id, for display beside a label. */
 export const shortId = value => typeof value === 'string' && /^[a-f0-9]{6,}$/.test(value) ? value.slice(0, 6) : '';
+
+/**
+ * The status bar line for one drive: { key, tone, percent?, ago? }, or null when automatic backup does not cover the
+ * drive (no status yet, or a drive whose storage is not a folder), so the caller keeps its own storage wording.
+ */
+export function statusBarState(status, sessionId, now = Date.now()) {
+  const drive = status?.drives?.find(item => item.sessionId === sessionId);
+  if (!drive || drive.phase === 'unavailable') return null;
+  if (!status.settings?.enabled || !drive.enabled || status.noticeRequired) return { key: 'Automatic backup off', tone: 'muted' };
+  if (drive.phase === 'backing-up') {
+    const percent = progressPercent(drive.progress);
+    return percent === null ? { key: 'Backing up…', tone: 'busy' } : { key: 'Backing up… {percent}%', percent, tone: 'busy' };
+  }
+  if (drive.phase === 'paused') return { key: 'Paused', tone: 'busy' };
+  if (drive.phase === 'needs-attention') return { key: 'Needs attention', tone: 'error' };
+  if (drive.phase === 'waiting-connection' || status.online === false) return { key: 'Waiting for connection', tone: 'warn' };
+  if (!status.signedIn) return { key: 'Sign in to back up', tone: 'muted' };
+  if (drive.dirty) return { key: 'Changes waiting', tone: 'busy' };
+  if (drive.lastBackup) return { key: 'Backed up {ago}', ago: relativeTime(drive.lastBackup, now), tone: 'ok' };
+  return { key: 'Waiting for the first backup', tone: 'muted' };
+}
