@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { constants } from 'node:fs';
 import { createHash, randomUUID } from 'node:crypto';
-import { createRegistryStorage, registryDestination } from './registry-storage.js';
+import { createRegistryStorage, registryDestination, createRevisionCache } from './registry-storage.js';
 import { createVaultImageSnapshot, inspectVaultConfiguration, describeStorageObject, openStorageObject, inspectStorageObject, checkContentAddress } from './vault-image-snapshot.js';
 import { planRegistrySnapshot } from './registry-snapshot-plan.js';
 import { validateRegistrySchedule, nextRegistryRun, registryOccurrence } from './registry-schedule.js';
@@ -110,7 +110,9 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
     });
     return saving;
   }
-  function storage(row, authorizer = authorize) { return storageFactory({ destination: testDestination ? { ...testDestination, repository: row.repository, visibility: row.visibility } : { repository: row.repository, visibility: row.visibility }, authorize: authorizer }); }
+  // One verified-snapshot cache for every client of this service, so repeated listings do not spend Docker Hub pulls.
+  const revisionCache = createRevisionCache();
+  function storage(row, authorizer = authorize) { return storageFactory({ destination: testDestination ? { ...testDestination, repository: row.repository, visibility: row.visibility } : { repository: row.repository, visibility: row.visibility }, authorize: authorizer, revisionCache }); }
   /**
    * Removes this drive's own old snapshots after a verified backup. It never fails the backup: a problem is
    * recorded on the row and the same snapshots are simply tried again after the next backup.

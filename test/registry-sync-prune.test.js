@@ -42,6 +42,16 @@ test('every verified backup prunes this drive to its retention rules and reports
   assert.equal(last.prune.pruned, 1);
 });
 
+test('a backup spends at most one Docker Hub pull, however many snapshots the repository holds', async t => {
+  const registry = createFakeRegistry('test/material-file-encryptor-storage');
+  const f = await fixture(t, registry, { retention: () => ({ keepLatest: 10, keepDaily: 0, keepWeekly: 0 }) });
+  for (let n = 0; n < 6; n++) { await touch(f.source, n); f.advance(3600000); await f.service.sync('main'); }
+  registry.requests.length = 0;
+  await touch(f.source, 9); f.advance(3600000); await f.service.sync('main');
+  const pulls = registry.requests.filter(line => line.startsWith('GET ') && line.includes('/manifests/'));
+  assert.equal(pulls.length, 1, `manifest reads: ${pulls.join(', ')}`);
+});
+
 test('a failed prune never fails the backup and is retried after the next one', async t => {
   const registry = createFakeRegistry('test/material-file-encryptor-storage');
   let refuse = true;

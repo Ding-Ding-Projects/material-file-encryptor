@@ -26,7 +26,11 @@ export function createFakeRegistry(repository) {
       for (const [tag, value] of tags) if (value === digest) tags.delete(tag);
       return new Response('', { status: 202 });
     }
-    if (rest.startsWith('manifests/')) { const key = rest.slice(10); const bytes = manifests.get(tags.get(key) ?? key); return bytes ? new Response(bytes) : new Response('', { status: 404 }); }
+    if (rest.startsWith('manifests/')) {
+      const key = rest.slice(10), digest = tags.get(key) ?? key, bytes = manifests.get(digest);
+      // Like Docker Hub, a manifest answer (GET or HEAD) names its digest.
+      return bytes ? new Response(options.method === 'HEAD' ? null : bytes, { headers: { 'Docker-Content-Digest': digest } }) : new Response('', { status: 404 });
+    }
     if (rest === 'tags/list') return new Response(JSON.stringify({ name: repository, tags: [...tags.keys()].sort() }));
     return new Response('', { status: 404 });
   };
