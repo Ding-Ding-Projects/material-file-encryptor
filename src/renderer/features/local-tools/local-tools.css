@@ -18,7 +18,7 @@
 .local-tools-table thead th:last-child{width:22%}
 .local-tools-table td{padding:0 12px;height:var(--v2-row);font-size:13px;border-bottom:1px solid var(--v2-line2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .local-tools-table td.detail,.local-tools-table td.category{color:var(--v2-text2)}
-.local-tools-row{cursor:pointer}
+.local-tools-row{cursor:pointer;transition:background-color var(--md-sys-motion-duration-short4,200ms) var(--md-sys-motion-easing-standard)}
 .local-tools-row:hover{background:var(--v2-hover)}
 .local-tools-row[aria-selected=true]{background:var(--v2-selected);box-shadow:inset 3px 0 0 var(--v2-accent)}
 .local-tools-row:focus-visible{outline:2px solid var(--v2-accent);outline-offset:-2px}

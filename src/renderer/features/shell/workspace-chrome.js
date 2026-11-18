@@ -105,13 +105,13 @@ export function mountWorkspaceChrome({doc = document, translate, getLanguage, ho
   const sessionStatus = session => t(session.recoveryRequired ? 'Recovery required' : session.operation ? 'Working…' : session.locked ? 'Locked' : session.mounted ? 'Mounted' : 'Unlocked · not mounted');
   function renderTreeDrives(sessions) {
     if (!treeSection) return;
-    if (!treeDrives) { treeDrives = doc.createElement('div'); treeDrives.className = 'tree-drives'; treeDrives.setAttribute('role', 'list'); treeSection.prepend(treeDrives); }
+    if (!treeDrives) { treeDrives = doc.createElement('div'); treeDrives.className = 'tree-drives'; treeDrives.setAttribute('role', 'group'); treeDrives.setAttribute('aria-label', t('Drives')); treeSection.prepend(treeDrives); }
     const {state} = snapshot;
     const fragment = doc.createDocumentFragment();
     sessions.forEach((session, index) => {
       const active = session.sessionId === state?.sessionId;
-      const row = doc.createElement('button');
-      row.type = 'button'; row.className = 'tree-drive'; row.setAttribute('role', 'listitem');
+      const row = doc.createElement('div');
+      row.className = 'tree-drive'; row.setAttribute('role', 'button'); row.tabIndex = 0;
       row.dataset.sessionId = session.sessionId; row.dataset.state = sessionTabState(session);
       if (active) row.setAttribute('aria-current', 'true');
       const letter = driveLetterLabel(session.driveLetter), name = sessionName(session, index), status = sessionStatus(session);
@@ -185,6 +185,7 @@ export function mountWorkspaceChrome({doc = document, translate, getLanguage, ho
     // The drives and their folders live inside the navigation tree when it is there.
     const rail = doc.querySelector('mfe-navigation-rail');
     if (rail) { treeSection.slot = 'drives'; rail.append(treeSection); } else sidebar.prepend(treeSection);
+    listen(treeSection, 'keydown', event => { const row = event.target.closest?.('.tree-drive'); if (row && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); row.click(); } });
     listen(treeSection, 'click', event => {
       const row = event.target.closest?.('.tree-drive');
       if (!row) return;

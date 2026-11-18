@@ -45,7 +45,7 @@
 @media (prefers-color-scheme:dark){:root:not([data-theme=light]):not([data-theme=dark])[data-theme-follow=system]{--v2-bg:#16181C}}
 :root[data-contrast=high]{--v2-line:#5E6370;--v2-line2:#8E929C;--v2-text2:#2F323A;--v2-text3:#454952;--v2-hover:color-mix(in srgb,var(--v2-text) 12%,transparent)}
 :root[data-theme=dark][data-contrast=high]{--v2-line:#A6AAB3;--v2-line2:#7D828C;--v2-text2:#E1E3E8;--v2-text3:#C9CCD3}
-:root[data-density=comfortable]{--v2-row:36px;--v2-control:36px;--row-height:var(--v2-row)}
+:root[data-density=comfortable]{--v2-row:48px;--v2-control:40px;--row-height:var(--v2-row)}
 
 html,body{background:var(--v2-bg);color:var(--v2-text)}
 body{font-size:13px;line-height:1.35}
@@ -90,7 +90,7 @@ mfe-main-workspace>mfe-top-bar{display:none}
 .folder-pane{padding:0;margin:0;border:0;background:transparent}
 .folder-pane>.pane-label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 .tree-drives{display:grid;gap:1px}
-.tree-drive{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:8px;min-height:var(--v2-row);padding:0 8px 0 22px;border-radius:var(--v2-radius);font-size:13px;color:var(--v2-text);cursor:pointer;white-space:nowrap}
+.tree-drive{transition:background-color var(--md-sys-motion-duration-short4,200ms) var(--md-sys-motion-easing-standard);all:unset;box-sizing:border-box;display:flex;align-items:center;gap:8px;min-height:var(--v2-row);padding:0 8px 0 22px;border-radius:var(--v2-radius);font-size:13px;color:var(--v2-text);cursor:pointer;white-space:nowrap}
 .tree-drive:hover{background:var(--v2-hover)}
 .tree-drive:focus-visible{outline:2px solid var(--v2-accent);outline-offset:-2px}
 .tree-drive[aria-current=true]{background:var(--v2-selected)}
@@ -146,7 +146,7 @@ mfe-control-guidance[data-presentation=hint]{display:none}
 :root[data-help-mode=on] mfe-control-guidance[data-presentation=hint][data-open=true]{max-width:none}
 :root[data-help-mode=on] td>mfe-control-guidance[data-presentation=hint],:root[data-help-mode=on] .drive-tabs-host mfe-control-guidance,:root[data-help-mode=on] .titlebar mfe-control-guidance{display:none}
 mfe-control-guidance[data-presentation=hint][data-open=true]{display:block;flex:1 0 100%;grid-column:1/-1}
-.help-tooltip{position:fixed;z-index:12000;max-width:320px;padding:6px 8px;border-radius:4px;background:#24272E;color:#F3F4F7;font-size:12px;line-height:1.35;pointer-events:none;box-shadow:0 4px 12px #0003;opacity:0;transform:translateY(-2px);transition:opacity 120ms cubic-bezier(.2,0,0,1),transform 120ms cubic-bezier(.2,0,0,1)}
+.help-tooltip{position:fixed;z-index:12000;max-width:320px;padding:6px 8px;border-radius:4px;background:#24272E;color:#F3F4F7;font-size:12px;line-height:1.35;pointer-events:none;box-shadow:0 4px 12px #0003;opacity:0;transform:translateY(-2px);transition:opacity var(--md-sys-motion-duration-short2,100ms) var(--md-sys-motion-easing-standard),transform var(--md-sys-motion-duration-short2,100ms) var(--md-sys-motion-easing-standard)}
 .help-tooltip.visible{opacity:1;transform:none}
 :root[data-theme=dark] .help-tooltip{background:#E4E6EB;color:#16181C}
 @media (prefers-reduced-motion:reduce){.help-tooltip{transition:none;transform:none}}

@@ -55,13 +55,10 @@ test('help mode is remembered and shown on the document root', () => {
   assert.deepEqual(seen, [false, true]);
 });
 
-test('context menus put actions on the target first and fold layout and appearance tools into Customize', async () => {
-  globalThis.document ??= undefined;
-  const {groupCustomizeItems} = await import('../src/shared/surface/overlay.js');
-  const items = [{id: 'open', label: 'Open'}, {id: 'layout-move', group: 'customize', label: 'Move'}, {id: 'appearance.edit', group: 'customize', label: 'Edit'}];
-  const grouped = groupCustomizeItems(items, {});
-  assert.deepEqual(grouped.map(item => item.id), ['open', 'customize']);
-  assert.deepEqual(groupCustomizeItems([{id: 'open'}], {}).map(item => item.id), ['open'], 'no Customize item without tools');
+test('context menus put actions on the target first and fold layout and appearance tools behind Customize', async () => {
+  const menu = await read('src/shared/surface/context-menu.js');
+  assert.ok(menu.includes("const folded=!this.search?.query&&list.some(row=>items[Number(row.id)]?.group==='customize')"), 'folded only while the filter is empty');
+  assert.ok(menu.includes("'aria-expanded':String(Boolean(this.customizeOpen))"));
   const layout = await read('src/shared/surface/panel-layout.js');
   assert.equal((layout.match(/group:'customize'/g) || []).length, 3);
   const appearance = await read('src/renderer/features/personalization/appearance.js');

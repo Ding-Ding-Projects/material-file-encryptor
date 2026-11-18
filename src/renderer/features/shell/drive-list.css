@@ -15,7 +15,7 @@
 .drive-list-table th[data-column=letter]{width:110px}
 .drive-list-table th[data-column=state]{width:180px}
 .drive-list-table td{padding:0 12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.drive-list-table tr[data-session-id]{cursor:pointer}
+.drive-list-table tr[data-session-id]{cursor:pointer;transition:background-color var(--md-sys-motion-duration-short4,200ms) var(--md-sys-motion-easing-standard)}
 .drive-list-table tr[data-session-id]:hover{background:var(--v2-hover)}
 .drive-list-table tr[data-session-id]:focus-visible{outline:2px solid var(--v2-accent);outline-offset:-2px}
 .drive-list-table tr.selected{background:var(--v2-selected);box-shadow:inset 3px 0 0 var(--v2-accent)}
@@ -49,7 +49,7 @@
 .unlock-bar .unlock-actions{margin:0;flex:none}
 .unlock-bar .unlock-note{flex:1 0 100%;margin:0;font-size:12px;color:var(--v2-text2)}
 .unlock-bar #unlock-error{flex:1 0 100%;margin:0}
-.unlock-card.unlock-bar[data-state=failed]{animation:unlock-bar-shake 300ms cubic-bezier(.2,0,0,1)}
+.unlock-card.unlock-bar[data-state=failed]{animation:unlock-bar-shake var(--md-sys-motion-duration-short4,300ms) var(--md-sys-motion-easing-standard)}
 @keyframes unlock-bar-shake{0%,100%{transform:none}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
 @media (prefers-reduced-motion:reduce){.unlock-card.unlock-bar[data-state=failed]{animation:none}}
 :root[data-motion=reduced] .unlock-card.unlock-bar[data-state=failed],:root[data-low-stimulation=true] .unlock-card.unlock-bar[data-state=failed]{animation:none}
