@@ -1,5 +1,6 @@
 import {createStartupSurprise,observeStartupInteraction} from '../shared/local-ux/surprise.js';
 import {plainErrorMessage} from '../shared/ipc-error.js';
+import {isBackupBusyRefusal,BACKUP_BUSY_HOLD_MS,BACKUP_BUSY_RETRY_MS} from '../shared/backup-busy.js';
 import {createMotionController} from './motion/motion-controller.js';
 import {createUnlockChoreography} from './motion/unlock-choreography.js';
 import {createInstallationTakeover,createTakeoverPreference} from './features/installation/takeover.js';
@@ -233,6 +234,9 @@ function applyPreferences() {
  notifyLanguageListeners();
 }
 colorQuery.addEventListener('change', applyThemeOnly);
+// A backup preparing its snapshot is normal work: the status bar says "Backing up…" for a moment instead of an error.
+let backupBusyUntil=0;
+function noteBackupBusy(){backupBusyUntil=Date.now()+BACKUP_BUSY_HOLD_MS;foundation?.updateChrome?.();setTimeout(()=>foundation?.updateChrome?.(),BACKUP_BUSY_HOLD_MS+50);}
 function clearMainError() { const banner = $('main-error'); if (banner) banner.hidden = true; }
 // A refused personal-wording file changed nothing, so it is reported as a transient, non-blocking notification
 // (status message plus notification centre entry) and never as a banner that outlives the action.
@@ -246,6 +250,15 @@ function showTransientError(error) {
 }
 function showError(error, inDialog = false) {
  const message = plainErrorMessage(error);
+ // Never a red banner, a funny suffix or an error notification for a backup that is simply busy.
+ if (isBackupBusyRefusal(message)) {
+  noteBackupBusy();
+  const note = t('The drive is backing up. Your files are safe; try again in a moment.',{factual:true});
+  if (inDialog) { $('dialog-error').textContent = note; $('dialog-error').hidden = false; return; }
+  clearTimeout(snackbarTimer); $('snackbar').textContent = note; $('snackbar').hidden = false;
+  snackbarTimer = setTimeout(() => { $('snackbar').hidden = true; }, 5500);
+  return;
+ }
  const target = $(inDialog ? 'dialog-error' : 'main-error-text'); target.textContent = t(message,{message:true});
  $(inDialog ? 'dialog-error' : 'main-error').hidden = false;
  if (!inDialog) $('main-error').scrollIntoView({block:'nearest'});
@@ -446,7 +459,10 @@ function updateSelectedFileRows(){
 /** Applies the selection model to the rows, the action buttons and the details panel. */
 function syncSelection(){selected=fileSelection.primary;updateSelectedFileRows();renderAvailability();foundation?.updateChrome?.();fileDetails?.selectEntry(currentFiles().find(file=>file.id===selected)||null);}
 function selectFile(file){fileSelection.only(file.id);syncSelection();}
-async function loadFilePage(append=false){if(!api?.listFiles||state?.locked)return;const revision=state.filesRevision??state.revision??'initial';if(!append&&filePageRevision===revision)return;const request=++filePageRequest;filePageRevision=revision;if(!append){pagedFiles=[];selected=null;fileSelection.clear();fileDetails?.selectEntry(null);renderedFilesKey='';renderFiles();}try{const page=await api.listFiles({cursor:append?fileNextCursor:null,limit:100,revision:revision==='initial'?undefined:revision});if(request!==filePageRequest||state?.locked)return;const items=Array.isArray(page)?page:page.items||page.files||[];pagedFiles=append?[...(pagedFiles||[]),...items]:items;fileNextCursor=page.nextCursor??null;const more=$('load-more-files');if(more)more.hidden=!fileNextCursor;renderedFilesKey='';renderFiles();foundation?.updateChrome?.();}catch(error){if(request===filePageRequest)showError(error);}}
+async function loadFilePage(append=false){if(!api?.listFiles||state?.locked)return;const revision=state.filesRevision??state.revision??'initial';if(!append&&filePageRevision===revision)return;const request=++filePageRequest;filePageRevision=revision;const lastKnown=pagedFiles;if(!append){pagedFiles=[];selected=null;fileSelection.clear();fileDetails?.selectEntry(null);renderedFilesKey='';renderFiles();}try{const page=await api.listFiles({cursor:append?fileNextCursor:null,limit:100,revision:revision==='initial'?undefined:revision});if(request!==filePageRequest||state?.locked)return;const items=Array.isArray(page)?page:page.items||page.files||[];pagedFiles=append?[...(pagedFiles||[]),...items]:items;fileNextCursor=page.nextCursor??null;const more=$('load-more-files');if(more)more.hidden=!fileNextCursor;renderedFilesKey='';renderFiles();foundation?.updateChrome?.();}catch(error){if(request!==filePageRequest)return;
+ // While a backup holds the drive the last known listing stays on screen and is refreshed shortly after.
+ if(isBackupBusyRefusal(error)){if(!append){pagedFiles=lastKnown;renderedFilesKey='';renderFiles();}filePageRevision=null;noteBackupBusy();setTimeout(()=>{if(request===filePageRequest)void loadFilePage();},BACKUP_BUSY_RETRY_MS);return;}
+ showError(error);}}
 function changeView(next) {
  try{navigationTiming=rendererTiming.begin('navigation',next);}catch{navigationTiming=null;}
  foundation?.closeContextMenu('navigation',{restoreFocus:false});
@@ -1073,7 +1089,7 @@ function setupEnhancedWorkspace() {
   openView:id=>{foundation.model.openTab({id,label:canonicalViewLabels[id]||id});foundation.shell.activate(id);},
   listVersions:id=>api?.listVersions?api.listVersions(id):Promise.resolve([]),
   backupStatus:()=>api?.registryStorageStatus?api.registryStorageStatus():Promise.resolve(null),
-  formatBytes,getTextScale:()=>shellPreferences.textScale/100
+  formatBytes,backingUp:()=>Date.now()<backupBusyUntil,getTextScale:()=>shellPreferences.textScale/100
  }});
  unlockCard=mountUnlockCard({doc:document,translate:t,hooks:{isBusy:()=>busy,chooseKeyFile:()=>api.chooseKeyFile(),unlock:unlockInline}});
  foundation.chrome=chrome;foundation.updateChrome=updateChrome;foundation.refreshChrome=()=>{unlockCard?.update(state);chrome?.refreshOverflow();};

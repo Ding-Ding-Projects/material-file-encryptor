@@ -3,12 +3,12 @@ namespace MaterialFileEncryptor.Host;
 internal sealed partial class VaultController
 {
     internal bool HasOpenSnapshotSource { get { lock(gate) return vault is not null; } }
-    internal async Task<(MaterialFileEncryptor.Core.VaultEngine.EncryptedSnapshot Snapshot, string Mode)> StageSnapshotAsync(CancellationToken cancellationToken = default)
+    internal async Task<(MaterialFileEncryptor.Core.VaultEngine.EncryptedSnapshot Snapshot, string Mode)> StageSnapshotAsync(CancellationToken cancellationToken = default, Action<int,int,long,long>? progress = null, bool leaveSourceParts = false)
     {
         MaterialFileEncryptor.Core.VaultEngine captured;
         string mode;
         lock(gate) { captured=Engine;mode=host is null?"unlocked-staged":"mounted-staged";++activePreparedOperations; }
-        try { return (await captured.StageEncryptedSnapshotAsync(cancellationToken).ConfigureAwait(false),mode); }
+        try { return (await captured.StageEncryptedSnapshotAsync(progress,leaveSourceParts,cancellationToken).ConfigureAwait(false),mode); }
         finally { lock(gate)--activePreparedOperations; }
     }
     internal void ValidateSnapshotSource(string? suppliedSource)

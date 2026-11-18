@@ -440,7 +440,7 @@ export function mountWorkspaceChrome({doc = document, translate, getLanguage, ho
     const total = files.reduce((sum, file) => sum + (Number(file.size) || 0), 0);
     set('status-used', state && !state.locked ? `${snapshot.hasMore ? t('{count} files (more available)', {count: files.length}) : t('{count} files', {count: files.length})} · ${t('{size} used', {size: hooks.formatBytes(total) || '0 B'})}` : '');
     const sync = state?.sync;
-    set('status-sync', !state || state.locked ? '' : sync?.running ? t('Syncing') : state.transport?.pendingSynchronization || sync?.pendingCommits ? t('Sync pending') : sync?.lastSync ? t('Synchronized') : t('Not synced yet'));
+    set('status-sync', !state || state.locked ? '' : hooks.backingUp?.() ? t('Backing up…') : sync?.running ? t('Syncing') : state.transport?.pendingSynchronization || sync?.pendingCommits ? t('Sync pending') : sync?.lastSync ? t('Synchronized') : t('Not synced yet'));
     set('status-cipher', t('Encrypted with AES-GCM'));
     const language = getLanguage();
     set('status-language', t('Language: {language}', {language: language === 'yue' ? '廣東話' : language === 'bilingual' ? 'English + 廣東話' : 'English'}));

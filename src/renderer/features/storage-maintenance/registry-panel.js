@@ -2,6 +2,7 @@ import { SurfaceElement, element, localized, register } from '../../../shared/su
 import { REGISTRY_COPY } from './registry-copy.js';
 import { REGISTRY_METHODS, DIGEST, registryDraft, registryConfiguration, registrySource, registryBusy, registrySnapshots } from './registry-model.js';
 import {RegistryLoginPanel} from './registry-login-panel.js';
+import { progressView, formatBytes, formatCount, formatDuration, formatTimestamp } from './registry-progress.js';
 import './backup-all-panel.js';
 
 const entry = () => ({ draft: registryDraft(), edited: false, status: null, snapshots: null, selected: '', restoredDestination: '', pending: null, cancelling: false, generation: 0, message: '', error: '' });
@@ -42,6 +43,7 @@ export class RegistryStoragePanel extends SurfaceElement {
     this.statusText = element('p', { role: 'status', 'aria-live': 'polite' }); this.error = element('p', { class: 'error', role: 'alert' });
     this.progress = element('md-linear-progress', { indeterminate: true });
     this.progressText = element('p', { role:'status', 'aria-live':'polite' });
+    this.slowText = element('p', { class:'slow-note' });
     this.recoveryText = element('p', { style:'user-select:text;white-space:pre-wrap;overflow-wrap:anywhere' });
     this.deferredText = element('p');
     this.ownerText = element('p', {role:'status', 'aria-live':'polite'});
@@ -58,7 +60,7 @@ export class RegistryStoragePanel extends SurfaceElement {
       copy('title', 'h2', { id: 'registry-title' }),this.loginPanel.root,this.backupPanel,copy('destination', 'h3'), field('repository'),field('visibility','text',['public','private']),this.visibilityNote,copy('destinationNote'),copy('destinationVerificationNote'),copy('snapshotNote'), copy('sourceRequired'),
       copy('schedule', 'h3'), field('enabled', 'checkbox'), field('mode', 'text', ['interval', 'calendar']), this.interval, this.calendar,
       element('div', { class: 'fields' }, [field('missed', 'text', ['run-once', 'skip']), field('retryMinutes', 'number')]), field('background', 'checkbox'), copy('backgroundNote'),
-      element('div', { class: 'actions' }, [button('save')]), copy('operation', 'h3'), this.statusText, this.error, this.ownerText, this.ownerButton, this.progress, this.progressText, this.recoveryText, this.deferredText, metrics,
+      element('div', { class: 'actions' }, [button('save')]), copy('operation', 'h3'), this.statusText, this.error, this.ownerText, this.ownerButton, this.progress, this.progressText, this.slowText, this.recoveryText, this.deferredText, metrics,
       element('div', { class: 'actions' }, ['sync', 'refresh', 'cancel'].map(button)), copy('revisions', 'h3'), copy('restoreNote'), this.revisionMessage, this.revision, this.revisionDetails,
       element('div', { class: 'actions' }, ['list', 'restore'].map(button)), this.restoreResult,
     ]));
@@ -160,7 +162,18 @@ export class RegistryStoragePanel extends SurfaceElement {
   async sync() {
     const current = this.synchronize(); if (!current || this.buttons.sync.disabled) return;
     await this.perform('syncing', async (row, id, source) => {
-      const result = await this.services.syncRegistryStorage();
+      let result;
+      try { result = await this.services.syncRegistryStorage(); }
+      catch (error) {
+        // A backup that paused because the drive was used is not a failure; it resumes by itself.
+        const paused = /Backup paused while you used the drive/.test(String(error?.message || ''));
+        if (!this.isCurrent(row)) return;
+        await this.readStatus(row, id, source).catch(() => {});
+        // Cancel is an answer, not a failure: say what happened instead of showing an error.
+        if (paused) { row.message = 'paused'; return; }
+        if (row.status?.state === 'cancelled') { row.message = 'syncCancelled'; return; }
+        throw error;
+      }
       if (!this.isCurrent(row)) return;
       row.message = result?.verified === true && DIGEST.test(result.digest) ? 'verified' : 'unverified';
       row.snapshots = null; row.selected = ''; await this.readStatus(row, id, source);
@@ -229,20 +242,22 @@ export class RegistryStoragePanel extends SurfaceElement {
     const actions = { save: editable, sync: editable && status?.configured && this.canSyncSource(), refresh: available && !pending, cancel: available && active && !otherOwner && !current?.cancelling, list: editable && status?.configured, restore: editable && status?.configured && current?.snapshots?.some(row => row.digest === current.selected) };
     for (const [key, node] of Object.entries(this.buttons)) { node.textContent = this.t(key); node.disabled = !actions[key]; }
     this.buttons.cancel.hidden = !active; this.progress.hidden = !active; this.progress.setAttribute('aria-label', this.t('operation'));
-    const progress=status?.progress;
-    const hasProgress=progress&&['downloading','preparing-upload','downloading-restore'].includes(progress.phase)&&Number.isSafeInteger(progress.completedFiles)&&progress.completedFiles>=0&&Number.isSafeInteger(progress.completedBytes)&&progress.completedBytes>=0;
-    this.progressText.hidden=!hasProgress;
-    this.progressText.textContent=hasProgress?`${this.t(progress.phase)}: ${progress.completedFiles}${Number.isSafeInteger(progress.totalFiles)&&progress.totalFiles>=progress.completedFiles?` / ${progress.totalFiles}`:''} ${this.t('progressFiles')} · ${progress.completedBytes} ${this.t('progressBytes')}`:'';
+    const view=active?progressView(status?.progress):null;
+    this.progressText.hidden=!view;this.progressText.textContent=view?this.progressLine(view):'';
+    this.slowText.hidden=!view?.slow;this.slowText.textContent=view?.slow?this.t('slowStep'):'';
+    // A known total gives a bar that moves; without one the bar keeps its indeterminate motion.
+    if(view?.fraction!=null){this.progress.indeterminate=false;this.progress.value=view.fraction;}else{this.progress.indeterminate=true;}
     const recovery=status?.restoreRecovery;
     this.recoveryText.hidden=!(recovery&&typeof recovery.destination==='string'&&recovery.destination.length>0&&recovery.destination.length<=32767);
     this.recoveryText.textContent=this.recoveryText.hidden?'':`${this.t(recovery.complete===true?'recoveryComplete':'recoveryIncomplete')}\n${recovery.destination}`;
     this.deferredText.hidden=status?.lastResult?.replayDeferred!==true;this.deferredText.textContent=this.t('replayDeferred');
-    const message = !available ? 'unavailable' : current?.cancelling ? 'cancelling' : current?.pending || current?.message || (!status ? 'unverified' : !status.configured ? 'unconfigured' : status.state === 'incomplete' ? 'unverified' : busy ? 'syncing' : 'idle');
-    this.statusText.textContent = this.t(message) + (busy ? ` (${String(status.state).slice(0,80)})` : '');
+    // A running operation is described by its step below, so a status refresh never hides it behind "Reading saved status".
+    const message = !available ? 'unavailable' : current?.cancelling ? 'cancelling' : status?.state === 'native-release-unverified' ? 'releaseUnverified' : status?.state === 'paused' && !current?.pending ? 'paused' : busy && status.state !== 'restoring' ? 'syncing' : current?.pending || current?.message || (!status ? 'unverified' : !status.configured ? 'unconfigured' : status.state === 'incomplete' ? 'unverified' : busy ? 'syncing' : 'idle');
+    this.statusText.textContent = this.t(message);
     this.error.textContent = current?.error ? this.t(current.error) : status?.lastError ? this.t('error') : ''; this.error.hidden = !this.error.textContent;
     this.restoredLocation.textContent = current?.restoredDestination || ''; this.restoreResult.hidden = !current?.restoredDestination;
     const last = status?.lastResult;
-    const values = { savedRepository: status?.configuration?.repository, savedVisibility:status?.configured?this.t(status.configuration?.visibility??'private'):null,nextDue: status?.nextDue, lastResult: last?.verified === true && DIGEST.test(last.digest) ? last.digest : last ? this.t('unverified') : null };
+    const values = { savedRepository: status?.configuration?.repository, savedVisibility:status?.configured?this.t(status.configuration?.visibility??'private'):null,nextDue: formatTimestamp(status?.nextDue, this.locale()), lastResult: last?.verified === true && DIGEST.test(last.digest) ? last.digest : last ? this.t('unverified') : null };
     for (const [key, row] of Object.entries(this.metrics)) { row.label.textContent = this.t(key); row.value.textContent = values[key] == null ? this.t('unknown') : String(values[key]).slice(0,512); }
     this.revision.label = this.t('select'); this.revision.setAttribute('aria-label', this.t('select')); this.revision.disabled = !editable || !current?.snapshots?.length;
     const optionRows = [element('option', { value: '', text: this.t('choose') }), ...(current?.snapshots || []).map(row => element('option', { value: row.digest, text: `${row.tag} · ${row.digest}` }))];
@@ -250,6 +265,16 @@ export class RegistryStoragePanel extends SurfaceElement {
     this.revisionMessage.textContent = current?.snapshots == null ? this.t('notLoaded') : !current.snapshots.length ? this.t('empty') : `${current.snapshots.length} ${this.t("snapshotCount")}`;
     const selected = current?.snapshots?.find(row => row.digest === current.selected); this.revisionDetails.hidden = !selected;
     for (const [key, row] of Object.entries(this.rows)) { row.label.textContent = this.t(key); const value = key === 'digest' ? selected?.digest : selected?.snapshot[key]; row.value.textContent = Array.isArray(value) ? value.join('\n') || this.t('none') : String(value ?? ''); }
+  }
+  locale() { return this.language === 'zh-HK' ? 'zh-HK' : 'en'; }
+  fill(key, values) { return Object.entries(values).reduce((text, [name, value]) => text.replaceAll(`{${name}}`, value), this.t(key)); }
+  progressLine(view) {
+    const locale = this.locale(), parts = [this.t(`step_${view.step}`) + (view.phase && view.phase !== view.step ? ` (${this.t(`phase_${view.phase}`)})` : '')];
+    if (view.done !== null && view.unit !== 'commits') parts.push(this.fill(view.total !== null ? `countOf_${view.unit}` : `count_${view.unit}`, { done: formatCount(view.done, locale), total: formatCount(view.total, locale) }));
+    if (view.bytesDone) parts.push(this.fill(view.bytesTotal !== null ? 'bytesOf' : 'bytesOnly', { done: formatBytes(view.bytesDone, locale), total: formatBytes(view.bytesTotal, locale) }));
+    if (view.pendingCommits) parts.push(this.fill('pendingCommits', { n: formatCount(view.pendingCommits, locale) }));
+    if (view.elapsedMs !== null) parts.push(this.fill('elapsed', { time: formatDuration(view.elapsedMs) }) + (view.totalElapsedMs !== null && view.totalElapsedMs > view.elapsedMs + 1000 ? `, ${this.fill('totalElapsed', { time: formatDuration(view.totalElapsedMs) })}` : ''));
+    return parts.join(' · ');
   }
   setLanguage(language) { this.language = language; this.backupPanel.setLanguage(language); this.render(); }
   destroy() { this.disposed = true;this.backupPanel.destroy();this.loginPanel.destroy();if(this.pollTimer!==null)clearTimeout(this.pollTimer);this.pollTimer=null;for (const current of this.sessions.values()) current.generation++; this.sessions.clear(); this.remove(); }

@@ -51,6 +51,7 @@ export const SHELL_COPY = Object.freeze({
   '{size} used': '已用 {size}',
   'Syncing': '同步中',
   'Sync pending': '等待同步',
+  'Backing up…': '備份中…',
   'Synchronized': '已同步',
   'Not synced yet': '未同步過',
   'Encrypted with AES-GCM': '使用 AES-GCM 加密',
