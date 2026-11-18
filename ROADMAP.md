@@ -1,3 +1,19 @@
+## Version 2 frame and pages, 2026-11-17
+
+- [ ] Navigation tree replaces the page tab strip as the main navigation: Home, drives with their folders, offline, history, Recycle Bin, Docker Hub backup, Local tools, Settings and Help, with the Settings and Help pages as child rows. Implemented with source tests; packaged-build proof pending.
+- [ ] Decision recorded: pages no longer open as tabs by themselves; the title bar keeps drive tabs and tabs opened from the New tab catalog, and Open every tab still opens every page as a tab. See design/redesign-2026-11/v2-decisions.md. Implemented with source tests; packaged-build proof pending.
+- [ ] Title bar: drive switcher, search field with a `.*` toggle that hands off to the command palette, help-mode button, notifications. Implemented with source tests; packaged-build proof pending.
+- [ ] Help without information icons in the desktop app: tooltip on hover and keyboard focus, accessible description, help mode inline text; the guard now checks reachable help per control. Implemented with source tests; packaged-build proof pending.
+- [ ] Drive list with an inline unlock bar and the New menu (on this PC, Docker Hub, open from Docker Hub). Implemented with source tests; packaged-build proof pending.
+- [ ] Home status dashboard, Local tools dense list, Settings categories with Backup and Updates, Docker Hub backup drive table grouped by repository. Implemented with source tests; packaged-build proof pending.
+- [ ] New Docker Hub drive easy path with the default repository preselected; repository chooser lists each repository once and has a New repository row (public only). Implemented with source tests; packaged-build proof pending.
+- [ ] Context menus fold panel layout and appearance tools into Customize. Implemented with source tests; packaged-build proof pending.
+- [ ] Packaged-build captures of every page at 1440 by 900 light and dark and at 360 px, compared with the boards, replacing the README captures.
+- [ ] Automatic backup, backup on lock, retention, pruning, the tag meter and moving a drive to its own repository (backend lanes; shown disabled today).
+- [ ] Remove the filter field and regex button from context menus while keeping type-to-filter.
+- [ ] Per-drive size, snapshot count and last-opened figures in the drive list and Home.
+- [ ] Share, Receive and Shared files pages (separate lane; the tree shows Shared files when that feature registers).
+
 ## Docker Hub drives without folders, 2026-11-17
 
 Branch `ai/feature/20261117-docker-hub-drive`. Ticks mean implemented with focused tests passing against a fake registry; nothing here has run against a real Docker Hub account except the sign-in relay.

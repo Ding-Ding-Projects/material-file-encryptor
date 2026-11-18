@@ -2,6 +2,10 @@
 
 Every capable control has its own compact information icon placed immediately before it, so it comes first in reading and keyboard order and stays attached to its control when a row wraps. The icon is a Material icon button bundled with the product, so it needs no network access. It stays closed until you open it.
 
+## In the desktop app: help without icons
+
+The desktop app no longer draws an icon in front of each control. The same help text is the control's tooltip, shown when the pointer rests on it or keyboard focus reaches it, and its accessible description, read by screen readers. The ? button in the title bar turns on help mode, which shows the text inline under every control. The full explanation and the guided steps of each control stay in the command palette as Explain and Guide commands. The website and the browser extension still use the icons described below.
+
 ## What the icon does
 
 - Opens an explanation written for that one control: its purpose, options, default, effects, an example, validation and recovery.
