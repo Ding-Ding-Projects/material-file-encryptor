@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Unlock</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..900&amp;family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..600,0..1,0&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.ms{font-family:'Material Symbols Rounded';font-weight:400;font-style:normal;font-size:24px;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;white-space:nowrap;direction:ltr;-webkit-font-feature-settings:'liga';font-feature-settings:'liga';user-select:none}
+.ms.fill{font-variation-settings:'FILL' 1}
+@keyframes enter{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes pop{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
+[data-motion=off] *{animation:none!important;transition:none!important}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+button,input,select{font:inherit;color:inherit}
+</style>
+</helmet>
+<div data-motion="{{motion}}" style="width:1440px;height:960px;display:flex;font-family:'Roboto Flex',system-ui,sans-serif;font-size:14px;line-height:20px;color:{{onSurface}};background:{{surface}};overflow:hidden">
+<nav aria-label="Sections" style="flex:0 0 96px;display:flex;flex-direction:column;align-items:center;gap:12px;padding-top:24px">
+<button type="button" aria-label="New drive" style="width:56px;height:56px;border-radius:16px;border:0;background:{{primaryContainer}};color:{{onPrimaryContainer}};display:grid;place-items:center;margin-bottom:16px;box-shadow:0 2px 6px {{shadow}}"><span class="ms" aria-hidden="true">add</span></button>
+<sc-for list="{{rail}}" as="r" hint-placeholder-count="8">
+<a href="#" style="display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;color:{{r.color}};width:80px"><span style="{{r.pill}}"><span class="{{r.iconClass}}" aria-hidden="true">{{r.icon}}</span></span><span style="font-size:12px;line-height:16px;font-weight:500">{{r.label}}</span></a>
+</sc-for>
+</nav>
+<main style="flex:1;padding:24px 24px 24px 0;display:flex;min-width:0">
+<div style="flex:1;border-radius:28px;background:{{surfaceContainerLow}};padding:24px;display:flex;flex-direction:column;gap:24px;min-width:0;overflow:hidden">
+<header style="display:flex;align-items:center;gap:12px">
+<button type="button" aria-label="Back to drives" style="width:40px;height:40px;border-radius:999px;border:0;background:transparent;color:{{onSurfaceVariant}};display:grid;place-items:center"><span class="ms" aria-hidden="true">arrow_back</span></button>
+<div style="flex:1"><h1 style="margin:0;font-size:32px;line-height:40px;font-weight:400">Unlock Work</h1><p style="margin:4px 0 0;color:{{onSurfaceVariant}};font-size:16px;line-height:24px">This drive is locked. Enter its password to open it as drive E:</p></div>
+</header>
+<div style="flex:1;display:flex;gap:24px;min-height:0">
+<section aria-label="Unlock drive" style="flex:1;display:flex;align-items:center;justify-content:center;min-width:0">
+<div style="width:520px;border-radius:28px;background:{{surfaceContainerHighest}};padding:40px 40px 32px;display:flex;flex-direction:column;align-items:center;gap:20px;animation:enter 320ms cubic-bezier(.05,.7,.1,1) both">
+<span aria-hidden="true" style="width:88px;height:88px;border-radius:999px;background:{{tertiaryContainer}};color:{{onTertiaryContainer}};display:grid;place-items:center"><span class="ms fill" style="font-size:44px">{{lockIcon}}</span></span>
+<div style="text-align:center"><h2 style="margin:0;font-size:24px;line-height:32px;font-weight:400">Work</h2><p style="margin:4px 0 0;color:{{onSurfaceVariant}};font-size:14px">Drive letter E: · Encrypted · 1.4 GB used of 8 GB</p></div>
+<div style="width:100%;display:flex;flex-direction:column;gap:4px">
+<label style="position:relative;display:flex;align-items:center;height:56px;border-radius:4px;border:{{fieldBorder}};padding:0 4px 0 16px;background:transparent">
+<span style="position:absolute;top:-10px;left:12px;padding:0 4px;background:{{surfaceContainerHighest}};font-size:12px;line-height:16px;color:{{fieldLabel}}">Password</span>
+<input type="{{pwType}}" value="{{pwValue}}" aria-label="Password" style="flex:1;border:0;background:transparent;outline:0;font-size:16px">
+<button type="button" onClick="{{togglePw}}" aria-label="{{pwAria}}" style="width:40px;height:40px;border-radius:999px;border:0;background:transparent;color:{{onSurfaceVariant}};display:grid;place-items:center"><span class="ms" aria-hidden="true">{{pwIcon}}</span></button>
+</label>
+<p role="alert" style="margin:0;padding:0 16px;min-height:16px;font-size:12px;line-height:16px;color:{{helperColor}};display:flex;align-items:center;gap:6px"><span class="ms" aria-hidden="true" style="font-size:16px;{{errIconStyle}}">error</span>{{helperText}}</p>
+</div>
+<div style="width:100%;display:flex;align-items:center;justify-content:space-between">
+<button type="button" style="height:40px;padding:0 12px;border-radius:999px;border:0;background:transparent;color:{{primary}};display:flex;align-items:center;gap:8px;font-weight:500"><span class="ms" aria-hidden="true" style="font-size:18px">key</span>Use key file</button>
+<button type="button" onClick="{{toggleErr}}" style="height:40px;padding:0 12px;border-radius:999px;border:0;background:transparent;color:{{onSurfaceVariant}};display:flex;align-items:center;gap:8px;font-weight:500;text-decoration:underline"><span class="ms" aria-hidden="true" style="font-size:18px">preview</span>{{demoLabel}}</button>
+</div>
+<div style="width:100%;display:flex;align-items:center;gap:16px;min-height:56px;border-top:1px solid {{outlineVariant}};padding-top:8px">
+<span style="flex:1"><span style="display:block;font-size:16px;line-height:24px">Remember on this PC</span><span style="color:{{onSurfaceVariant}};font-size:14px">Unlock Work automatically when you sign in to Windows</span></span>
+<button type="button" role="switch" aria-checked="{{rememberChecked}}" aria-label="Remember on this PC" onClick="{{toggleRemember}}" style="{{switchTrack}}"><span style="{{switchHandle}}"></span></button>
+</div>
+<button type="button" style="width:100%;height:48px;border-radius:999px;border:0;background:{{primary}};color:{{onPrimary}};display:flex;align-items:center;justify-content:center;gap:8px;font-weight:500;font-size:16px"><span class="ms" aria-hidden="true" style="font-size:20px">lock_open</span>Unlock</button>
+</div>
+</section>
+<aside aria-label="Other drives" style="flex:0 0 360px;border-radius:12px;border:1px solid {{outlineVariant}};padding:16px;display:flex;flex-direction:column;gap:4px">
+<h2 style="margin:0 0 8px;font-size:16px;line-height:24px;font-weight:500">Other drives</h2>
+<sc-for list="{{others}}" as="o" hint-placeholder-count="4">
+<div style="display:flex;align-items:center;gap:16px;min-height:72px;border-bottom:1px solid {{outlineVariant}}">
+<span aria-hidden="true" style="{{o.avatar}}">{{o.letter}}</span>
+<span style="flex:1;min-width:0"><span style="display:block;font-size:16px;line-height:24px;font-weight:500">{{o.name}}</span><span style="color:{{onSurfaceVariant}};font-size:14px">{{o.where}}</span></span>
+<span style="{{o.chip}}"><span class="ms" aria-hidden="true" style="font-size:18px">{{o.icon}}</span>{{o.state}}</span>
+</div>
+</sc-for>
+<p style="margin:12px 0 0;color:{{onSurfaceVariant}}">Locked drives stay hidden in Explorer until you unlock them.</p>
+</aside>
+</div>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"seed":{"editor":"enum","options":["green","indigo","amber"],"default":"green"},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"motion":{"editor":"enum","options":["on","off"],"default":"on"},"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  constructor(p){ super(p); this.state = { showPw: false, wrong: false, remember: true }; }
+  renderVals() {
+    const t = scheme(this.props.seed ?? 'green', this.props.theme ?? 'dark');
+    const s = this.state;
+    const railDefs = [['Home','home'],['Drives','hard_drive'],['Offline','offline_pin'],['History','history'],['Backup','cloud_upload'],['Shared','share'],['Tools','build'],['Settings','settings']];
+    const SEL = 1;
+    const others = [
+      { name:'Studio', where:'Q: · 2.8 GB', letter:'S', locked:false },
+      { name:'Photos 2026', where:'P: · 312 MB', letter:'P', locked:false },
+      { name:'Music library', where:'M: · 41 GB', letter:'M', locked:true },
+      { name:'Taxes', where:'T: · 86 MB', letter:'T', locked:true }
+    ];
+    return { ...t, motion: this.props.motion ?? 'on',
+      rail: railDefs.map(([label, icon], i) => ({ label, icon, iconClass: i === SEL ? 'ms fill' : 'ms', color: i === SEL ? t.onSurface : t.onSurfaceVariant,
+        pill: 'width:56px;height:32px;border-radius:16px;display:grid;place-items:center;background:' + (i === SEL ? t.secondaryContainer : 'transparent') + ';color:' + (i === SEL ? t.onSecondaryContainer : 'inherit') })),
+      lockIcon: 'lock',
+      pwType: s.showPw ? 'text' : 'password',
+      pwValue: s.wrong ? 'summer-2025' : 'correct horse battery',
+      pwIcon: s.showPw ? 'visibility_off' : 'visibility',
+      pwAria: s.showPw ? 'Hide password' : 'Show password',
+      togglePw: () => this.setState({ showPw: !s.showPw }),
+      toggleErr: () => this.setState({ wrong: !s.wrong }),
+      demoLabel: s.wrong ? 'Hide wrong password' : 'Show wrong password',
+      fieldBorder: s.wrong ? '2px solid ' + t.error : '2px solid ' + t.primary,
+      fieldLabel: s.wrong ? t.error : t.primary,
+      helperColor: s.wrong ? t.error : t.onSurfaceVariant,
+      helperText: s.wrong ? 'Wrong password. 2 attempts left before a 30 second wait.' : 'Passwords are case sensitive.',
+      errIconStyle: s.wrong ? '' : 'display:none',
+      toggleRemember: () => this.setState({ remember: !s.remember }),
+      rememberChecked: s.remember ? 'true' : 'false',
+      switchTrack: 'width:52px;height:32px;border-radius:999px;padding:0;cursor:pointer;position:relative;flex:0 0 52px;background:' + (s.remember ? t.primary : t.surfaceContainerHighest) + ';border:' + (s.remember ? '0' : '2px solid ' + t.outline),
+      switchHandle: 'position:absolute;top:50%;transform:translateY(-50%);border-radius:999px;transition:left 200ms;width:' + (s.remember ? '24px' : '16px') + ';height:' + (s.remember ? '24px' : '16px') + ';left:' + (s.remember ? '24px' : '6px') + ';background:' + (s.remember ? t.onPrimary : t.outline),
+      others: others.map(o => ({ ...o,
+        avatar: 'width:40px;height:40px;border-radius:999px;display:grid;place-items:center;font-size:16px;font-weight:500;background:' + t.primaryContainer + ';color:' + t.onPrimaryContainer,
+        icon: o.locked ? 'lock' : 'lock_open', state: o.locked ? 'Locked' : 'Unlocked',
+        chip: 'display:flex;align-items:center;gap:6px;height:32px;padding:0 12px 0 8px;border-radius:8px;font-weight:500;background:' + (o.locked ? 'transparent' : t.secondaryContainer) + ';border:' + (o.locked ? '1px solid ' + t.outlineVariant : '0') + ';color:' + (o.locked ? t.onSurfaceVariant : t.onSecondaryContainer) }))
+    };
+  }
+}
+function scheme(seed, theme) {
+  const dark = theme !== 'light';
+  const seeds = {
+    green:  dark ? { primary:'#8FD6B0', onPrimary:'#003825', primaryContainer:'#00513A', onPrimaryContainer:'#AAF2CB', secondaryContainer:'#354B40', onSecondaryContainer:'#CFE9D9', tertiaryContainer:'#234C5D', onTertiaryContainer:'#C1E8FB' }
+                 : { primary:'#2B6A4E', onPrimary:'#FFFFFF', primaryContainer:'#AFF1CE', onPrimaryContainer:'#002114', secondaryContainer:'#CFE9D9', onSecondaryContainer:'#0B1F15', tertiaryContainer:'#C1E8FB', onTertiaryContainer:'#001F2A' },
+    indigo: dark ? { primary:'#B9C3FF', onPrimary:'#1F2C61', primaryContainer:'#364379', onPrimaryContainer:'#DDE1FF', secondaryContainer:'#424659', onSecondaryContainer:'#DFE1F9', tertiaryContainer:'#5C3D58', onTertiaryContainer:'#FFD6F7' }
+                 : { primary:'#4D5C92', onPrimary:'#FFFFFF', primaryContainer:'#DDE1FF', onPrimaryContainer:'#05164B', secondaryContainer:'#DFE1F9', onSecondaryContainer:'#171B2C', tertiaryContainer:'#FFD6F7', onTertiaryContainer:'#2C1229' },
+    amber:  dark ? { primary:'#F5BD6F', onPrimary:'#452B00', primaryContainer:'#633F00', onPrimaryContainer:'#FFDDB3', secondaryContainer:'#574431', onSecondaryContainer:'#FBDEBC', tertiaryContainer:'#3E4E2E', onTertiaryContainer:'#D5EDBA' }
+                 : { primary:'#835416', onPrimary:'#FFFFFF', primaryContainer:'#FFDDB3', onPrimaryContainer:'#2A1700', secondaryContainer:'#FBDEBC', onSecondaryContainer:'#271904', tertiaryContainer:'#D5EDBA', onTertiaryContainer:'#11200A' }
+  };
+  const neutral = dark
+    ? { surface:'#101413', surfaceContainerLowest:'#0B0F0E', surfaceContainerLow:'#181D1B', surfaceContainer:'#1C211F', surfaceContainerHigh:'#272B29', surfaceContainerHighest:'#313634', onSurface:'#E0E3E0', onSurfaceVariant:'#C0C9C3', outline:'#8A938D', outlineVariant:'#404944', error:'#FFB4AB', onError:'#690005', errorContainer:'#93000A', onErrorContainer:'#FFDAD6', inverseSurface:'#E0E3E0', inverseOnSurface:'#2D3130', scrim:'rgba(0,0,0,.5)', shadow:'rgba(0,0,0,.45)' }
+    : { surface:'#F7FAF7', surfaceContainerLowest:'#FFFFFF', surfaceContainerLow:'#F1F4F1', surfaceContainer:'#EBEFEB', surfaceContainerHigh:'#E6E9E6', surfaceContainerHighest:'#E0E3E0', onSurface:'#191C1B', onSurfaceVariant:'#404944', outline:'#707973', outlineVariant:'#C0C9C3', error:'#BA1A1A', onError:'#FFFFFF', errorContainer:'#FFDAD6', onErrorContainer:'#410002', inverseSurface:'#2D3130', inverseOnSurface:'#EEF1EE', scrim:'rgba(0,0,0,.32)', shadow:'rgba(0,0,0,.18)' };
+  return { ...neutral, ...(seeds[seed] || seeds.green) };
+}
+</script>
+</body>
+</html>

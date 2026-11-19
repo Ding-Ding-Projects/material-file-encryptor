@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Context menu</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..900&amp;family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..600,0..1,0&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.ms{font-family:'Material Symbols Rounded';font-weight:400;font-style:normal;font-size:24px;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;white-space:nowrap;direction:ltr;-webkit-font-feature-settings:'liga';font-feature-settings:'liga';user-select:none}
+.ms.fill{font-variation-settings:'FILL' 1}
+@keyframes enter{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes pop{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
+[data-motion=off] *{animation:none!important;transition:none!important}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+button,input,select{font:inherit;color:inherit}
+</style>
+</helmet>
+<div data-motion="{{motion}}" style="position:relative;width:1440px;height:960px;display:flex;font-family:'Roboto Flex',system-ui,sans-serif;font-size:14px;line-height:20px;color:{{onSurface}};background:{{surface}};overflow:hidden">
+<nav aria-label="Sections" style="flex:0 0 96px;display:flex;flex-direction:column;align-items:center;gap:12px;padding-top:24px">
+<button type="button" aria-label="Import files" style="width:56px;height:56px;border-radius:16px;border:0;background:{{primaryContainer}};color:{{onPrimaryContainer}};display:grid;place-items:center;margin-bottom:16px;box-shadow:0 2px 6px {{shadow}}"><span class="ms" aria-hidden="true">upload_file</span></button>
+<sc-for list="{{rail}}" as="r" hint-placeholder-count="8">
+<a href="#" style="display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;color:{{r.color}};width:80px"><span style="{{r.pill}}"><span class="{{r.iconClass}}" aria-hidden="true">{{r.icon}}</span></span><span style="font-size:12px;line-height:16px;font-weight:500">{{r.label}}</span></a>
+</sc-for>
+</nav>
+<main style="flex:1;padding:24px 24px 24px 0;display:flex;min-width:0">
+<div style="flex:1;border-radius:28px;background:{{surfaceContainerLow}};padding:24px;display:flex;flex-direction:column;gap:16px;min-width:0;overflow:hidden">
+<header style="display:flex;align-items:center;gap:12px">
+<div style="flex:1"><h1 style="margin:0;font-size:32px;line-height:40px;font-weight:400">My drive</h1><p style="margin:4px 0 0;color:{{onSurfaceVariant}};font-size:16px;line-height:24px">Studio · 8 items · encrypted on this PC</p></div>
+<label style="{{searchBox}}"><span class="ms" aria-hidden="true" style="color:{{onSurfaceVariant}}">search</span><input placeholder="Search in Studio" aria-label="Search in Studio" style="flex:1;border:0;background:transparent;outline:0;font-size:16px"></label>
+<button type="button" style="{{btnRegex}}"><span class="ms" aria-hidden="true" style="font-size:18px">regular_expression</span>Regex</button>
+</header>
+<section aria-label="Drive" style="border-radius:28px;background:{{surfaceContainerHighest}};overflow:hidden;display:flex;flex-direction:column">
+<div aria-hidden="true" style="height:72px;background:linear-gradient(120deg,#3B5BA9,#8E5EA8 55%,#D98E5A)"></div>
+<div style="display:flex;align-items:center;gap:16px;padding:16px 24px">
+<span aria-hidden="true" style="width:48px;height:48px;border-radius:999px;display:grid;place-items:center;font-size:20px;font-weight:500;background:{{primaryContainer}};color:{{onPrimaryContainer}}">S</span>
+<div style="flex:1"><div style="font-size:22px;line-height:28px">Studio</div><div style="color:{{onSurfaceVariant}}">Q: · 2.8 GB</div></div>
+<span style="{{chipSelected}}"><span class="ms" aria-hidden="true" style="font-size:18px">lock_open</span>Unlocked</span>
+<button type="button" style="{{btnOutlined}}"><span class="ms" aria-hidden="true" style="font-size:18px">lock</span>Lock</button>
+</div>
+</section>
+<div style="display:flex;align-items:center;gap:8px">
+<button type="button" style="{{btnFilled}}"><span class="ms" aria-hidden="true" style="font-size:18px">upload_file</span>Import</button>
+<button type="button" style="{{btnTonal}}"><span class="ms" aria-hidden="true" style="font-size:18px">create_new_folder</span>New folder</button>
+<button type="button" style="{{btnOutlined}}"><span class="ms" aria-hidden="true" style="font-size:18px">sync</span>Sync now</button>
+<button type="button" style="{{btnOutlined}}"><span class="ms" aria-hidden="true" style="font-size:18px">offline_pin</span>Keep offline</button>
+<button type="button" style="{{btnOutlined}}"><span class="ms" aria-hidden="true" style="font-size:18px">share</span>Share</button>
+<span style="flex:1"></span>
+<button type="button" aria-label="More actions" style="{{iconBtn}}"><span class="ms" aria-hidden="true">more_vert</span></button>
+</div>
+<div style="flex:1;display:flex;gap:16px;min-height:0">
+<section aria-label="Files" style="flex:1;min-width:0;display:flex;flex-direction:column;border-radius:12px;background:{{surfaceContainerHighest}};overflow:hidden">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 120px 150px 40px;gap:12px;align-items:center;height:40px;padding:0 16px;color:{{onSurfaceVariant}};font-weight:500;border-bottom:1px solid {{outlineVariant}}"><span>Name</span><span>Size</span><span>Modified</span><span></span></div>
+<sc-for list="{{rows}}" as="f" hint-placeholder-count="8">
+<div style="{{f.row}}">
+<span style="display:flex;align-items:center;gap:16px;min-width:0"><span style="{{f.iconBox}}"><span class="ms" aria-hidden="true" style="font-size:20px">{{f.icon}}</span></span><span style="font-size:16px;line-height:24px;font-weight:500;white-space:nowrap">{{f.name}}</span></span>
+<span style="color:{{onSurfaceVariant}}">{{f.size}}</span>
+<span style="color:{{onSurfaceVariant}}">{{f.mod}}</span>
+<span class="ms" aria-hidden="true" style="font-size:20px;color:{{onSurfaceVariant}}">{{f.state}}</span>
+</div>
+</sc-for>
+</section>
+<aside aria-label="Details" style="flex:0 0 340px;border-radius:12px;border:1px solid {{outlineVariant}};padding:20px;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;gap:16px"><span style="width:56px;height:56px;border-radius:16px;display:grid;place-items:center;background:{{primaryContainer}};color:{{onPrimaryContainer}}"><span class="ms fill" aria-hidden="true" style="font-size:28px">table_chart</span></span><div><div style="font-size:16px;line-height:24px;font-weight:500">Budget 2026.xlsx</div><div style="color:{{onSurfaceVariant}}">Spreadsheet</div></div></div>
+</aside>
+</div>
+</div>
+</main>
+<div aria-hidden="true" style="position:absolute;inset:0;background:{{scrim}}"></div>
+<div role="menu" aria-label="File actions" style="position:absolute;left:560px;top:236px;width:340px;padding:8px 0;border-radius:16px;background:{{surfaceContainer}};box-shadow:0 4px 12px {{shadow}};animation:pop 200ms cubic-bezier(.05,.7,.1,1) both">
+<div style="display:flex;align-items:center;gap:12px;padding:8px 20px 12px;border-bottom:1px solid {{outlineVariant}};margin-bottom:8px">
+<span style="width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:{{primaryContainer}};color:{{onPrimaryContainer}}"><span class="ms fill" aria-hidden="true">table_chart</span></span>
+<div style="min-width:0"><div style="font-size:16px;line-height:24px;font-weight:500">Budget 2026.xlsx</div><div style="color:{{onSurfaceVariant}};font-size:12px;line-height:16px">640 KB · Spreadsheet</div></div>
+</div>
+<sc-for list="{{items}}" as="m" hint-placeholder-count="14">
+<div role="{{m.role}}" onMouseEnter="{{m.enter}}" style="{{m.style}}"><span class="ms" aria-hidden="true" style="{{m.iconStyle}}">{{m.icon}}</span><span style="flex:1;font-weight:500;white-space:nowrap">{{m.label}}</span><span style="color:{{m.keyColor}};font-weight:500">{{m.key}}</span><span class="ms" aria-hidden="true" style="color:{{onSurfaceVariant}}">{{m.trail}}</span></div>
+</sc-for>
+</div>
+<div role="menu" aria-label="Open with" style="{{subStyle}}">
+<sc-for list="{{subItems}}" as="s" hint-placeholder-count="3">
+<div role="menuitem" onMouseEnter="{{s.enter}}" style="{{s.style}}"><span class="ms" aria-hidden="true" style="color:{{onSurfaceVariant}}">{{s.icon}}</span><span style="flex:1;font-weight:500;white-space:nowrap">{{s.label}}</span></div>
+</sc-for>
+</div>
+<div aria-live="polite" style="position:absolute;left:24px;bottom:24px;height:48px;padding:0 16px;border-radius:4px;background:{{inverseSurface}};color:{{inverseOnSurface}};display:flex;align-items:center;gap:12px"><span class="ms" aria-hidden="true">touch_app</span>Right-click a file to see its actions</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"seed":{"editor":"enum","options":["green","indigo","amber"],"default":"green"},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"motion":{"editor":"enum","options":["on","off"],"default":"on"},"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  constructor(p){ super(p); this.state = { hover: 'openwith' }; }
+  renderVals() {
+    const t = scheme(this.props.seed ?? 'green', this.props.theme ?? 'dark');
+    const u = ui(t, 1);
+    const h = this.state.hover;
+    const hl = 'color-mix(in srgb, ' + t.onSurface + ' 12%, transparent)';
+    const files = [
+      ['picture_as_pdf','Quarterly report.pdf','4.2 MB','Today 19:12','offline_pin'],
+      ['picture_as_pdf','Contract.pdf','1.1 MB','Today 11:02','lock'],
+      ['slideshow','Brand guidelines.pptx','38.6 MB','Yesterday 16:40','offline_pin'],
+      ['image','Logo-final.svg','212 KB','Yesterday 09:15','lock'],
+      ['description','Interview notes.docx','86 KB','14 Nov 21:30','lock'],
+      ['table_chart','Budget 2026.xlsx','640 KB','12 Nov 08:48','offline_pin'],
+      ['folder','Product photos','1.2 GB','10 Nov 17:20','lock'],
+      ['movie','Demo reel.mp4','512 MB','8 Nov 13:05','lock']
+    ];
+    const defs = [
+      ['open','open_in_new','Open','Enter',''],
+      ['openwith','apps','Open with','','chevron_right'],
+      ['rename','edit','Rename','F2',''],
+      ['copy','content_copy','Copy','Ctrl+C',''],
+      ['d1'],
+      ['share','share','Share via Docker Hub','',''],
+      ['link','link','Create a download link','',''],
+      ['export','download','Export a copy','',''],
+      ['d2'],
+      ['offline','offline_pin','Keep offline','',''],
+      ['versions','history','All versions','Ctrl+H',''],
+      ['details','info','Details','Alt+Enter',''],
+      ['d3'],
+      ['delete','delete','Delete','Del','']
+    ];
+    const item = (hov, bad) => 'display:flex;align-items:center;gap:16px;height:48px;margin:0 8px;padding:0 12px;border-radius:12px;cursor:pointer;background:' + (hov ? hl : 'transparent') + ';color:' + (bad ? t.error : t.onSurface);
+    return { ...t, ...u, motion: this.props.motion ?? 'on',
+      rows: files.map(([icon, name, size, mod, state], i) => ({ icon, name, size, mod, state,
+        iconBox: 'width:40px;height:40px;border-radius:12px;display:grid;place-items:center;flex:0 0 auto;background:' + (i === 5 ? t.primaryContainer : t.surfaceContainerHigh) + ';color:' + (i === 5 ? t.onPrimaryContainer : t.onSurfaceVariant),
+        row: 'display:grid;grid-template-columns:minmax(0,1fr) 120px 150px 40px;gap:12px;align-items:center;height:56px;padding:0 16px;border-bottom:1px solid ' + t.outlineVariant + ';background:' + (i === 5 ? t.secondaryContainer : 'transparent') })),
+      items: defs.map(d => d.length === 1
+        ? { role:'separator', enter: () => {}, style:'height:1px;margin:8px 0;background:' + t.outlineVariant + ';overflow:hidden', iconStyle:'display:none', icon:'', label:'', key:'', keyColor:'inherit', trail:'' }
+        : { role:'menuitem', enter: () => this.setState({ hover: d[0] }), style:item(h === d[0] || (d[0] === 'openwith' && h.startsWith('sub')), d[0] === 'delete'),
+            iconStyle:'color:' + (d[0] === 'delete' ? t.error : t.onSurfaceVariant), icon:d[1], label:d[2], key:d[3], keyColor: d[0] === 'delete' ? t.error : t.onSurfaceVariant, trail:d[4] }),
+      subStyle: 'position:absolute;left:904px;top:' + (236 + 8 + 65 + 8 + 48 - 8) + 'px;width:300px;padding:8px 0;border-radius:16px;background:' + t.surfaceContainer + ';box-shadow:0 4px 12px ' + t.shadow + ';animation:pop 200ms cubic-bezier(.05,.7,.1,1) both;display:' + (h === 'openwith' || h.startsWith('sub') ? 'block' : 'none'),
+      subItems: [['Microsoft Excel','table_view'],['Notepad','edit_note'],['Choose another app','apps']].map(([label, icon], i) => ({ label, icon, enter: () => this.setState({ hover: 'sub' + i }), style: item(h === 'sub' + i, false) }))
+    };
+  }
+}
+function ui(t, selected) {
+  const railDefs = [['Home','home'],['Drives','hard_drive'],['Offline','offline_pin'],['History','history'],['Backup','cloud_upload'],['Shared','share'],['Tools','build'],['Settings','settings']];
+  const B = (bg, fg, border, pad, extra) => 'height:40px;padding:' + (pad || '0 24px 0 16px') + ';border-radius:999px;border:' + (border || '0') + ';background:' + bg + ';color:' + fg + ';display:flex;align-items:center;justify-content:center;gap:8px;font-weight:500;cursor:pointer;white-space:nowrap;' + (extra || '');
+  return {
+    rail: railDefs.map(([label, icon], i) => ({ label, icon, iconClass: i === selected ? 'ms fill' : 'ms', color: i === selected ? t.onSurface : t.onSurfaceVariant,
+      pill: 'width:56px;height:32px;border-radius:16px;display:grid;place-items:center;background:' + (i === selected ? t.secondaryContainer : 'transparent') + ';color:' + (i === selected ? t.onSecondaryContainer : 'inherit') })),
+    btnFilled: B(t.primary, t.onPrimary), btnTonal: B(t.secondaryContainer, t.onSecondaryContainer), btnOutlined: B('transparent', t.primary, '1px solid ' + t.outline),
+    btnRegex: B(t.secondaryContainer, t.onSecondaryContainer, '0', '0 16px 0 12px'),
+    iconBtn: 'width:40px;height:40px;border-radius:999px;border:0;background:transparent;color:' + t.onSurfaceVariant + ';display:grid;place-items:center;cursor:pointer',
+    searchBox: 'display:flex;align-items:center;gap:12px;width:420px;height:56px;border-radius:999px;background:' + t.surfaceContainerHigh + ';padding:0 8px 0 16px',
+    chipSelected: 'display:flex;align-items:center;gap:8px;height:32px;padding:0 12px 0 8px;border-radius:8px;font-weight:500;background:' + t.secondaryContainer + ';color:' + t.onSecondaryContainer
+  };
+}
+function scheme(seed, theme) {
+  const dark = theme !== 'light';
+  const seeds = {
+    green:  dark ? { primary:'#8FD6B0', onPrimary:'#003825', primaryContainer:'#00513A', onPrimaryContainer:'#AAF2CB', secondaryContainer:'#354B40', onSecondaryContainer:'#CFE9D9', tertiaryContainer:'#234C5D', onTertiaryContainer:'#C1E8FB' }
+                 : { primary:'#2B6A4E', onPrimary:'#FFFFFF', primaryContainer:'#AFF1CE', onPrimaryContainer:'#002114', secondaryContainer:'#CFE9D9', onSecondaryContainer:'#0B1F15', tertiaryContainer:'#C1E8FB', onTertiaryContainer:'#001F2A' },
+    indigo: dark ? { primary:'#B9C3FF', onPrimary:'#1F2C61', primaryContainer:'#364379', onPrimaryContainer:'#DDE1FF', secondaryContainer:'#424659', onSecondaryContainer:'#DFE1F9', tertiaryContainer:'#5C3D58', onTertiaryContainer:'#FFD6F7' }
+                 : { primary:'#4D5C92', onPrimary:'#FFFFFF', primaryContainer:'#DDE1FF', onPrimaryContainer:'#05164B', secondaryContainer:'#DFE1F9', onSecondaryContainer:'#171B2C', tertiaryContainer:'#FFD6F7', onTertiaryContainer:'#2C1229' },
+    amber:  dark ? { primary:'#F5BD6F', onPrimary:'#452B00', primaryContainer:'#633F00', onPrimaryContainer:'#FFDDB3', secondaryContainer:'#574431', onSecondaryContainer:'#FBDEBC', tertiaryContainer:'#3E4E2E', onTertiaryContainer:'#D5EDBA' }
+                 : { primary:'#835416', onPrimary:'#FFFFFF', primaryContainer:'#FFDDB3', onPrimaryContainer:'#2A1700', secondaryContainer:'#FBDEBC', onSecondaryContainer:'#271904', tertiaryContainer:'#D5EDBA', onTertiaryContainer:'#11200A' }
+  };
+  const neutral = dark
+    ? { surface:'#101413', surfaceContainerLowest:'#0B0F0E', surfaceContainerLow:'#181D1B', surfaceContainer:'#1C211F', surfaceContainerHigh:'#272B29', surfaceContainerHighest:'#313634', onSurface:'#E0E3E0', onSurfaceVariant:'#C0C9C3', outline:'#8A938D', outlineVariant:'#404944', error:'#FFB4AB', onError:'#690005', errorContainer:'#93000A', onErrorContainer:'#FFDAD6', inverseSurface:'#E0E3E0', inverseOnSurface:'#2D3130', scrim:'rgba(0,0,0,.5)', shadow:'rgba(0,0,0,.45)' }
+    : { surface:'#F7FAF7', surfaceContainerLowest:'#FFFFFF', surfaceContainerLow:'#F1F4F1', surfaceContainer:'#EBEFEB', surfaceContainerHigh:'#E6E9E6', surfaceContainerHighest:'#E0E3E0', onSurface:'#191C1B', onSurfaceVariant:'#404944', outline:'#707973', outlineVariant:'#C0C9C3', error:'#BA1A1A', onError:'#FFFFFF', errorContainer:'#FFDAD6', onErrorContainer:'#410002', inverseSurface:'#2D3130', inverseOnSurface:'#EEF1EE', scrim:'rgba(0,0,0,.32)', shadow:'rgba(0,0,0,.18)' };
+  return { ...neutral, ...(seeds[seed] || seeds.green) };
+}
+</script>
+</body>
+</html>

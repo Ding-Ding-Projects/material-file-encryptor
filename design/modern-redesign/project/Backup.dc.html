@@ -2,73 +2,191 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Docker Hub backup</title>
+<title>Backup</title>
 <script src="./support.js"></script>
 </head>
 <body>
 <x-dc>
 <helmet>
-<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..900&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..900&amp;family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..600,0..1,0&amp;display=swap" rel="stylesheet">
 <style>
 body{margin:0}
-@keyframes rise{from{transform:translateY(12px);opacity:0}to{transform:none;opacity:1}}
-@keyframes shimmer{from{background-position:-300px 0}to{background-position:300px 0}}
+.ms{font-family:'Material Symbols Rounded';font-weight:400;font-style:normal;font-size:24px;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;white-space:nowrap;direction:ltr;-webkit-font-feature-settings:'liga';font-feature-settings:'liga';user-select:none}
+.ms.fill{font-variation-settings:'FILL' 1}
+@keyframes enter{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes pop{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
 [data-motion=off] *{animation:none!important;transition:none!important}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-button{font:inherit;color:inherit}
+button,input,select{font:inherit;color:inherit}
 </style>
 </helmet>
-<div data-motion="{{motion}}" style="width:1440px;height:960px;display:flex;gap:20px;padding:20px;box-sizing:border-box;font-family:'Roboto Flex',system-ui,sans-serif;font-size:14px;color:{{text}};background:{{bg}};overflow:hidden">
-<nav aria-label="Sections" style="flex:0 0 84px;border-radius:32px;background:{{rail}}"></nav>
-<main style="flex:1;display:flex;flex-direction:column;gap:18px;min-width:0">
-<header style="display:flex;align-items:flex-end;gap:16px">
-<div style="flex:1"><h1 style="margin:0;font-size:40px;font-weight:850;letter-spacing:-.02em">Docker Hub backup</h1><p style="margin:6px 0 0;color:{{muted}};font-size:15px">Signed in as studio-owner · repository studio-owner/material-file-encryptor-storage · public, files encrypted</p></div>
-<button type="button" style="height:52px;padding:0 24px;border-radius:26px;border:1px solid {{outline}};background:transparent;font-weight:600">Settings</button>
-<button type="button" style="height:52px;padding:0 24px;border-radius:26px;border:0;background:{{accent}};color:#06281A;font-weight:700">Back up all now</button>
+<div data-motion="{{motion}}" style="position:relative;width:1440px;height:960px;display:flex;font-family:'Roboto Flex',system-ui,sans-serif;font-size:14px;line-height:20px;color:{{onSurface}};background:{{surface}};overflow:hidden">
+<nav aria-label="Sections" style="flex:0 0 96px;display:flex;flex-direction:column;align-items:center;gap:12px;padding-top:24px">
+<button type="button" aria-label="Add a drive to back up" style="width:56px;height:56px;border-radius:16px;border:0;background:{{primaryContainer}};color:{{onPrimaryContainer}};display:grid;place-items:center;margin-bottom:16px;box-shadow:0 2px 6px {{shadow}}"><span class="ms" aria-hidden="true">add</span></button>
+<sc-for list="{{rail}}" as="r" hint-placeholder-count="8">
+<a href="#" style="display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;color:{{r.color}};width:80px"><span style="{{r.pill}}"><span class="{{r.iconClass}}" aria-hidden="true">{{r.icon}}</span></span><span style="font-size:12px;line-height:16px;font-weight:500">{{r.label}}</span></a>
+</sc-for>
+</nav>
+<main style="flex:1;padding:24px 24px 24px 0;display:flex;min-width:0">
+<div style="flex:1;border-radius:28px;background:{{surfaceContainerLow}};padding:24px;display:flex;flex-direction:column;gap:16px;min-width:0;overflow:hidden">
+<header style="display:flex;align-items:center;gap:12px">
+<div style="flex:1"><h1 style="margin:0;font-size:32px;line-height:40px;font-weight:400">Docker Hub backup</h1><p style="margin:4px 0 0;color:{{onSurfaceVariant}};font-size:16px;line-height:24px">Signed in as studio-owner · every drive has its own repository</p></div>
+<button type="button" style="{{btnOutlined}}"><span class="ms" aria-hidden="true" style="font-size:18px">settings</span>Settings</button>
+<button type="button" style="{{btnFilled}}"><span class="ms" aria-hidden="true" style="font-size:18px">cloud_upload</span>Back up all now</button>
 </header>
-<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px">
-<sc-for list="{{stats}}" as="s" hint-placeholder-count="4"><div style="border-radius:24px;background:{{surface}};padding:18px"><span style="font-size:12px;color:{{muted}}">{{s.label}}</span><b style="display:block;font-size:28px;font-weight:800;margin-top:4px">{{s.value}}</b></div></sc-for>
+<section aria-label="Backing up now" style="display:flex;align-items:center;gap:16px;height:72px;padding:0 16px;border-radius:16px;background:{{surfaceContainerHighest}};animation:enter 320ms cubic-bezier(.05,.7,.1,1) both">
+<span aria-hidden="true" style="{{avatarPrimary}}">S</span>
+<span style="width:260px"><span style="display:block;font-size:16px;line-height:24px;font-weight:500">Studio</span><span style="display:block;color:{{onSurfaceVariant}};font-size:12px;line-height:16px">Uploading · 22 of 36 parts · 80 MiB</span></span>
+<div aria-hidden="true" style="flex:1;height:4px;border-radius:999px;background:{{secondaryContainer}};overflow:hidden"><div style="width:62%;height:100%;background:{{primary}};border-radius:999px"></div></div>
+<span style="font-size:16px;font-weight:500;width:44px;text-align:right">62%</span>
+<span style="color:{{onSurfaceVariant}};width:70px">48 MB/s</span>
+<span style="color:{{onSurfaceVariant}};width:70px">0:24 left</span>
+<button type="button" style="{{btnOutlined}}"><span class="ms" aria-hidden="true" style="font-size:18px">close</span>Cancel</button>
+</section>
+<p style="margin:0;color:{{onSurfaceVariant}}">{{summary}}</p>
+<div style="display:flex;align-items:center;gap:8px">
+<sc-for list="{{chips}}" as="c" hint-placeholder-count="5"><button type="button" onClick="{{c.pick}}" style="{{c.style}}"><span class="ms" aria-hidden="true" style="{{c.checkStyle}}">check</span>{{c.label}} {{c.count}}</button></sc-for>
+<span style="flex:1"></span>
+<label style="display:flex;align-items:center;gap:12px;width:320px;height:56px;border-radius:999px;background:{{surfaceContainerHigh}};padding:0 8px 0 16px"><span class="ms" aria-hidden="true" style="color:{{onSurfaceVariant}}">search</span><input value="{{q}}" onInput="{{typeQuery}}" placeholder="Search drives by name" aria-label="Search drives by name" style="flex:1;min-width:0;border:0;background:transparent;outline:0;font-size:16px"></label>
+<button type="button" onClick="{{toggleRegex}}" aria-pressed="{{rxPressed}}" style="{{btnRegex}}"><span class="ms" aria-hidden="true" style="font-size:18px">regular_expression</span>Regex</button>
+<div style="position:relative">
+<button type="button" onClick="{{toggleSort}}" aria-haspopup="menu" style="{{btnTonal}}"><span class="ms" aria-hidden="true" style="font-size:18px">sort</span>{{sortLabel}}<span class="ms" aria-hidden="true" style="font-size:18px">expand_more</span></button>
+<div role="menu" style="{{menuStyle}}">
+<sc-for list="{{sortOptions}}" as="o" hint-placeholder-count="5"><button type="button" role="menuitem" onClick="{{o.pick}}" style="{{o.style}}"><span class="ms" aria-hidden="true" style="{{o.checkStyle}}">check</span>{{o.label}}</button></sc-for>
 </div>
-<div style="flex:1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;min-height:0">
-<sc-for list="{{drives}}" as="d" hint-placeholder-count="3">
-<section aria-label="{{d.name}}" style="border-radius:28px;background:{{surface}};overflow:hidden;display:flex;flex-direction:column;animation:rise 320ms both">
-<div aria-hidden="true" style="{{d.banner}}"></div>
-<div style="padding:20px;display:flex;flex-direction:column;gap:14px;flex:1">
-<div style="display:flex;align-items:center;gap:10px"><b style="font-size:20px;font-weight:750;flex:1">{{d.name}}</b><span style="{{d.pill}}">{{d.state}}</span></div>
-<p style="margin:0;color:{{muted}};line-height:1.5">{{d.detail}}</p>
-<sc-if value="{{d.running}}" hint-placeholder-val="{{ false }}">
-<ol style="margin:0;padding:0;list-style:none;display:flex;gap:6px"><sc-for list="{{d.steps}}" as="s" hint-placeholder-count="4"><li style="{{s.style}}">{{s.label}}</li></sc-for></ol>
-<div aria-hidden="true" style="height:12px;border-radius:6px;background:{{surface2}};overflow:hidden"><div style="width:62%;height:100%;border-radius:6px;background:{{accent}};background-image:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);background-size:300px 100%;animation:shimmer 1.4s linear infinite"></div></div>
-<p style="margin:0;font-weight:600">Uploading · 62% · 22 of 36 parts · 1.7 of 2.8 GB · 48 MB/s · about 0:24 left</p>
-</sc-if>
-<dl style="margin:auto 0 0;display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:13px"><dt style="color:{{muted}}">Last backup</dt><dd style="margin:0">{{d.last}}</dd><dt style="color:{{muted}}">Part size</dt><dd style="margin:0">80 MiB</dd><dt style="color:{{muted}}">Snapshots</dt><dd style="margin:0">{{d.snaps}}</dd></dl>
-<div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" onClick="{{d.backup}}" style="height:44px;padding:0 18px;border-radius:22px;border:0;background:{{accent}};color:#06281A;font-weight:700">{{d.action}}</button><button type="button" style="height:44px;padding:0 18px;border-radius:22px;border:1px solid {{outline}};background:transparent">Restore…</button></div>
+</div>
+</div>
+<section aria-label="Drives" style="flex:1;min-height:0;display:flex;flex-direction:column;border-radius:16px;border:1px solid {{outlineVariant}};overflow:hidden">
+<div style="display:flex;align-items:center;gap:16px;height:40px;padding:0 16px;color:{{onSurfaceVariant}};font-size:12px;font-weight:500;border-bottom:1px solid {{outlineVariant}};background:{{surfaceContainer}}">
+<span style="width:40px"></span><span style="flex:1">Drive</span><span style="width:150px">State</span><span style="width:140px">Last backup</span><span style="width:80px;text-align:right">Size</span><span style="width:90px;text-align:right">Snapshots</span><span style="width:40px"></span>
+</div>
+<div role="list" style="flex:1;min-height:0;overflow:auto">
+<sc-for list="{{rows}}" as="d" hint-placeholder-count="14">
+<div role="listitem" style="{{d.wrap}}">
+<button type="button" onClick="{{d.toggle}}" aria-expanded="{{d.expanded}}" style="width:100%;height:56px;box-sizing:border-box;display:flex;align-items:center;gap:16px;padding:0 16px;border:0;background:transparent;text-align:left;cursor:pointer">
+<span aria-hidden="true" style="{{d.avatar}}">{{d.letter}}</span>
+<span style="flex:1;min-width:0"><span style="display:block;font-size:16px;line-height:24px;font-weight:500">{{d.name}}</span><span style="display:block;color:{{onSurfaceVariant}};font-size:12px;line-height:16px">{{d.sub}}</span></span>
+<span style="width:150px"><span style="{{d.chip}}"><span class="ms" aria-hidden="true" style="font-size:18px">{{d.stateIcon}}</span>{{d.stateLabel}}</span></span>
+<span style="width:140px;color:{{onSurfaceVariant}}">{{d.last}}</span>
+<span style="width:80px;text-align:right">{{d.size}}</span>
+<span style="width:90px;text-align:right">{{d.snaps}}</span>
+<span class="ms" aria-hidden="true" style="width:40px;text-align:center;color:{{onSurfaceVariant}}">{{d.chevron}}</span>
+</button>
+<div style="{{d.detail}}">
+<div style="display:flex;gap:32px;color:{{onSurfaceVariant}}"><span>Repository <b style="color:{{onSurface}};font-weight:500">{{d.repo}}</b></span><span>Part size <b style="color:{{onSurface}};font-weight:500">80 MiB</b></span><span>Tags used <b style="color:{{onSurface}};font-weight:500">{{d.snaps}}</b></span></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<button type="button" style="{{btnTonal}}"><span class="ms" aria-hidden="true" style="font-size:18px">cloud_upload</span>Back up now</button>
+<button type="button" style="{{btnOutlined}}"><span class="ms" aria-hidden="true" style="font-size:18px">restore</span>Restore</button>
+<button type="button" style="{{btnOutlined}}"><span class="ms" aria-hidden="true" style="font-size:18px">auto_delete</span>Prune now</button>
+<button type="button" style="{{btnDanger}}"><span class="ms" aria-hidden="true" style="font-size:18px">cloud_off</span>Stop backing up</button>
+</div>
+</div>
+</div>
+</sc-for>
+<p style="{{emptyStyle}}">No drives match this filter.</p>
 </div>
 </section>
-</sc-for>
 </div>
 </main>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#7FD9A8","options":["#7FD9A8","#B9C3FF","#FFB59E","#F2C94C"]},"theme":{"editor":"enum","options":["night","day"],"default":"night"},"motion":{"editor":"enum","options":["on","off"],"default":"on"},"$preview":{"width":1440,"height":960}}'>
+<script type="text/x-dc" data-dc-script data-props='{"seed":{"editor":"enum","options":["green","indigo","amber"],"default":"green"},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"motion":{"editor":"enum","options":["on","off"],"default":"on"},"$preview":{"width":1440,"height":960}}'>
 class Component extends DCLogic {
-  constructor(p){ super(p); this.state = { started: {} }; }
+  constructor(p){ super(p); this.state = { filter:'all', q:'', rx:false, sort:'status', sortOpen:false, open:'taxes' }; }
   renderVals() {
-    const day = (this.props.theme ?? 'night') === 'day', accent = this.props.accent ?? '#7FD9A8';
-    const c = day ? { bg:'#F3F4F8', rail:'#FFFFFF', surface:'#FFFFFF', surface2:'#EEF0F6', text:'#15161C', muted:'#555766', outline:'#C3C5D2' }
-                  : { bg:'#0E0F13', rail:'#17181F', surface:'#17181F', surface2:'#22232C', text:'#ECEDF4', muted:'#A6A8B8', outline:'#3A3C48' };
-    const defs = [
-      { id:'studio', name:'Studio', state:'Backing up', detail:'Packed into 80 MiB parts first, now uploading.', last:'Today 19:52', snaps:'12', banner:'linear-gradient(120deg,#3B5BA9,#8E5EA8 55%,#D98E5A)', running:true },
-      { id:'photos', name:'Photos 2026', state:'Queued', detail:'Waiting for Studio to finish. 48 files, 312 MB.', last:'Never', snaps:'0', banner:'linear-gradient(120deg,#1F6F5C,#7FD9A8)', running:false },
-      { id:'work', name:'Work', state:'Up to date', detail:'Locked. Backs up again after the next change.', last:'Yesterday 21:10', snaps:'30', banner:null, running:false }
-    ];
-    return { ...c, accent, motion: this.props.motion ?? 'on',
-      stats: [['Drives backed up','2 of 3'],['Stored on Docker Hub','6.1 GB'],['Tags used','212 of 1,000'],['Next check','20:52']].map(([label,value]) => ({ label, value })),
-      drives: defs.map(d => ({ ...d, action: d.running ? 'Cancel' : this.state.started[d.id] ? 'Queued' : 'Back up now', backup: () => this.setState({ started: { ...this.state.started, [d.id]: true } }),
-        banner: 'height:88px;background:' + (d.banner || c.surface2),
-        pill: 'padding:6px 12px;border-radius:14px;font-size:12px;font-weight:700;background:' + (d.running ? accent : d.state==='Queued' ? '#F2C94C' : c.surface2) + ';color:' + (d.running||d.state==='Queued' ? '#14161C' : c.text),
-        steps: ['Check','Pack','Upload','Verify'].map((label,i) => ({ label, style:'flex:1;text-align:center;padding:6px 0;border-radius:12px;font-size:12px;font-weight:700;background:' + (i<2?accent:i===2?accent+'44':c.surface2) + ';color:' + (i<2?'#06281A':c.text) })) })) };
+    const t = scheme(this.props.seed ?? 'green', this.props.theme ?? 'dark');
+    const s = this.state;
+    const railDefs = [['Home','home'],['Drives','hard_drive'],['Offline','offline_pin'],['History','history'],['Backup','cloud_upload'],['Shared','share'],['Tools','build'],['Settings','settings']];
+    const sel = 4;
+    const base = 'height:40px;padding:0 24px 0 16px;border-radius:999px;display:flex;align-items:center;gap:8px;font-weight:500;cursor:pointer;white-space:nowrap;';
+    const btn = {
+      filled: base + 'border:0;background:' + t.primary + ';color:' + t.onPrimary,
+      tonal: base + 'border:0;background:' + t.secondaryContainer + ';color:' + t.onSecondaryContainer,
+      outlined: base + 'border:1px solid ' + t.outline + ';background:transparent;color:' + t.primary,
+      danger: base + 'border:1px solid ' + t.outline + ';background:transparent;color:' + t.error
+    };
+    const D = [
+      ['studio','Studio','Q','running','Running now',2800,'2.8 GB',38,'Drive Q: · unlocked',99],
+      ['photos','Photos 2026','P','queued','Yesterday 22:10',312,'312 MB',24,'Waiting for Studio to finish',80],
+      ['work','Work','E','ok','Today 17:30',640,'640 MB',31,'Drive E: · locked',95],
+      ['music','Music library','M','ok','Today 03:00',1100,'1.1 GB',19,'Drive M: · unlocked',94],
+      ['taxes','Taxes','T','attention','12 Nov 21:44',96,'96 MB',12,'Sign-in expired · sign in to Docker Hub again',60],
+      ['archive','Archive 2024','A','ok','Today 03:00',420,'420 MB',9,'Drive A: · locked',93],
+      ['projects','Projects','R','ok','Today 12:15',380,'380 MB',17,'Drive R: · unlocked',97],
+      ['family','Family videos','F','ok','Yesterday 03:00',180,'180 MB',8,'Drive F: · locked',90],
+      ['design','Design assets','D','ok','Today 16:48',140,'140 MB',14,'Drive D: · unlocked',96],
+      ['receipts','Receipts','C','ok','Today 03:00',24,'24 MB',6,'Drive C2: · locked',92],
+      ['old','Old backups','O','ok','16 Nov 03:00',150,'150 MB',11,'Drive O: · locked',70],
+      ['notes','Notes','N','ok','Today 09:20',12,'12 MB',7,'Drive N: · unlocked',91],
+      ['clients','Client files','L','ok','Today 14:02',120,'120 MB',10,'Drive L: · locked',98],
+      ['scans','Scans','K','ok','Yesterday 18:36',52,'52 MB',6,'Drive K: · locked',89]
+    ].map(([id,name,letter,state,last,mb,size,snaps,sub,rec]) => ({ id,name,letter,state,last,mb,size,snaps,sub,rec,repo:'studio-owner/mfe-' + id }));
+    const count = f => f === 'all' ? D.length : D.filter(d => d.state === f).length;
+    const chipDefs = [['all','All'],['attention','Needs attention'],['running','Running'],['queued','Queued'],['ok','Up to date']];
+    let re = null;
+    if (s.q) { try { re = s.rx ? new RegExp(s.q, 'i') : null; } catch (e) { re = null; } }
+    const match = d => !s.q || (s.rx ? (re ? re.test(d.name) : false) : d.name.toLowerCase().includes(s.q.toLowerCase()));
+    const order = { attention:0, running:1, queued:2, ok:3 };
+    const sorters = {
+      status: (a,b) => order[a.state] - order[b.state] || a.name.localeCompare(b.name),
+      name: (a,b) => a.name.localeCompare(b.name),
+      last: (a,b) => b.rec - a.rec,
+      size: (a,b) => b.mb - a.mb,
+      snaps: (a,b) => b.snaps - a.snaps
+    };
+    const sortDefs = [['status','Status'],['name','Name'],['last','Last backup'],['size','Size'],['snaps','Snapshots']];
+    const list = D.filter(d => (s.filter === 'all' || d.state === s.filter) && match(d)).sort(sorters[s.sort]);
+    const chipOf = d => {
+      const m = { ok:['cloud_done','Up to date',0], running:['cloud_upload','Running',1], queued:['schedule','Queued',2], attention:['error','Needs attention',3] }[d.state];
+      const fill = d.state === 'running' ? t.secondaryContainer : d.state === 'attention' ? t.errorContainer : 'transparent';
+      const col = d.state === 'running' ? t.onSecondaryContainer : d.state === 'attention' ? t.onErrorContainer : t.onSurfaceVariant;
+      return { icon:m[0], label:m[1], style:'display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px 0 8px;border-radius:8px;font-weight:500;white-space:nowrap;background:' + fill + ';color:' + col + ';border:' + (fill === 'transparent' ? '1px solid ' + t.outlineVariant : '0') };
+    };
+    const totalMB = D.reduce((n,d) => n + d.mb, 0);
+    return { ...t, motion: this.props.motion ?? 'on',
+      btnFilled: btn.filled, btnTonal: btn.tonal, btnOutlined: btn.outlined, btnDanger: btn.danger,
+      btnRegex: base + 'border:0;background:' + (s.rx ? t.primaryContainer : t.secondaryContainer) + ';color:' + (s.rx ? t.onPrimaryContainer : t.onSecondaryContainer),
+      rxPressed: s.rx ? 'true' : 'false',
+      avatarPrimary: 'flex:0 0 40px;width:40px;height:40px;border-radius:999px;display:grid;place-items:center;font-size:16px;font-weight:500;background:' + t.primaryContainer + ';color:' + t.onPrimaryContainer,
+      q: s.q,
+      typeQuery: e => this.setState({ q: e.target.value }),
+      toggleRegex: () => this.setState({ rx: !s.rx }),
+      toggleSort: () => this.setState({ sortOpen: !s.sortOpen }),
+      sortLabel: 'Sort: ' + sortDefs.find(o => o[0] === s.sort)[1],
+      menuStyle: 'display:' + (s.sortOpen ? 'block' : 'none') + ';position:absolute;right:0;top:44px;z-index:5;width:220px;padding:8px 0;border-radius:16px;background:' + t.surfaceContainer + ';box-shadow:0 4px 12px ' + t.shadow + ';animation:pop 200ms both',
+      sortOptions: sortDefs.map(([id,label]) => ({ label, pick: () => this.setState({ sort:id, sortOpen:false }),
+        style:'width:100%;height:48px;display:flex;align-items:center;gap:12px;padding:0 12px;border:0;background:transparent;font-weight:500;cursor:pointer;text-align:left',
+        checkStyle:'font-size:20px;color:' + t.primary + ';visibility:' + (s.sort === id ? 'visible' : 'hidden') })),
+      summary: D.length + ' drives · ' + count('ok') + ' up to date · ' + (totalMB / 1024).toFixed(1) + ' GB stored · ' + D.reduce((n,d) => n + d.snaps, 0) + ' of 1,000 tags used',
+      chips: chipDefs.map(([id,label]) => ({ label, count: count(id), pick: () => this.setState({ filter:id }),
+        checkStyle:'font-size:18px;display:' + (s.filter === id ? 'inline-block' : 'none'),
+        style:'height:32px;padding:0 12px;border-radius:8px;display:flex;align-items:center;gap:6px;font-weight:500;cursor:pointer;white-space:nowrap;background:' + (s.filter === id ? t.secondaryContainer : 'transparent') + ';color:' + (s.filter === id ? t.onSecondaryContainer : t.onSurfaceVariant) + ';border:' + (s.filter === id ? '0' : '1px solid ' + t.outlineVariant) })),
+      rows: list.map(d => { const c = chipOf(d); const open = s.open === d.id; return { ...d,
+        stateIcon:c.icon, stateLabel:c.label, chip:c.style, expanded: open ? 'true' : 'false', chevron: open ? 'expand_less' : 'expand_more',
+        toggle: () => this.setState({ open: open ? null : d.id }),
+        wrap:'border-bottom:1px solid ' + t.outlineVariant + ';background:' + (open ? t.surfaceContainer : 'transparent'),
+        avatar:'flex:0 0 40px;width:40px;height:40px;border-radius:999px;display:grid;place-items:center;font-size:16px;font-weight:500;background:' + (d.state === 'attention' ? t.errorContainer : t.primaryContainer) + ';color:' + (d.state === 'attention' ? t.onErrorContainer : t.onPrimaryContainer),
+        detail:'display:' + (open ? 'flex' : 'none') + ';flex-direction:column;gap:12px;padding:4px 16px 16px 72px;animation:enter 240ms cubic-bezier(.05,.7,.1,1) both' }; }),
+      emptyStyle:'display:' + (list.length ? 'none' : 'block') + ';margin:0;padding:32px;text-align:center;color:' + t.onSurfaceVariant,
+      rail: railDefs.map(([label, icon], i) => ({ label, icon, iconClass: i === sel ? 'ms fill' : 'ms', color: i === sel ? t.onSurface : t.onSurfaceVariant,
+        pill: 'width:56px;height:32px;border-radius:16px;display:grid;place-items:center;background:' + (i === sel ? t.secondaryContainer : 'transparent') + ';color:' + (i === sel ? t.onSecondaryContainer : 'inherit') }))
+    };
   }
+}
+function scheme(seed, theme) {
+  const dark = theme !== 'light';
+  const seeds = {
+    green:  dark ? { primary:'#8FD6B0', onPrimary:'#003825', primaryContainer:'#00513A', onPrimaryContainer:'#AAF2CB', secondaryContainer:'#354B40', onSecondaryContainer:'#CFE9D9', tertiaryContainer:'#234C5D', onTertiaryContainer:'#C1E8FB' }
+                 : { primary:'#2B6A4E', onPrimary:'#FFFFFF', primaryContainer:'#AFF1CE', onPrimaryContainer:'#002114', secondaryContainer:'#CFE9D9', onSecondaryContainer:'#0B1F15', tertiaryContainer:'#C1E8FB', onTertiaryContainer:'#001F2A' },
+    indigo: dark ? { primary:'#B9C3FF', onPrimary:'#1F2C61', primaryContainer:'#364379', onPrimaryContainer:'#DDE1FF', secondaryContainer:'#424659', onSecondaryContainer:'#DFE1F9', tertiaryContainer:'#5C3D58', onTertiaryContainer:'#FFD6F7' }
+                 : { primary:'#4D5C92', onPrimary:'#FFFFFF', primaryContainer:'#DDE1FF', onPrimaryContainer:'#05164B', secondaryContainer:'#DFE1F9', onSecondaryContainer:'#171B2C', tertiaryContainer:'#FFD6F7', onTertiaryContainer:'#2C1229' },
+    amber:  dark ? { primary:'#F5BD6F', onPrimary:'#452B00', primaryContainer:'#633F00', onPrimaryContainer:'#FFDDB3', secondaryContainer:'#574431', onSecondaryContainer:'#FBDEBC', tertiaryContainer:'#3E4E2E', onTertiaryContainer:'#D5EDBA' }
+                 : { primary:'#835416', onPrimary:'#FFFFFF', primaryContainer:'#FFDDB3', onPrimaryContainer:'#2A1700', secondaryContainer:'#FBDEBC', onSecondaryContainer:'#271904', tertiaryContainer:'#D5EDBA', onTertiaryContainer:'#11200A' }
+  };
+  const neutral = dark
+    ? { surface:'#101413', surfaceContainerLowest:'#0B0F0E', surfaceContainerLow:'#181D1B', surfaceContainer:'#1C211F', surfaceContainerHigh:'#272B29', surfaceContainerHighest:'#313634', onSurface:'#E0E3E0', onSurfaceVariant:'#C0C9C3', outline:'#8A938D', outlineVariant:'#404944', error:'#FFB4AB', onError:'#690005', errorContainer:'#93000A', onErrorContainer:'#FFDAD6', inverseSurface:'#E0E3E0', inverseOnSurface:'#2D3130', scrim:'rgba(0,0,0,.5)', shadow:'rgba(0,0,0,.45)' }
+    : { surface:'#F7FAF7', surfaceContainerLowest:'#FFFFFF', surfaceContainerLow:'#F1F4F1', surfaceContainer:'#EBEFEB', surfaceContainerHigh:'#E6E9E6', surfaceContainerHighest:'#E0E3E0', onSurface:'#191C1B', onSurfaceVariant:'#404944', outline:'#707973', outlineVariant:'#C0C9C3', error:'#BA1A1A', onError:'#FFFFFF', errorContainer:'#FFDAD6', onErrorContainer:'#410002', inverseSurface:'#2D3130', inverseOnSurface:'#EEF1EE', scrim:'rgba(0,0,0,.32)', shadow:'rgba(0,0,0,.18)' };
+  return { ...neutral, ...(seeds[seed] || seeds.green) };
 }
 </script>
 </body>

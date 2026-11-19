@@ -8,61 +8,175 @@
 <body>
 <x-dc>
 <helmet>
-<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..900&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..900&amp;family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..600,0..1,0&amp;display=swap" rel="stylesheet">
 <style>
 body{margin:0}
-@keyframes rise{from{transform:translateY(12px);opacity:0}to{transform:none;opacity:1}}
+.ms{font-family:'Material Symbols Rounded';font-weight:400;font-style:normal;font-size:24px;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;white-space:nowrap;direction:ltr;-webkit-font-feature-settings:'liga';font-feature-settings:'liga';user-select:none}
+.ms.fill{font-variation-settings:'FILL' 1}
+@keyframes enter{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes pop{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
 [data-motion=off] *{animation:none!important;transition:none!important}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-button,input{font:inherit;color:inherit}
+button,input,select{font:inherit;color:inherit}
 </style>
 </helmet>
-<div data-motion="{{motion}}" style="width:1440px;height:960px;display:flex;gap:20px;padding:20px;box-sizing:border-box;font-family:'Roboto Flex',system-ui,sans-serif;font-size:14px;color:{{text}};background:{{bg}};overflow:hidden">
-<nav aria-label="Sections" style="flex:0 0 84px;border-radius:32px;background:{{rail}}"></nav>
-<main style="flex:1;display:flex;flex-direction:column;gap:18px;min-width:0">
-<h1 style="margin:0;font-size:40px;font-weight:850;letter-spacing:-.02em">Settings</h1>
-<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-<label style="flex:1;min-width:320px;display:flex;align-items:center;gap:10px;height:56px;border-radius:28px;background:{{surface}};padding:0 20px"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{muted}}" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg><input value="{{query}}" onInput="{{type}}" placeholder="Search settings" aria-label="Search settings" style="flex:1;border:0;background:transparent;outline:0;font-size:16px"></label>
-<button type="button" aria-pressed="{{regexOn}}" onClick="{{toggleRegex}}" style="{{regexStyle}}">.* Regex</button>
+<div data-motion="{{motion}}" style="width:1440px;height:960px;display:flex;font-family:'Roboto Flex',system-ui,sans-serif;font-size:14px;line-height:20px;color:{{onSurface}};background:{{surface}};overflow:hidden">
+<nav aria-label="Sections" style="flex:0 0 96px;display:flex;flex-direction:column;align-items:center;gap:12px;padding-top:24px">
+<button type="button" aria-label="New drive" style="width:56px;height:56px;border-radius:16px;border:0;background:{{primaryContainer}};color:{{onPrimaryContainer}};display:grid;place-items:center;margin-bottom:16px;box-shadow:0 2px 6px {{shadow}}"><span class="ms" aria-hidden="true">add</span></button>
+<sc-for list="{{rail}}" as="r" hint-placeholder-count="8">
+<a href="#" style="display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;color:{{r.color}};width:80px"><span style="{{r.pill}}"><span class="{{r.iconClass}}" aria-hidden="true">{{r.icon}}</span></span><span style="font-size:12px;line-height:16px;font-weight:500">{{r.label}}</span></a>
+</sc-for>
+</nav>
+<main style="flex:1;padding:24px 24px 24px 0;display:flex;min-width:0">
+<div style="flex:1;border-radius:28px;background:{{surfaceContainerLow}};padding:24px;display:flex;flex-direction:column;gap:16px;min-width:0;overflow:hidden">
+<header style="display:flex;align-items:center;gap:12px">
+<div style="flex:1"><h1 style="margin:0;font-size:32px;line-height:40px;font-weight:400">Settings</h1><p style="margin:4px 0 0;color:{{onSurfaceVariant}};font-size:16px;line-height:24px">{{subtitle}}</p></div>
+<label style="display:flex;align-items:center;gap:12px;width:520px;height:56px;border-radius:999px;background:{{surfaceContainerHigh}};padding:0 8px 0 16px"><span class="ms" aria-hidden="true" style="color:{{onSurfaceVariant}}">search</span><input value="{{query}}" onInput="{{onQuery}}" placeholder="Search all settings" aria-label="Search all settings" style="flex:1;border:0;background:transparent;outline:0;font-size:16px"></label>
+<button type="button" aria-pressed="{{regexOn}}" onClick="{{toggleRegex}}" style="{{regexBtn}}"><span class="ms" aria-hidden="true" style="font-size:18px">regular_expression</span>Regex</button>
+</header>
+<section aria-label="Regex builder" style="{{regexStrip}}">
+<label style="display:flex;align-items:center;gap:8px;flex:1;height:48px;border-radius:12px;border:1px solid {{outline}};padding:0 12px"><span style="font-size:12px;color:{{primary}};font-weight:500">Pattern</span><input value="{{pattern}}" onInput="{{onPattern}}" aria-label="Regex pattern" placeholder="for example: notif|sound" style="flex:1;border:0;background:transparent;outline:0;font-size:16px;font-family:ui-monospace,Consolas,monospace"></label>
+<div style="display:flex;gap:8px" role="group" aria-label="Flags">
+<sc-for list="{{flags}}" as="f" hint-placeholder-count="3"><button type="button" aria-pressed="{{f.on}}" onClick="{{f.toggle}}" style="{{f.style}}"><span class="ms" aria-hidden="true" style="{{f.checkStyle}}">check</span>{{f.label}}</button></sc-for>
 </div>
-<sc-if value="{{regex}}" hint-placeholder-val="{{ false }}">
-<div style="border-radius:24px;background:{{surface}};padding:16px 20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;animation:rise 240ms both"><b>Regex builder</b><code style="padding:6px 10px;border-radius:10px;background:{{surface2}}">^back(up|ing)</code><span style="color:{{muted}}">flags: i · matches 4 settings</span><span style="flex:1"></span><button type="button" style="height:40px;padding:0 16px;border-radius:20px;border:1px solid {{outline}};background:transparent">Open full builder</button></div>
-</sc-if>
-<div style="flex:1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;min-height:0;overflow:auto">
-<sc-for list="{{groups}}" as="g" hint-placeholder-count="6">
-<section aria-label="{{g.title}}" style="border-radius:28px;background:{{surface}};padding:20px;display:flex;flex-direction:column;gap:6px;animation:rise 300ms both">
-<h2 style="margin:0 0 6px;font-size:18px;font-weight:750">{{g.title}}</h2>
-<sc-for list="{{g.items}}" as="i" hint-placeholder-count="3">
-<label style="display:flex;align-items:center;gap:12px;min-height:52px;border-radius:16px;padding:0 6px"><span style="flex:1"><b style="display:block;font-weight:600">{{i.label}}</b><span style="font-size:12px;color:{{muted}}">{{i.help}}</span></span><input type="checkbox" checked="{{i.on}}" style="width:44px;height:24px;accent-color:{{accent}}"></label>
-</sc-for>
+<span style="{{matchStyle}}"><span class="ms" aria-hidden="true" style="font-size:18px">{{matchIcon}}</span>{{matchText}}</span>
 </section>
+<div style="flex:1;display:flex;gap:16px;min-height:0">
+<nav aria-label="Settings sections" style="flex:0 0 280px;display:flex;flex-direction:column;gap:4px;overflow:hidden">
+<sc-for list="{{sects}}" as="c" hint-placeholder-count="9"><button type="button" onClick="{{c.pick}}" style="{{c.style}}"><span class="{{c.iconClass}}" aria-hidden="true">{{c.icon}}</span><span style="flex:1;text-align:left">{{c.label}}</span><span style="{{c.badge}}">{{c.count}}</span></button></sc-for>
+</nav>
+<section aria-label="Settings rows" style="flex:1;border-radius:28px;background:{{surfaceContainerHighest}};padding:24px;display:flex;flex-direction:column;min-width:0;overflow:hidden;animation:enter 320ms cubic-bezier(.05,.7,.1,1) both">
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:8px"><span class="ms fill" aria-hidden="true" style="color:{{primary}}">{{headIcon}}</span><h2 style="margin:0;font-size:24px;line-height:32px;font-weight:400;flex:1">{{headTitle}}</h2>
+<button type="button" onClick="{{resetSection}}" style="height:40px;padding:0 12px 0 8px;border-radius:999px;border:0;background:transparent;color:{{primary}};display:flex;align-items:center;gap:8px;font-weight:500"><span class="ms" aria-hidden="true" style="font-size:18px">restart_alt</span>Reset this section</button></div>
+<div role="list" style="flex:1;overflow:hidden">
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="5">
+<div role="listitem" style="display:flex;align-items:center;gap:16px;min-height:72px;border-bottom:1px solid {{outlineVariant}}">
+<span style="flex:1;min-width:0"><span style="display:block;font-size:16px;line-height:24px;font-weight:500">{{r.title}}</span><span style="display:block;color:{{onSurfaceVariant}}">{{r.sub}}</span></span>
+<span style="{{r.tag}}">{{r.sectionName}}</span>
+<button type="button" role="switch" aria-checked="{{r.on}}" aria-label="{{r.title}}" onClick="{{r.toggle}}" style="{{r.swTrack}}"><span style="{{r.swHandle}}"></span></button>
+<button type="button" aria-haspopup="listbox" aria-label="{{r.title}} value" style="{{r.selStyle}}"><span>{{r.value}}</span><span class="ms" aria-hidden="true" style="font-size:20px">expand_more</span></button>
+<span style="{{r.sliderWrap}}"><input type="range" min="0" max="100" value="{{r.slider}}" onInput="{{r.onSlide}}" aria-label="{{r.title}} level" style="width:180px;accent-color:{{primary}}"><span style="width:56px;text-align:right;font-weight:500">{{r.sliderText}}</span></span>
+</div>
 </sc-for>
+</div>
+<p style="{{emptyStyle}}">No settings match this search.</p>
+</section>
+</div>
 </div>
 </main>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#7FD9A8","options":["#7FD9A8","#B9C3FF","#FFB59E","#F2C94C"]},"theme":{"editor":"enum","options":["night","day"],"default":"night"},"motion":{"editor":"enum","options":["on","off"],"default":"on"},"$preview":{"width":1440,"height":960}}'>
+<script type="text/x-dc" data-dc-script data-props='{"seed":{"editor":"enum","options":["green","indigo","amber"],"default":"green"},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"motion":{"editor":"enum","options":["on","off"],"default":"on"},"$preview":{"width":1440,"height":960}}'>
 class Component extends DCLogic {
-  constructor(p){ super(p); this.state = { query: '', regex: false }; }
+  constructor(p){ super(p); this.state = { sect: 1, query: '', regex: false, pattern: '', fi: true, fg: true, fm: false, vals: {} }; }
   renderVals() {
-    const day = (this.props.theme ?? 'night') === 'day', accent = this.props.accent ?? '#7FD9A8';
-    const c = day ? { bg:'#F3F4F8', rail:'#FFFFFF', surface:'#FFFFFF', surface2:'#EEF0F6', text:'#15161C', muted:'#555766', outline:'#C3C5D2' }
-                  : { bg:'#0E0F13', rail:'#17181F', surface:'#17181F', surface2:'#22232C', text:'#ECEDF4', muted:'#A6A8B8', outline:'#3A3C48' };
-    const all = [
-      ['Backup', [['Back up automatically','About a minute after changes',true],['Back up on lock','When changes are waiting',true],['Pack to 80 MiB before backup','Fewer, larger parts on Docker Hub',true]]],
-      ['Appearance', [['Dark theme','Follows Windows when off',true],['Reduced motion','Stops animations',false],['Drive banners in lists','Uses each drive\'s banner',true]]],
-      ['Language', [['Bilingual labels','English and Cantonese side by side',false],['24-hour time','For every time shown',true]]],
-      ['Privacy', [['Lock when idle','After 15 minutes',true],['Clear clipboard','30 seconds after copying a share',true]]],
-      ['Notifications', [['Backup finished','A quiet toast',true],['Sounds','Short cues for actions',true]]],
-      ['File hosting', [['Check instances on open','Health is checked, never assumed',true],['Remove from Docker Hub when a link ends','Default for new links',false]]]
-    ];
-    const q = this.state.query.trim().toLowerCase();
-    const groups = all.map(([title, items]) => ({ title, items: items.filter(([label,help]) => !q || (label+help+title).toLowerCase().includes(q)).map(([label,help,on]) => ({ label, help, on })) })).filter(g => g.items.length);
-    return { ...c, accent, motion: this.props.motion ?? 'on', query: this.state.query, groups,
-      type: e => this.setState({ query: e.target.value }), regex: this.state.regex, regexOn: String(this.state.regex),
-      toggleRegex: () => this.setState({ regex: !this.state.regex }),
-      regexStyle: 'height:56px;padding:0 22px;border-radius:28px;border:' + (this.state.regex?'0':'1px solid '+c.outline) + ';background:' + (this.state.regex?accent:'transparent') + ';color:' + (this.state.regex?'#06281A':c.text) + ';font-weight:700;font-family:monospace' };
+    const t = scheme(this.props.seed ?? 'green', this.props.theme ?? 'dark');
+    const S = this.state;
+    const railDefs = [['Home','home'],['Drives','hard_drive'],['Offline','offline_pin'],['History','history'],['Backup','cloud_upload'],['Shared','share'],['Tools','build'],['Settings','settings']];
+    const sectDefs = [['Backup','cloud_upload'],['Appearance','palette'],['Language','language'],['Privacy and locks','lock'],['Notifications','notifications'],['Sounds','volume_up'],['File hosting','dns'],['Updates','update'],['Advanced','tune']];
+    const rowDefs = [
+      [0,'sw','Back up automatically','Upload changed drives to Docker Hub every night at 02:00',true],
+      [0,'sel','Part size','Large drives are split into parts before upload','80 MiB'],
+      [0,'sl','Upload speed limit','Keep some bandwidth free while backing up',48,' MB/s'],
+      [0,'sw','Verify after upload','Download a sample of parts and compare checksums',true],
+      [1,'sw','Follow Windows theme','Switch between light and dark with Windows',true],
+      [1,'sw','Use dynamic color','Pick accent colors from the drive banner',true],
+      [1,'sw','Show drive banners','Display the banner image on drive cards',true],
+      [2,'sel','Interface language','Applies to menus, dialogs and messages','English'],
+      [2,'sel','Time format','Used in history, backups and shared links','24-hour'],
+      [2,'sw','Show both languages','Display a second language under each label',false],
+      [3,'sw','Lock drives when Windows locks','Unmounts every drive as soon as the session locks',true],
+      [3,'sw','Hide file names in history','Show only counts and sizes in the activity list',false],
+      [3,'sw','Clear clipboard after 30 seconds','Applies to copied codes and links',true],
+      [4,'sw','Backup finished','Show a message when a backup completes',true],
+      [4,'sw','Shared link opened','Tell me when someone opens a link I created',false],
+      [4,'sw','Quiet hours','No notifications between 22:00 and 07:00',true],
+      [5,'sw','Action sounds','Short sounds for unlock, lock and finished backups',true],
+      [5,'sl','Volume','Relative to the Windows volume',60,'%'],
+      [5,'sw','Unlock chime','Play a chime when a drive is unlocked',true],
+      [6,'sw','Allow downloads on local network','Other computers on your network can open links',false],
+      [6,'sel','Link expiry','Shared links stop working after this time','7 days'],
+      [6,'sw','Require a password','Visitors must enter a password to download',true],
+      [7,'sw','Install updates automatically','Download and install new versions in the background',false],
+      [7,'sel','Update channel','Stable receives fewer, more tested builds','Stable'],
+      [7,'sel','Check every','How often to look for a new version','6 hours'],
+      [8,'sw','Mount drives at sign in','Unlocked drives return after you sign in to Windows',true],
+      [8,'sl','Cache size','Local space used for faster file access',4,' GB'],
+      [8,'sw','Write a diagnostic log','Save technical details to help with support',false]
+    ].map((d, i) => ({ id: 'r' + i, sect: d[0], kind: d[1], title: d[2], sub: d[3], def: d[4], suffix: d[5] || '' }));
+    const val = (r) => (S.vals[r.id] !== undefined ? S.vals[r.id] : r.def);
+    const q = (S.query || '').trim();
+    const pat = (S.pattern || '').trim();
+    let flagStr = (S.fi ? 'i' : '') + (S.fm ? 'm' : '');
+    let test = null, bad = false;
+    if (S.regex && (pat || q)) { try { const re = new RegExp(pat || q, flagStr); test = r => re.test(r.title + ' ' + r.sub); } catch (e) { bad = true; test = () => false; } }
+    else if (q) { test = r => (r.title + ' ' + r.sub).toLowerCase().includes(q.toLowerCase()); }
+    const searching = !!test;
+    const shown = rowDefs.filter(r => searching ? test(r) : r.sect === S.sect);
+    const sw = (on) => ({
+      swTrack: 'position:relative;flex:0 0 52px;width:52px;height:32px;padding:0;border-radius:999px;cursor:pointer;display:' + 'block' + ';box-sizing:border-box;background:' + (on ? t.primary : t.surfaceContainerHighest) + ';border:' + (on ? '0' : '2px solid ' + t.outline) + ';transition:background 200ms',
+      swHandle: 'position:absolute;top:' + (on ? '4px' : '6px') + ';left:' + (on ? '24px' : '6px') + ';width:' + (on ? '24px' : '16px') + ';height:' + (on ? '24px' : '16px') + ';border-radius:999px;background:' + (on ? t.onPrimary : t.outline) + ';transition:all 200ms'
+    });
+    const mkRow = (r) => {
+      const on = !!val(r);
+      const s = sw(on);
+      const v = val(r);
+      return {
+        title: r.title, sub: r.sub, on: String(on), sectionName: sectDefs[r.sect][0],
+        tag: 'display:' + (searching ? 'inline-block' : 'none') + ';padding:2px 10px;border-radius:8px;background:' + t.surfaceContainerHigh + ';color:' + t.onSurfaceVariant + ';font-size:12px;line-height:16px;font-weight:500',
+        toggle: () => this.setState({ vals: { ...S.vals, [r.id]: !on } }),
+        swTrack: r.kind === 'sw' ? s.swTrack : 'display:none', swHandle: s.swHandle,
+        value: r.kind === 'sel' ? String(v) : '',
+        selStyle: r.kind === 'sel' ? 'display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:140px;height:40px;padding:0 12px 0 16px;border-radius:8px;border:1px solid ' + t.outline + ';background:transparent;font-size:16px' : 'display:none',
+        sliderWrap: r.kind === 'sl' ? 'display:flex;align-items:center;gap:12px' : 'display:none',
+        slider: r.kind === 'sl' ? String(r.id === 'r26' ? v * 10 : v) : '0',
+        sliderText: r.kind === 'sl' ? (r.id === 'r26' ? v + r.suffix : v + r.suffix) : '',
+        onSlide: (e) => { const n = Number(e.target.value); this.setState({ vals: { ...S.vals, [r.id]: r.id === 'r26' ? Math.max(1, Math.round(n / 10)) : n } }); }
+      };
+    };
+    const rows = shown.map(mkRow);
+    const regexBtn = 'height:40px;padding:0 16px 0 12px;border-radius:999px;display:flex;align-items:center;gap:8px;font-weight:500;cursor:pointer;border:' + (S.regex ? '0' : '1px solid ' + t.outline) + ';background:' + (S.regex ? t.primary : t.secondaryContainer) + ';color:' + (S.regex ? t.onPrimary : t.onSecondaryContainer);
+    const mkFlag = (key, label) => { const on = S[key]; return { label, on: String(on), toggle: () => this.setState({ [key]: !on }),
+      style: 'height:32px;padding:0 12px 0 ' + (on ? '8px' : '12px') + ';border-radius:8px;display:flex;align-items:center;gap:6px;font-weight:500;cursor:pointer;font-family:ui-monospace,Consolas,monospace;border:' + (on ? '0' : '1px solid ' + t.outlineVariant) + ';background:' + (on ? t.secondaryContainer : 'transparent') + ';color:' + (on ? t.onSecondaryContainer : t.onSurfaceVariant),
+      checkStyle: on ? 'font-size:18px' : 'display:none' }; };
+    const cur = sectDefs[S.sect];
+    return { ...t, motion: this.props.motion ?? 'on',
+      subtitle: searching ? shown.length + ' of ' + rowDefs.length + ' settings match' : '9 sections · everything is saved on this computer',
+      query: S.query, pattern: S.pattern,
+      onQuery: (e) => this.setState({ query: e.target.value }),
+      onPattern: (e) => this.setState({ pattern: e.target.value }),
+      regexOn: String(S.regex), regexBtn, toggleRegex: () => this.setState({ regex: !S.regex }),
+      regexStrip: S.regex ? 'display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:16px;background:' + t.surfaceContainer + ';animation:pop 200ms cubic-bezier(.05,.7,.1,1) both' : 'display:none',
+      flags: [mkFlag('fi', 'i'), mkFlag('fg', 'g'), mkFlag('fm', 'm')],
+      matchStyle: 'display:flex;align-items:center;gap:6px;height:32px;padding:0 12px 0 8px;border-radius:8px;font-weight:500;background:' + (bad ? t.errorContainer : t.tertiaryContainer) + ';color:' + (bad ? t.onErrorContainer : t.onTertiaryContainer),
+      matchIcon: bad ? 'error' : 'manage_search',
+      matchText: bad ? 'Invalid pattern' : (searching ? shown.length + ' matches' : 'Type a pattern'),
+      rail: railDefs.map(([label, icon], i) => ({ label, icon, iconClass: i === 7 ? 'ms fill' : 'ms', color: i === 7 ? t.onSurface : t.onSurfaceVariant,
+        pill: 'width:56px;height:32px;border-radius:16px;display:grid;place-items:center;background:' + (i === 7 ? t.secondaryContainer : 'transparent') + ';color:' + (i === 7 ? t.onSecondaryContainer : 'inherit') })),
+      sects: sectDefs.map(([label, icon], i) => { const sel = i === S.sect && !searching; return { label, icon, iconClass: sel ? 'ms fill' : 'ms', count: String(rowDefs.filter(r => r.sect === i).length),
+        pick: () => this.setState({ sect: i, query: '', pattern: '' }),
+        badge: 'font-size:12px;line-height:16px;font-weight:500;color:' + (sel ? t.onSecondaryContainer : t.onSurfaceVariant),
+        style: 'display:flex;align-items:center;gap:12px;height:56px;padding:0 16px;border:0;border-radius:999px;cursor:pointer;font-size:14px;font-weight:500;background:' + (sel ? t.secondaryContainer : 'transparent') + ';color:' + (sel ? t.onSecondaryContainer : t.onSurfaceVariant) }; }),
+      headIcon: searching ? 'manage_search' : cur[1], headTitle: searching ? 'Search results' : cur[0],
+      resetSection: () => { const keep = { ...S.vals }; rowDefs.filter(r => r.sect === S.sect).forEach(r => delete keep[r.id]); this.setState({ vals: keep }); },
+      rows, emptyStyle: shown.length ? 'display:none' : 'margin:24px 0 0;color:' + t.onSurfaceVariant + ';font-size:16px'
+    };
   }
+}
+function scheme(seed, theme) {
+  const dark = theme !== 'light';
+  const seeds = {
+    green:  dark ? { primary:'#8FD6B0', onPrimary:'#003825', primaryContainer:'#00513A', onPrimaryContainer:'#AAF2CB', secondaryContainer:'#354B40', onSecondaryContainer:'#CFE9D9', tertiaryContainer:'#234C5D', onTertiaryContainer:'#C1E8FB' }
+                 : { primary:'#2B6A4E', onPrimary:'#FFFFFF', primaryContainer:'#AFF1CE', onPrimaryContainer:'#002114', secondaryContainer:'#CFE9D9', onSecondaryContainer:'#0B1F15', tertiaryContainer:'#C1E8FB', onTertiaryContainer:'#001F2A' },
+    indigo: dark ? { primary:'#B9C3FF', onPrimary:'#1F2C61', primaryContainer:'#364379', onPrimaryContainer:'#DDE1FF', secondaryContainer:'#424659', onSecondaryContainer:'#DFE1F9', tertiaryContainer:'#5C3D58', onTertiaryContainer:'#FFD6F7' }
+                 : { primary:'#4D5C92', onPrimary:'#FFFFFF', primaryContainer:'#DDE1FF', onPrimaryContainer:'#05164B', secondaryContainer:'#DFE1F9', onSecondaryContainer:'#171B2C', tertiaryContainer:'#FFD6F7', onTertiaryContainer:'#2C1229' },
+    amber:  dark ? { primary:'#F5BD6F', onPrimary:'#452B00', primaryContainer:'#633F00', onPrimaryContainer:'#FFDDB3', secondaryContainer:'#574431', onSecondaryContainer:'#FBDEBC', tertiaryContainer:'#3E4E2E', onTertiaryContainer:'#D5EDBA' }
+                 : { primary:'#835416', onPrimary:'#FFFFFF', primaryContainer:'#FFDDB3', onPrimaryContainer:'#2A1700', secondaryContainer:'#FBDEBC', onSecondaryContainer:'#271904', tertiaryContainer:'#D5EDBA', onTertiaryContainer:'#11200A' }
+  };
+  const neutral = dark
+    ? { surface:'#101413', surfaceContainerLowest:'#0B0F0E', surfaceContainerLow:'#181D1B', surfaceContainer:'#1C211F', surfaceContainerHigh:'#272B29', surfaceContainerHighest:'#313634', onSurface:'#E0E3E0', onSurfaceVariant:'#C0C9C3', outline:'#8A938D', outlineVariant:'#404944', error:'#FFB4AB', onError:'#690005', errorContainer:'#93000A', onErrorContainer:'#FFDAD6', inverseSurface:'#E0E3E0', inverseOnSurface:'#2D3130', scrim:'rgba(0,0,0,.5)', shadow:'rgba(0,0,0,.45)' }
+    : { surface:'#F7FAF7', surfaceContainerLowest:'#FFFFFF', surfaceContainerLow:'#F1F4F1', surfaceContainer:'#EBEFEB', surfaceContainerHigh:'#E6E9E6', surfaceContainerHighest:'#E0E3E0', onSurface:'#191C1B', onSurfaceVariant:'#404944', outline:'#707973', outlineVariant:'#C0C9C3', error:'#BA1A1A', onError:'#FFFFFF', errorContainer:'#FFDAD6', onErrorContainer:'#410002', inverseSurface:'#2D3130', inverseOnSurface:'#EEF1EE', scrim:'rgba(0,0,0,.32)', shadow:'rgba(0,0,0,.18)' };
+  return { ...neutral, ...(seeds[seed] || seeds.green) };
 }
 </script>
 </body>
