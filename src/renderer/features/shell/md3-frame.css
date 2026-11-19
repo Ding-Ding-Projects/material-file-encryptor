@@ -171,3 +171,14 @@ md-menu{--md-menu-container-shape:16px}
 
 /* The navigation drawer scrolls vertically only: long labels wrap or ellipsize instead of adding a horizontal bar. */
 .app-shell>.sidebar,.sidebar mfe-navigation-rail,.sidebar .folder-tree{overflow-x:hidden}
+
+/* Settings: categories are 48 px pills with an icon, the selected one on secondary container; search is a pill. */
+.settings-category{--md-text-button-container-height:48px;--md-text-button-container-shape:999px;--md-text-button-label-text-size:14px;--md-text-button-label-text-color:var(--m3-on-surface-variant,var(--md-sys-color-on-surface-variant));--md-text-button-icon-color:var(--m3-on-surface-variant,var(--md-sys-color-on-surface-variant));border-radius:999px}
+.settings-category.is-selected,.settings-category[aria-selected=true]{background:var(--md-sys-color-secondary-container);border-radius:999px;--md-text-button-label-text-color:var(--md-sys-color-on-secondary-container);--md-text-button-icon-color:var(--md-sys-color-on-secondary-container)}
+.settings-category.is-selected::before,.settings-category[aria-selected=true]::before{display:none}
+.settings-category{width:100%;max-width:100%;box-sizing:border-box}
+.settings-category>span[slot=icon]{width:auto;flex:none}
+.settings-category>span:not([slot]){width:calc(100cqi - 82px);text-align:start}
+.settings-categories{border-inline-end:0;background:transparent}
+.settings-categories>mfe-search{--md-outlined-text-field-container-shape:28px}
+:root:not([data-max839]) .settings-layout{grid-template-columns:288px minmax(0,1fr)}

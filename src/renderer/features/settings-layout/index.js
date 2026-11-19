@@ -1,5 +1,9 @@
 import {localized, text} from '../../../shared/surface/registry.js';
 import {SETTINGS_LAYOUT_COPY as C} from './copy.js';
+import {withIcon} from '../../icons.js';
+
+// One icon per settings category, in page order, so the category list reads like the redesign.
+const CATEGORY_ICONS = {'section-0': 'lock', 'storage-settings': 'drive', 'section-2': 'palette', 'section-3': 'sync', 'section-4': 'text', 'sound-settings': 'play', 'section-6': 'book', backup: 'cloud_upload', updates: 'update'};
 
 /**
  * Settings as a real settings layout: a category list (with the settings search above it) and one category of dense
@@ -136,7 +140,9 @@ export function mountSettingsLayout(view, {getLanguage = () => 'en', openView = 
   function renderNav() {
     list.replaceChildren(...categories().map(category => {
       const button = el('md-text-button', {type: 'button', role: 'tab', class: 'settings-category', 'data-category': category.id, 'aria-selected': String(!searching && category.id === active)});
+      button.classList.toggle('is-selected', !searching && category.id === active);
       button.append(el('span', {text: category.label}));
+      withIcon(button, CATEGORY_ICONS[category.id] || 'settings');
       button.addEventListener('click', () => { if (category.view) openView(category.view); else select(category.id); });
       button.addEventListener('keydown', event => {
         const buttons = [...list.querySelectorAll('.settings-category')], index = buttons.indexOf(button);
@@ -152,7 +158,7 @@ export function mountSettingsLayout(view, {getLanguage = () => 'en', openView = 
     const current = categories().find(category => category.id === active);
     categoryTitle.textContent = searching ? L('Search results') : current?.label || '';
     if (searching) content.dataset.searching = ''; else delete content.dataset.searching;
-    for (const button of list.querySelectorAll('.settings-category')) button.setAttribute('aria-selected', String(!searching && button.dataset.category === active));
+    for (const button of list.querySelectorAll('.settings-category')) { const on = !searching && button.dataset.category === active; button.setAttribute('aria-selected', String(on)); button.classList.toggle('is-selected', on); }
   }
   // The backup status changes while the app runs (sign-in, the notice, every backup), so opening Backup reads it again.
   function refreshBackup() { return Promise.resolve().then(getBackupStatus).then(value => { if (value) { status = value; renderBackup(); apply(); } }, () => {}); }
