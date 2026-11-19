@@ -72,7 +72,7 @@
   --md-outlined-text-field-container-shape:var(--m3-shape-xs);--md-filled-text-field-container-shape:var(--m3-shape-xs);--md-outlined-select-text-field-container-shape:var(--m3-shape-xs);
   --md-outlined-text-field-top-space:16px;--md-outlined-text-field-bottom-space:16px;--md-outlined-text-field-input-text-size:16px;--md-outlined-text-field-label-text-size:16px;--md-outlined-text-field-outline-color:var(--m3-outline);
   --md-outlined-select-text-field-top-space:16px;--md-outlined-select-text-field-bottom-space:16px;--md-outlined-select-text-field-input-text-size:16px;--md-outlined-select-text-field-outline-color:var(--m3-outline);
-  --md-menu-container-shape:16px;--md-menu-container-color:var(--m3-surface-container);--md-menu-item-one-line-container-height:48px;--md-menu-item-label-text-size:14px;--md-menu-item-top-space:12px;--md-menu-item-bottom-space:12px;
+  --md-menu-container-shape:16px;--md-menu-container-color:var(--m3-surface-container);--md-menu-item-one-line-container-height:48px;--md-menu-item-label-text-size:14px;--md-menu-item-top-space:0px;--md-menu-item-bottom-space:0px;
   --md-dialog-container-shape:28px;--md-dialog-container-color:var(--m3-surface-high);
   --md-chip-container-shape:8px;--md-filter-chip-container-shape:8px;--md-assist-chip-container-shape:8px;--md-suggestion-chip-container-shape:8px;--md-input-chip-container-shape:8px;
   --md-filter-chip-selected-container-color:var(--m3-secondary-container);--md-filter-chip-selected-label-text-color:var(--m3-on-secondary-container);
@@ -168,3 +168,6 @@ md-menu{--md-menu-container-shape:16px}
 }
 @media (pointer:coarse){md-filled-button,md-outlined-button,md-text-button,md-filled-tonal-button{--md-filled-button-container-height:48px;--md-outlined-button-container-height:48px;--md-text-button-container-height:48px;--md-filled-tonal-button-container-height:48px}}
 @media (prefers-reduced-motion:reduce){.tree-drive,.tree-row{transition:none}}
+
+/* The navigation drawer scrolls vertically only: long labels wrap or ellipsize instead of adding a horizontal bar. */
+.app-shell>.sidebar,.sidebar mfe-navigation-rail,.sidebar .folder-tree{overflow-x:hidden}

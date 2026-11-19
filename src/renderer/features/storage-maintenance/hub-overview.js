@@ -57,9 +57,11 @@ export function mountHubOverview(host, {services = {}, getLanguage = () => 'en',
       remove: {label: 'Remove this drive’s backups…', disabled: !drive.repository || typeof services.autoBackupListOwn !== 'function', run: () => void askRemove(drive)}
     };
   }
+  const MENU_ICONS = {backup: 'cloud_upload', restore: 'download', prune: 'delete', move: 'folder', switch: 'sync', open: 'open', remove: 'delete'};
+  const MENU_SECTIONS = {backup: 0, restore: 0, prune: 1, move: 1, switch: 1, open: 2, remove: 3};
   function rowMenu(anchor, event, drive) {
     const actions = driveActions(drive);
-    openContextMenu({anchor, event, target: anchor, language: getLanguage(), items: ['backup', 'restore', 'prune', 'move', 'switch', 'open', 'remove'].map(id => ({id: `hub:${id === 'switch' ? 'switch' : id}`, label: text(actions[id].label, AUTO_BACKUP_COPY[actions[id].label]), disabled: actions[id].disabled, run: actions[id].run}))});
+    openContextMenu({anchor, event, target: anchor, language: getLanguage(), items: ['backup', 'restore', 'prune', 'move', 'switch', 'open', 'remove'].map(id => ({id: `hub:${id === 'switch' ? 'switch' : id}`, label: text(actions[id].label, AUTO_BACKUP_COPY[actions[id].label]), icon: MENU_ICONS[id], section: MENU_SECTIONS[id], danger: id === 'remove', disabled: actions[id].disabled, run: actions[id].run}))});
   }
   function driveRow(drive) {
     const bucket = bucketOf(drive), state = driveState(drive), open = expanded.has(drive.sessionId), name = drive.name || drive.sessionId;
