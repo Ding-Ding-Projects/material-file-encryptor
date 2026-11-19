@@ -91,7 +91,7 @@ export class HubDriveDialog extends SurfaceElement {
     this.reset(); this.mode = mode; this.direct = mode === 'create' && direct === true; this.stage = mode === 'open' ? 'repository' : 'choose';
     this.picker.configure({ services: this.api, mode, translate: this.translateText, language: this.language });
     this.loginPanel.configure(this.api);
-    const letters = this.letters(); this.draft = { driveName: 'Drive', driveLetter: letters[0] ?? 'M', credentialMode: 'password', password: '', confirmPassword: '', keyFilePath: '' };
+    const letters = this.letters(); this.draft = { driveName: '', driveLetter: letters[0] ?? 'M', credentialMode: 'password', password: '', confirmPassword: '', keyFilePath: '' };
     this.render(); const shown = this.dialog.showModal?.(); Promise.resolve(shown).then(() => this.focusFirst(), () => {});
     if (mode === 'open') this.enterRepositoryStep();
     else if (this.direct) void this.afterWhere();

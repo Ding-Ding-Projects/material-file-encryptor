@@ -1,28 +1,158 @@
 {
  "v": 3,
- "createdOnFiles": {"v": 1, "at": "2026-11-18T12:00:00Z"},
+ "createdOnFiles": {
+  "v": 1,
+  "at": "2026-11-18T12:00:00Z"
+ },
  "title": "File Hosting",
- "launch": {"view": "canvas", "page": "app"},
+ "launch": {
+  "view": "canvas",
+  "page": "app"
+ },
  "pages": [
-  {"id": "app", "name": "Desktop app: deploy, links, manage"},
-  {"id": "site", "name": "Hosted download page"}
+  {
+   "id": "app",
+   "name": "Desktop app: deploy, links, manage"
+  },
+  {
+   "id": "site",
+   "name": "Hosted download page"
+  },
+  {
+   "id": "drives",
+   "name": "Drive icon and banner"
+  }
  ],
  "boards": {
-  "Main.dc.html": {"x": 0, "y": 0, "w": 1440, "h": 960, "page": "app", "title": "Deploy file hosting (one-click wizard)", "is_interactive": true},
-  "CreateLink.dc.html": {"x": 1520, "y": 0, "w": 1440, "h": 960, "page": "app", "title": "Create a download link with QR code", "is_interactive": true},
-  "Manage.dc.html": {"x": 0, "y": 1080, "w": 1440, "h": 960, "page": "app", "title": "File hosting: status, links and instance", "is_interactive": true},
-  "Download.dc.html": {"x": 0, "y": 0, "w": 1280, "h": 860, "page": "site", "title": "Download page (wide)", "expand": "fill", "is_interactive": true},
-  "DownloadPhone.dc.html": {"x": 1360, "y": 0, "w": 390, "h": 844, "page": "site", "title": "Download page (phone 390 px)", "is_interactive": true}
+  "Main.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 960,
+   "page": "app",
+   "title": "Deploy file hosting (one-click wizard)",
+   "is_interactive": true
+  },
+  "CreateLink.dc.html": {
+   "x": 1520,
+   "y": 0,
+   "w": 1440,
+   "h": 960,
+   "page": "app",
+   "title": "Create a download link with QR code",
+   "is_interactive": true
+  },
+  "Manage.dc.html": {
+   "x": 0,
+   "y": 1080,
+   "w": 1440,
+   "h": 960,
+   "page": "app",
+   "title": "File hosting: status, links and instance",
+   "is_interactive": true
+  },
+  "Download.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1280,
+   "h": 860,
+   "page": "site",
+   "title": "Download page (wide)",
+   "expand": "fill",
+   "is_interactive": true
+  },
+  "DownloadPhone.dc.html": {
+   "x": 1360,
+   "y": 0,
+   "w": 390,
+   "h": 844,
+   "page": "site",
+   "title": "Download page (phone 390 px)",
+   "is_interactive": true
+  },
+  "DriveAppearance.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 960,
+   "page": "drives",
+   "title": "Drive icon and banner, with public warning",
+   "is_interactive": true
+  }
  },
- "order": ["Main.dc.html", "CreateLink.dc.html", "Manage.dc.html", "Download.dc.html", "DownloadPhone.dc.html"],
+ "order": [
+  "Main.dc.html",
+  "CreateLink.dc.html",
+  "Manage.dc.html",
+  "Download.dc.html",
+  "DownloadPhone.dc.html",
+  "DriveAppearance.dc.html"
+ ],
  "notes": {
-  "appTitle": {"x": 0, "y": -300, "text": "Desktop app: host files through Docker Hub", "kind": "title1", "maxW": 2960, "page": "app"},
-  "siteTitle": {"x": 0, "y": -300, "text": "What the recipient sees", "kind": "title1", "maxW": 1750, "page": "site"},
-  "noteMain": {"x": -440, "y": 0, "w": 360, "fill": "yellow", "page": "app", "text": "Deploy wizard. Pick where to host (this computer or an SSH host), the port, and the public address (none, a quick Cloudflare tunnel, or your own tunnel with its token). Deploy pulls the published image, starts Compose, waits for health and shows the LAN and public links.\n\nTry: switch the host and address options, then press Deploy.\n\nUnbuilt: nothing yet, this is the target."},
-  "noteCreate": {"x": 3040, "y": 0, "w": 360, "fill": "yellow", "page": "app", "text": "Create a link from Shared files. Choose when it expires and whether it deletes itself after a number of downloads. The link carries the key after #, so the server never sees it. A QR code is drawn for phones.\n\nTry: change expiry and the download limit, then Create link.\n\nUnbuilt: nothing yet, this is the target."},
-  "noteManage": {"x": 1520, "y": 1080, "w": 360, "fill": "yellow", "page": "app", "text": "File hosting page. Health is checked when the page opens, never assumed. Each link shows expiry, downloads left and state, with copy, QR and End now. The instance card restarts, updates, stops and shows logs.\n\nTry: End a link, Show QR.\n\nUnbuilt: nothing yet, this is the target."},
-  "noteDownload": {"x": 1830, "y": 0, "w": 360, "fill": "yellow", "page": "site", "text": "Hosted page. The server streams only the encrypted file it cached from Docker Hub; the browser decrypts it with the key in the link. Passphrase shares ask for it here. Expired and used-up links say so plainly.\n\nTry: the state tweak (ready, passphrase, downloading, done, expired).\n\nUnbuilt: nothing yet, this is the target."},
-  "notePhone": {"x": 1830, "y": 460, "w": 360, "fill": "yellow", "page": "site", "text": "Same page at 390 px. Every action stays reachable: one column, 48 px button, details fold under the file card.\n\nTry: the state tweak.\n\nUnbuilt: nothing yet, this is the target."}
+  "appTitle": {
+   "x": 0,
+   "y": -300,
+   "text": "Desktop app: host files through Docker Hub",
+   "kind": "title1",
+   "maxW": 2960,
+   "page": "app"
+  },
+  "siteTitle": {
+   "x": 0,
+   "y": -300,
+   "text": "What the recipient sees",
+   "kind": "title1",
+   "maxW": 1750,
+   "page": "site"
+  },
+  "noteMain": {
+   "x": -440,
+   "y": 0,
+   "w": 360,
+   "fill": "yellow",
+   "page": "app",
+   "text": "Deploy wizard. Pick where to host (this computer or an SSH host), the port, and the public address (none, a quick Cloudflare tunnel, or your own tunnel with its token). Deploy pulls the published image, starts Compose, waits for health and shows the LAN and public links.\n\nTry: switch the host and address options, then press Deploy.\n\nUnbuilt: nothing yet, this is the target."
+  },
+  "noteCreate": {
+   "x": 3040,
+   "y": 0,
+   "w": 360,
+   "fill": "yellow",
+   "page": "app",
+   "text": "Create a link from Shared files. Choose when it expires and whether it deletes itself after a number of downloads. The link carries the key after #, so the server never sees it. A QR code is drawn for phones.\n\nTry: change expiry and the download limit, then Create link.\n\nUnbuilt: nothing yet, this is the target."
+  },
+  "noteManage": {
+   "x": 1520,
+   "y": 1080,
+   "w": 360,
+   "fill": "yellow",
+   "page": "app",
+   "text": "File hosting page. Health is checked when the page opens, never assumed. Each link shows expiry, downloads left and state, with copy, QR and End now. The instance card restarts, updates, stops and shows logs.\n\nTry: End a link, Show QR.\n\nUnbuilt: nothing yet, this is the target."
+  },
+  "noteDownload": {
+   "x": 1830,
+   "y": 0,
+   "w": 360,
+   "fill": "yellow",
+   "page": "site",
+   "text": "Hosted page. The server streams only the encrypted file it cached from Docker Hub; the browser decrypts it with the key in the link. Passphrase shares ask for it here. Expired and used-up links say so plainly.\n\nTry: the state tweak (ready, passphrase, downloading, done, expired).\n\nUnbuilt: nothing yet, this is the target."
+  },
+  "notePhone": {
+   "x": 1830,
+   "y": 460,
+   "w": 360,
+   "fill": "yellow",
+   "page": "site",
+   "text": "Same page at 390 px. Every action stays reachable: one column, 48 px button, details fold under the file card.\n\nTry: the state tweak.\n\nUnbuilt: nothing yet, this is the target."
+  },
+  "noteAppearance": {
+   "x": 1520,
+   "y": 0,
+   "w": 360,
+   "fill": "yellow",
+   "page": "drives",
+   "text": "Drive icon and banner. Chosen from the drive row menu. The images travel unencrypted with the drive's backups to the public Docker Hub repository, so the drive list and the Open from Docker Hub picker can show them before unlocking. Save stays off until the public warning is acknowledged.\n\nTry: Remove and choose the icon and banner, tick the warning.\n\nUnbuilt: all of it."
+  }
  },
  "designSystems": []
 }

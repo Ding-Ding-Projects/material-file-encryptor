@@ -4,7 +4,7 @@ export const AUTO_BACKUP_COPY = Object.freeze({
   'Drive': '磁碟', 'From': '來源', 'Last backup': '上次備份', 'Snapshots': '快照', 'Status': '狀態', 'Backup': '備份', 'This PC': '呢部電腦',
   'Not backed up': '未備份', 'Never': '從未', 'just now': '啱啱', '{count} min ago': '{count} 分鐘前', '{count} h ago': '{count} 小時前',
   'Backed up': '已備份', 'Backing up…': '備份緊…', 'Backup off': '備份已關閉', 'No encrypted storage': '冇加密儲存', 'Paused while you use the drive': '你用緊磁碟，暫停咗',
-  'Waiting for connection': '等緊網絡連線', 'Needs attention': '需要處理', 'Changes waiting': '有改動等緊備份', 'Waiting for the first backup': '等緊第一次備份',
+  'Waiting for connection': '等緊網絡連線', 'Needs attention': '需要處理', 'Waiting for {name} to finish': '等緊 {name} 備份完', 'Changes waiting': '有改動等緊備份', 'Waiting for the first backup': '等緊第一次備份',
   'Public': '公開', 'Private': '私人', '{count} drives': '{count} 個磁碟', '1 drive': '1 個磁碟', '{count} of 1,000 tags': '1,000 個標籤用咗 {count} 個',
   'Move drives to their own repositories': '將磁碟搬去各自嘅 repository',
   'Back up now': '立即備份', 'Prune old snapshots now': '而家清走舊快照', 'Move to its own repository': '搬去自己嘅 repository', 'Stop backing up': '停止備份',

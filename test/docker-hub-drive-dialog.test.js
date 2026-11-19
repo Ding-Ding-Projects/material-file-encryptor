@@ -124,7 +124,7 @@ test('a failed first sync keeps the drive, names the reason and retries only tha
   dialog.open('create');
   byText(dialog, 'Docker Hub').listeners.click(); await settle(() => dialog.stage === 'repository'); await settle(() => dialog.picker.snapshot);
   dialog.picker.chooseSuggested(); await settle(() => dialog.stage === 'details');
-  type(byId(dialog, 'hub-password'), 'pw'); type(byId(dialog, 'hub-confirm-password'), 'pw');
+  type(byId(dialog, 'hub-drive-name'), 'Drive'); type(byId(dialog, 'hub-password'), 'pw'); type(byId(dialog, 'hub-confirm-password'), 'pw');
   byText(dialog, 'Create drive').listeners.click(); await settle(() => dialog.stage === 'failed');
   assert.equal(dialog.stage, 'failed');
   const text = textOf(dialog.dialog); assert.ok(text.includes('The drive exists and is mounted as M:') && text.includes('Docker Hub could not be reached'));

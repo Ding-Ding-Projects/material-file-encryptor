@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Drive icon and banner</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+@keyframes rise{from{transform:translateY(10px);opacity:0}to{transform:none;opacity:1}}
+[data-motion=off] *{animation:none!important;transition:none!important}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+button,input{font:inherit;color:inherit}
+</style>
+</helmet>
+<div data-motion="{{motion}}" style="width:1440px;height:960px;position:relative;font-family:'Roboto Flex',system-ui,sans-serif;font-size:14px;color:#E4E4EE;background:#121318;overflow:hidden;display:flex">
+<nav aria-label="Drives" style="flex:0 0 280px;background:#1A1B21;border-right:1px solid #2C2D35;padding:16px 12px;display:flex;flex-direction:column;gap:8px">
+<span style="font-size:12px;letter-spacing:.08em;color:#9A9BA8;padding:4px 10px">DRIVES</span>
+<sc-for list="{{drives}}" as="d" hint-placeholder-count="3">
+<a href="#" style="{{d.style}}">
+<span aria-hidden="true" style="{{d.banner}}"></span>
+<span style="position:relative;display:flex;align-items:center;gap:10px;padding:10px 12px">
+<span aria-hidden="true" style="{{d.icon}}">{{d.letter}}</span>
+<span style="display:flex;flex-direction:column"><b style="font-size:14px;color:#F2F2FA">{{d.name}}</b><span style="font-size:12px;color:#C5C6D4">{{d.sub}}</span></span>
+</span>
+</a>
+</sc-for>
+</nav>
+<div aria-hidden="true" style="position:absolute;inset:0 0 0 280px;background:rgba(0,0,0,.45)"></div>
+<section role="dialog" aria-modal="true" aria-labelledby="ttl" style="position:absolute;left:400px;top:70px;width:920px;height:820px;border-radius:24px;background:#1E1F26;box-shadow:0 12px 40px rgba(0,0,0,.5);display:flex;flex-direction:column;overflow:hidden;animation:rise 300ms cubic-bezier(.05,.7,.1,1) both">
+<div style="position:relative;height:180px;flex:none;background:{{bannerFill}}">
+<div style="position:absolute;left:28px;bottom:-40px;width:96px;height:96px;border-radius:24px;background:{{iconFill}};border:4px solid #1E1F26;display:grid;place-items:center;font-size:40px;font-weight:700;color:#14205F">A</div>
+<button type="button" aria-label="Close" style="position:absolute;right:16px;top:16px;width:48px;height:48px;border-radius:24px;border:0;background:rgba(0,0,0,.4);color:#fff;font-size:22px">×</button>
+</div>
+<div style="padding:56px 28px 20px;display:flex;flex-direction:column;gap:18px;flex:1;overflow:auto">
+<h1 id="ttl" style="margin:0;font-size:22px">Studio: icon and banner</h1>
+<div role="note" style="display:flex;gap:12px;padding:14px 16px;border-radius:14px;background:#4A2A00;color:#FFDDB3;line-height:1.5">
+<svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="M12 9v4"></path><path d="M12 17h.01"></path><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path></svg>
+<div><b>These images are public.</b> They are uploaded unencrypted with this drive's backups to your public Docker Hub repository, so the drive can show them before it is unlocked. Anyone can see them. Don't use photos of people or anything private. Your files stay encrypted.</div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px">
+<div style="padding:16px;border-radius:16px;background:#2A2B33;display:flex;flex-direction:column;gap:10px">
+<b>Icon</b><span style="color:#C5C6D4">Square PNG, JPEG or WebP, up to 512 KB. Shown beside the drive name.</span>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" onClick="{{setIcon}}" style="min-height:44px;padding:0 18px;border-radius:22px;border:1px solid #8F90A0;background:transparent">Choose icon…</button><button type="button" onClick="{{clearIcon}}" style="min-height:44px;padding:0 18px;border-radius:22px;border:0;background:transparent;color:#FFB4AB">Remove</button></div>
+</div>
+<div style="padding:16px;border-radius:16px;background:#2A2B33;display:flex;flex-direction:column;gap:10px">
+<b>Banner</b><span style="color:#C5C6D4">Wide image, 3:1 works best, up to 1 MB. Shown behind the drive in lists.</span>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" onClick="{{setBanner}}" style="min-height:44px;padding:0 18px;border-radius:22px;border:1px solid #8F90A0;background:transparent">Choose banner…</button><button type="button" onClick="{{clearBanner}}" style="min-height:44px;padding:0 18px;border-radius:22px;border:0;background:transparent;color:#FFB4AB">Remove</button></div>
+</div>
+</div>
+<label style="display:flex;align-items:center;gap:12px;min-height:48px"><input type="checkbox" onChange="{{toggleAck}}" style="width:22px;height:22px">I understand the icon and banner are public</label>
+</div>
+<footer style="display:flex;justify-content:flex-end;gap:10px;padding:14px 28px;border-top:1px solid #2C2D35">
+<button type="button" style="min-height:48px;padding:0 22px;border-radius:24px;border:1px solid #8F90A0;background:transparent">Cancel</button>
+<button type="button" style="{{saveStyle}}">Save</button>
+</footer>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#B9C3FF","options":["#B9C3FF","#A8D5A2","#FFB59E","#E3B9FF"]},"motion":{"editor":"enum","options":["on","off"],"default":"on"},"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  constructor(p){ super(p); this.state = { icon: true, banner: true, ack: false }; }
+  renderVals() {
+    const accent = this.props.accent ?? '#B9C3FF', s = this.state;
+    const bannerFill = s.banner ? 'linear-gradient(120deg,#3B5BA9,#8E5EA8 55%,#D98E5A)' : '#2A2B33';
+    const iconFill = s.icon ? accent : '#3A3B44';
+    const drives = [
+      { name: 'Studio', sub: 'Q: · backed up 19:52', letter: 'A', withArt: true, current: true },
+      { name: 'Work drive', sub: 'E: · locked', letter: 'W', withArt: false },
+      { name: 'Photos 2026', sub: 'P: · waiting for Studio', letter: 'P', withArt: false }
+    ].map(d => ({ ...d,
+      style: 'position:relative;display:block;border-radius:16px;overflow:hidden;text-decoration:none;min-height:64px;background:' + (d.current ? '#2A2B33' : 'transparent') + ';outline:' + (d.current ? '2px solid ' + accent : 'none'),
+      banner: 'position:absolute;inset:0;opacity:.55;background:' + (d.withArt && s.banner ? bannerFill : 'transparent'),
+      icon: 'width:36px;height:36px;border-radius:10px;display:grid;place-items:center;font-weight:700;color:#14205F;background:' + (d.withArt && s.icon ? accent : '#C5C6D4') }));
+    return { accent, motion: this.props.motion ?? 'on', bannerFill, iconFill, drives,
+      setIcon: () => this.setState({ icon: true }), clearIcon: () => this.setState({ icon: false }),
+      setBanner: () => this.setState({ banner: true }), clearBanner: () => this.setState({ banner: false }),
+      toggleAck: () => this.setState({ ack: !s.ack }),
+      saveStyle: 'min-height:48px;padding:0 26px;border-radius:24px;border:0;font-weight:650;background:' + (s.ack ? accent : '#3A3B44') + ';color:' + (s.ack ? '#14205F' : '#8F90A0') };
+  }
+}
+</script>
+</body>
+</html>
