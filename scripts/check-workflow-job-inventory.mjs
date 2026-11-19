@@ -9,6 +9,8 @@ const REQUIRED_TOOLS={
  '.github/workflows/windows.yml#windows':['Windows PowerShell 5.1','cmd.exe','Git','GitHub CLI','Node.js','npm','pinned .NET SDK','7-Zip','NuGet','WinFsp packaging files'],
  '.github/workflows/windows.yml#promote':['Windows PowerShell >=5.1','Git','GitHub CLI','Node.js'],
  '.github/workflows/capture-evidence.yml#evidence':['Node.js','Python','GitHub CLI','project packages','Playwright','Chromium','Linux browser shared libraries'],
+ '.github/workflows/file-hosting-image.yml#build':['Docker Engine','POSIX shell (bash)','GitHub Container Registry login'],
+ '.github/workflows/file-hosting-image.yml#publish':['Docker Buildx','jq','POSIX shell (bash)','GitHub Container Registry login'],
  '.github/workflows/pages.yml#deploy':['Node.js','npm','GitHub CLI','POSIX shell (bash)','esbuild','locked browser packages','verified bundled fonts'],
 };
 

@@ -2,7 +2,8 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import net from 'node:net';
 import { randomBytes as nodeRandomBytes } from 'node:crypto';
-import { validateSettings, instanceFiles, SECRET_FILES, composeArgs, remoteDocker, remoteWrite, remoteRemove, sshArgsFor, sshForwardArgs, quickTunnelUrl, lanAddress, linkBase, planError } from './hosting-plan.js';
+import { validateSettings, instanceFiles, SECRET_FILES, composeArgs, remoteDocker, remoteWrite, remoteRemove, sshArgsFor, sshForwardArgs, quickTunnelUrl, lanAddress, routedAddress, linkBase, planError } from './hosting-plan.js';
+import { createSocket as createUdpSocket } from 'node:dgram';
 
 const coded = (code, message) => Object.assign(Error(message), { code });
 const SAFE_CODES = new Set(['INVALID_SETTINGS', 'BUSY', 'CANCELLED', 'NOT_FOUND', 'DOCKER_MISSING', 'SSH_UNAVAILABLE', 'PULL_FAILED', 'START_FAILED', 'UNHEALTHY', 'ADMIN_FAILED',
@@ -17,7 +18,7 @@ const MINUTE = 60000;
  *   spawn                          node:child_process spawn (ssh uploads and port forwards)
  *   shares                         { entry(id), command(id), revoke(id) } from the share service
  */
-export function createHostingService({ store, shares, exec, spawn, fetcher = fetch, userDir, interfaces = () => ({}), randomBytes = nodeRandomBytes, now = Date.now, sleep = ms => new Promise(resolve => setTimeout(resolve, ms)), healthTimeoutMs = 90000 }) {
+export function createHostingService({ store, shares, exec, spawn, fetcher = fetch, userDir, interfaces = () => ({}), localAddress = () => routedAddress(createUdpSocket), randomBytes = nodeRandomBytes, now = Date.now, sleep = ms => new Promise(resolve => setTimeout(resolve, ms)), healthTimeoutMs = 90000 }) {
   let active = null;
   const secretsOf = item => [item?.adminToken, item?.tunnelToken].filter(Boolean);
   const clean = (text, item) => { let out = String(text || '').slice(-600); for (const secret of secretsOf(item)) out = out.split(secret).join('[hidden]'); return out.trim(); };
@@ -119,8 +120,9 @@ export function createHostingService({ store, shares, exec, spawn, fetcher = fet
       await sleep(2000);
     }
   }
-  const lanUrlFor = item => {
-    const host = item.target === 'local' ? lanAddress(interfaces()) : item.ssh.host;
+  const thisComputer = async () => (await localAddress().catch(() => null)) || lanAddress(interfaces());
+  const lanUrlFor = async item => {
+    const host = item.target === 'local' ? await thisComputer() : item.ssh.host;
     return host ? `http://${host}:${item.port}` : null;
   };
 
@@ -156,8 +158,14 @@ export function createHostingService({ store, shares, exec, spawn, fetcher = fet
       phase('files', 'done');
 
       phase('pull', 'running');
+      let usedLocalImage = false;
       try { await docker(item, composeArgs(item, 'pull'), { timeout: 20 * MINUTE, signal }); }
-      catch (error) { if (signal.aborted) throw error; throw Object.assign(coded('PULL_FAILED', 'The server image could not be downloaded. Check the internet connection on the host.'), { detail: error.detail }); }
+      catch (error) {
+        if (signal.aborted) throw error;
+        // Offline, or the registry is unreachable: an exact copy already on the host is still the requested image.
+        try { await docker(item, ['image', 'inspect', '--format', '{{.Id}}', item.image], { timeout: 30000, signal }); usedLocalImage = true; }
+        catch { throw Object.assign(coded('PULL_FAILED', 'The server image could not be downloaded. Check the internet connection on the host.'), { detail: error.detail }); }
+      }
       phase('pull', 'done');
 
       phase('start', 'running');
@@ -170,7 +178,7 @@ export function createHostingService({ store, shares, exec, spawn, fetcher = fet
       phase('health', 'done');
 
       phase('address', 'running');
-      item.lanUrl = lanUrlFor(item);
+      item.lanUrl = await lanUrlFor(item);
       if (item.tunnel === 'quick') item.quickUrl = await readQuickUrl(item, signal);
       item.deployedAt = new Date(now()).toISOString();
       const saved = await store.putInstance(item);
@@ -180,7 +188,7 @@ export function createHostingService({ store, shares, exec, spawn, fetcher = fet
         for (let i = 0; i < 6 && !publicReachable; i++) { try { publicReachable = (await getJson(base + '/api/health', { timeout: 8000, signal })).json?.ok === true; } catch { publicReachable = false; } if (!publicReachable) await sleep(3000); }
       }
       phase('address', 'done');
-      return { instance: store.instanceView(saved), health: { checkedAt: new Date(now()).toISOString(), version: health.version }, publicReachable };
+      return { instance: store.instanceView(saved), health: { checkedAt: new Date(now()).toISOString(), version: health.version }, publicReachable, usedLocalImage };
     } catch (error) {
       if (active?.current && active.phases[active.current] === 'running') active.phases[active.current] = 'failed';
       throw safe(error, 'Deployment failed.');
@@ -280,7 +288,7 @@ export function createHostingService({ store, shares, exec, spawn, fetcher = fet
     get pending() { return Boolean(active); },
     status: () => active ? { state: 'deploying', name: active.name, phases: { ...active.phases }, current: active.current } : { state: 'idle' },
     cancel() { active?.controller.abort(); return { cancelled: Boolean(active) }; },
-    async instances() { return { instances: (await store.instances()).map(store.instanceView), persistent: store.persistent, error: store.loadError, lanAddress: lanAddress(interfaces()) }; },
+    async instances() { return { instances: (await store.instances()).map(store.instanceView), persistent: store.persistent, error: store.loadError, lanAddress: await thisComputer() }; },
     deploy,
     health: run(health, 'The health check failed.'),
     action: run(action, 'The action failed.'),

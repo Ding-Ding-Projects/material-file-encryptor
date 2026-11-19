@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { validateSettings, instanceFiles, composeArgs, quickTunnelUrl, lanAddress, remoteWrite, remoteDocker, sshForwardArgs, DEFAULT_IMAGE, SERVER_VERSION, linkBase } from '../src/main/file-hosting/hosting-plan.js';
+import { validateSettings, instanceFiles, composeArgs, quickTunnelUrl, lanAddress, routedAddress, remoteWrite, remoteDocker, sshForwardArgs, DEFAULT_IMAGE, SERVER_VERSION, linkBase } from '../src/main/file-hosting/hosting-plan.js';
 import { validateHostingRequest, HOSTING_METHODS } from '../src/main/file-hosting/ipc.js';
 import { createHostingService } from '../src/main/file-hosting/hosting-service.js';
 import { createHostingStore } from '../src/main/file-hosting/hosting-store.js';
@@ -45,7 +45,11 @@ test('compose and ssh commands are exact and quoted', () => {
   assert.deepEqual(sshForwardArgs(ssh, 40001).slice(0, 5), ['-N', '-o', 'ExitOnForwardFailure=yes', '-L', '127.0.0.1:40001:127.0.0.1:8790']);
 });
 
-test('the quick tunnel address and the LAN address are found', () => {
+test('the quick tunnel address and the LAN address are found', async () => {
+  assert.equal(lanAddress({ 'Ethernet 2': [{ family: 'IPv4', address: '192.168.56.1', internal: false }], 'Wi-Fi': [{ family: 'IPv4', address: '192.168.50.59', internal: false }] }), '192.168.50.59', 'the VirtualBox host-only address is never chosen');
+  const fakeSocket = address => () => ({ once() {}, connect(_port, _host, done) { done(); }, address: () => ({ address }), close() {} });
+  assert.equal(await routedAddress(fakeSocket('192.168.50.59')), '192.168.50.59');
+  assert.equal(await routedAddress(fakeSocket('8.8.4.4')), null, 'a public source address is not a LAN link');
   assert.equal(quickTunnelUrl('INF |  https://calm-river-4821.trycloudflare.com  |\nother https://api.trycloudflare.com'), 'https://api.trycloudflare.com');
   assert.equal(quickTunnelUrl('nothing yet'), null);
   assert.equal(lanAddress({ 'vEthernet (WSL)': [{ family: 'IPv4', address: '172.20.0.1', internal: false }], Ethernet: [{ family: 'IPv4', address: '10.0.0.5', internal: false }], 'Wi-Fi': [{ family: 'IPv4', address: '192.168.50.24', internal: false }], lo: [{ family: 'IPv4', address: '127.0.0.1', internal: true }] }), '192.168.50.24');
@@ -80,7 +84,7 @@ async function harness({ healthy = true } = {}) {
   };
   const service = createHostingService({
     store, fetcher, userDir: directory, sleep: async () => {}, healthTimeoutMs: 1000,
-    interfaces: () => ({ 'Wi-Fi': [{ family: 'IPv4', address: '192.168.50.24', internal: false }] }),
+    interfaces: () => ({ 'Ethernet 2': [{ family: 'IPv4', address: '192.168.56.1', internal: false }], 'Wi-Fi': [{ family: 'IPv4', address: '192.168.50.24', internal: false }] }), localAddress: async () => null,
     exec: async (command, args) => { calls.push([command, ...args].join(' ')); return { stdout: '', stderr: '' }; },
     spawn: () => { throw Error('no ssh in this test'); },
     shares: { entry: async id => id === shareEntry.id ? shareEntry : null, command: async () => `mfe-share:v1:registry-1.docker.io/${shareEntry.repository}@${shareEntry.digest}#${'K'.repeat(43)}`, revoke: async id => { revoked.push(id); } }

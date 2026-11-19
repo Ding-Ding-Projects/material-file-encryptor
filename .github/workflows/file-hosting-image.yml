@@ -1,0 +1,80 @@
+name: File hosting image
+
+# Builds and publishes the self-hosted download server image for amd64 and arm64.
+# Every push gets an immutable sha tag; pushes to main also move the version tag and latest.
+on:
+  push:
+    branches: ['**']
+    paths:
+      - 'file-hosting/**'
+      - '.github/workflows/file-hosting-image.yml'
+      - '.github/workflows/file-hosting-image.dependencies.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: file-hosting-image-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Build and push the ${{ matrix.arch }} image
+        shell: bash
+        env:
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ACTOR: ${{ github.actor }}
+          REPOSITORY: ${{ github.repository }}
+          REVISION: ${{ github.sha }}
+          ARCH: ${{ matrix.arch }}
+        run: |
+          set -euo pipefail
+          image=ghcr.io/ding-ding-projects/material-file-encryptor-hosting
+          docker version --format 'Docker {{.Server.Version}}'
+          printf '%s' "$REGISTRY_TOKEN" | docker login ghcr.io -u "$ACTOR" --password-stdin
+          docker build --pull \
+            --label "org.opencontainers.image.source=https://github.com/$REPOSITORY" \
+            --label "org.opencontainers.image.revision=$REVISION" \
+            --label "org.opencontainers.image.description=Self-hosted download links for encrypted Material File Encryptor shares" \
+            --label "org.opencontainers.image.licenses=GPL-3.0-only" \
+            -t "$image:sha-$REVISION-$ARCH" file-hosting
+          docker push "$image:sha-$REVISION-$ARCH"
+
+  publish:
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Publish the multi-architecture tags
+        shell: bash
+        env:
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ACTOR: ${{ github.actor }}
+          REVISION: ${{ github.sha }}
+          REF: ${{ github.ref }}
+        run: |
+          set -euo pipefail
+          image=ghcr.io/ding-ding-projects/material-file-encryptor-hosting
+          version=$(jq -r .version file-hosting/server/package.json)
+          printf '%s' "$REGISTRY_TOKEN" | docker login ghcr.io -u "$ACTOR" --password-stdin
+          tags=(-t "$image:sha-$REVISION")
+          if [ "$REF" = "refs/heads/main" ]; then tags+=(-t "$image:$version" -t "$image:latest"); fi
+          docker buildx imagetools create "${tags[@]}" "$image:sha-$REVISION-amd64" "$image:sha-$REVISION-arm64"
+          docker buildx imagetools inspect "$image:sha-$REVISION"
+          {
+            echo "### File hosting image"
+            echo "- \`$image:sha-$REVISION\` (amd64, arm64)"
+            if [ "$REF" = "refs/heads/main" ]; then echo "- \`$image:$version\` and \`latest\`"; fi
+          } >> "$GITHUB_STEP_SUMMARY"

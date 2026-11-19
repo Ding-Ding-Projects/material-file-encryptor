@@ -119,13 +119,26 @@ export function lanAddress(interfaces) {
   const candidates = [];
   for (const [name, list] of Object.entries(interfaces || {})) for (const item of list || []) {
     if (item.family !== 'IPv4' && item.family !== 4) continue;
-    if (item.internal || /^169\.254\./.test(item.address)) continue;
+    // 192.168.56.0/24 is VirtualBox's default host-only network: never the address a phone can reach.
+    if (item.internal || /^169\.254\./.test(item.address) || /^192\.168\.56\./.test(item.address)) continue;
     if (/vethernet|wsl|docker|virtualbox|vmware|hyper-v|loopback/i.test(name)) continue;
     const score = /^192\.168\./.test(item.address) ? 0 : /^10\./.test(item.address) ? 1 : /^172\.(1[6-9]|2\d|3[01])\./.test(item.address) ? 2 : 3;
     candidates.push({ address: item.address, score });
   }
   candidates.sort((a, b) => a.score - b.score);
   return candidates[0]?.address ?? null;
+}
+
+/** A private IPv4 the operating system would route out from. connect() on UDP sends nothing; it only picks a route. */
+export function routedAddress(createSocket) {
+  return new Promise(resolve => {
+    let socket;
+    try { socket = createSocket('udp4'); } catch { resolve(null); return; }
+    const done = value => { try { socket.close(); } catch { /* already closed */ } resolve(value); };
+    socket.once('error', () => done(null));
+    try { socket.connect(53, '1.1.1.1', () => { let address = null; try { address = socket.address().address; } catch { address = null; } done(/^(?:192\.168\.|10\.|172\.(?:1[6-9]|2\d|3[01])\.)/.test(address || '') ? address : null); }); }
+    catch { done(null); }
+  });
 }
 
 /** The base address links are built on: own tunnel, then quick tunnel, then the LAN. */

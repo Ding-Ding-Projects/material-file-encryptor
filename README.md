@@ -46,6 +46,7 @@ Protected browser mediation has focused source and compiled synthetic pipe verif
 | Recover changes or deletions | Browse retained versions and restore recoverable Recycle Bin entries. Retention does not promise reclaimed storage. [History and Recycle Bin](docs/features/storage/history-and-recycle-bin.md) · [File activity](docs/features/storage/file-history-activity.md) |
 | Transfer encrypted objects | Use a backing folder or configured encrypted Git transport. Local durability and provider upload are distinct. [Encrypted transport](docs/features/storage/git-transport.md) |
 | Back up and synchronize encrypted snapshots | Open Docker Hub storage, verify sign-in, choose explicit public or private visibility, schedule synchronization, inspect immutable revisions, restore into a fresh folder and review concurrent file changes. The synthetic public-provider round trip is verified; installed scheduling and complete GUI acceptance remain pending. [Registry synchronization](docs/features/storage/registry-sync.md) |
+| Host files as web links | Deploy a small download server with one click on this computer or an SSH host, optionally behind a Cloudflare tunnel, then turn any Docker Hub share into a web link with an expiry, a download limit and a QR code. The server stores only ciphertext; the browser decrypts with the key after `#`. A local build, Compose start, LAN check, GUI deployment and browser decryption were verified; the published image, SSH hosts and tunnels are not yet. [File hosting](docs/features/storage/file-hosting.md) |
 | Customize the workspace | Language, appearance, typography, motion and attention controls retain their documented limits. Specialized editors and contextual guidance remain incomplete. [Settings](docs/features/interface/settings-completeness.md) · [Appearance](docs/features/interface/appearance-editor.md) · [Guidance](docs/features/interface/settings-guidance.md) · [Destructive actions](docs/features/interface/destructive-actions.md) |
 | Propose a browser download | Pair explicitly, propose a public HTTPS link, then choose a native destination and confirm Start in the desktop. Pairing does not start a transfer or authenticate a browser profile. [Browser download handoff](docs/features/workflows/browser-download-handoff.md) · [Extension workspace](docs/features/workflows/browser-extension-workspace.md) |
 | Inspect local tools | Conversion, local models and server preparation require their own supported providers. Their documentation does not certify complete running workflows. [Converter](docs/features/converter/README.md) · [Local models](docs/features/ollama/README.md) · [Server preparation](docs/features/server-manager/README.md) |
@@ -411,22 +412,22 @@ The verification diagram is a path, not a claim that every step passed. Releases
 
 ## Project size and human-time estimate
 
-**Estimate, not a measurement:** writing this project by hand would plausibly take one person about **115.4 to 230.8 person-months** (2,308 to 4,616 working days). Nobody built it that way; this gives a sense of scale and is not a claim about effort, quality or value.
+**Estimate, not a measurement:** writing this project by hand would plausibly take one person about **129.5 to 259 person-months** (2,590 to 5,181 working days). Nobody built it that way; this gives a sense of scale and is not a claim about effort, quality or value.
 
 | Hand-written code | Files | Non-blank lines | Multiplier | Weighted lines |
 |---|---:|---:|---:|---:|
-| Application source (JavaScript) | 488 | 43,415 | 1 | 43,415 |
-| Native engine and drive adapter (C#) | 60 | 8,573 | 1.5 | 12,860 |
-| Styles and markup (CSS, HTML) | 35 | 1,951 | 1 | 1,951 |
-| Tests | 507 | 40,641 | 1 | 40,641 |
-| Build, release and tooling scripts | 159 | 16,535 | 1 | 16,535 |
-| **Total** | | **111,115** | | **115,402** |
+| Application source (JavaScript) | 561 | 51,805 | 1 | 51,805 |
+| Native engine and drive adapter (C#) | 64 | 9,119 | 1.5 | 13,679 |
+| Styles and markup (CSS, HTML) | 43 | 2,456 | 1 | 2,456 |
+| Tests | 551 | 44,972 | 1 | 44,972 |
+| Build, release and tooling scripts | 160 | 16,601 | 1 | 16,601 |
+| **Total** | | **124,953** | | **129,513** |
 
-**Arithmetic:** 115,402 weighted lines ÷ 50 lines per day = 2,308 days, and 115,402 ÷ 25 = 4,616 days; at 20 working days per month that is 115.4 to 230.8 person-months.
+**Arithmetic:** 129,513 weighted lines ÷ 50 lines per day = 2,590 days, and 129,513 ÷ 25 = 5,181 days; at 20 working days per month that is 129.5 to 259 person-months.
 
 **Assumptions:** 25 (conservative) to 50 (optimistic) non-blank lines per 8-hour day of finished, reviewed, debugged code, a common industry rule of thumb rather than a measurement of this team. The native engine counts at 1.5 times because encrypted storage and a filesystem adapter are harder than their size suggests. Part of the application source is written as long lines, so line counts understate it. Design, research and review time beyond the test code are not included.
 
-**Left out, exactly as the line count leaves them out:** images, JSON data and catalogues, and other non-code files (329 files); Markdown prose (counted separately, not estimated) (274 files); design reference prototypes (104 files); vendored, bundled or build-output trees (16 files); lockfiles (1 files). Markdown prose (17,607 non-blank lines in 274 files) is not estimated.
+**Left out, exactly as the line count leaves them out:** images, JSON data and catalogues, and other non-code files (488 files); Markdown prose (counted separately, not estimated) (285 files); design reference prototypes (116 files); vendored, bundled or build-output trees (16 files); lockfiles (1 files). Markdown prose (18,855 non-blank lines in 285 files) is not estimated.
 
 Reproduce it with `node scripts/human-time-estimate.mjs` (prints the same table from `git ls-files`) and refresh this block with `node scripts/human-time-estimate.mjs --write`. The block may lag the tree by up to 10 percent before `--check` and the test fail.
 

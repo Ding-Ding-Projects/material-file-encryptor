@@ -249,7 +249,7 @@ export class ShareDialog extends SurfaceElement {
     const meta = element('div', {}, [element('b', { text: entry.name }), element('p', { class: 'meta', text: this.t('entryMeta', { size: formatBytes(entry.size), when: formatTime(entry.createdAt) }) }),
       element('div', { class: 'row' }, [element('span', { class: 'badge', text: this.t(entry.state === 'active' ? 'statusActive' : 'statusRevoked') }), ...(entry.passphrase ? [element('span', { class: 'badge', text: this.t('withPassphrase') })] : [])])]);
     const actions = entry.state === 'active'
-      ? [this.button(this.t('copyAgain'), () => void this.copyAgain(entry), { disabled: this.busy }), this.button(this.t('revoke'), () => void this.revoke(entry), { disabled: this.busy })]
+      ? [this.button(this.t('copyAgain'), () => void this.copyAgain(entry), { disabled: this.busy }), this.button(this.t('webLink'), () => this.openWebLink(entry), { disabled: this.busy }), this.button(this.t('revoke'), () => void this.revoke(entry), { disabled: this.busy })]
       : [this.button(this.t('forget'), () => void this.forget(entry), { disabled: this.busy })];
     return element('li', { class: 'entry', 'data-state': entry.state }, [meta, element('div', { class: 'entry-actions' }, actions)]);
   }
@@ -278,6 +278,8 @@ export class ShareDialog extends SurfaceElement {
     finally { this.busy = false; }
     await this.loadList();
   }
+  /** Hands the share to file hosting, which makes a web link with expiry, a download limit and a QR code. */
+  openWebLink(entry) { this.close(); globalThis.dispatchEvent?.(new CustomEvent('mfe:open-file-hosting', { detail: { mode: 'link', shareId: entry.id } })); }
   async forget(entry) { try { await this.api.shareForget(entry.id); } catch (error) { this.error = { key: shareErrorKey(error) }; } await this.loadList(); }
   destroy() { this.disposed = true; clearTimeout(this.pollTimer); this.loginPanel.destroy?.(); this.infoIcons.destroy?.(); }
 }

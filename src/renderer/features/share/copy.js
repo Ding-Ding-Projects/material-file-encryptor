@@ -3,6 +3,7 @@ export const SHARE_COPY = {
   shareTitle: ['Share via Docker Hub', '經 Docker Hub 分享'],
   receiveTitle: ['Receive a shared file', '接收分享嘅檔案'],
   listTitle: ['Shared files', '已分享嘅檔案'],
+  webLink: ['Web link…', '網頁連結…'],
   close: ['Close', '關閉'],
   cancel: ['Cancel', '取消'],
   back: ['Back', '返回'],

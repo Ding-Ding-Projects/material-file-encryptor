@@ -1,3 +1,19 @@
+## File hosting for shared files, 2026-11-18
+
+Branch `ai/feature/20261118-file-hosting`. Design boards: `design/file-hosting/`. Ticks mean implemented with focused tests passing; live proof is stated per item.
+
+- [x] Download server in `file-hosting/server`: anonymous Docker Hub fetch by digest with manifest, config and layer checks, a ciphertext-only cache with eviction, links with expiry and a download limit, an admin API with a bearer key and lockout, a strict-CSP download page. 8 server tests.
+- [x] Browser decryption of the share format with WebCrypto, including passphrase shares through a scrypt port that matches Node. Verified in a real browser: a 48 KB test file decrypted byte for byte, a wrong passphrase refused, the right one accepted, and the 375 px phone layout.
+- [x] `Dockerfile` and tracked `compose.yaml` with quick and own Cloudflare tunnel profiles. Built locally, started with the tracked Compose file and reached on the LAN address.
+- [x] Desktop deployment to this computer or an SSH host (owner-only secret files, exact quoted commands, SSH port forward for admin calls), health wait, LAN address from the routed interface, quick tunnel address read from logs, several instances. 8 desktop tests.
+- [x] File hosting dialog: setup wizard, management with live health and instance actions, Create link with expiry, delete-after, Docker Hub removal, QR code (decodes back to the link) and PNG save; Web link on each shared file; command palette entries; two-key confirmation for remove, stop, restart, update and end link. A real one-click deploy through the GUI passed its health check.
+- [x] GitHub Actions workflow `file-hosting-image.yml` for amd64 and arm64 to GHCR (no tests or lint).
+- [ ] First hosted run of the image workflow, and public visibility of the GHCR package so hosts can pull without signing in.
+- [ ] A real Docker Hub share hosted end to end, SSH host deployment, both tunnel kinds, and an installed packaged build.
+- [ ] A sidebar page for File hosting (the board shows one; it opens as a dialog from the command palette, New tab catalog and Shared files for now).
+- [ ] `host.bat` with detached and log modes, the portable setup wizard `.exe`, the appliance OS image, and the deploy app targets for VirtualBox, VMware, USB and Raspberry Pi.
+- [ ] Cantonese screenshots and design boards for the Cantonese layout.
+
 ## Seamless Docker Hub backup and retention, 2026-11-18
 
 Issues #26 and #27. Ticks mean implemented with focused tests passing; live proof is stated per item.
