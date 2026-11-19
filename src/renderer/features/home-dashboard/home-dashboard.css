@@ -35,7 +35,8 @@
 .home-status-row[data-tone=ok] .value{color:var(--v2-ok)}
 .home-status-row[data-tone=warn] .value{color:var(--v2-warn)}
 .home-quick{display:grid;padding:4px;container-type:inline-size}
-.home-quick md-text-button>span{display:block;width:calc(100cqi - 24px);text-align:start}
+.home-quick md-text-button>span:not([slot]){display:block;width:calc(100cqi - 56px);text-align:start}
+.home-quick md-text-button>span[slot=icon]{width:auto;flex:none}
 .home-quick md-text-button{justify-content:flex-start}
 .home-empty{background:var(--v2-surface);border:1px solid var(--v2-line);border-radius:6px;padding:16px}
 .home-empty h2{margin:0 0 4px;font-size:15px}
