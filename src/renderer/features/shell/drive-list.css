@@ -74,3 +74,8 @@
 .unlock-bar #unlock-password-fields{display:flex;align-items:center;gap:4px}
 .unlock-bar #unlock-show-password{flex:none}
 .drive-list-hidden-actions{display:none}
+
+/* A drive's own icon and banner in the drive table. */
+.drive-icon{width:24px;height:24px;border-radius:6px;object-fit:cover;vertical-align:middle;flex:none}
+tr.has-banner>td:first-child{background:linear-gradient(90deg,var(--md-sys-color-surface,#1a1b21) 30%,color-mix(in srgb,var(--md-sys-color-surface,#1a1b21) 50%,transparent)),var(--drive-banner) center/cover no-repeat}
+.drive-appearance-button{margin:6px 0}

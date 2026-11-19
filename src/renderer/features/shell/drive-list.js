@@ -84,7 +84,11 @@ export function mountDriveList({doc = document, translate, getLanguage, hooks}) 
       const letter = driveLetterLabel(session.driveLetter);
       const name = session.driveName || `${t('Vault')} ${index + 1}`;
       const nameCell = node('td', {class: 'drive-name'});
-      nameCell.append(icon('drive'), node('strong', {text: letter ? `${letter} ` : ''}), doc.createTextNode(name));
+      const art = hooks.appearance?.(session.sessionId);
+      let mark = icon('drive');
+      if (art?.icon) { mark = doc.createElement('img'); mark.className = 'drive-icon'; mark.src = art.icon; mark.alt = ''; mark.width = 24; mark.height = 24; }
+      if (art?.banner) { row.classList.add('has-banner'); row.style.setProperty('--drive-banner', `url("${art.banner}")`); }
+      nameCell.append(mark, node('strong', {text: letter ? `${letter} ` : ''}), doc.createTextNode(name));
       const stateCell = node('td', {class: 'drive-state', 'data-state': sessionTabState(session)});
       stateCell.append(icon(session.locked ? 'lock' : 'lock_open'), doc.createTextNode(stateLabel(session)));
       const folder = active ? (state?.storageDir || '') : '';
@@ -107,6 +111,8 @@ export function mountDriveList({doc = document, translate, getLanguage, hooks}) 
     if (!session) { details.append(node('p', {class: 'muted', text: t('Select a drive to see its details.')})); return; }
     const letter = driveLetterLabel(session.driveLetter);
     details.append(node('p', {class: 'inspector-name', text: [letter, session.driveName].filter(Boolean).join(' ')}), node('p', {class: 'muted', text: stateLabel(session)}));
+    if (hooks.openAppearance) { const change = node('md-outlined-button', {text: t('Icon and banner…'), class: 'drive-appearance-button'}); change.addEventListener('click', () => hooks.openAppearance(session.sessionId)); details.append(change); }
+    if (hooks.openStorage) { const open = node('md-outlined-button', {text: t('Open encrypted storage folder'), class: 'drive-appearance-button'}); open.addEventListener('click', () => hooks.openStorage(session.sessionId)); details.append(open); }
     const list = node('dl', {class: 'drive-list-facts'});
     const fact = (label, value) => { if (!value) return; list.append(node('dt', {text: t(label)}), node('dd', {text: value, title: value})); };
     fact('Encrypted storage', state?.storageDir || '');
@@ -135,7 +141,7 @@ export function mountDriveList({doc = document, translate, getLanguage, hooks}) 
   listen(settingsButton, 'click', () => hooks.openSettings());
   return {
     // Rows animate in, so they are rebuilt only when what they show changes, not on every state tick.
-    update(next) { state = next; const signature = JSON.stringify([state?.sessionId, state?.storageDir, state?.cacheDir, sessions().map(session => [session.sessionId, session.driveName, session.driveLetter, session.locked, session.mounted, Boolean(session.operation), Boolean(session.recoveryRequired)])]); if (signature === lastSignature) return; lastSignature = signature; render(); },
+    update(next) { state = next; const signature = JSON.stringify([hooks.appearanceVersion?.() ?? 0, state?.sessionId, state?.storageDir, state?.cacheDir, sessions().map(session => [session.sessionId, session.driveName, session.driveLetter, session.locked, session.mounted, Boolean(session.operation), Boolean(session.recoveryRequired)])]); if (signature === lastSignature) return; lastSignature = signature; render(); },
     setLanguage() { lastSignature = ''; chooseLabel.textContent = t('Choose storage folder…'); missingNote.textContent = t('or use New to make a drive.'); showLabel.textContent = t(passwordField?.type === 'text' ? 'Hide' : 'Show'); newLabel.textContent = t('New'); settingsLabel.textContent = t('Drive settings'); toolbar.setAttribute('aria-label', t('Drive commands')); table.setAttribute('aria-label', t('Drives')); headCells.forEach((cell, index) => { cell.textContent = t(columns[index][1]); }); details.setAttribute('aria-label', t('Details')); render(); },
     destroy() { for (const dispose of disposers.splice(0)) dispose(); }
   };

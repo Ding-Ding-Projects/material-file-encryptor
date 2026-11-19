@@ -68,7 +68,7 @@ export function mountWorkspaceChrome({doc = document, translate, getLanguage, ho
     if (!tabsHost) return;
     const {state} = snapshot;
     const sessions = state?.sessions?.length ? state.sessions : state ? [{sessionId: state.sessionId, driveName: state.driveName, driveLetter: state.driveLetter, locked: state.locked, mounted: state.mounted}] : [];
-    const signature = JSON.stringify([state?.sessionId, getLanguage(), sessions.map(s => [s.sessionId, s.driveName, s.driveLetter, s.locked, s.mounted, Boolean(s.operation), Boolean(s.recoveryRequired)])]);
+    const signature = JSON.stringify([state?.sessionId, getLanguage(), hooks.appearanceVersion?.() ?? 0, sessions.map(s => [s.sessionId, s.driveName, s.driveLetter, s.locked, s.mounted, Boolean(s.operation), Boolean(s.recoveryRequired)])]);
     if (tabsHost.dataset.signature !== signature) {
       tabsHost.dataset.signature = signature;
       tabsHost.setAttribute('aria-label', t('Drives'));
@@ -125,7 +125,12 @@ export function mountWorkspaceChrome({doc = document, translate, getLanguage, ho
       if (letter) { const strong = doc.createElement('strong'); strong.textContent = letter; label.append(strong, ' '); }
       label.append(name);
       const badge = doc.createElement('span'); badge.className = 'tree-drive-state'; badge.textContent = session.locked ? '🔒' : session.mounted ? '●' : '○'; badge.setAttribute('aria-hidden', 'true');
-      row.append(icon('drive'), label, badge);
+      // A drive's own icon replaces the generic one, and its banner sits behind the row.
+      const art = hooks.driveAppearance?.(session.sessionId);
+      let mark = icon('drive');
+      if (art?.icon) { mark = doc.createElement('img'); mark.className = 'tree-drive-icon'; mark.src = art.icon; mark.alt = ''; mark.width = 20; mark.height = 20; }
+      if (art?.banner) { row.classList.add('has-banner'); row.style.setProperty('--drive-banner', `url("${art.banner}")`); }
+      row.append(mark, label, badge);
       fragment.append(row);
     });
     treeDrives.replaceChildren(fragment);

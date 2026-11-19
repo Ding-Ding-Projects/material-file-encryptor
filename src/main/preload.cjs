@@ -25,6 +25,7 @@ const api = {
   shareList: () => invoke('shareList'), shareCommand: id => invoke('shareCommand', { id }), shareRevoke: id => invoke('shareRevoke', { id }), shareRevokeAll: () => invoke('shareRevokeAll'),
   shareForget: id => invoke('shareForget', { id }), shareReceive: ({ command, incomingId, passphrase = null }) => invoke('shareReceive', command !== undefined ? { command, passphrase } : { incomingId, passphrase }),
   shareReceiveSave: (receiveId, destination) => invoke('shareReceiveSave', { receiveId, destination }), shareReceiveDiscard: receiveId => invoke('shareReceiveDiscard', { receiveId }),
+  openStorageFolder: sessionId => invoke('openStorageFolder', { sessionId }), driveAppearanceList: () => invoke('driveAppearanceList'), driveAppearanceChoose: (sessionId, kind) => invoke('driveAppearanceChoose', { sessionId, kind, acknowledged: true }), driveAppearanceRemove: (sessionId, kind) => invoke('driveAppearanceRemove', { sessionId, kind }),
   hostingInstances: () => invoke('hostingInstances'), hostingStatus: () => invoke('hostingStatus'), hostingCancel: () => invoke('hostingCancel'),
   hostingDeploy: (settings, tunnelToken = null) => invoke('hostingDeploy', { settings, tunnelToken }), hostingHealth: id => invoke('hostingHealth', { id }), hostingAction: (id, action) => invoke('hostingAction', { id, action }),
   hostingLinks: id => invoke('hostingLinks', { id }), hostingCreateLink: request => invoke('hostingCreateLink', request), hostingLinkUrl: (instanceId, linkId) => invoke('hostingLinkUrl', { instanceId, linkId }),

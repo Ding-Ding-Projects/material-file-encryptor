@@ -57,6 +57,8 @@ import { SHARE_METHODS, dispatchShare, receiveArgument } from './share/ipc.js';
 import { createHostingService } from './file-hosting/hosting-service.js';
 import { createHostingStore } from './file-hosting/hosting-store.js';
 import { HOSTING_METHODS, dispatchHosting } from './file-hosting/ipc.js';
+import { createDriveAppearanceStore, readVaultId, validateAppearanceImage, APPEARANCE_LIMITS } from './drive-appearance/appearance-store.js';
+import { APPEARANCE_METHODS } from './drive-appearance/ipc.js';
 import { execFile as execFileCallback, spawn as spawnProcess } from 'node:child_process';
 import { promisify } from 'node:util';
 import { networkInterfaces } from 'node:os';
@@ -141,7 +143,9 @@ const registryRoot = path.join(app.getPath('userData'), 'RegistrySync');
 const registryDocker = createDockerImageTransport();
 const registryLogin = createRegistryLogin({ transport: registryDocker, openPage: url => shell.openExternal(url), packaged: app.isPackaged, resourcesPath: process.resourcesPath });
 const autoBackupSettings = createAutoBackupSettings({ file: path.join(registryRoot, 'auto-backup.json') });
-const registrySync = createRegistrySyncService({ root: registryRoot, onChanged: () => hubCatalog.invalidate(),
+// A drive's icon and banner: local copies here, published unencrypted beside its backups (the person confirms that).
+const driveAppearance = createDriveAppearanceStore({ root: path.join(app.getPath('userData'), 'drive-appearance') });
+const registrySync = createRegistrySyncService({ root: registryRoot, onChanged: () => hubCatalog.invalidate(), appearance: vaultId => driveAppearance.get(vaultId),
   retention: () => autoBackupSettings.peek().retention,
   testDestination: registryTestDestination,
   contexts: id => id === undefined ? [...vaultSessions.rows] : (() => { const row = vaultSessions.rows.get(id); return row && { storageDir: row.state.storageDir || row.preferences.storageDir, transport: row.preferences.transport || 'folder', driveName: row.state.driveName || row.preferences.driveName }; })(),
@@ -229,6 +233,42 @@ const hostingService = createHostingService({
   userDir: path.join(app.getPath('userData'), 'file-hosting'),
   interfaces: networkInterfaces
 });
+async function driveVaultId(sessionId) {
+  const row = vaultSessions.rows.get(sessionId);
+  const storageDir = row?.state?.storageDir || row?.preferences?.storageDir;
+  const id = storageDir ? await readVaultId(storageDir) : null;
+  if (!id) throw Object.assign(Error('This drive has no encrypted storage folder yet.'), { code: 'NO_STORAGE' });
+  return id;
+}
+async function driveAppearanceRequest(method, params) {
+  if (method === 'openStorageFolder') {
+    // Opens the drive's encrypted storage folder in Explorer. It only holds ciphertext, so nothing readable is exposed.
+    const row = vaultSessions.rows.get(params.sessionId);
+    const storageDir = row?.state?.storageDir || row?.preferences?.storageDir;
+    if (!storageDir) throw Object.assign(Error('This drive has no encrypted storage folder yet.'), { code: 'NO_STORAGE' });
+    const stat = await fs.stat(storageDir).catch(() => null);
+    if (!stat?.isDirectory()) throw Object.assign(Error('The encrypted storage folder is not reachable. It may be on a drive that is not connected.'), { code: 'NO_STORAGE' });
+    await openPath(storageDir);
+    return { opened: true };
+  }
+  if (method === 'driveAppearanceList') {
+    const out = {};
+    for (const [sessionId] of vaultSessions.rows) { try { out[sessionId] = await driveAppearance.view(await driveVaultId(sessionId)); } catch { out[sessionId] = { icon: null, banner: null }; } }
+    return out;
+  }
+  const vaultId = await driveVaultId(params.sessionId);
+  if (method === 'driveAppearanceRemove') { await driveAppearance.remove(vaultId, params.kind); void autoBackup.noteChange(params.sessionId).catch(() => {}); return driveAppearance.view(vaultId); }
+  const picked = await dialog.showOpenDialog(window, { title: params.kind === 'icon' ? 'Choose a drive icon · 揀磁碟圖示' : 'Choose a drive banner · 揀磁碟橫額', properties: ['openFile'], filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp'] }] });
+  if (picked.canceled || !picked.filePaths?.[0]) return { cancelled: true, ...(await driveAppearance.view(vaultId)) };
+  const stat = await fs.stat(picked.filePaths[0]);
+  if (stat.size > APPEARANCE_LIMITS[params.kind]) throw Object.assign(Error(params.kind === 'icon' ? 'The icon can be up to 512 KB.' : 'The banner can be up to 1 MB.'), { code: 'IMAGE_TOO_LARGE' });
+  const bytes = new Uint8Array(await fs.readFile(picked.filePaths[0]));
+  validateAppearanceImage(params.kind, bytes);
+  await driveAppearance.set(vaultId, params.kind, bytes, { acknowledged: params.acknowledged === true });
+  // The next backup publishes the change; mark the drive so it does not wait for the hourly check.
+  void autoBackup.noteChange(params.sessionId).catch(() => {});
+  return driveAppearance.view(vaultId);
+}
 /** A share link or --receive command from the command line is held here; only an id reaches the renderer. */
 function handleIncomingShare(argv) {
   const text = receiveArgument(argv); if (!text) return false;
@@ -431,6 +471,7 @@ async function dispatchRequest(method, params, context) {
     if (method === 'startRegistryLogin') return registryLogin.start();
     return registryLogin.openPage();
   }
+  if (APPEARANCE_METHODS.has(method)) return driveAppearanceRequest(method, params);
   if (HOSTING_METHODS.has(method)) {
     if (!['hostingStatus', 'hostingCancel', 'hostingInstances', 'hostingLinkUrl'].includes(method) && (quitPending || shuttingDown || updateInstallLease)) throw Error('The application is preparing to close.');
     return dispatchHosting(hostingService, method, params);

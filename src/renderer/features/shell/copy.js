@@ -70,6 +70,8 @@ export const SHELL_COPY = Object.freeze({
   'Automatic backup off': '自動備份已關閉',
   'Sign in to back up': '登入 Docker Hub 先可以備份',
   'Changes waiting': '有改動等緊備份',
+  'Icon and banner…': '圖示同橫額…',
+  'Open encrypted storage folder': '打開加密儲存資料夾',
   'Waiting for the first backup': '等緊第一次備份',
   'just now': '啱啱',
   '{count} min ago': '{count} 分鐘前',
