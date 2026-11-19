@@ -28,6 +28,7 @@ var cases = new (string,Action)[] {
     ("packing publication stalls and exact acknowledgement",PackingTests.Publication),
     ("packing authenticates and repairs pre-existing source ciphertext",PackingTests.SourceAuthentication),
     ("packing dense 80 MiB physical caps and bounded records",PackingTests.Dense),
+    ("backup packing repacks a 1 MiB drive to 80 MiB parts",PackingTests.BackupRepacksSmallDriveTarget),
     ("encrypted activity snapshots, paging, tamper refusal and upgrade",ActivityTests.Run),
     ("hydration runs outside core and callback locks before atomic mutation",HydrationConcurrency),
     ("independent earlier deletion requires explicit selection",ExplicitDescendants),

@@ -18,6 +18,8 @@ async function fixture(t, extra = {}) {
   const requests = [], options = { root: work, contexts: id => id === undefined ? [['main', {}]] : ({ storageDir: source, transport: 'folder' }),
     nativeRequest: async (method, params, id) => { requests.push({ method, params, id }); return method === 'beginSnapshot' ? { leaseId: 'lease', storageDir: source } : method === 'releaseSnapshot' ? { released: true } : {}; },
     chooseRestore: async () => root, testDestination: { endpoint: 'http://127.0.0.1:15221', testOnly: true }, ...extra };
+  // Fakes that do not model packing get a completed pack, so their tests keep testing what they were written for.
+  if (!extra.strictPacking) { const inner = options.nativeRequest; options.nativeRequest = async (method, params, id) => { const value = await inner(method, params, id); if (method === 'startPacking' && !value?.operationId) return { operationId: 'pack-fixture' }; if (method === 'operations' && !Array.isArray(value)) return []; return value; }; }
   return { root, source, work, options, requests, service: createRegistrySyncService(options) };
 }
 const configuration = (schedule = DEFAULT_REGISTRY_SCHEDULE) => ({ repository: 'test/vault', visibility: 'private', schedule });
@@ -119,6 +121,8 @@ test('a failed native release retains ownership and blocks new work until explic
   let releases = 0;
   const f = await fixture(t, { storageFactory: () => ({ list: async () => [] }) });
   f.options.nativeRequest = async method => {
+    if (method === 'startPacking') return { operationId: 'pack-owned' };
+    if (method === 'operations') return [];
     if (method === 'beginSnapshot') return { leaseId: 'owned', storageDir: f.source };
     if (method === 'releaseSnapshot' && ++releases === 1) throw Error('synthetic release failure');
     return { released: true };
@@ -214,7 +218,8 @@ test('a backup packs files into the drive part size before the snapshot is stage
   const calls = [], states = ['running', 'running', 'completed'];
   const nativeRequest = async (method, params) => {
     calls.push({ method, params });
-    if (method === 'storageDiagnostics') return { targetPartSizeBytes: 80 * 1024 * 1024, pendingPackingFiles: 1 };
+    // The drive reports a 1 MiB target, as the drive in the report did; the backup must still pack to 80 MiB.
+    if (method === 'storageDiagnostics') return { targetPartSizeBytes: 1024 * 1024, pendingPackingFiles: 0 };
     if (method === 'startPacking') return { operationId: 'pack-1' };
     if (method === 'operations') { const state = states.shift() ?? 'completed'; return [{ operationId: 'pack-1', kind: 'packing', phase: 'packing', state, bytesCompleted: state === 'completed' ? 3000 : 1000, totalBytes: 3000, completedFiles: 0, totalFiles: 1 }]; }
     if (method === 'beginSnapshot') return { leaseId: 'lease', storageDir: 'unused' };
@@ -227,6 +232,26 @@ test('a backup packs files into the drive part size before the snapshot is stage
   assert.deepEqual(calls.find(call => call.method === 'startPacking').params, { partSizeBytes: 83886080 });
   assert.ok(names.indexOf('startPacking') < names.lastIndexOf('beginSnapshot'), 'packing finishes before the snapshot lease');
   assert.ok(names.filter(name => name === 'operations').length >= 3, 'the packing operation was followed to completion');
+});
+
+test('a drive that cannot start packing stops the backup instead of uploading small parts', async t => {
+  const calls = [];
+  const nativeRequest = async method => { calls.push(method); if (method === 'startPacking') return {}; if (method === 'beginSnapshot') return { leaseId: 'lease', storageDir: 'unused' }; return method === 'releaseSnapshot' ? { released: true } : {}; };
+  const f = await fixture(t, { nativeRequest, strictPacking: true, storageFactory: () => ({ list: async () => [] }) });
+  await f.service.configure('main', configuration());
+  await assert.rejects(f.service.sync('main'));
+  assert.ok(calls.includes('startPacking'));
+  assert.ok(!calls.slice(calls.indexOf('startPacking')).includes('beginSnapshot'));
+});
+
+test('a locked drive skips packing and still backs up', async t => {
+  const calls = [];
+  const nativeRequest = async method => { calls.push(method); if (method === 'statusSummary') return { locked: true }; if (method === 'beginSnapshot') return { leaseId: 'lease', storageDir: 'unused' }; return method === 'releaseSnapshot' ? { released: true } : {}; };
+  const f = await fixture(t, { nativeRequest, strictPacking: true, storageFactory: () => ({ list: async () => [] }) });
+  await f.service.configure('main', configuration());
+  await f.service.sync('main').catch(() => {});
+  assert.ok(!calls.includes('startPacking'), 'a locked drive is not asked to pack');
+  assert.ok(calls.includes('beginSnapshot'), 'the backup still stages its snapshot');
 });
 
 test('a failed packing operation stops the backup before anything is staged', async t => {
