@@ -323,7 +323,7 @@ function resetVaultPresentation() {
  closeDrivePicker();$('vault-form').reset();
  for(const id of ['password-input','confirm-password','key-path','storage-input','cache-input','remote-repository'])$(id).value='';
  $('password-input').type='password';$('show-password').setAttribute('aria-pressed','false');setText('show-password','Show');
- $('drive-name').value=DEFAULT_DRIVE_NAME;$('drive-letter').value='';$('transport-mode').value='folder';$('private-git-fields').hidden=true;
+ $('drive-name').value='';$('drive-letter').value='';$('transport-mode').value='folder';$('private-git-fields').hidden=true;
  driveLetterEdited=false;activeDriveLetter='';operationNotifications.clear();clearMainError();
  foundation?.closeContextMenu('vault-switch',{restoreFocus:false});
 }
@@ -591,7 +591,8 @@ function prepareVaultForm(mode) {
  $('transport-mode').value=state?.transport?.mode || 'folder'; $('remote-repository').value=state?.transport?.remoteRepository || ''; $('private-git-fields').hidden=$('transport-mode').value!=='privateGit';
  $('password-input').type = 'password'; $('show-password').setAttribute('aria-pressed','false'); setText('show-password','Show');
  updateDriveLetters(false);
- $('drive-name').value = normalizeDriveName(state?.driveName) || normalizeDriveName(state?.defaults?.driveName) || DEFAULT_DRIVE_NAME;
+ // A new drive starts unnamed, so it is named on purpose instead of every drive becoming the default name.
+ $('drive-name').value = mode === 'create' ? '' : normalizeDriveName(state?.driveName) || normalizeDriveName(state?.defaults?.driveName) || DEFAULT_DRIVE_NAME;
  updateDialog(); renderAvailability();
 }
 let hubDriveView = null;
@@ -629,7 +630,7 @@ async function openShare(mode, detail) {
  else if (mode === 'receive') shareView.receive(detail);
  else shareView.list();
 }
-function openVaultDialog(mode) { prepareVaultForm(mode); const shown = $('vault-dialog').showModal(); $('storage-input').focus(); /* The dialog moves focus to its first control once it has opened, which is an information icon. Put it on the first field instead. */ Promise.resolve(shown).then(() => { if ($('vault-dialog').open) $('storage-input').focus(); }, () => {}); }
+function openVaultDialog(mode) { prepareVaultForm(mode); const first = mode === 'create' ? 'drive-name' : 'storage-input'; const shown = $('vault-dialog').showModal(); $(first).focus(); /* The dialog moves focus to its first control once it has opened, which is an information icon. Put it on the first field instead: the name when creating, so the drive is named before anything else. */ Promise.resolve(shown).then(() => { if ($('vault-dialog').open) $(first).focus(); }, () => {}); }
 /** Unlocks from the in-tab card: the saved folders and letter fill the same form the dialog uses, so both paths send identical requests. */
 async function unlockInline({mode,password,keyFilePath,autoUnlock}) {
  if (busy || !state || !api) return {ok:false,error:''};

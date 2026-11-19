@@ -45,6 +45,24 @@ internal static class PackingTests
         engine.PackingTestPoint=point=>{if(point=="packed"){engine.PackingTestPoint=null;engine.Delete("moved");engine.CreateFile("moved");engine.WriteRange("moved",0,new byte[]{77});}};
         engine.PackAsync("moved",16384).GetAwaiter().GetResult();Assert(Read(engine,"moved").SequenceEqual(new byte[]{77}),"Packing replaced a recreated identity");
     }
+    // The reported case: a drive whose part size is 1 MiB, a file written in 1 MiB pieces, then the whole drive packed
+    // at 80 MiB the way a Docker Hub backup now asks. Every file must end up in 80 MiB parts, and the drive's own
+    // target must become 80 MiB so later writes are packed to it too.
+    internal static void BackupRepacksSmallDriveTarget()
+    {
+        const long small=1024*1024,backup=80L*1024*1024;
+        using var fixture=new Fixture();using var engine=fixture.Create(small);
+        engine.CreateFile("big");var bytes=Data(12*1024*1024,7);
+        for(int offset=0;offset<bytes.Length;offset+=1024*1024){engine.WriteRange("big",offset,bytes.AsSpan(offset,1024*1024).ToArray());engine.FlushLocalOnly();}
+        engine.ProcessPackingQueueAsync().GetAwaiter().GetResult();
+        Assert(engine.GetInfo("big")!.PartCount>=12,"Setup did not produce small parts");
+        engine.PackAsync(null,backup).GetAwaiter().GetResult();
+        var info=engine.GetInfo("big")!;
+        Assert(info.PartSizeBytes==backup,"File was not repacked to the backup part size");
+        Assert(info.PartCount==1,"A 12 MiB file still spans "+info.PartCount+" parts after packing at 80 MiB");
+        Assert(engine.PackingStatus.TargetPartSizeBytes==backup,"The drive target stayed at the small part size");
+        Assert(Read(engine,"big").SequenceEqual(bytes),"Packing changed the file content");
+    }
     internal static void Durability()
     {
         using var fixture=new Fixture();var bytes=Data(260000);string version;

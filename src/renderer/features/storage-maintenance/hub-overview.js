@@ -46,7 +46,7 @@ export function mountHubOverview(host, {services = {}, getLanguage = () => 'en',
     menu.addEventListener('click', event => rowMenu(menu, event, drive));
     const toggle = help(el('md-switch', {'aria-label': `${L('Back up this drive')}: ${drive.name || drive.sessionId}`, class: 'drive-switch', selected: drive.enabled, disabled: drive.phase === 'unavailable'}), 'Backs up this drive automatically after changes and every hour. Turn it off to keep this drive on this PC only.');
     toggle.addEventListener('change', () => void act(() => services.autoBackupSetDrive(drive.sessionId, toggle.selected)));
-    const label = state.percent !== undefined && state.percent !== null ? `${L(state.key)} ${state.percent}%` : L(state.key);
+    const label = state.percent !== undefined && state.percent !== null ? `${L(state.key)} ${state.percent}%` : L(state.key, state.values);
     const tr = el('tr', {'data-session-id': drive.sessionId, 'data-state': drive.enabled ? drive.phase : 'off', 'data-tone': state.tone}, [
       el('td', {class: 'name'}, [doc.createTextNode(drive.name || drive.sessionId), ...(shortId(drive.deviceId) ? [el('code', {class: 'short-id', text: shortId(drive.deviceId)})] : [])]),
       el('td', {text: L('This PC')}), el('td', {text: when(drive.lastBackup)}), el('td', {class: 'number', text: Number.isSafeInteger(drive.snapshots) ? String(drive.snapshots) : '-'}),

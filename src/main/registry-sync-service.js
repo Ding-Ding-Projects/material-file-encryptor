@@ -24,6 +24,8 @@ const REMOVE_INVALID = "Only this drive's own snapshots from this computer can b
 export const PAUSED = 'Backup paused while you used the drive; it will resume.';
 const SAFE_REASONS = new Set(['The destination contains a different vault.', 'Snapshot catalogue exceeds this client limit. Narrow the repository before retrying.', 'Snapshot catalogue exceeds the metadata limit.', 'Native synchronization did not settle.', 'Native synchronization needs attention.', STALLED, RELEASE_TIMEOUT, BUSY, NOT_BACKED_UP, REMOVE_INVALID]);
 const summary = value => value ? { state: value.state, at: value.at, pruned: value.pruned, failed: value.failed, kept: value.kept } : null;
+/** The part size every Docker Hub backup packs to before its snapshot is staged: 80 MiB. */
+export const BACKUP_PART_SIZE_BYTES = 80 * 1024 * 1024;
 const sleep = ms =>new Promise(resolve => setTimeout(resolve, ms).unref?.());
 /** Rejects as soon as the signal aborts. The underlying native request keeps running and is settled by its owner. */
 function abortable(promise, signal) {
@@ -197,17 +199,20 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
    * cheap when there is nothing to do. A host without these requests skips straight to staging.
    */
   async function packBeforeSnapshot(id, row, signal) {
-    let diagnostics;
-    try { diagnostics = await abortable(nativeRequest('storageDiagnostics', {}, id), signal); }
-    catch (error) { if (signal.aborted) throw error; return { packed: false }; }
-    const cap = diagnostics?.targetPartSizeBytes;
-    if (!Number.isSafeInteger(cap) || cap <= 0) return { packed: false };
+    // Backups always use 80 MiB parts. A drive could report a 1 MiB target, and a file counts as packed
+    // only when its part size equals the target, so packing to the drive's own value left 1 MiB parts in place.
+    // Packing the whole drive also makes 80 MiB the drive's part size for later writes.
+    const cap = BACKUP_PART_SIZE_BYTES;
+    // Packing rewrites parts, which needs the unlocked drive. A backup taken on lock uploads the parts as they are.
+    let summary = null;
+    try { summary = await abortable(nativeRequest('statusSummary', {}, id), signal); } catch (error) { if (signal.aborted) throw error; }
+    if (summary?.locked === true) return { packed: false, reason: 'locked' };
     step(row, 'packing', { unit: 'bytes', partSizeBytes: cap });
     let started;
     try { started = await abortable(nativeRequest('startPacking', { partSizeBytes: cap }, id), signal); }
     catch (error) { if (signal.aborted) throw error; throw Error('The drive could not pack its parts before the backup.'); }
     const operationId = started?.operationId;
-    if (typeof operationId !== 'string' || !operationId) return { packed: false };
+    if (typeof operationId !== 'string' || !operationId) throw Error('The drive did not start packing its parts before the backup.');
     const deadline = now() + 6 * 3600000;
     try {
       for (;;) {

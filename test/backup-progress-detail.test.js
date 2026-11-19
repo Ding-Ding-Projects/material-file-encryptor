@@ -27,3 +27,8 @@ test('the progress view knows the packing step and gives speed and time left', (
   const early = progressView({ step: 'uploading', completedBytes: 10, totalBytes: 100, stepStartedAt: now - 1000 }, now);
   assert.equal(early.rate, null, 'no speed from a sample under three seconds');
 });
+
+test('a drive waiting behind another backup says which drive it waits for', async () => {
+  const { driveState } = await import('../src/renderer/features/storage-maintenance/auto-backup/model.js');
+  assert.deepEqual(driveState({ enabled: true, phase: 'idle', queuedBehind: 'Studio' }), { key: 'Waiting for {name} to finish', values: { name: 'Studio' }, tone: 'busy' });
+});

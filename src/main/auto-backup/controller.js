@@ -161,12 +161,15 @@ export function createAutoBackup({ sync, docker, drives, settings, online = () =
       const current = await settings.get();
       const name = await account();
       const list = [];
+      // One drive backs up at a time; a drive that is due meanwhile says which drive it is waiting for.
+      const runningName = running ? (drives().find(value => value.sessionId === running)?.name || '') : null;
       for (const item of drives()) {
         let saved = null; try { saved = await sync.status(item.sessionId); } catch { saved = null; }
         const entry = drive(item.sessionId);
         const enabled = current.drives[item.sessionId]?.enabled !== false;
         const phase = !eligible(item) ? 'unavailable' : !enabled ? 'off' : running === item.sessionId ? 'backing-up' : entry.phase;
-        list.push({ sessionId: item.sessionId, name: item.name || '', enabled, phase, dirty: entry.dirty, dueAt: entry.dueAt, retryAt: entry.retryAt, failures: entry.failures,
+        const queuedBehind = running && running !== item.sessionId && eligible(item) && enabled && ['idle', undefined].includes(entry.phase) && (entry.dirty || !saved?.lastResult) ? (runningName || 'another drive') : null;
+        list.push({ sessionId: item.sessionId, name: item.name || '', enabled, phase, queuedBehind, dirty: entry.dirty, dueAt: entry.dueAt, retryAt: entry.retryAt, failures: entry.failures,
           lastError: entry.lastError ?? saved?.lastError ?? null, lastBackup: saved?.lastResult?.verifiedAt ?? null,
           repository: saved?.configuration?.repository ?? null, visibility: saved?.configuration?.visibility ?? null, deviceId: saved?.deviceId ?? null,
           progress: saved?.progress ?? null, syncState: saved?.state ?? null,

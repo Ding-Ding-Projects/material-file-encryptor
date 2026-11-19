@@ -35,6 +35,7 @@ export function driveState(drive) {
   if (drive.phase === 'paused') return { key: 'Paused while you use the drive', tone: 'busy' };
   if (drive.phase === 'waiting-connection') return { key: 'Waiting for connection', tone: 'warn' };
   if (drive.phase === 'needs-attention') return { key: 'Needs attention', tone: 'error' };
+  if (drive.queuedBehind) return { key: 'Waiting for {name} to finish', values: { name: drive.queuedBehind }, tone: 'busy' };
   if (drive.dirty) return { key: 'Changes waiting', tone: 'busy' };
   if (drive.lastBackup) return { key: 'Backed up', tone: 'ok' };
   return { key: 'Waiting for the first backup', tone: 'muted' };
