@@ -26,5 +26,5 @@ test('every details pane state has Cantonese wording and the pane links to the b
   assert.match(chrome, /detailsPaneState\(autoBackupStatus, state\.sessionId\)/);
   assert.match(chrome, /listen\(\$\('inspector-backup-settings'\), 'click', \(\) => hooks\.openView\('storage'\)\)/);
   const html = readFileSync(new URL('../src/renderer/index.html', import.meta.url), 'utf8');
-  assert.match(html, /id="inspector-backup-settings"[^>]*>Open Docker Hub backup</);
+  assert.match(html, /id="inspector-backup-settings"[^>]*>(?:<span data-icon="[^"]+"><\/span>)?(?:<span data-i18n>)?Open Docker Hub backup</);
 });

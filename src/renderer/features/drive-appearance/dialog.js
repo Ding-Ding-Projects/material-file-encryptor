@@ -1,4 +1,5 @@
 import { SurfaceElement, element, localized, register } from '../../../shared/surface/registry.js';
+import { withKeyIcon } from '../../icons.js';
 
 // Pairs are [English, Cantonese].
 export const APPEARANCE_COPY = {
@@ -43,7 +44,7 @@ export class DriveAppearanceDialog extends SurfaceElement {
   setLanguage(language) { this.language = language; if (this.dialog.open) this.render(); }
   t(key, values) { const [en, yue] = APPEARANCE_COPY[key] || [key, key], translated = this.translateText(en); return fill(translated !== en ? translated : localized({ en, yue }, this.language === 'zh-HK' ? 'yue' : this.language), values); }
   open({ sessionId, name, images }) { Object.assign(this, { sessionId, name, images: images || {}, acknowledged: false, notice: null, error: null, busy: false }); this.render(); if (!this.dialog.open) this.dialog.showModal?.(); }
-  button(text, onClick, { filled = false, disabled = false } = {}) { const node = element(filled ? 'md-filled-button' : 'md-outlined-button', { text }); node.disabled = disabled; node.addEventListener('click', () => { if (!node.disabled) onClick(); }); return node; }
+  button(text, onClick, { filled = false, disabled = false } = {}) { const node = element(filled ? 'md-filled-button' : 'md-outlined-button', { text }); node.disabled = disabled; withKeyIcon(node, text, key => this.t(key)); node.addEventListener('click', () => { if (!node.disabled) onClick(); }); return node; }
   async change(kind, remove) {
     this.busy = true; this.error = null; this.notice = null; this.render();
     try {

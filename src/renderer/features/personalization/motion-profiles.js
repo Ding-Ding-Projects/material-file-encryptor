@@ -2,6 +2,7 @@
 // preview and tunes duration, delay, stagger, easing, distance and scale for each. It edits the shared motion
 // controller, so every change is visible across the whole app at once. The advanced keyframe editor stays one
 // button away for authoring per-element tracks.
+import {withIcon} from '../../icons.js';
 import {control as materialControl} from '../../../shared/surface/controls.js';
 import {createSettingsControl} from './settings-controls.js';
 import {motionKindName, motionText} from './motion-profiles-copy.js';
@@ -34,8 +35,8 @@ export function mountMotionProfiles(host, {controller, getLanguage = () => 'en',
   host.append(root);
 
   const el = (tag, className, text) => { const node = doc.createElement(tag); if (className) node.className = className; if (text !== undefined) node.textContent = text; return node; };
-  const button = (label, run, variant = 'outlined') => {
-    const node = materialControl('button', {class: variant, type: 'button'}, [label], doc);
+  const button = (label, run, variant = 'outlined', iconName = 'check') => {
+    const node = withIcon(materialControl('button', {class: variant, type: 'button'}, [label], doc), iconName);
     node.addEventListener('click', () => { if (!disposed) { try { run(); } catch (error) { notify(error.message); } } });
     return node;
   };
@@ -105,7 +106,7 @@ export function mountMotionProfiles(host, {controller, getLanguage = () => 'en',
     profiles.setAttribute('role', 'radiogroup');
     profiles.setAttribute('aria-label', L('Motion profile'));
     const choose = (id, name) => {
-      const node = materialControl('button', {class: id === activeId ? 'primary' : 'outlined', type: 'button', role: 'radio'}, [name], doc);
+      const node = withIcon(materialControl('button', {class: id === activeId ? 'primary' : 'outlined', type: 'button', role: 'radio'}, [name], doc), 'palette');
       node.setAttribute('aria-checked', String(id === activeId));
       node.addEventListener('click', () => { controller.useProfile(id); say('Motion profile applied.'); });
       profiles.append(node);
@@ -122,11 +123,11 @@ export function mountMotionProfiles(host, {controller, getLanguage = () => 'en',
     const profileActions = el('div', 'motion-profiles-actions');
     const nameField = materialControl('input', {type: 'text', label: L('Profile name'), 'aria-label': L('Profile name'), maxLength: 40}, [], doc);
     profileActions.append(nameField,
-      button(L('Save as profile'), () => { controller.saveProfile(nameField.value); say('Motion profile saved.'); }),
-      button(L('Delete profile'), () => { controller.deleteProfile(activeId); say('Motion profile deleted.'); }),
-      button(L('Import JSON'), () => file.click()),
-      button(L('Export JSON'), () => { download?.(controller.exportJson(), 'motion-profile.json'); say('Motion profile exported.'); }),
-      button(L('Reset all'), () => { controller.resetAll(); say('Everything is back to the Expressive profile.'); }));
+      button(L('Save as profile'), () => { controller.saveProfile(nameField.value); say('Motion profile saved.'); }, 'outlined', 'save'),
+      button(L('Delete profile'), () => { controller.deleteProfile(activeId); say('Motion profile deleted.'); }, 'outlined', 'delete'),
+      button(L('Import JSON'), () => file.click(), 'outlined', 'upload'),
+      button(L('Export JSON'), () => { download?.(controller.exportJson(), 'motion-profile.json'); say('Motion profile exported.'); }, 'outlined', 'export'),
+      button(L('Reset all'), () => { controller.resetAll(); say('Everything is back to the Expressive profile.'); }, 'outlined', 'restore'));
     const deleteButton = profileActions.children[2];
     deleteButton.disabled = !Object.hasOwn(custom, activeId);
     const file = el('input');
@@ -198,7 +199,7 @@ export function mountMotionProfiles(host, {controller, getLanguage = () => 'en',
 
     detail.append(el('p', 'motion-profiles-easing-title', L('Easing')));
     detail.append(curveEditor(row.easing));
-    detail.append(button(L('Reset this kind'), () => controller.resetKind(selected)), button(L('Advanced keyframe editor'), openAdvanced, 'text'));
+    detail.append(button(L('Reset this kind'), () => controller.resetKind(selected), 'outlined', 'restore'), button(L('Advanced keyframe editor'), openAdvanced, 'text', 'edit'));
     layout.append(grid, detail);
     root.append(layout, status);
   }
@@ -219,7 +220,7 @@ export function mountMotionProfiles(host, {controller, getLanguage = () => 'en',
     box.append(svg);
     const chips = el('div', 'motion-profiles-chips');
     for (const name of EASING_NAMES) {
-      const chip = materialControl('button', {class: easing === name ? 'primary' : 'outlined', type: 'button'}, [name[0].toUpperCase() + name.slice(1)], doc);
+      const chip = withIcon(materialControl('button', {class: easing === name ? 'primary' : 'outlined', type: 'button'}, [name[0].toUpperCase() + name.slice(1)], doc), 'curve');
       chip.setAttribute('aria-pressed', String(easing === name));
       chip.addEventListener('click', () => controller.setKind(selected, {easing: name}));
       chips.append(chip);

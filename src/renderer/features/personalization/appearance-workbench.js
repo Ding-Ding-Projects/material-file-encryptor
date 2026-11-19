@@ -1,3 +1,4 @@
+import {withLabelIcon} from '../../icons.js';
 import {appearanceTranslator} from './appearance-copy.js';
 import {mountWorkbenchGuidance,WORKBENCH_GUIDANCE_COPY} from './workbench-guidance.js';
 
@@ -20,7 +21,7 @@ function workbenchContext(host,options){
   const mounted=mountWorkbenchGuidance(target,{key,context,options,t,run:async()=>{if(!available()||target.isConnected===false||target.disabled||target.readOnly)throw Error(t('This workbench is no longer available.'));return run();},validate:async()=>{if(!available()||target.isConnected===false)throw Error(t('This workbench is no longer available.'));await validate?.();}});guidance.push(mounted);return mounted;
  }
  function action(parent,label,key,operation,validate,context=''){
-  const row=doc.createElement('div');if(!['tool-search','preview-search','tool-search-clear','preview-search-clear'].includes(key))row.className='local-ux-field';parent.append(row);const button=doc.createElement('md-outlined-button');button.type='button';button.textContent=t(label);button.setAttribute('aria-label',t(label));row.append(button);let flight=null;
+  const row=doc.createElement('div');if(!['tool-search','preview-search','tool-search-clear','preview-search-clear'].includes(key))row.className='local-ux-field';parent.append(row);const button=doc.createElement('md-outlined-button');button.type='button';button.textContent=t(label);withLabelIcon(button,label);button.setAttribute('aria-label',t(label));row.append(button);let flight=null;
   listen(button,'click',()=>{if(!available()||button.disabled||flight)return;flight=Promise.resolve().then(operation);flight.then(accepted=>{if(accepted!==true&&available()){const status=host.querySelector('[role="status"]');if(status)status.textContent=t('The original control did not confirm a change.');}},error=>{if(available()){const status=host.querySelector('[role="status"]');if(status)status.textContent=t(error.message);options.onError?.(error);}});flight.finally(()=>{flight=null;}).catch(()=>{});});
   help(button,key,async()=>{if(flight)throw Error(t('The original control did not confirm a change.'));button.click();if(!flight)throw Error(t('The original control did not confirm a change.'));const admitted=await flight;if(admitted!==true)throw Error(t('The original control did not confirm a change.'));},validate,context);
   return button;

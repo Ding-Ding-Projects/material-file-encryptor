@@ -1,3 +1,4 @@
+import {withLabelIcon} from '../../icons.js';
 import {control} from '../../../shared/surface/controls.js';
 import {createAccessSearch} from './surface.js';
 /** Separate host-backed history credential; never inherits profile authentication. */
@@ -9,7 +10,7 @@ export function mountAccessHistory(container,{request,t=(_key,value)=>value,conf
  root.append(node('p','Access history has its own password. Snapshots are encrypted in the local application-data history. Nothing is synchronized.'));
  const status=node('p');status.setAttribute('role','status');root.append(status);
  const report=error=>{if(alive){status.textContent=text(error?.message||String(error));notify(status.textContent);}};
- const button=(label,run,parent=root)=>{const el=control('button',{type:'button'},[],doc);el.dataset.accessHistoryAction=label.toLowerCase().replace(/[^a-z0-9]+/g,'-');bindings.push(()=>el.textContent=text(label));el.textContent=text(label);el.addEventListener('click',async()=>{if(!alive||el.disabled||el.isConnected===false)return;el.disabled=true;try{await run();}catch(error){report(error);}finally{if(alive)el.disabled=false;}});parent.append(el);return el;};
+ const button=(label,run,parent=root)=>{const el=withLabelIcon(control('button',{type:'button'},[],doc),label);el.dataset.accessHistoryAction=label.toLowerCase().replace(/[^a-z0-9]+/g,'-');bindings.push(()=>el.textContent=text(label));el.textContent=text(label);el.addEventListener('click',async()=>{if(!alive||el.disabled||el.isConnected===false)return;el.disabled=true;try{await run();}catch(error){report(error);}finally{if(alive)el.disabled=false;}});parent.append(el);return el;};
  const field=(label,type='text',parent=root)=>{const wrap=node('div'),el=control(type==='textarea'?'textarea':'input',{type},[],doc);wrap.className='access-field';bindings.push(()=>{el.label=text(label);el.setAttribute('aria-label',text(label));});el.label=text(label);el.setAttribute('aria-label',text(label));el.dataset.accessHistoryField=label.toLowerCase().replace(/[^a-z0-9]+/g,'-');wrap.append(el);if(!['date','number'].includes(type))button('Clear',()=>{if(el.disabled||el.readOnly)return;el.value='';el.dispatchEvent(new Event('input',{bubbles:true,composed:true}));el.focus();},wrap);parent.append(wrap);return el;};
  const password=field('History password','password'),workspace=node('section');workspace.hidden=true;root.append(workspace);
  async function lock(){clearTimeout(unlockTimer);unlockTimer=null;unlocked=false;revision++;selected=[];workspace.hidden=true;password.value='';list.replaceChildren();comparison.textContent='';await request('historyLock',{});status.textContent=text('History locked');}

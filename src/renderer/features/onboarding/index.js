@@ -1,9 +1,12 @@
+import {withIcon} from '../../icons.js';
 import {control} from '../../../shared/surface/controls.js';
 import {DEFAULT_DRIVE_NAME, DRIVE_NAME_MAX_LENGTH} from '../../../shared/drive-name.js';
 import {STEPS} from './model.js';
 
 const STEP_NAMES = Object.freeze({welcome: 'Welcome', look: 'Look and language', requirements: 'Requirements', drive: 'Your drive', browser: 'Pair a browser', done: 'Finish'});
 const STEP_CHIPS = Object.freeze({welcome: 'Welcome', look: 'Look and language', requirements: 'Requirements', drive: 'Your drive', browser: 'Browser', done: 'Finish'});
+const ONBOARDING_BUTTON_ICONS = Object.freeze({check: 'refresh', install: 'download', 'create-drive': 'add', 'unlock-drive': 'lock_open', back: 'back', 'skip-step': 'next', finish: 'check', next: 'next', 'save-close': 'save', 'skip-setup': 'close', restart: 'restore'});
+const STEP_ICONS = Object.freeze({welcome: 'info', look: 'palette', requirements: 'check', drive: 'drive', browser: 'link', done: 'check'});
 const STATE_LABELS = Object.freeze({current: 'Current', done: 'Done', skipped: 'Skipped', pending: 'Not started'});
 
 /**
@@ -55,7 +58,7 @@ export function mountOnboarding(host, {session, translate = value => value, subs
   const busyNote = () => make('p', {class: 'onboarding-busy', role: 'status', 'aria-live': 'polite', text: session.busy ? t('Working…') : ''});
   const paragraph = source => make('p', {text: t(source)});
   const button = (key, label, kind, onClick, {disabled = false, hidden = false} = {}) => {
-    const node = control('button', {class: kind === 'primary' ? 'primary' : kind === 'outlined' ? 'outlined' : '', text: t(label)}, [], doc);
+    const node = withIcon(control('button', {class: kind === 'primary' ? 'primary' : kind === 'outlined' ? 'outlined' : '', text: t(label)}, [], doc), key.startsWith('browse') ? 'folder' : ONBOARDING_BUTTON_ICONS[key] || 'check');
     node.dataset ||= {};
     node.dataset.focusKey = key;
     node.disabled = disabled || Boolean(session.busy);
@@ -176,7 +179,7 @@ export function mountOnboarding(host, {session, translate = value => value, subs
     header.append(progress, make('p', {class: 'onboarding-count', text: fill('Step {n} of {total}', {n: index + 1, total})}));
     const chips = make('ol', {class: 'onboarding-steps', 'aria-label': t('Setup steps')});
     for (const step of session.steps()) {
-      const chip = control('button', {text: t(STEP_CHIPS[step.id]), class: 'onboarding-step-chip'}, [], doc);
+      const chip = withIcon(control('button', {text: t(STEP_CHIPS[step.id]), class: 'onboarding-step-chip'}, [], doc), STEP_ICONS[step.id] || 'check');
       chip.setAttribute('aria-label', `${t(STEP_CHIPS[step.id])}: ${t(STATE_LABELS[step.state])}`);
       if (step.state === 'current') chip.setAttribute('aria-current', 'step');
       chip.dataset ||= {};

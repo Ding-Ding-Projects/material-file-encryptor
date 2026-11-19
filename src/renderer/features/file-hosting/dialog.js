@@ -1,4 +1,5 @@
 import { SurfaceElement, element, localized, register } from '../../../shared/surface/registry.js';
+import { withKeyIcon } from '../../icons.js';
 import { HOSTING_COPY } from './copy.js';
 import { confirmDestructiveAction } from '../../../shared/surface/workflow-confirm.js';
 import { linkQrSvg, linkQrPng } from './qr.js';
@@ -125,7 +126,7 @@ export class FileHostingDialog extends SurfaceElement {
 
   /* -------------------------------------------------------------- helpers */
   button(text, onClick, { filled = false, disabled = false, id, danger = false } = {}) {
-    const node = element(filled ? 'md-filled-button' : 'md-outlined-button', { text, ...(id ? { id } : {}) }); node.disabled = disabled;
+    const node = element(filled ? 'md-filled-button' : 'md-outlined-button', { text, ...(id ? { id } : {}) }); node.disabled = disabled; withKeyIcon(node, text, key => this.t(key));
     if (danger) node.style.setProperty('--md-outlined-button-label-text-color', 'var(--md-sys-color-error,#b3261e)');
     node.addEventListener('click', () => { if (!node.disabled) onClick(); }); return node;
   }

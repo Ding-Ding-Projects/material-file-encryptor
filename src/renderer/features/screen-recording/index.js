@@ -1,5 +1,6 @@
 // Screen recording view. The main process lists capture sources, grants exactly the one the user chose and writes
 // the WebM chunks to a file picked in a native save dialog. Nothing is uploaded and no preview is kept in memory.
+import {withIcon} from '../../icons.js';
 import { el, createLabels, formatDuration } from '../toolbox-common.js';
 
 function pickMime() {
@@ -15,13 +16,13 @@ export function mountScreenRecording(root, { api = window.drive, getLanguage = (
   const privacy = labels.text(el('p', { class: 'toolbox-note' }), 'Recordings are written to a file you choose on this computer. Nothing is uploaded. Everything visible in the chosen screen or window is recorded, including private content, so close anything you do not want captured.', '錄影會寫入你揀嘅本機檔案，唔會上載。所揀螢幕或視窗內所有可見內容都會被錄低，包括私人內容，請先關閉唔想被錄到嘅畫面。');
   const unavailable = labels.text(el('p', { class: 'toolbox-status', 'data-level': 'error', hidden: true }), 'Screen recording needs the desktop application and a browser engine that supports MediaRecorder.', '螢幕錄影需要桌面程式，同支援 MediaRecorder 嘅瀏覽器引擎。');
   const grid = el('div', { class: 'toolbox-grid', role: 'radiogroup', 'aria-label': '' }); labels.attr(grid, 'aria-label', 'Screen or window to record', '要錄影嘅螢幕或視窗');
-  const refresh = el('button', { type: 'button', class: 'toolbox-button' }); labels.text(refresh, 'Refresh sources', '重新整理來源');
+  const refresh = el('button', { type: 'button', class: 'toolbox-button' }); labels.text(refresh, 'Refresh sources', '重新整理來源'); withIcon(refresh, 'refresh');
   const mic = el('input', { type: 'checkbox' });
   const micLabel = el('label', {}, [mic, labels.text(el('span'), 'Include microphone', '包括麥克風')]);
   const ack = el('input', { type: 'checkbox' });
   const ackLabel = el('label', {}, [ack, labels.text(el('span'), 'I understand that everything visible will be recorded.', '我明白所有可見內容都會被錄低。')]);
-  const start = el('button', { type: 'button', class: 'toolbox-button primary', disabled: true }); labels.text(start, 'Start recording', '開始錄影');
-  const stop = el('button', { type: 'button', class: 'toolbox-button', hidden: true }); labels.text(stop, 'Stop and save', '停止並儲存');
+  const start = el('button', { type: 'button', class: 'toolbox-button primary', disabled: true }); labels.text(start, 'Start recording', '開始錄影'); withIcon(start, 'play');
+  const stop = el('button', { type: 'button', class: 'toolbox-button', hidden: true }); labels.text(stop, 'Stop and save', '停止並儲存'); withIcon(stop, 'stop');
   const dot = el('span', { class: 'toolbox-rec-dot', hidden: true, 'aria-hidden': 'true' });
   const timer = el('span', { class: 'toolbox-timer', role: 'timer', 'aria-live': 'off', text: '00:00:00' });
   const status = el('p', { class: 'toolbox-status', role: 'status' });

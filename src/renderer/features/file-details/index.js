@@ -1,3 +1,4 @@
+import {withIcon, withLabelIcon} from '../../icons.js';
 import { control, connectSelectSearch, setControlLanguage } from '../../../shared/surface/controls.js';
 import { filterVersions, compareText, selectedVersions } from './model.js';
 import { createVersionSearch } from './version-search.js';
@@ -34,11 +35,11 @@ export function mountFileDetails(root, { services, translate = value => value, l
  const status = element('p', '', { role: 'status', 'aria-live': 'polite' });
  const list = element('div', null, { role: 'tabpanel', tabindex: '0' });
  const preview = element('pre', '', { class: 'file-details-preview', tabindex: '0', 'aria-label': translate('Version preview') });
- const more = element('button', 'Load more activity', { type: 'button' });
+ const more = withIcon(element('button', 'Load more activity', { type: 'button' }), 'arrow_down');
  shell.append(title, tabs, controls, toolbar, status, list, preview, more); root.replaceChildren(shell);
  function fail(error) { status.textContent = error instanceof Error ? error.message : String(error); }
  function button(label, callback, enabled = true) {
-  const node = element('button', label, { type: 'button' }); node.disabled = !enabled || busy;
+  const node = withLabelIcon(element('button', label, { type: 'button' }), label); node.disabled = !enabled || busy;
   node.addEventListener('click', () => void perform(callback)); return node;
  }
  async function perform(callback) {

@@ -1,75 +1,95 @@
 import {localized, text} from '../../../shared/surface/registry.js';
 import {openContextMenu} from '../../../shared/surface/overlay.js';
+import {icon} from '../../icons.js';
 import {AUTO_BACKUP_COPY} from './auto-backup/copy.js';
 import {groupDrives, driveState, relativeTime, summary, shortId} from './auto-backup/model.js';
+import {FILTERS, SORTS, PART_SIZE_MIB, bucketOf, sizeOf, filterCounts, visibleDrives, listSummary, runningStrip, avatarLetter} from './auto-backup/list-model.js';
+import {formatBytes, formatDuration} from './registry-progress.js';
 
 export const HUB_OVERVIEW_COPY = AUTO_BACKUP_COPY;
 const POLL_MS = 4000;
+const FILTER_LABELS = {all: 'All', attention: 'Needs attention', running: 'Running', queued: 'Queued', ok: 'Up to date'};
+const SORT_LABELS = {attention: 'Needs attention first', name: 'Name', last: 'Last backup', size: 'Size'};
+const STEP_LABELS = {discovering: 'Discovering', 'waiting-drive': 'Waiting for the drive', downloading: 'Downloading', applying: 'Applying', packing: 'Packing', preparing: 'Preparing', uploading: 'Uploading', verifying: 'Verifying', restoring: 'Restoring'};
+const BUCKET_ICONS = {ok: 'cloud', running: 'cloud_upload', queued: 'sync', attention: 'error', off: 'offline'};
+const BUCKET_LABELS = {ok: 'Up to date', running: 'Running', queued: 'Queued', attention: 'Needs attention', off: 'Backup off'};
 
 /**
- * The Docker Hub backup page header and drive table, grouped by repository. Every figure comes from the host's
- * automatic backup status: whether backup is on, each drive's switch, state, last backup, snapshot count, the
- * repository's tag count and the last prune. The full storage, sign-in, snapshot and conflict panels stay below.
+ * The Docker Hub backup page: toolbar, a pinned strip for the backup running now, a summary line, filter chips with live
+ * counts, name search with a regular expression switch, a sort control and one dense row per drive that expands in place
+ * to its actions. Every figure comes from the host's automatic backup status: whether backup is on, each drive's switch,
+ * state, last backup, snapshot count, the repository's tag count and the last prune. The full storage, sign-in, snapshot
+ * and conflict panels stay below.
  */
 export function mountHubOverview(host, {services = {}, getLanguage = () => 'en', onBackupAll = () => {}, onRestore = () => {}, onShowDetails = () => {}, onOpenDrive = () => {}, onSettings = () => {}, now = () => Date.now()} = {}) {
   const doc = host.ownerDocument;
   const L = (key, values = {}) => Object.entries(values).reduce((value, [name, item]) => value.replaceAll(`{${name}}`, String(item)), localized(text(key, AUTO_BACKUP_COPY[key] ?? key), getLanguage()));
-  const el = (tag, props = {}, children = []) => { const node = doc.createElement(tag); for (const [key, value] of Object.entries(props)) { if (key === 'text') node.textContent = value; else if (key === 'class') node.className = value; else if (key === 'checked' || key === 'selected' || key === 'disabled') node[key] = value; else node.setAttribute(key, value); } node.append(...children); return node; };
+  const el = (tag, props = {}, children = []) => { const node = doc.createElement(tag); for (const [key, value] of Object.entries(props)) { if (key === 'text') node.textContent = value; else if (key === 'class') node.className = value; else if (key === 'checked' || key === 'selected' || key === 'disabled' || key === 'value') node[key] = value; else node.setAttribute(key, value); } node.append(...children); return node; };
+  const glyph = name => el('span', {'data-icon': name, class: 'hub-icon'}, [icon(name)]);
+  const button = (props, name, label, tag = 'button') => el(tag, {type: 'button', ...props}, [glyph(name), el('span', {class: 'label', text: label})]);
   const help = (node, key) => { const value = L(key); node.setAttribute('data-help-text', value); node.setAttribute('aria-description', value); return node; };
   const root = el('div', {class: 'hub-overview'});
   host.prepend(root);
-  let status = null, backingUpAll = false, failed = false, generation = 0, message = '', timer = null, disposed = false, settled = false, lastJson = '', removal = null;
-  const when = value => { const relative = relativeTime(value, now()); if (relative.key === 'date') return new Date(relative.time).toLocaleString(getLanguage() === 'yue' ? 'zh-HK' : 'en', {month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'}); return L(relative.key, {count: relative.count}); };
+  let status = null, backingUpAll = false, failed = false, generation = 0, message = '', timer = null, disposed = false, lastJson = '', removal = null;
+  const view = {filter: 'all', query: '', regex: false, sort: 'attention', sortOpen: false};
+  const expanded = new Set();
+  const clock = value => new Date(value).toLocaleString(getLanguage() === 'yue' ? 'zh-HK' : 'en', {month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23'});
+  const when = value => { const relative = relativeTime(value, now()); if (relative.key === 'date') return clock(relative.time); return L(relative.key, {count: relative.count}); };
   const delayText = seconds => seconds === 60 ? L('1 minute') : seconds % 60 === 0 ? L('{count} minutes', {count: seconds / 60}) : L('{count} seconds', {count: seconds});
+  const bytesText = value => formatBytes(value, getLanguage() === 'yue' ? 'zh-HK' : 'en');
 
   async function act(work, done) {
     try { const result = await work(); message = done ? done(result) : ''; }
     catch (error) { message = String(error?.message || error); }
     await load();
   }
-  function rowMenu(anchor, event, drive) {
+  /** The per-drive actions, shared by the expanded row and the right-click menu. */
+  function driveActions(drive) {
     const run = (method, ...args) => () => void act(() => services[method](...args), method === 'autoBackupPrune' ? result => L('Removed {count} old snapshots.', {count: result?.pruned ?? 0}) : method === 'autoBackupMove' ? () => L('This drive now backs up to its own repository.') : null);
     const usable = drive.phase !== 'unavailable';
-    openContextMenu({anchor, event, target: anchor, language: getLanguage(), items: [
-      {id: 'hub:backup', label: text('Back up now', AUTO_BACKUP_COPY['Back up now']), disabled: !usable || !status?.signedIn || typeof services.autoBackupNow !== 'function', run: run('autoBackupNow', drive.sessionId)},
-      {id: 'hub:restore', label: text('Restore…', AUTO_BACKUP_COPY['Restore…']), run: () => onRestore()},
-      {id: 'hub:prune', label: text('Prune old snapshots now', AUTO_BACKUP_COPY['Prune old snapshots now']), disabled: !drive.lastBackup || typeof services.autoBackupPrune !== 'function', run: run('autoBackupPrune', drive.sessionId)},
-      {id: 'hub:move', label: text('Move to its own repository', AUTO_BACKUP_COPY['Move to its own repository']), disabled: !usable || !drive.repository || !status?.signedIn, run: run('autoBackupMove', drive.sessionId)},
-      {id: 'hub:switch', label: drive.enabled ? text('Stop backing up', AUTO_BACKUP_COPY['Stop backing up']) : text('Start backing up', AUTO_BACKUP_COPY['Start backing up']), disabled: !usable, run: run('autoBackupSetDrive', drive.sessionId, !drive.enabled)},
-      {id: 'hub:open', label: text('Open this drive', AUTO_BACKUP_COPY['Open this drive']), run: () => onOpenDrive(drive.sessionId)},
-      {id: 'hub:remove', label: text('Remove this drive’s backups…', AUTO_BACKUP_COPY['Remove this drive’s backups…']), disabled: !drive.repository || typeof services.autoBackupListOwn !== 'function', run: () => void askRemove(drive)}
-    ]});
+    return {
+      backup: {label: 'Back up now', disabled: !usable || !status?.signedIn || typeof services.autoBackupNow !== 'function', run: run('autoBackupNow', drive.sessionId)},
+      restore: {label: 'Restore…', disabled: false, run: () => onRestore()},
+      prune: {label: 'Prune old snapshots now', disabled: !drive.lastBackup || typeof services.autoBackupPrune !== 'function', run: run('autoBackupPrune', drive.sessionId)},
+      move: {label: 'Move to its own repository', disabled: !usable || !drive.repository || !status?.signedIn, run: run('autoBackupMove', drive.sessionId)},
+      switch: {label: drive.enabled ? 'Stop backing up' : 'Start backing up', disabled: !usable, run: run('autoBackupSetDrive', drive.sessionId, !drive.enabled)},
+      open: {label: 'Open this drive', disabled: false, run: () => onOpenDrive(drive.sessionId)},
+      remove: {label: 'Remove this drive’s backups…', disabled: !drive.repository || typeof services.autoBackupListOwn !== 'function', run: () => void askRemove(drive)}
+    };
+  }
+  const MENU_ICONS = {backup: 'cloud_upload', restore: 'download', prune: 'delete', move: 'folder', switch: 'sync', open: 'open', remove: 'delete'};
+  const MENU_SECTIONS = {backup: 0, restore: 0, prune: 1, move: 1, switch: 1, open: 2, remove: 3};
+  function rowMenu(anchor, event, drive) {
+    const actions = driveActions(drive);
+    openContextMenu({anchor, event, target: anchor, language: getLanguage(), items: ['backup', 'restore', 'prune', 'move', 'switch', 'open', 'remove'].map(id => ({id: `hub:${id === 'switch' ? 'switch' : id}`, label: text(actions[id].label, AUTO_BACKUP_COPY[actions[id].label]), icon: MENU_ICONS[id], section: MENU_SECTIONS[id], danger: id === 'remove', disabled: actions[id].disabled, run: actions[id].run}))});
   }
   function driveRow(drive) {
-    const state = driveState(drive);
-    const menu = el('md-icon-button', {class: 'row-menu', 'aria-label': `${L('Drive actions')}: ${drive.name || drive.sessionId}`, title: L('Drive actions')}, [el('span', {text: '⋯', 'aria-hidden': 'true'})]);
-    menu.addEventListener('click', event => rowMenu(menu, event, drive));
-    const toggle = help(el('md-switch', {'aria-label': `${L('Back up this drive')}: ${drive.name || drive.sessionId}`, class: 'drive-switch', selected: drive.enabled, disabled: drive.phase === 'unavailable'}), 'Backs up this drive automatically after changes and every hour. Turn it off to keep this drive on this PC only.');
-    toggle.addEventListener('change', () => void act(() => services.autoBackupSetDrive(drive.sessionId, toggle.selected)));
-    const label = state.percent !== undefined && state.percent !== null ? `${L(state.key)} ${state.percent}%` : L(state.key, state.values);
-    const tr = el('tr', {'data-session-id': drive.sessionId, 'data-state': drive.enabled ? drive.phase : 'off', 'data-tone': state.tone}, [
-      el('td', {class: 'name'}, [doc.createTextNode(drive.name || drive.sessionId), ...(shortId(drive.deviceId) ? [el('code', {class: 'short-id', text: shortId(drive.deviceId)})] : [])]),
-      el('td', {text: L('This PC')}), el('td', {text: when(drive.lastBackup)}), el('td', {class: 'number', text: Number.isSafeInteger(drive.snapshots) ? String(drive.snapshots) : '-'}),
-      el('td', {class: 'status', title: drive.lastError || ''}, [el('span', {class: 'dot', 'aria-hidden': 'true'}), doc.createTextNode(label)]),
-      el('td', {class: 'backup'}, [toggle]), el('td', {class: 'menu'}, [menu])]);
-    tr.addEventListener('contextmenu', event => { event.preventDefault(); event.stopPropagation(); rowMenu(tr, event, drive); });
-    return tr;
-  }
-  function groupRow(group) {
-    const cells = [el('span', {class: group.repository ? 'repository' : '', text: group.repository || L('Not backed up')})];
-    if (group.repository) cells.push(el('span', {class: 'chip', text: L(group.visibility === 'private' ? 'Private' : 'Public')}));
-    cells.push(el('span', {class: 'muted', text: group.drives.length === 1 ? L('1 drive') : L('{count} drives', {count: group.drives.length})}));
-    const end = el('span', {class: 'group-end'});
-    if (group.repository && Number.isSafeInteger(group.tagCount)) {
-      const meter = help(el('meter', {min: '0', max: '1000', low: '800', high: '800', optimum: '0', value: String(group.tagCount), 'aria-label': L('{count} of 1,000 tags', {count: group.tagCount})}), 'Number of snapshot tags in this repository. Docker Hub use by this app is limited to 1,000 tags per repository, shared by every drive in it.');
-      end.append(el('span', {class: 'tag-count', text: L('{count} of 1,000 tags', {count: group.tagCount})}), meter);
-      if (group.nearLimit && group.drives.length > 1) {
-        const move = el('md-text-button', {type: 'button', class: 'move-all'}, [el('span', {text: L('Move drives to their own repositories')})]);
-        move.addEventListener('click', () => void act(async () => { for (const drive of group.drives) if (drive.enabled) await services.autoBackupMove(drive.sessionId); }));
-        end.append(move);
-      }
+    const bucket = bucketOf(drive), state = driveState(drive), open = expanded.has(drive.sessionId), name = drive.name || drive.sessionId;
+    const stateLabel = state.percent !== undefined && state.percent !== null ? `${L(state.key)} ${state.percent}%` : L(state.key, state.values);
+    const size = sizeOf(drive);
+    const sub = drive.lastError ? String(drive.lastError) : shortId(drive.deviceId) ? `${L('This PC')} · ${shortId(drive.deviceId)}` : L('This PC');
+    const head = el('button', {type: 'button', class: 'drive-head', 'aria-expanded': String(open), 'aria-label': `${name}: ${stateLabel}. ${L(open ? 'Hide details' : 'Show details')}`}, [
+      el('span', {class: 'avatar', 'aria-hidden': 'true', text: avatarLetter(drive)}),
+      el('span', {class: 'who'}, [el('span', {class: 'name', text: name}), el('span', {class: 'note', text: sub, title: drive.lastError || ''})]),
+      el('span', {class: 'state-chip', 'data-bucket': bucket, title: drive.lastError || ''}, [glyph(BUCKET_ICONS[bucket]), el('span', {text: stateLabel})]),
+      el('span', {class: 'last', text: when(drive.lastBackup), title: drive.lastBackup ? clock(Date.parse(drive.lastBackup)) : ''}),
+      el('span', {class: 'size', text: size === null ? '–' : bytesText(size)}),
+      el('span', {class: 'snaps', text: Number.isSafeInteger(drive.snapshots) ? String(drive.snapshots) : '–'}),
+      el('span', {class: 'chevron', 'data-open': String(open), 'aria-hidden': 'true'}, [glyph('add')])]);
+    const row = el('div', {class: 'drive-row', role: 'listitem', 'data-session-id': drive.sessionId, 'data-state': drive.enabled ? drive.phase : 'off', 'data-bucket': bucket, 'data-open': String(open)}, [head]);
+    head.addEventListener('click', () => { if (expanded.has(drive.sessionId)) expanded.delete(drive.sessionId); else expanded.add(drive.sessionId); renderList(); });
+    row.addEventListener('contextmenu', event => { event.preventDefault(); event.stopPropagation(); rowMenu(row, event, drive); });
+    if (open) {
+      const actions = driveActions(drive);
+      const act1 = (id, name2, variant) => { const spec = actions[id]; const node = button({class: `hub-btn ${variant}`, 'data-action': id, disabled: spec.disabled}, name2, L(spec.label)); node.addEventListener('click', () => { if (!node.disabled) spec.run(); }); return node; };
+      const fact = (label, value) => el('span', {class: 'fact'}, [el('span', {class: 'fact-label', text: L(label)}), el('b', {text: value})]);
+      const toggle = act1('switch', drive.enabled ? 'close' : 'add', 'danger');
+      const tags = Number.isSafeInteger(drive.tagCount) ? L('{used} of {limit} tags used', {used: drive.tagCount, limit: '1,000'}) : L('Not reported');
+      row.append(el('div', {class: 'drive-detail'}, [
+        el('div', {class: 'facts'}, [fact('Repository', drive.repository || L('Not backed up')), ...(drive.repository && drive.visibility ? [fact('Status', L(drive.visibility === 'private' ? 'Private' : 'Public'))] : []), fact('Part size', `${PART_SIZE_MIB} MiB`), fact('Tags used', tags)]),
+        el('div', {class: 'actions'}, [act1('backup', 'cloud_upload', 'tonal'), act1('restore', 'export', 'outlined'), act1('prune', 'delete', 'outlined'), toggle])]));
     }
-    return el('tr', {class: 'group-row', 'data-near-limit': String(group.nearLimit)}, [el('th', {scope: 'colgroup', colspan: '7'}, [...cells, end])]);
+    return row;
   }
   /** Lists this computer's snapshots of the drive and asks before removing exactly those tags. */
   async function askRemove(drive) {
@@ -116,35 +136,111 @@ export function mountHubOverview(host, {services = {}, getLanguage = () => 'en',
       }, result => result.failed ? L('Backed up {done} drives; {failed} need attention.', result) : L('Backed up {done} drives.', result));
     } finally { backingUpAll = false; lastJson = ''; if (!disposed) render(); }
   }
-  function render() {
-    const toolbar = el('div', {class: 'v2-toolbar', role: 'toolbar', 'aria-label': L('Docker Hub backup commands')});
-    const backupAll = el('md-filled-button', {id: 'hub-backup-all', type: 'button', disabled: backingUpAll}, [el('span', {text: L('Back up all now')})]);
-    backupAll.addEventListener('click', () => void backUpAll());
-    const restore = el('md-text-button', {id: 'hub-restore', type: 'button'}, [el('span', {text: L('Restore…')})]);
-    restore.addEventListener('click', () => onRestore());
-    const refresh = el('md-text-button', {id: 'hub-refresh', type: 'button'}, [el('span', {text: L('Refresh')})]);
-    refresh.addEventListener('click', () => void load());
-    const settings = el('md-text-button', {id: 'hub-settings', type: 'button', class: 'end'}, [el('span', {text: L('Backup settings')})]);
-    settings.addEventListener('click', () => onSettings());
-    toolbar.append(backupAll, restore, refresh, settings);
+
+  // The search field, regex switch and sort control are built once so typing never loses focus across list refreshes.
+  const searchInput = el('input', {type: 'search', class: 'hub-search-input', autocomplete: 'off', spellcheck: 'false'});
+  const searchLabel = el('label', {class: 'hub-search'}, [glyph('search'), searchInput]);
+  const regexButton = button({class: 'hub-btn toggle', id: 'hub-regex'}, 'search', '');
+  const sortButton = button({class: 'hub-btn tonal', id: 'hub-sort', 'aria-haspopup': 'menu'}, 'menu', '');
+  const sortMenu = el('div', {class: 'hub-menu', role: 'menu', hidden: ''});
+  const regexNote = el('p', {class: 'hub-regex-note', role: 'alert', hidden: ''});
+  const controls = el('div', {class: 'hub-controls'}, [searchLabel, regexButton, el('div', {class: 'hub-sort'}, [sortButton, sortMenu])]);
+  searchInput.addEventListener('input', () => { view.query = searchInput.value; renderList(); });
+  regexButton.addEventListener('click', () => { view.regex = !view.regex; renderList(); });
+  sortButton.addEventListener('click', () => { view.sortOpen = !view.sortOpen; renderControls(); });
+  const onEscape = event => { if (event.key === 'Escape' && view.sortOpen) { view.sortOpen = false; renderControls(); sortButton.focus?.(); } };
+  doc.addEventListener?.('keydown', onEscape);
+  const chipsHost = el('div', {class: 'hub-chips', role: 'group'});
+  const stripHost = el('div', {class: 'hub-strip-host'});
+  const summaryHost = el('div', {class: 'hub-summary-host'});
+  const listHost = el('div', {class: 'hub-list', role: 'list'});
+  const listShell = el('section', {class: 'hub-list-shell'}, [listHost]);
+
+  function renderControls() {
+    searchInput.placeholder = L('Search drives by name'); searchInput.setAttribute('aria-label', L('Search drives by name'));
+    regexButton.querySelector('.label').textContent = L('Regex'); regexButton.setAttribute('aria-pressed', String(view.regex)); regexButton.setAttribute('aria-label', L('Use a regular expression')); regexButton.title = L('Use a regular expression');
+    sortButton.querySelector('.label').textContent = L('Sort: {name}', {name: L(SORT_LABELS[view.sort])}); sortButton.setAttribute('aria-expanded', String(view.sortOpen)); sortButton.setAttribute('aria-label', L('Sort drives'));
+    sortMenu.hidden = !view.sortOpen;
+    sortMenu.replaceChildren(...SORTS.map(id => { const item = el('button', {type: 'button', role: 'menuitemradio', 'aria-checked': String(view.sort === id), class: 'hub-menu-item', 'data-sort': id}, [el('span', {class: 'tick', 'aria-hidden': 'true', text: view.sort === id ? '✓' : ''}), el('span', {text: L(SORT_LABELS[id])})]); item.addEventListener('click', () => { view.sort = id; view.sortOpen = false; renderList(); }); return item; }));
+    chipsHost.setAttribute('aria-label', L('Filter drives'));
+  }
+  function renderChips(counts) {
+    chipsHost.replaceChildren(...FILTERS.map(id => { const on = view.filter === id; const chip = el('button', {type: 'button', class: 'hub-chip', 'aria-pressed': String(on), 'data-filter': id}, [...(on ? [el('span', {class: 'tick', 'aria-hidden': 'true', text: '✓'})] : []), el('span', {text: `${L(FILTER_LABELS[id])} ${counts[id]}`})]); chip.addEventListener('click', () => { view.filter = id; renderList(); }); return chip; }));
+  }
+  /** Re-renders only what depends on the filter, search and sort: chips, controls and the list. */
+  function renderList() {
+    renderControls();
+    const drives = status?.drives ?? [];
+    renderChips(filterCounts(drives));
+    const {rows, error} = visibleDrives(drives, view);
+    regexNote.hidden = !error; regexNote.textContent = error ? L('That regular expression is not valid.') : '';
+    searchInput.setAttribute('aria-invalid', String(error));
+    listShell.setAttribute('aria-label', L('Drive list'));
+    const header = el('div', {class: 'hub-list-head', 'aria-hidden': 'true'}, ['Drive', 'Status', 'Last backup', 'Size', 'Snapshots'].map((label, index) => el('span', {class: `col-${index}`, text: L(label)})));
+    if (!status) listHost.replaceChildren(el('p', {class: 'hub-empty', role: 'status', text: L(failed ? 'The drive list could not be read. The details below still work.' : 'Loading the drive list…')}));
+    else if (!rows.length) listHost.replaceChildren(el('p', {class: 'hub-empty', role: 'status', text: L('No drives match this filter.')}));
+    else listHost.replaceChildren(...rows.map(driveRow));
+    listShell.replaceChildren(header, listHost);
+  }
+  function renderStrip() {
+    const run = runningStrip(status, now());
+    if (!run) { stripHost.replaceChildren(); return; }
+    const parts = [];
+    if (run.step) parts.push(L(STEP_LABELS[run.step]));
+    if (run.done !== null) parts.push(run.total !== null ? L('{done} of {total} {unit}', {done: run.done, total: run.total, unit: L(run.unit || 'files')}) : `${run.done} ${L(run.unit || 'files')}`);
+    parts.push(`${PART_SIZE_MIB} MiB`);
+    const bar = el('md-linear-progress', {'aria-label': L('Backing up now'), ...(run.percent === null ? {indeterminate: ''} : {})});
+    if (run.percent !== null) bar.value = run.percent / 100;
+    const cancel = button({class: 'hub-btn outlined', id: 'hub-strip-cancel'}, 'close', L('Cancel'));
+    cancel.disabled = typeof services.cancelRegistryStorage !== 'function'; cancel.hidden = cancel.disabled;
+    cancel.addEventListener('click', () => void act(() => services.cancelRegistryStorage(), null));
+    const facts = [el('span', {class: 'percent', text: run.percent === null ? '' : `${run.percent}%`})];
+    if (run.rate) facts.push(el('span', {class: 'fact-quiet', text: `${bytesText(Math.round(run.rate))}/s`}));
+    if (run.remainingMs !== null) facts.push(el('span', {class: 'fact-quiet', text: L('{time} left', {time: formatDuration(run.remainingMs)})}));
+    stripHost.replaceChildren(el('section', {class: 'hub-strip', 'aria-label': L('Backing up now')}, [
+      el('span', {class: 'avatar', 'aria-hidden': 'true', text: avatarLetter({name: run.name})}),
+      el('span', {class: 'who'}, [el('span', {class: 'name', text: run.name}), el('span', {class: 'note', text: parts.join(' · ')})]),
+      el('span', {class: 'bar'}, [bar]), ...facts, cancel]));
+  }
+  function renderSummary() {
     const line = summary(status, now());
     const lineText = line.key === 'Backed up {ago}' ? L(line.key, {ago: L(line.ago.key, {count: line.ago.count})}) : line.key === 'Backing up… {percent}%' ? (line.percent === null ? L('Backing up…') : L(line.key, {percent: line.percent})) : L(line.key);
     const parts = [el('strong', {class: 'summary-state', text: lineText})];
     if (status?.signedIn && !status.noticeRequired && status.settings.enabled) parts.push(el('span', {class: 'muted', text: L('changes back up {delay} after a drive goes idle', {delay: delayText(status.settings.idleDelaySeconds)})}));
-    const summaryRow = el('div', {class: 'hub-summary', role: 'status', 'aria-live': 'polite', 'data-tone': line.tone}, parts);
-    const head = el('thead', {}, [el('tr', {}, ['Drive', 'From', 'Last backup', 'Snapshots', 'Status', 'Backup', ''].map(label => el('th', {scope: 'col', text: label ? L(label) : ''})))]);
-    const body = el('tbody');
-    if (!status) body.append(el('tr', {}, [el('td', {colspan: '7', class: 'note', text: L(failed ? 'The drive list could not be read. The details below still work.' : 'Loading the drive list…')})]));
-    else for (const group of groupDrives(status.drives)) { body.append(groupRow(group)); for (const drive of group.drives) body.append(driveRow(drive)); }
-    const children = [toolbar, summaryRow];
+    const figures = listSummary(status?.drives ?? []);
+    if (status?.drives?.length) {
+      parts.push(el('span', {class: 'muted', text: L('{count} drives · {ok} up to date', {count: figures.drives, ok: figures.upToDate})}));
+      if (figures.storedBytes !== null) parts.push(el('span', {class: 'muted', text: L('{size} stored', {size: bytesText(figures.storedBytes)})}));
+      if (figures.tagsUsed !== null) parts.push(el('span', {class: 'muted', text: L('{used} of {limit} tags used', {used: figures.tagsUsed.toLocaleString('en'), limit: figures.tagLimit.toLocaleString('en')})}));
+    }
+    summaryHost.replaceChildren(el('div', {class: 'hub-summary', role: 'status', 'aria-live': 'polite', 'data-tone': line.tone}, parts));
+  }
+  function render() {
+    const toolbar = el('div', {class: 'v2-toolbar', role: 'toolbar', 'aria-label': L('Docker Hub backup commands')});
+    const backupAll = button({id: 'hub-backup-all', class: 'hub-btn filled', disabled: backingUpAll}, 'cloud_upload', L('Back up all now'));
+    backupAll.addEventListener('click', () => void backUpAll());
+    const restore = button({id: 'hub-restore', class: 'hub-btn outlined'}, 'export', L('Restore…'));
+    restore.addEventListener('click', () => onRestore());
+    const refresh = button({id: 'hub-refresh', class: 'hub-btn outlined'}, 'sync', L('Refresh'));
+    refresh.addEventListener('click', () => void load());
+    const settings = button({id: 'hub-settings', class: 'hub-btn outlined end'}, 'settings', L('Backup settings'));
+    settings.addEventListener('click', () => onSettings());
+    toolbar.append(backupAll, restore, refresh, settings);
+    renderStrip(); renderSummary(); renderList();
+    const near = groupDrives(status?.drives ?? []).filter(group => group.repository && group.nearLimit);
+    const children = [toolbar, stripHost, summaryHost];
     if (status?.signedIn && status.noticeRequired) children.push(notice());
     if (removal) children.push(removalPanel());
-    // Rows enter with the list motion once; the refreshes that follow replace them in place without replaying it.
-    children.push(el('table', {class: 'hub-overview-table', 'aria-label': L('Backup'), ...(settled ? {'data-settled': ''} : {})}, [head, body]));
-    if (status) settled = true;
+    if (near.length) {
+      const move = button({class: 'hub-btn tonal move-all'}, 'cloud_upload', L('Move drives to their own repositories'));
+      move.addEventListener('click', () => void act(async () => { for (const group of near) if (group.drives.length > 1) for (const drive of group.drives) if (drive.enabled) await services.autoBackupMove(drive.sessionId); }));
+      children.push(el('div', {class: 'hub-notice hub-near', role: 'status'}, [el('span', {text: L('Backup is nearly at the tag limit in {count} repositories.', {count: near.length})}), ...(near.some(group => group.drives.length > 1) ? [move] : [])]));
+    }
+    children.push(el('div', {class: 'hub-filters'}, [chipsHost, controls]), regexNote, listShell);
     const pruneNote = status?.drives?.some(drive => drive.lastPrune?.failed > 0) ? L('Some old snapshots could not be removed; they are tried again after the next backup.') : '';
     children.push(el('p', {class: 'hub-overview-note', role: 'status', text: [message, pruneNote].filter(Boolean).join(' ')}));
     root.replaceChildren(...children);
+    for (const node of root.querySelectorAll?.('[data-icon]') ?? []) if (!node.firstChild) node.replaceChildren(icon(node.dataset.icon));
   }
   async function load() {
     const request = ++generation;
@@ -153,8 +249,8 @@ export function mountHubOverview(host, {services = {}, getLanguage = () => 'en',
     catch { if (request !== generation || disposed) return; failed = true; }
     render();
   }
-  // While anything is moving the table refreshes itself; the poll stops with the page.
+  // While anything is moving the list refreshes itself; the poll stops with the page.
   const poll = () => { if (disposed) return; timer = setTimeout(async () => { if (!doc.hidden) await load().catch(() => {}); poll(); }, POLL_MS); };
   render(); void load(); poll();
-  return {refresh: load, backUpAll, setLanguage: render, destroy() { disposed = true; generation++; clearTimeout(timer); root.remove(); }};
+  return {refresh: load, backUpAll, setLanguage: render, destroy() { disposed = true; generation++; clearTimeout(timer); doc.removeEventListener?.('keydown', onEscape); root.remove(); }};
 }

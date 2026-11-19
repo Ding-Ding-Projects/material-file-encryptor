@@ -28,5 +28,14 @@ export const AUTO_BACKUP_COPY = Object.freeze({
   'Only snapshots this computer uploaded for this drive are removed. Encrypted layers shared with other drives stay. Backup for this drive is turned off afterwards. This cannot be undone.':
     '只會刪除呢部電腦幫呢個磁碟上載嘅快照，同其他磁碟共用嘅加密分層會保留。刪除之後呢個磁碟嘅備份會關閉。呢個動作冇得還原。',
   'Removed {removed} snapshots; {failed} could not be confirmed.': '刪除咗 {removed} 個快照；{failed} 個未能確認。',
+  'Filter drives': '篩選磁碟', 'All': '全部', 'Running': '進行中', 'Queued': '排緊隊', 'Up to date': '已係最新',
+  'Backing up now': '而家備份緊', 'Search drives by name': '用名稱搜尋磁碟', 'Regex': '正則', 'Use a regular expression': '用正則表達式搜尋',
+  'That regular expression is not valid.': '呢個正則表達式唔啱。', 'Sort drives': '排序磁碟', 'Sort: {name}': '排序：{name}',
+  'Needs attention first': '需要處理嘅優先', 'Name': '名稱', 'Size': '大細', 'No drives match this filter.': '冇磁碟符合呢個篩選。',
+  'Drive list': '磁碟清單', 'Show details': '睇詳情', 'Hide details': '收埋詳情', 'Repository': 'Repository', 'Part size': '分段大細', 'Tags used': '已用標籤',
+  '{count} drives · {ok} up to date': '{count} 個磁碟 · {ok} 個已係最新', '{size} stored': '已存 {size}', '{used} of {limit} tags used': '已用 {used} / {limit} 個標籤',
+  '{done} of {total} {unit}': '第 {done} / {total} {unit}', 'parts': '個分段', 'files': '個檔案', 'commits': '個提交', '{time} left': '尚餘 {time}', 'Not reported': '未知', 'Cancel backup': '取消備份',
+  'Discovering': '搵緊資料', 'Waiting for the drive': '等緊磁碟', 'Downloading': '下載緊', 'Applying': '套用緊', 'Packing': '整理緊', 'Preparing': '準備緊', 'Uploading': '上載緊', 'Verifying': '驗證緊', 'Restoring': '還原緊',
+  'Backup is nearly at the tag limit in {count} repositories.': '有 {count} 個 repository 嘅標籤差唔多用晒。',
   'Removed {count} old snapshots.': '清走咗 {count} 個舊快照。', 'This drive now backs up to its own repository.': '呢個磁碟而家備份去自己嘅 repository。',
 });

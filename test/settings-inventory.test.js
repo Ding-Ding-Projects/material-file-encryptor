@@ -55,7 +55,8 @@ test('every setting in the Settings view exists, has an accessible name, and is 
   assert.ok(html.length > 1000, 'the Settings view was found');
   const selectors = new Set(CONTROL_SELECTOR.split(','));
   for (const [tag, id, label] of SETTINGS_VIEW) {
-    const control = html.match(new RegExp(`<${tag}[^>]*\\bid="${id}"[^>]*>([^<]*)`))?.[0];
+    // A button may lead with its icon and keep its translated label in its own span.
+    const control = html.match(new RegExp(`<${tag}[^>]*\\bid="${id}"[^>]*>(?:<span data-icon="[^"]*"></span>)?(?:<span data-i18n>)?([^<]*)`))?.[0];
     assert.ok(control, `${id} is in the Settings view`);
     assert.ok(selectors.has(tag), `${tag} is in CONTROL_SELECTOR, so ${id} is indexed by the palette and searched by Settings search`);
     const named = control.includes(`aria-label="${label}"`) || new RegExp(`>\\s*${label}\\s*$`).test(control);

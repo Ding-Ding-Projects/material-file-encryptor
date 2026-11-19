@@ -90,7 +90,7 @@ export function mountQuicktype(root, {request, onExport, getLanguage = () => 'en
     if (state.sourceKind === 'json') {
       const tabs = plain('div', 'studio-row');
       tabs.setAttribute('role', 'group'); tabs.setAttribute('aria-label', tr('Samples', '樣本'));
-      state.sources.forEach((_, index) => tabs.append(kit.button(tr('Sample ', '樣本 ') + (index + 1), tr('Sample ', '樣本 ') + (index + 1), () => { state.active = index; render(); }, {variant: index === state.active ? 'primary' : 'outlined'})));
+      state.sources.forEach((_, index) => tabs.append(kit.button(tr('Sample ', '樣本 ') + (index + 1), tr('Sample ', '樣本 ') + (index + 1), () => { state.active = index; render(); }, {variant: index === state.active ? 'primary' : 'outlined', icon: 'file'})));
       tabs.append(kit.button('Add sample', '加入樣本', () => { if (state.sources.length < 8) { state.sources.push('{}'); state.active = state.sources.length - 1; render(); } }, {disabled: state.sources.length >= 8}));
       if (state.sources.length > 1) tabs.append(kit.button('Drop sample', '移走樣本', () => { state.sources.splice(state.active, 1); state.active = Math.max(0, state.active - 1); render(); schedule(); }));
       left.append(tabs);

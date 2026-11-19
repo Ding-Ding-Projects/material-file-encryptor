@@ -1,6 +1,6 @@
 import {openContextMenu} from '../../../shared/surface/overlay.js';
 import {text} from '../../../shared/surface/registry.js';
-import {icon} from '../../icons.js';
+import {icon, withIcon} from '../../icons.js';
 import {SHELL_COPY} from './copy.js';
 import {driveLetterLabel, sessionTabState} from './workspace-chrome.js';
 
@@ -56,6 +56,7 @@ export function mountDriveList({doc = document, translate, getLanguage, hooks}) 
   const chooseStorage = node('md-outlined-button', {id: 'unlock-choose-storage', type: 'button'});
   const chooseLabel = node('span', {text: t('Choose storage folder…')});
   chooseStorage.append(chooseLabel);
+  withIcon(chooseStorage, 'folder');
   const missingNote = node('span', {class: 'unlock-missing-note', text: t('or use New to make a drive.')});
   missing.append(chooseStorage, missingNote);
   card.querySelector('.unlock-head')?.after(missing);
@@ -111,8 +112,8 @@ export function mountDriveList({doc = document, translate, getLanguage, hooks}) 
     if (!session) { details.append(node('p', {class: 'muted', text: t('Select a drive to see its details.')})); return; }
     const letter = driveLetterLabel(session.driveLetter);
     details.append(node('p', {class: 'inspector-name', text: [letter, session.driveName].filter(Boolean).join(' ')}), node('p', {class: 'muted', text: stateLabel(session)}));
-    if (hooks.openAppearance) { const change = node('md-outlined-button', {text: t('Icon and banner…'), class: 'drive-appearance-button'}); change.addEventListener('click', () => hooks.openAppearance(session.sessionId)); details.append(change); }
-    if (hooks.openStorage) { const open = node('md-outlined-button', {text: t('Open encrypted storage folder'), class: 'drive-appearance-button'}); open.addEventListener('click', () => hooks.openStorage(session.sessionId)); details.append(open); }
+    if (hooks.openAppearance) { const change = node('md-outlined-button', {text: t('Icon and banner…'), class: 'drive-appearance-button'}); withIcon(change, 'image'); change.addEventListener('click', () => hooks.openAppearance(session.sessionId)); details.append(change); }
+    if (hooks.openStorage) { const open = node('md-outlined-button', {text: t('Open encrypted storage folder'), class: 'drive-appearance-button'}); withIcon(open, 'folder'); open.addEventListener('click', () => hooks.openStorage(session.sessionId)); details.append(open); }
     const list = node('dl', {class: 'drive-list-facts'});
     const fact = (label, value) => { if (!value) return; list.append(node('dt', {text: t(label)}), node('dd', {text: value, title: value})); };
     fact('Encrypted storage', state?.storageDir || '');

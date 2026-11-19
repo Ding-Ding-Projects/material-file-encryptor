@@ -1,3 +1,4 @@
+import {withLabelIcon} from '../../icons.js';
 import {SERVER_PRACTICE} from '../../../shared/local-ux/server-preparation-practice.js';
 import { control } from '../../../shared/surface/controls.js';
 import {surfaceRegistry} from '../../../shared/surface/registry.js';
@@ -24,7 +25,7 @@ export function mountServerPreparation(host,services={}){
   const module=mountControlGuidance(target,{descriptor:{...row,practice:SERVER_PRACTICE[key],id:`server-preparation:${key}:${context}`,labelYue:t(row.label),sourceId:'docs/features/server-manager/preparation.md',concept:key,help:helpBase+'#'+key,steps:[row.purpose,row.validation]},t,run,validate:()=>{if(!available()||target.isConnected===false||target.disabled)throw Error(t('This action is no longer available.'));},registerHelp:services.registerHelp,registerCommands:services.registerCommands,openHelp:services.openGuidanceHelp,getDetails:()=>context?{provenance:context}:{} });mounted.push(()=>module.destroy());
  }
  function action(parent,label,key,operation,{disabled=false,reason='',context=''}={}){
-  const button=node('md-outlined-button',label);button.type='button';button.disabled=disabled||typeof services.request!=='function';button.setAttribute('aria-label',t(label));if(reason)button.title=t(reason);parent.append(button);const generation=epoch;let flight=null;
+  const button=withLabelIcon(node('md-outlined-button',label),label);button.type='button';button.disabled=disabled||typeof services.request!=='function';button.setAttribute('aria-label',t(label));if(reason)button.title=t(reason);parent.append(button);const generation=epoch;let flight=null;
   const click=()=>{if(!available()||generation!==epoch||button.disabled||flight)return;flight=Promise.resolve().then(operation);flight.catch(()=>{if(available()){message=t('The preparation action was not completed. Review source, capacity or recovery state before retrying.');render();}});flight.finally(()=>{flight=null;}).catch(()=>{});};button.addEventListener('click',click);mounted.push(()=>button.removeEventListener('click',click));
   guidance(button,key,async()=>{if(flight)throw Error(t('This action is no longer available.'));button.click();if(!flight||await flight!==true)throw Error(t('This action is no longer available.'));},context);return button;
  }

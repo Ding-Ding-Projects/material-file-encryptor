@@ -14,6 +14,17 @@
 
 ![Unlocked drive with a file selected: details pane with its encrypted part, versions and automatic backup state, and one-line Availability labels](docs/images/captures/leftovers-6b35600d/workspace-file-selected-light-en-1440.png)
 
+## Material 3 redesign
+
+The app now follows the Material 3 redesign. These captures come from the built app at commit 73010eb4; the other captures in this README still show the earlier version 2 look until they are retaken.
+
+| | |
+|---|---|
+| ![Home in the Material 3 redesign, dark theme: navigation drawer with a New drive button, drives, needs attention, status and quick start with icons](docs/images/captures/md3-redesign-73010eb4/home-dark-en.png) | ![Home in the Material 3 redesign, light theme](docs/images/captures/md3-redesign-73010eb4/home-light-en.png) |
+| ![Docker Hub backup built for many drives: filter chips with counts, search with regex, sort and a dense drive row](docs/images/captures/md3-redesign-73010eb4/docker-hub-backup-dark-en.png) | ![Docker Hub backup row menu with an icon on every action and groups](docs/images/captures/md3-redesign-73010eb4/backup-row-menu-dark-en.png) |
+| ![Settings with an icon per category, the selected category in a filled pill and a rounded search field](docs/images/captures/md3-redesign-73010eb4/settings-dark-en.png) | |
+
+
 The current build: source `6b35600d` for the workspace, the Docker Hub backup page, new Docker Hub drives and Settings > Updates, and source `b6949943` for the rest. More captures, with a receipt for each, are in [Current captures](#current-captures); earlier captures are in the [screenshot archive](docs/screenshots-archive.md).
 
 **Ordinary installed 1.823.1 verification:** Version 1.823.1 is verified in the ordinary user installation from release source `14d6e07636a1f1d62e6dd345273a0c6866664562`. All 910 payload files matched; four opened-file handles resolved to ordinary installation paths. Independent queries through the existing Explorer desktop confirmed the installation folder and Desktop/Start menu shortcut targets. The installer operation returned 0. Its original continuous observer failed, so operation exit and recorded-process absence were recovered separately and remain separate verdicts. The detailed original receipts remain preserved privately. The installed English/light initial setup screen and five native window icon handles were observed with an isolated verification profile. Both ordinary-shell shortcut icon images were separately inspected and show the green folder-lock mark with the shortcut arrow; this is extracted shell-icon evidence, not a rendered Explorer/taskbar/tray screenshot. The runtime observer failed its Python-wrapper identity handshake; separate recovery found every recorded identity absent and the hidden desktop unavailable, while replacement processes were left untouched. Console observation covers only the capture interval, not startup history. Rendered taskbar/tray icons, full workflows and a disposable fresh-machine installation remain unverified. Independent recovery is now recorded separately. Canonical capture promotion remains pending because release source 14d6e07636a1f1d62e6dd345273a0c6866664562 differs from verifier checkout edf13cba77968c81a3c7eca392fdc1f740126868. The genuine capture remains private and unpromoted; no tool-context image is presented as ordinary-installed proof.
