@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Home</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+@keyframes rise{from{transform:translateY(14px);opacity:0}to{transform:none;opacity:1}}
+@keyframes shimmer{from{background-position:-300px 0}to{background-position:300px 0}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+[data-motion=off] *{animation:none!important;transition:none!important}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+button,input{font:inherit;color:inherit}
+</style>
+</helmet>
+<div data-motion="{{motion}}" style="width:1440px;height:960px;display:flex;gap:20px;padding:20px;box-sizing:border-box;font-family:'Roboto Flex',system-ui,sans-serif;font-size:14px;color:{{text}};background:{{bg}};overflow:hidden">
+<nav aria-label="Sections" style="flex:0 0 84px;border-radius:32px;background:{{rail}};display:flex;flex-direction:column;align-items:center;gap:10px;padding:18px 0">
+<div aria-hidden="true" style="width:48px;height:48px;border-radius:16px;background:{{accent}};display:grid;place-items:center;margin-bottom:14px"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="{{onAccent}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg></div>
+<sc-for list="{{nav}}" as="n" hint-placeholder-count="5">
+<a href="#" aria-label="{{n.label}}" style="{{n.style}}"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{n.path}}"></path></svg><span style="font-size:11px;font-weight:600">{{n.short}}</span></a>
+</sc-for>
+</nav>
+<main style="flex:1;display:flex;flex-direction:column;gap:20px;min-width:0">
+<header style="display:flex;align-items:center;gap:16px">
+<div style="flex:1"><p style="margin:0;color:{{muted}};font-size:15px">Good evening</p><h1 style="margin:2px 0 0;font-size:40px;font-weight:800;letter-spacing:-.02em;line-height:1.05">Your encrypted drives</h1></div>
+<label style="display:flex;align-items:center;gap:10px;width:360px;height:52px;border-radius:26px;background:{{surface}};padding:0 18px"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{muted}}" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg><input placeholder="Search all drives" aria-label="Search all drives" style="flex:1;border:0;background:transparent;outline:0;font-size:15px"><span style="font-family:monospace;font-size:12px;padding:3px 8px;border-radius:8px;background:{{surface2}};color:{{muted}}">.*</span></label>
+<button type="button" style="height:52px;padding:0 24px;border-radius:26px;border:0;background:{{accent}};color:{{onAccent}};font-weight:700;font-size:15px">New drive</button>
+</header>
+<div style="flex:1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:20px;min-height:0">
+<sc-for list="{{drives}}" as="d" hint-placeholder-count="3">
+<button type="button" onClick="{{d.pick}}" style="{{d.card}}">
+<span aria-hidden="true" style="{{d.banner}}"></span>
+<span style="position:relative;display:flex;flex-direction:column;gap:10px;height:100%;padding:20px;box-sizing:border-box;text-align:left">
+<span style="display:flex;align-items:center;gap:12px"><span aria-hidden="true" style="{{d.icon}}">{{d.letter}}</span><span style="flex:1"><b style="display:block;font-size:20px;font-weight:750">{{d.name}}</b><span style="font-size:13px;opacity:.85">{{d.where}}</span></span><span style="{{d.pill}}">{{d.state}}</span></span>
+<span style="margin-top:auto;display:flex;gap:18px;font-size:13px;opacity:.9"><span>{{d.size}}</span><span>{{d.files}}</span><span>{{d.backed}}</span></span>
+</span>
+</button>
+</sc-for>
+<section aria-label="Backup now running" style="grid-column:3 / span 2;grid-row:1 / span 2;border-radius:28px;background:{{surface}};padding:24px;display:flex;flex-direction:column;gap:16px;animation:rise 360ms cubic-bezier(.05,.7,.1,1) both">
+<div style="display:flex;align-items:center;gap:10px"><span style="width:10px;height:10px;border-radius:5px;background:{{accent}};animation:pulse 1.6s infinite"></span><h2 style="margin:0;font-size:20px;font-weight:750;flex:1">Backing up Studio</h2><button type="button" style="height:40px;padding:0 16px;border-radius:20px;border:1px solid {{outline}};background:transparent">Cancel</button></div>
+<ol style="margin:0;padding:0;list-style:none;display:flex;gap:8px">
+<sc-for list="{{steps}}" as="s" hint-placeholder-count="4"><li style="{{s.style}}">{{s.label}}</li></sc-for>
+</ol>
+<div><div style="display:flex;align-items:baseline;gap:10px"><b style="font-size:56px;font-weight:850;letter-spacing:-.03em">62%</b><span style="color:{{muted}}">1.7 GB of 2.8 GB</span></div>
+<div aria-hidden="true" style="height:14px;border-radius:7px;background:{{surface2}};overflow:hidden;margin-top:12px"><div style="width:62%;height:100%;border-radius:7px;background:{{accent}};background-image:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);background-size:300px 100%;animation:shimmer 1.4s linear infinite"></div></div></div>
+<dl style="margin:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px">
+<div style="padding:14px;border-radius:18px;background:{{surface2}}"><dt style="font-size:12px;color:{{muted}}">Speed</dt><dd style="margin:4px 0 0;font-size:18px;font-weight:700">48 MB/s</dd></div>
+<div style="padding:14px;border-radius:18px;background:{{surface2}}"><dt style="font-size:12px;color:{{muted}}">Time left</dt><dd style="margin:4px 0 0;font-size:18px;font-weight:700">about 0:24</dd></div>
+<div style="padding:14px;border-radius:18px;background:{{surface2}}"><dt style="font-size:12px;color:{{muted}}">Parts</dt><dd style="margin:4px 0 0;font-size:18px;font-weight:700">22 of 36 · 80 MiB</dd></div>
+</dl>
+<p style="margin:0;color:{{muted}}">Photos 2026 is waiting for Studio to finish.</p>
+</section>
+<section aria-label="Quick actions" style="grid-column:1 / span 2;grid-row:3;border-radius:28px;background:{{surface}};padding:20px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px">
+<sc-for list="{{actions}}" as="a" hint-placeholder-count="4">
+<button type="button" style="border:0;border-radius:20px;background:{{surface2}};display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;padding:14px;text-align:left;min-height:96px"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="{{accent}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="{{a.path}}"></path></svg><b style="font-size:14px">{{a.label}}</b></button>
+</sc-for>
+</section>
+<section aria-label="Recent activity" style="grid-column:3 / span 2;grid-row:3;border-radius:28px;background:{{surface}};padding:20px;display:flex;flex-direction:column;gap:10px;overflow:hidden">
+<h2 style="margin:0;font-size:16px;font-weight:700">Recent</h2>
+<sc-for list="{{recent}}" as="r" hint-placeholder-count="3"><div style="display:flex;gap:12px;align-items:center"><span style="width:8px;height:8px;border-radius:4px;background:{{r.dot}}"></span><span style="flex:1">{{r.text}}</span><span style="color:{{muted}};font-size:13px">{{r.time}}</span></div></sc-for>
+</section>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#7FD9A8","options":["#7FD9A8","#B9C3FF","#FFB59E","#F2C94C"]},"theme":{"editor":"enum","options":["night","day"],"default":"night"},"motion":{"editor":"enum","options":["on","off"],"default":"on"},"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  constructor(p){ super(p); this.state = { picked: 'studio' }; }
+  renderVals() {
+    const day = (this.props.theme ?? 'night') === 'day';
+    const accent = this.props.accent ?? '#7FD9A8';
+    const c = day ? { bg:'#F3F4F8', rail:'#FFFFFF', surface:'#FFFFFF', surface2:'#EEF0F6', text:'#15161C', muted:'#555766', outline:'#C3C5D2' }
+                  : { bg:'#0E0F13', rail:'#17181F', surface:'#17181F', surface2:'#22232C', text:'#ECEDF4', muted:'#A6A8B8', outline:'#3A3C48' };
+    const navDefs = [['Home','Home','M4 11 12 4l8 7M6 10v10h12V10'],['Drives','Drives','M3 6h18v12H3zM3 12h18'],['Backup','Backup','M12 16V4m0 0-4 4m4-4 4 4M5 20h14'],['Shared','Shared','M7 12a3 3 0 1 0 0 .01M17 6a3 3 0 1 0 0 .01M17 18a3 3 0 1 0 0 .01M9.6 10.7l4.8-3.4M9.6 13.3l4.8 3.4'],['Settings','Settings','M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19 12l2-1-2-4-2 1-2-2 1-2-4-2-1 2h-2L8 2 4 4l1 2-2 2-2-1-2 4 2 1v2l-2 1 2 4 2-1 2 2-1 2 4 2 1-2h2l1 2 4-2-1-2 2-2 2 1 2-4-2-1z']];
+    const drivesDef = [
+      { id:'studio', name:'Studio', where:'Q: · unlocked', state:'Backing up', size:'2.8 GB', files:'1 file', backed:'Backed up 19:52', letter:'S', banner:'linear-gradient(120deg,#3B5BA9,#8E5EA8 55%,#D98E5A)', span:'grid-column:1 / span 2;grid-row:1' },
+      { id:'photos', name:'Photos 2026', where:'P: · unlocked', state:'Queued', size:'312 MB', files:'48 files', backed:'Never', letter:'P', banner:'linear-gradient(120deg,#1F6F5C,#7FD9A8)', span:'grid-column:1;grid-row:2' },
+      { id:'work', name:'Work', where:'E: · locked', state:'Locked', size:'—', files:'—', backed:'Backed up yesterday', letter:'W', banner:null, span:'grid-column:2;grid-row:2' }
+    ];
+    return { ...c, accent, onAccent:'#06281A', motion: this.props.motion ?? 'on',
+      nav: navDefs.map(([label, short, path], i) => ({ label, short, path, style:'width:64px;padding:10px 0;border-radius:20px;display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;color:' + (i===0?c.text:c.muted) + ';background:' + (i===0?accent+'33':'transparent') })),
+      drives: drivesDef.map(d => ({ ...d, pick: () => this.setState({ picked: d.id }),
+        card: d.span + ';position:relative;overflow:hidden;border-radius:28px;border:' + (this.state.picked===d.id?'2px solid '+accent:'2px solid transparent') + ';padding:0;cursor:pointer;color:' + (d.banner?'#FFFFFF':c.text) + ';background:' + c.surface + ';animation:rise 320ms cubic-bezier(.05,.7,.1,1) both',
+        banner: 'position:absolute;inset:0;' + (d.banner ? 'background:linear-gradient(0deg,rgba(0,0,0,.55),rgba(0,0,0,.05)),' + d.banner : ''),
+        icon: 'width:52px;height:52px;border-radius:16px;display:grid;place-items:center;font-size:24px;font-weight:800;color:#14205F;background:' + (d.banner ? '#FFFFFF' : c.surface2) + ';' + (d.banner?'':'color:'+c.text),
+        pill: 'padding:6px 12px;border-radius:14px;font-size:12px;font-weight:700;background:' + (d.state==='Backing up'?accent:d.banner?'rgba(255,255,255,.22)':c.surface2) + ';color:' + (d.state==='Backing up'?'#06281A':'inherit') })),
+      steps: ['Check','Pack','Upload','Verify'].map((label,i) => ({ label, style:'flex:1;text-align:center;padding:8px 0;border-radius:14px;font-size:13px;font-weight:700;background:' + (i<2?accent:i===2?accent+'44':c.surface2) + ';color:' + (i<2?'#06281A':c.text) })),
+      actions: [['Unlock a drive','M7 11V8a5 5 0 0 1 9.9-1M5 11h14v10H5z'],['Share a file','M12 16V4m0 0-4 4m4-4 4 4M5 20h14'],['Receive a file','M12 4v12m0 0-4-4m4 4 4-4M5 20h14'],['File hosting','M3 7h18v10H3zM7 11h.01M11 11h6']].map(([label,path]) => ({ label, path })),
+      recent: [{ text:'Studio packed into 36 parts of 80 MiB', time:'19:41', dot:accent },{ text:'Shared Quarterly report.pdf', time:'18:05', dot:'#B9C3FF' },{ text:'Work locked', time:'17:30', dot:c.muted }]
+    };
+  }
+}
+</script>
+</body>
+</html>

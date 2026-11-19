@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Drive workspace</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+@keyframes rise{from{transform:translateY(12px);opacity:0}to{transform:none;opacity:1}}
+@keyframes slide{from{transform:translateX(24px);opacity:0}to{transform:none;opacity:1}}
+[data-motion=off] *{animation:none!important;transition:none!important}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+button,input{font:inherit;color:inherit}
+</style>
+</helmet>
+<div data-motion="{{motion}}" style="width:1440px;height:960px;display:flex;gap:20px;padding:20px;box-sizing:border-box;font-family:'Roboto Flex',system-ui,sans-serif;font-size:14px;color:{{text}};background:{{bg}};overflow:hidden">
+<nav aria-label="Sections" style="flex:0 0 84px;border-radius:32px;background:{{rail}}"></nav>
+<main style="flex:1;display:flex;flex-direction:column;gap:16px;min-width:0">
+<header style="position:relative;height:168px;border-radius:28px;overflow:hidden;flex:none;background:linear-gradient(0deg,rgba(0,0,0,.55),rgba(0,0,0,.05)),linear-gradient(120deg,#3B5BA9,#8E5EA8 55%,#D98E5A);color:#fff;display:flex;align-items:flex-end;gap:16px;padding:22px 24px;box-sizing:border-box;animation:rise 320ms both">
+<span aria-hidden="true" style="width:72px;height:72px;border-radius:20px;background:#fff;color:#14205F;display:grid;place-items:center;font-size:34px;font-weight:850">S</span>
+<div style="flex:1"><h1 style="margin:0;font-size:36px;font-weight:850;letter-spacing:-.02em">Studio</h1><p style="margin:4px 0 0;opacity:.9">Q: · unlocked · 2.8 GB · backed up 19:52 · 80 MiB parts</p></div>
+<button type="button" style="height:48px;padding:0 20px;border-radius:24px;border:0;background:rgba(255,255,255,.2);color:#fff;font-weight:650">Lock</button>
+</header>
+<div role="toolbar" aria-label="File commands" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+<sc-for list="{{commands}}" as="c" hint-placeholder-count="6"><button type="button" style="{{c.style}}">{{c.label}}</button></sc-for>
+<span style="flex:1"></span>
+<label style="display:flex;align-items:center;gap:8px;width:300px;height:44px;border-radius:22px;background:{{surface}};padding:0 16px"><input placeholder="Search this drive" aria-label="Search this drive" style="flex:1;border:0;background:transparent;outline:0"><span style="font-family:monospace;font-size:12px;color:{{muted}}">.*</span></label>
+</div>
+<div style="flex:1;display:flex;gap:16px;min-height:0">
+<section aria-label="Files" style="flex:1;min-width:0;border-radius:28px;background:{{surface}};padding:10px;display:flex;flex-direction:column;gap:4px;overflow:auto">
+<sc-for list="{{files}}" as="f" hint-placeholder-count="6">
+<button type="button" onClick="{{f.pick}}" style="{{f.style}}"><span aria-hidden="true" style="{{f.chip}}">{{f.ext}}</span><span style="flex:1;text-align:left"><b style="display:block;font-weight:650">{{f.name}}</b><span style="font-size:12px;color:{{muted}}">{{f.meta}}</span></span><span style="font-size:13px;color:{{muted}}">{{f.size}}</span></button>
+</sc-for>
+</section>
+<aside aria-label="Details" style="flex:0 0 360px;border-radius:28px;background:{{surface}};padding:22px;display:flex;flex-direction:column;gap:14px;animation:slide 280ms both">
+<h2 style="margin:0;font-size:20px;font-weight:750;overflow-wrap:anywhere">{{selName}}</h2>
+<dl style="margin:0;display:grid;grid-template-columns:auto 1fr;gap:8px 14px;font-size:13px"><dt style="color:{{muted}}">Size</dt><dd style="margin:0">{{selSize}}</dd><dt style="color:{{muted}}">Changed</dt><dd style="margin:0">18 Nov 2026, 19:40</dd><dt style="color:{{muted}}">Versions</dt><dd style="margin:0">4 kept</dd><dt style="color:{{muted}}">Offline</dt><dd style="margin:0">Yes</dd></dl>
+<div style="display:flex;flex-direction:column;gap:8px">
+<button type="button" style="height:48px;border-radius:24px;border:0;background:{{accent}};color:#06281A;font-weight:700">Open</button>
+<button type="button" style="height:48px;border-radius:24px;border:1px solid {{outline}};background:transparent">Share via Docker Hub…</button>
+<button type="button" style="height:48px;border-radius:24px;border:1px solid {{outline}};background:transparent">All versions</button>
+<button type="button" style="height:48px;border-radius:24px;border:1px solid {{outline}};background:transparent">Open encrypted storage folder</button>
+</div>
+</aside>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#7FD9A8","options":["#7FD9A8","#B9C3FF","#FFB59E","#F2C94C"]},"theme":{"editor":"enum","options":["night","day"],"default":"night"},"motion":{"editor":"enum","options":["on","off"],"default":"on"},"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  constructor(p){ super(p); this.state = { picked: 0 }; }
+  renderVals() {
+    const day = (this.props.theme ?? 'night') === 'day', accent = this.props.accent ?? '#7FD9A8';
+    const c = day ? { bg:'#F3F4F8', rail:'#FFFFFF', surface:'#FFFFFF', surface2:'#EEF0F6', text:'#15161C', muted:'#555766', outline:'#C3C5D2' }
+                  : { bg:'#0E0F13', rail:'#17181F', surface:'#17181F', surface2:'#22232C', text:'#ECEDF4', muted:'#A6A8B8', outline:'#3A3C48' };
+    const list = [['Final mix.wav','WAV','2.6 GB','Changed 19:40 · 4 versions'],['Session notes.md','MD','14 KB','Changed 18:02'],['Cover art.png','PNG','8.2 MB','Changed yesterday'],['Stems','DIR','—','12 files'],['Contract.pdf','PDF','420 KB','Changed 12 Nov'],['Mix references','DIR','—','5 files']];
+    const chipColor = { WAV:'#B9C3FF', MD:'#F2C94C', PNG:'#FFB59E', DIR:accent, PDF:'#FF8A80' };
+    const sel = list[this.state.picked];
+    return { ...c, accent, motion: this.props.motion ?? 'on', selName: sel[0], selSize: sel[2],
+      commands: ['Import','New folder','Sync now','Keep offline','Share','More'].map((label,i) => ({ label, style:'height:44px;padding:0 18px;border-radius:22px;border:' + (i===0?'0':'1px solid '+c.outline) + ';background:' + (i===0?accent:'transparent') + ';color:' + (i===0?'#06281A':c.text) + ';font-weight:' + (i===0?700:500) })),
+      files: list.map((f,i) => ({ name:f[0], ext:f[1], size:f[2], meta:f[3], pick: () => this.setState({ picked:i }),
+        style:'display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:18px;border:0;cursor:pointer;background:' + (this.state.picked===i?accent+'2A':'transparent'),
+        chip:'width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-size:11px;font-weight:800;color:#14161C;background:' + chipColor[f[1]] })) };
+  }
+}
+</script>
+</body>
+</html>

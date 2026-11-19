@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Docker Hub backup</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+@keyframes rise{from{transform:translateY(12px);opacity:0}to{transform:none;opacity:1}}
+@keyframes shimmer{from{background-position:-300px 0}to{background-position:300px 0}}
+[data-motion=off] *{animation:none!important;transition:none!important}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+button{font:inherit;color:inherit}
+</style>
+</helmet>
+<div data-motion="{{motion}}" style="width:1440px;height:960px;display:flex;gap:20px;padding:20px;box-sizing:border-box;font-family:'Roboto Flex',system-ui,sans-serif;font-size:14px;color:{{text}};background:{{bg}};overflow:hidden">
+<nav aria-label="Sections" style="flex:0 0 84px;border-radius:32px;background:{{rail}}"></nav>
+<main style="flex:1;display:flex;flex-direction:column;gap:18px;min-width:0">
+<header style="display:flex;align-items:flex-end;gap:16px">
+<div style="flex:1"><h1 style="margin:0;font-size:40px;font-weight:850;letter-spacing:-.02em">Docker Hub backup</h1><p style="margin:6px 0 0;color:{{muted}};font-size:15px">Signed in as studio-owner · repository studio-owner/material-file-encryptor-storage · public, files encrypted</p></div>
+<button type="button" style="height:52px;padding:0 24px;border-radius:26px;border:1px solid {{outline}};background:transparent;font-weight:600">Settings</button>
+<button type="button" style="height:52px;padding:0 24px;border-radius:26px;border:0;background:{{accent}};color:#06281A;font-weight:700">Back up all now</button>
+</header>
+<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px">
+<sc-for list="{{stats}}" as="s" hint-placeholder-count="4"><div style="border-radius:24px;background:{{surface}};padding:18px"><span style="font-size:12px;color:{{muted}}">{{s.label}}</span><b style="display:block;font-size:28px;font-weight:800;margin-top:4px">{{s.value}}</b></div></sc-for>
+</div>
+<div style="flex:1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;min-height:0">
+<sc-for list="{{drives}}" as="d" hint-placeholder-count="3">
+<section aria-label="{{d.name}}" style="border-radius:28px;background:{{surface}};overflow:hidden;display:flex;flex-direction:column;animation:rise 320ms both">
+<div aria-hidden="true" style="{{d.banner}}"></div>
+<div style="padding:20px;display:flex;flex-direction:column;gap:14px;flex:1">
+<div style="display:flex;align-items:center;gap:10px"><b style="font-size:20px;font-weight:750;flex:1">{{d.name}}</b><span style="{{d.pill}}">{{d.state}}</span></div>
+<p style="margin:0;color:{{muted}};line-height:1.5">{{d.detail}}</p>
+<sc-if value="{{d.running}}" hint-placeholder-val="{{ false }}">
+<ol style="margin:0;padding:0;list-style:none;display:flex;gap:6px"><sc-for list="{{d.steps}}" as="s" hint-placeholder-count="4"><li style="{{s.style}}">{{s.label}}</li></sc-for></ol>
+<div aria-hidden="true" style="height:12px;border-radius:6px;background:{{surface2}};overflow:hidden"><div style="width:62%;height:100%;border-radius:6px;background:{{accent}};background-image:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);background-size:300px 100%;animation:shimmer 1.4s linear infinite"></div></div>
+<p style="margin:0;font-weight:600">Uploading · 62% · 22 of 36 parts · 1.7 of 2.8 GB · 48 MB/s · about 0:24 left</p>
+</sc-if>
+<dl style="margin:auto 0 0;display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:13px"><dt style="color:{{muted}}">Last backup</dt><dd style="margin:0">{{d.last}}</dd><dt style="color:{{muted}}">Part size</dt><dd style="margin:0">80 MiB</dd><dt style="color:{{muted}}">Snapshots</dt><dd style="margin:0">{{d.snaps}}</dd></dl>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" onClick="{{d.backup}}" style="height:44px;padding:0 18px;border-radius:22px;border:0;background:{{accent}};color:#06281A;font-weight:700">{{d.action}}</button><button type="button" style="height:44px;padding:0 18px;border-radius:22px;border:1px solid {{outline}};background:transparent">Restore…</button></div>
+</div>
+</section>
+</sc-for>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#7FD9A8","options":["#7FD9A8","#B9C3FF","#FFB59E","#F2C94C"]},"theme":{"editor":"enum","options":["night","day"],"default":"night"},"motion":{"editor":"enum","options":["on","off"],"default":"on"},"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  constructor(p){ super(p); this.state = { started: {} }; }
+  renderVals() {
+    const day = (this.props.theme ?? 'night') === 'day', accent = this.props.accent ?? '#7FD9A8';
+    const c = day ? { bg:'#F3F4F8', rail:'#FFFFFF', surface:'#FFFFFF', surface2:'#EEF0F6', text:'#15161C', muted:'#555766', outline:'#C3C5D2' }
+                  : { bg:'#0E0F13', rail:'#17181F', surface:'#17181F', surface2:'#22232C', text:'#ECEDF4', muted:'#A6A8B8', outline:'#3A3C48' };
+    const defs = [
+      { id:'studio', name:'Studio', state:'Backing up', detail:'Packed into 80 MiB parts first, now uploading.', last:'Today 19:52', snaps:'12', banner:'linear-gradient(120deg,#3B5BA9,#8E5EA8 55%,#D98E5A)', running:true },
+      { id:'photos', name:'Photos 2026', state:'Queued', detail:'Waiting for Studio to finish. 48 files, 312 MB.', last:'Never', snaps:'0', banner:'linear-gradient(120deg,#1F6F5C,#7FD9A8)', running:false },
+      { id:'work', name:'Work', state:'Up to date', detail:'Locked. Backs up again after the next change.', last:'Yesterday 21:10', snaps:'30', banner:null, running:false }
+    ];
+    return { ...c, accent, motion: this.props.motion ?? 'on',
+      stats: [['Drives backed up','2 of 3'],['Stored on Docker Hub','6.1 GB'],['Tags used','212 of 1,000'],['Next check','20:52']].map(([label,value]) => ({ label, value })),
+      drives: defs.map(d => ({ ...d, action: d.running ? 'Cancel' : this.state.started[d.id] ? 'Queued' : 'Back up now', backup: () => this.setState({ started: { ...this.state.started, [d.id]: true } }),
+        banner: 'height:88px;background:' + (d.banner || c.surface2),
+        pill: 'padding:6px 12px;border-radius:14px;font-size:12px;font-weight:700;background:' + (d.running ? accent : d.state==='Queued' ? '#F2C94C' : c.surface2) + ';color:' + (d.running||d.state==='Queued' ? '#14161C' : c.text),
+        steps: ['Check','Pack','Upload','Verify'].map((label,i) => ({ label, style:'flex:1;text-align:center;padding:6px 0;border-radius:12px;font-size:12px;font-weight:700;background:' + (i<2?accent:i===2?accent+'44':c.surface2) + ';color:' + (i<2?'#06281A':c.text) })) })) };
+  }
+}
+</script>
+</body>
+</html>

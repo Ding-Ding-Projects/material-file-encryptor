@@ -1,0 +1,27 @@
+{
+ "v": 3,
+ "createdOnFiles": {"v": 1, "at": "2026-11-18T22:40:00Z"},
+ "title": "Encryptor Modern Redesign",
+ "launch": {"view": "canvas", "page": "desktop"},
+ "pages": [
+  {"id": "desktop", "name": "Desktop app"},
+  {"id": "phone", "name": "Narrow window"}
+ ],
+ "boards": {
+  "Main.dc.html": {"x": 0, "y": 0, "w": 1440, "h": 960, "page": "desktop", "title": "Home: bento overview", "is_interactive": true},
+  "Drive.dc.html": {"x": 1520, "y": 0, "w": 1440, "h": 960, "page": "desktop", "title": "Drive: files workspace", "is_interactive": true},
+  "Backup.dc.html": {"x": 0, "y": 1080, "w": 1440, "h": 960, "page": "desktop", "title": "Docker Hub backup", "is_interactive": true},
+  "Settings.dc.html": {"x": 1520, "y": 1080, "w": 1440, "h": 960, "page": "desktop", "title": "Settings with search", "is_interactive": true},
+  "Phone.dc.html": {"x": 0, "y": 0, "w": 390, "h": 844, "page": "phone", "title": "Home at 390 px", "is_interactive": true}
+ },
+ "order": ["Main.dc.html", "Drive.dc.html", "Backup.dc.html", "Settings.dc.html", "Phone.dc.html"],
+ "notes": {
+  "deskTitle": {"x": 0, "y": -300, "text": "Vault Night: the encryptor, redesigned", "kind": "title1", "maxW": 2960, "page": "desktop"},
+  "noteMain": {"x": -440, "y": 0, "w": 360, "fill": "yellow", "page": "desktop", "text": "Home. A bento grid instead of stacked panels: drive cards carry their own banner and icon, a live backup card shows the current step (packing, uploading) with speed and time left, and quick actions sit one click away. Floating pill rail on the left.\n\nTry: the theme and accent tweaks, pick a drive card.\n\nUnbuilt: all of it."},
+  "noteDrive": {"x": 3040, "y": 0, "w": 360, "fill": "yellow", "page": "desktop", "text": "Drive workspace. A banner header for the drive, a pill command bar that folds into More, roomy file rows with type chips, and a details side sheet with versions and Open encrypted storage folder.\n\nTry: select a file row.\n\nUnbuilt: all of it."},
+  "noteBackup": {"x": -440, "y": 1080, "w": 360, "fill": "yellow", "page": "desktop", "text": "Docker Hub backup. One card per drive: state, last backup, part size (80 MiB) and the queue (Waiting for Studio to finish). The running backup shows packing then uploading with speed and time left.\n\nTry: Back up now on a drive.\n\nUnbuilt: all of it."},
+  "noteSettings": {"x": 3040, "y": 1080, "w": 360, "fill": "yellow", "page": "desktop", "text": "Settings. Search with the regex builder beside it, grouped task cards, and real switches. Every setting stays reachable at 360 px.\n\nTry: type in search, switch Regex.\n\nUnbuilt: all of it."},
+  "notePhone": {"x": 470, "y": 0, "w": 360, "fill": "yellow", "page": "phone", "text": "Home at 390 px. Same content, one column: the rail becomes a bottom bar, drive cards stack, the backup card stays on top.\n\nTry: tap a drive card.\n\nUnbuilt: all of it."}
+ },
+ "designSystems": []
+}

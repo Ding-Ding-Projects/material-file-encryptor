@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Home on a narrow window</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+@keyframes rise{from{transform:translateY(12px);opacity:0}to{transform:none;opacity:1}}
+@keyframes shimmer{from{background-position:-200px 0}to{background-position:200px 0}}
+[data-motion=off] *{animation:none!important;transition:none!important}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+button{font:inherit;color:inherit}
+</style>
+</helmet>
+<div data-motion="{{motion}}" style="width:390px;height:844px;display:flex;flex-direction:column;font-family:'Roboto Flex',system-ui,sans-serif;font-size:14px;color:{{text}};background:{{bg}};overflow:hidden">
+<div style="flex:1;overflow:auto;padding:18px 16px;display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;align-items:center;gap:10px"><h1 style="margin:0;font-size:28px;font-weight:850;flex:1;letter-spacing:-.02em">Drives</h1><button type="button" style="height:44px;padding:0 18px;border-radius:22px;border:0;background:{{accent}};color:#06281A;font-weight:700">New</button></div>
+<section aria-label="Backup now running" style="border-radius:24px;background:{{surface}};padding:16px;display:flex;flex-direction:column;gap:10px;animation:rise 300ms both">
+<div style="display:flex;align-items:baseline;gap:8px"><b style="font-size:16px;flex:1">Backing up Studio</b><b style="font-size:24px">62%</b></div>
+<div aria-hidden="true" style="height:10px;border-radius:5px;background:{{surface2}};overflow:hidden"><div style="width:62%;height:100%;background:{{accent}};background-image:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);background-size:200px 100%;animation:shimmer 1.4s linear infinite"></div></div>
+<span style="color:{{muted}};font-size:13px">22 of 36 parts · 48 MB/s · about 0:24 left</span>
+</section>
+<sc-for list="{{drives}}" as="d" hint-placeholder-count="3">
+<button type="button" onClick="{{d.pick}}" style="{{d.card}}"><span aria-hidden="true" style="{{d.banner}}"></span><span style="position:relative;display:flex;align-items:center;gap:12px;padding:16px;text-align:left"><span aria-hidden="true" style="{{d.icon}}">{{d.letter}}</span><span style="flex:1"><b style="display:block;font-size:17px">{{d.name}}</b><span style="font-size:12px;opacity:.85">{{d.sub}}</span></span></span></button>
+</sc-for>
+</div>
+<nav aria-label="Sections" style="flex:none;height:72px;background:{{rail}};display:flex;justify-content:space-around;align-items:center">
+<sc-for list="{{tabs}}" as="t" hint-placeholder-count="4"><a href="#" style="{{t.style}}">{{t.label}}</a></sc-for>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#7FD9A8","options":["#7FD9A8","#B9C3FF","#FFB59E","#F2C94C"]},"theme":{"editor":"enum","options":["night","day"],"default":"night"},"motion":{"editor":"enum","options":["on","off"],"default":"on"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(p){ super(p); this.state = { picked: 'studio' }; }
+  renderVals() {
+    const day = (this.props.theme ?? 'night') === 'day', accent = this.props.accent ?? '#7FD9A8';
+    const c = day ? { bg:'#F3F4F8', rail:'#FFFFFF', surface:'#FFFFFF', surface2:'#EEF0F6', text:'#15161C', muted:'#555766' }
+                  : { bg:'#0E0F13', rail:'#17181F', surface:'#17181F', surface2:'#22232C', text:'#ECEDF4', muted:'#A6A8B8' };
+    const defs = [['studio','Studio','Q: · backing up','S','linear-gradient(120deg,#3B5BA9,#8E5EA8 55%,#D98E5A)'],['photos','Photos 2026','P: · waiting for Studio','P','linear-gradient(120deg,#1F6F5C,#7FD9A8)'],['work','Work','E: · locked','W',null]];
+    return { ...c, accent, motion: this.props.motion ?? 'on',
+      drives: defs.map(([id,name,sub,letter,banner]) => ({ name, sub, letter, pick: () => this.setState({ picked:id }),
+        card:'position:relative;overflow:hidden;border-radius:24px;padding:0;cursor:pointer;min-height:92px;border:' + (this.state.picked===id?'2px solid '+accent:'2px solid transparent') + ';color:' + (banner?'#fff':c.text) + ';background:' + c.surface,
+        banner:'position:absolute;inset:0;' + (banner ? 'background:linear-gradient(0deg,rgba(0,0,0,.5),rgba(0,0,0,.05)),' + banner : ''),
+        icon:'width:48px;height:48px;border-radius:14px;display:grid;place-items:center;font-size:22px;font-weight:800;color:' + (banner?'#14205F':c.text) + ';background:' + (banner?'#fff':c.surface2) })),
+      tabs: ['Home','Drives','Backup','Settings'].map((label,i) => ({ label, style:'min-width:72px;min-height:48px;display:grid;place-items:center;border-radius:24px;text-decoration:none;font-weight:600;color:' + (i===1?'#06281A':c.muted) + ';background:' + (i===1?accent:'transparent') })) };
+  }
+}
+</script>
+</body>
+</html>
