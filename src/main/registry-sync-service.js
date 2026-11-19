@@ -190,6 +190,43 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
     row.progress = { step: name, phase: counts.phase || name, startedAt: row.operationStartedAt ?? now(), stepStartedAt: now(), unit: 'files',
       completedFiles: 0, totalFiles: null, completedBytes: 0, totalBytes: null, ...counts };
   }
+  /**
+   * Packs the drive's files into parts of its configured size before a snapshot is staged. Writes land as one small
+   * part per write call and packing normally runs later, so without this a backup uploads thousands of tiny layers
+   * (a 2.8 GB file became 5,752 objects instead of about 36 at 80 MiB). Already packed files are skipped, so this is
+   * cheap when there is nothing to do. A host without these requests skips straight to staging.
+   */
+  async function packBeforeSnapshot(id, row, signal) {
+    let diagnostics;
+    try { diagnostics = await abortable(nativeRequest('storageDiagnostics', {}, id), signal); }
+    catch (error) { if (signal.aborted) throw error; return { packed: false }; }
+    const cap = diagnostics?.targetPartSizeBytes;
+    if (!Number.isSafeInteger(cap) || cap <= 0) return { packed: false };
+    step(row, 'packing', { unit: 'bytes', partSizeBytes: cap });
+    let started;
+    try { started = await abortable(nativeRequest('startPacking', { partSizeBytes: cap }, id), signal); }
+    catch (error) { if (signal.aborted) throw error; throw Error('The drive could not pack its parts before the backup.'); }
+    const operationId = started?.operationId;
+    if (typeof operationId !== 'string' || !operationId) return { packed: false };
+    const deadline = now() + 6 * 3600000;
+    try {
+      for (;;) {
+        signal.throwIfAborted();
+        const list = await abortable(nativeRequest('operations', {}, id), signal);
+        const operation = Array.isArray(list) ? list.find(item => item?.operationId === operationId) : null;
+        if (operation) Object.assign(row.progress, { phase: operation.phase === 'publication' ? 'packing-publication' : 'packing',
+          completedBytes: Number(operation.bytesCompleted) || 0, totalBytes: Number(operation.totalBytes) || null,
+          completedFiles: Number(operation.completedFiles) || 0, totalFiles: Number(operation.totalFiles) || null });
+        if (!operation || operation.state === 'completed') return { packed: true, partSizeBytes: cap };
+        if (operation.state === 'failed' || operation.state === 'cancelled') throw Error(operation.error || 'Packing the parts before the backup failed.');
+        if (now() >= deadline) throw Error('Packing the parts before the backup did not finish.');
+        await abortable(sleep(500), signal);
+      }
+    } catch (error) {
+      if (signal.aborted) void nativeRequest('cancelOperation', { operationId }, id).catch(() => {});
+      throw error;
+    }
+  }
   // Native staging reports parts and bytes; a host without that request simply leaves the counts empty.
   async function watchStaging(operation, id, row, purpose = 'admission') {
     let lastKey = '', changedAt = now(), stopped = false;
@@ -412,6 +449,8 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
           row.replayDeferred = native?.locked === true;
         } else row.replayDeferred = false;
         const replayDeferred = row.replayDeferred === true;
+        // Pack first, so the snapshot holds parts of the drive's chosen size rather than one per write.
+        if (!replayDeferred) await packBeforeSnapshot(id, row, signal);
         let lease, plan;
         try {
           try {

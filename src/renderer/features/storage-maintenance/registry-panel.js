@@ -270,8 +270,11 @@ export class RegistryStoragePanel extends SurfaceElement {
   fill(key, values) { return Object.entries(values).reduce((text, [name, value]) => text.replaceAll(`{${name}}`, value), this.t(key)); }
   progressLine(view) {
     const locale = this.locale(), parts = [this.t(`step_${view.step}`) + (view.phase && view.phase !== view.step ? ` (${this.t(`phase_${view.phase}`)})` : '')];
+    if (view.percent !== null && view.percent !== undefined) parts.push(`${view.percent}%`);
     if (view.done !== null && view.unit !== 'commits') parts.push(this.fill(view.total !== null ? `countOf_${view.unit}` : `count_${view.unit}`, { done: formatCount(view.done, locale), total: formatCount(view.total, locale) }));
     if (view.bytesDone) parts.push(this.fill(view.bytesTotal !== null ? 'bytesOf' : 'bytesOnly', { done: formatBytes(view.bytesDone, locale), total: formatBytes(view.bytesTotal, locale) }));
+    if (view.rate) parts.push(this.fill('rate', { rate: formatBytes(Math.round(view.rate), locale) }));
+    if (view.remainingMs !== null && view.remainingMs !== undefined) parts.push(this.fill('remaining', { time: formatDuration(view.remainingMs) }));
     if (view.pendingCommits) parts.push(this.fill('pendingCommits', { n: formatCount(view.pendingCommits, locale) }));
     if (view.elapsedMs !== null) parts.push(this.fill('elapsed', { time: formatDuration(view.elapsedMs) }) + (view.totalElapsedMs !== null && view.totalElapsedMs > view.elapsedMs + 1000 ? `, ${this.fill('totalElapsed', { time: formatDuration(view.totalElapsedMs) })}` : ''));
     return parts.join(' · ');

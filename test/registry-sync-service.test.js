@@ -209,3 +209,39 @@ test('a briefly busy native host is waited for, and a lasting refusal still fail
   await g.service.configure('main', configuration());
   await assert.rejects(g.service.sync('main'), /stayed busy with other work/);
 });
+
+test('a backup packs files into the drive part size before the snapshot is staged', async t => {
+  const calls = [], states = ['running', 'running', 'completed'];
+  const nativeRequest = async (method, params) => {
+    calls.push({ method, params });
+    if (method === 'storageDiagnostics') return { targetPartSizeBytes: 80 * 1024 * 1024, pendingPackingFiles: 1 };
+    if (method === 'startPacking') return { operationId: 'pack-1' };
+    if (method === 'operations') { const state = states.shift() ?? 'completed'; return [{ operationId: 'pack-1', kind: 'packing', phase: 'packing', state, bytesCompleted: state === 'completed' ? 3000 : 1000, totalBytes: 3000, completedFiles: 0, totalFiles: 1 }]; }
+    if (method === 'beginSnapshot') return { leaseId: 'lease', storageDir: 'unused' };
+    return method === 'releaseSnapshot' ? { released: true } : {};
+  };
+  const f = await fixture(t, { nativeRequest, storageFactory: () => ({ list: async () => [] }) });
+  await f.service.configure('main', configuration());
+  await f.service.sync('main').catch(() => {});
+  const names = calls.map(call => call.method);
+  assert.deepEqual(calls.find(call => call.method === 'startPacking').params, { partSizeBytes: 83886080 });
+  assert.ok(names.indexOf('startPacking') < names.lastIndexOf('beginSnapshot'), 'packing finishes before the snapshot lease');
+  assert.ok(names.filter(name => name === 'operations').length >= 3, 'the packing operation was followed to completion');
+});
+
+test('a failed packing operation stops the backup before anything is staged', async t => {
+  const calls = [];
+  const nativeRequest = async method => {
+    calls.push(method);
+    if (method === 'storageDiagnostics') return { targetPartSizeBytes: 80 * 1024 * 1024 };
+    if (method === 'startPacking') return { operationId: 'pack-2' };
+    if (method === 'operations') return [{ operationId: 'pack-2', state: 'failed', error: 'synthetic packing failure' }];
+    if (method === 'beginSnapshot') return { leaseId: 'lease', storageDir: 'unused' };
+    return method === 'releaseSnapshot' ? { released: true } : {};
+  };
+  const f = await fixture(t, { nativeRequest, storageFactory: () => ({ list: async () => [] }) });
+  await f.service.configure('main', configuration());
+  await assert.rejects(f.service.sync('main'));
+  assert.ok(calls.includes('startPacking'));
+  assert.ok(!calls.slice(calls.indexOf('startPacking')).includes('beginSnapshot'), 'no snapshot lease after a failed pack');
+});

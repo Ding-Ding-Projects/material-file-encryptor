@@ -8,8 +8,10 @@ export const TAG_WARNING = 800;
 /** Percent of the running step, from bytes when known, otherwise from counted items. Null when unknown. */
 export function progressPercent(progress) {
   if (!progress) return null;
-  const ratio = Number.isFinite(progress.totalBytes) && progress.totalBytes > 0 ? progress.completedBytes / progress.totalBytes
-    : Number.isFinite(progress.totalFiles) && progress.totalFiles > 0 ? progress.completedFiles / progress.totalFiles : null;
+  // The same blend as the page's bar: files and bytes averaged, so many small objects still move the number.
+  const byBytes = Number.isFinite(progress.totalBytes) && progress.totalBytes > 0 ? progress.completedBytes / progress.totalBytes : null;
+  const byFiles = Number.isFinite(progress.totalFiles) && progress.totalFiles > 0 ? progress.completedFiles / progress.totalFiles : null;
+  const ratio = byBytes !== null && byFiles !== null ? (byBytes + byFiles) / 2 : byBytes ?? byFiles;
   return ratio === null || !Number.isFinite(ratio) ? null : Math.max(0, Math.min(100, Math.round(ratio * 100)));
 }
 
@@ -81,6 +83,10 @@ export function statusBarState(status, sessionId, now = Date.now()) {
   if (!status.settings?.enabled || !drive.enabled || status.noticeRequired) return { key: 'Automatic backup off', tone: 'muted' };
   if (drive.phase === 'backing-up') {
     const percent = progressPercent(drive.progress);
+    const done = drive.progress?.completedFiles, total = drive.progress?.totalFiles;
+    // With file counts the line keeps moving while thousands of small objects are sent and the byte share is still 0%.
+    if (percent !== null && Number.isSafeInteger(done) && Number.isSafeInteger(total) && total > 0)
+      return { key: 'Backing up… {percent}% · {done} of {total} files', percent, done: done.toLocaleString(), total: total.toLocaleString(), tone: 'busy' };
     return percent === null ? { key: 'Backing up…', tone: 'busy' } : { key: 'Backing up… {percent}%', percent, tone: 'busy' };
   }
   if (drive.phase === 'paused') return { key: 'Paused', tone: 'busy' };

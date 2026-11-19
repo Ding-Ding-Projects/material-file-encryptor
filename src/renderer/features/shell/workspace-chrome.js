@@ -514,7 +514,7 @@ export function mountWorkspaceChrome({doc = document, translate, getLanguage, ho
       const ago = !line.ago ? '' : line.ago.key === 'date'
         ? new Date(line.ago.time).toLocaleString(language === 'yue' ? 'zh-HK' : 'en', {month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'})
         : translate(line.ago.key, {language, values: {count: line.ago.count}});
-      return translate(line.key, {language, values: {percent: line.percent, ago}});
+      return translate(line.key, {language, values: {percent: line.percent, done: line.done, total: line.total, ago}});
     };
     const language = getLanguage();
     if (language === 'bilingual') { const en = render('en'), yue = render('yue'); return en === yue ? en : `${en} · ${yue}`; }
