@@ -1,3 +1,4 @@
+import {withIcon} from '../../icons.js';
 import {control, connectSelectSearch, setControlLanguage} from '../../../shared/surface/controls.js';
 import {renderMarkdown} from './markdown.js';
 import { createScopedSearch } from '../../scoped-search.js';
@@ -14,7 +15,7 @@ export function mountChangelog(host, { entries = [], translate = value => value,
   const from = date('From date'), to = date('To date');
   const category = control('select'); category.label = translate('Category'); category.setAttribute('aria-label', translate('Category'));
   for (const value of ['', ...new Set(entries.map(row => row.category).filter(Boolean))]) { const option = control('option'); option.value = value; option.textContent = value || translate('All categories'); category.append(option); }
-  const exportButton = control('button', {type:'button'}); exportButton.type = 'button'; exportButton.textContent = translate('Export filtered changes');
+  const exportButton = withIcon(control('button', {type:'button'}), 'export'); exportButton.type = 'button'; exportButton.textContent = translate('Export filtered changes');
   const stopSelectSearch = connectSelectSearch(category, {language});
   controls.style.cssText='display:flex;flex-wrap:wrap;gap:12px;align-items:center'; content.style.cssText='max-height:60dvh;overflow:auto;overflow-wrap:anywhere';
   controls.append(category, exportButton);

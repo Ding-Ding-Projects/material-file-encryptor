@@ -1,3 +1,4 @@
+import {withIcon, iconForLabel} from '../icons.js';
 import {control} from '../../shared/surface/controls.js';
 
 /**
@@ -21,8 +22,9 @@ export function createKit(root, {getLanguage = () => 'en', subscribeLanguage} = 
     if (text !== undefined) node.textContent = text;
     return node;
   };
-  const button = (en, yue, onClick, {variant = 'outlined', disabled = false, title} = {}) => {
+  const button = (en, yue, onClick, {variant = 'outlined', disabled = false, title, icon} = {}) => {
     const node = el('button', {class: variant === 'primary' ? 'primary' : variant === 'text' ? '' : 'outlined', 'aria-label': tr(en, yue)}, [tr(en, yue)]);
+    withIcon(node, icon || iconForLabel(en));
     if (title) node.title = title;
     node.disabled = disabled;
     node.addEventListener('click', () => { if (!node.disabled) onClick(); });

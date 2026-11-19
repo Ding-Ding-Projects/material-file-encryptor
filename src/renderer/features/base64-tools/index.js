@@ -1,5 +1,6 @@
 // Base64 toolkit view. Text conversion runs in the renderer with the pure codec; files stream in bounded chunks,
 // either through the main process (picked files, written beside the source) or through the renderer (dropped files).
+import {withIcon, iconForLabel} from '../../icons.js';
 import { encodeBytes, decodeToBytes, toHexView, buildDataUri, parseDataUri, createStreamEncoder, createStreamDecoder, Base64Error, MAX_TEXT_BYTES, base64NameFor, originalNameFrom, sniffType } from '../../../shared/toolbox/base64-codec.js';
 import { el, createLabels, saveBlob } from '../toolbox-common.js';
 
@@ -41,7 +42,8 @@ export function mountBase64Tools(root, { api = window.drive, getLanguage = () =>
   const status = el('p', { class: 'toolbox-status', role: 'status' });
   const hex = el('pre', { 'aria-label': '', hidden: true }); labels.attr(hex, 'aria-label', 'Hex view of the bytes', '位元組十六進位檢視');
 
-  const button = (en, yue, onclick, primary = false) => { const b = el('button', { type: 'button', class: `toolbox-button${primary ? ' primary' : ''}`, onclick }); labels.text(b, en, yue); return b; };
+  const BUTTON_ICONS = { Encode: 'lock', Decode: 'lock_open', 'Hex view': 'search', 'Build data: URL': 'link', Paste: 'download', 'Encode a file…': 'upload', 'Decode a file…': 'download' };
+  const button = (en, yue, onclick, primary = false) => { const b = el('button', { type: 'button', class: `toolbox-button${primary ? ' primary' : ''}`, onclick }); labels.text(b, en, yue); withIcon(b, BUTTON_ICONS[en] || iconForLabel(en)); return b; };
   let bytesOfResult = null, undoStack = [], redoStack = [], job = null;
   const setStatus = (en, yue, level = 'info') => { status.textContent = tr(en, yue); status.dataset.level = level; };
   const fail = error => { status.textContent = error instanceof Base64Error && error.offset !== null ? `${tr(error.message, error.message)} (${tr('offset', '位置')} ${error.offset})` : error?.message || String(error); status.dataset.level = 'error'; };

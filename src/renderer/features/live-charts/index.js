@@ -1,5 +1,6 @@
 // Live charts view. Charts show only what the application has actually reported while this window was open:
 // drive used space (sum of file sizes from each state update) and operation progress. Nothing is simulated.
+import {withIcon} from '../../icons.js';
 import { createLiveChart } from '../../../shared/surface/live-chart.js';
 import { formatBytes } from '../../../shared/toolbox/chart-scale.js';
 import { el, createLabels } from '../toolbox-common.js';
@@ -17,7 +18,7 @@ export function mountLiveCharts(root, { getLanguage = () => 'en' } = {}) {
   const progress = createLiveChart(progressHost, { title: { en: 'Operation progress', yue: '操作進度' }, unit: '%', format: v => String(Math.round(v)), getLanguage, staleAfterMs: 120000, copy: { empty: { en: 'No operation has run since this view opened.', yue: '呢個畫面開啟後未有操作執行。' } } });
   const historyTitle = labels.text(el('h3'), 'Transfer history (this session)', '傳輸記錄（今次使用期間）');
   const historyList = el('ol'), historyEmpty = labels.text(el('p', { class: 'toolbox-note' }), 'No operations have finished yet.', '暫時未有已完成嘅操作。');
-  const pause = el('button', { type: 'button', class: 'toolbox-button', 'aria-pressed': 'false' }); labels.text(pause, 'Pause charts', '暫停圖表');
+  const pause = el('button', { type: 'button', class: 'toolbox-button', 'aria-pressed': 'false' }); labels.text(pause, 'Pause charts', '暫停圖表'); withIcon(pause, 'pause');
   let paused = false; pause.addEventListener('click', () => { paused = !paused; pause.setAttribute('aria-pressed', String(paused)); labels.text(pause, paused ? 'Resume charts' : 'Pause charts', paused ? '繼續圖表' : '暫停圖表'); storage.setMode(paused ? 'paused' : 'live'); progress.setMode(paused ? 'paused' : 'live'); });
   view.append(title, note, el('div', { class: 'toolbox-row' }, [pause]), storageHost, progressHost, historyTitle, historyEmpty, historyList);
   root.append(view);

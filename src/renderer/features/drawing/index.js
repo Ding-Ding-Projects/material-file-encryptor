@@ -1,8 +1,10 @@
 // Sketch board view: pen, marker, eraser, shapes, text, undo/redo, PNG and SVG export, optional save into the unlocked drive.
+import {withIcon, iconForLabel} from '../../icons.js';
 import { createHistory, restoreHistory, toSvg, constrainPoint, TOOLS } from '../../../shared/toolbox/drawing-history.js';
 import { el, createLabels, saveBlob } from '../toolbox-common.js';
 
 const WIDTH = 960, HEIGHT = 600, BACKGROUND = '#ffffff', STORE_KEY = 'mfe.toolbox.drawing.v1';
+const TOOL_ICONS = { pen: 'edit', marker: 'edit', eraser: 'close', line: 'minimize', rect: 'maximize', ellipse: 'circle', arrow: 'next', text: 'text' };
 const TOOL_LABELS = { pen: ['Pen', '畫筆', 'P'], marker: ['Marker', '螢光筆', 'M'], eraser: ['Eraser', '擦膠', 'E'], line: ['Line', '直線', 'L'], rect: ['Rectangle', '長方形', 'R'], ellipse: ['Ellipse', '橢圓', 'O'], arrow: ['Arrow', '箭咀', 'A'], text: ['Text', '文字', 'T'] };
 
 export function paintShapes(ctx, shapes, scale = 1, background = BACKGROUND) {
@@ -39,7 +41,7 @@ export function mountDrawing(root, { api = window.drive, getLanguage = () => 'en
   for (const name of TOOLS) {
     const [en, yue, key] = TOOL_LABELS[name];
     const b = el('button', { type: 'button', class: 'toolbox-button', role: 'radio', 'aria-checked': String(name === tool), title: `${en} (${key})` });
-    labels.text(b, en, yue); b.addEventListener('click', () => selectTool(name)); toolButtons.set(name, b); toolbar.append(b);
+    labels.text(b, en, yue); withIcon(b, TOOL_ICONS[name]); b.addEventListener('click', () => selectTool(name)); toolButtons.set(name, b); toolbar.append(b);
   }
   function selectTool(name) { tool = name; for (const [n, b] of toolButtons) b.setAttribute('aria-checked', String(n === name)); textInput.hidden = name !== 'text'; }
   const color = el('input', { type: 'color', value: '#1a1a1a', 'aria-label': '' }); labels.attr(color, 'aria-label', 'Colour', '顏色');
@@ -79,7 +81,7 @@ export function mountDrawing(root, { api = window.drive, getLanguage = () => 'en
     const match = Object.entries(TOOL_LABELS).find(([, v]) => v[2].toLowerCase() === key); if (match) { event.preventDefault(); selectTool(match[0]); }
   });
 
-  const button = (en, yue, onclick, primary = false) => { const b = el('button', { type: 'button', class: `toolbox-button${primary ? ' primary' : ''}`, onclick }); labels.text(b, en, yue); return b; };
+  const button = (en, yue, onclick, primary = false) => { const b = el('button', { type: 'button', class: `toolbox-button${primary ? ' primary' : ''}`, onclick }); labels.text(b, en, yue); withIcon(b, iconForLabel(en)); return b; };
   const undoNow = () => { if (history.undo()) { persist(); redraw(); } }, redoNow = () => { if (history.redo()) { persist(); redraw(); } };
   const undo = button('Undo', '還原', undoNow), redo = button('Redo', '重做', redoNow);
   const clear = button('Clear…', '清除…', async () => {

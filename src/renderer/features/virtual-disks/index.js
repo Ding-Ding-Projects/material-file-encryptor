@@ -93,7 +93,7 @@ export function mountVirtualDisks(root, {request, confirmDestructive, getLanguag
       table.append(header);
       for (const disk of rows) {
         const tableRow = plain('tr');
-        const select = kit.button(disk.path || tr('(unknown)', '（未知）'), disk.path || '', () => { state.file = disk.path; state.info = null; state.resize.size = ''; render(); void inspect(); }, {variant: 'text'});
+        const select = kit.button(disk.path || tr('(unknown)', '（未知）'), disk.path || '', () => { state.file = disk.path; state.info = null; state.resize.size = ''; render(); void inspect(); }, {variant: 'text', icon: 'drive'});
         const cell = plain('td'); cell.append(select);
         tableRow.append(cell, plain('td', '', '#' + disk.number), plain('td', '', formatSize(disk.sizeBytes)), plain('td', '', (disk.letters ?? []).join(', ') || '-'), plain('td', '', disk.readOnly ? tr('Read-only', '唯讀') : tr('Read-write', '讀寫')));
         table.append(tableRow);

@@ -1,3 +1,4 @@
+import {withIcon} from '../../icons.js';
 import {fontFamilyKey} from '../../../shared/local-ux/font-family-key.js';
 import {mountFontPicker,fontFaceCSSFamily,validateFontFaceSelection} from './font-picker.js';
 import {sharedBundledFontCatalog} from './bundled-font-loader.js';
@@ -8,7 +9,7 @@ export function fontSelectionFromProperties(catalog,properties={}){
 }
 /** Metadata discovery has no authority to save appearance or install fonts. */
 export function mountAppearanceFontWorkflow(host,{services={},mutate,getCurrent,disabled=()=>false,translate=value=>value}={}){
- const doc=host.ownerDocument,t=translate,section=doc.createElement('section'),status=doc.createElement('p'),progress=doc.createElement('output'),load=doc.createElement('md-text-button'),cancel=doc.createElement('md-text-button');let alive=true,generation=0,requestId=null,picker=null,off=null;
+ const doc=host.ownerDocument,t=translate,section=doc.createElement('section'),status=doc.createElement('p'),progress=doc.createElement('output'),load=withIcon(doc.createElement('md-text-button'),'folder'),cancel=withIcon(doc.createElement('md-text-button'),'cancel');let alive=true,generation=0,requestId=null,picker=null,off=null;
  let bundled=Array.isArray(services.bundledFonts)?services.bundledFonts:[],installed=[];const bundledReady=services.bundledFontBaseURL?sharedBundledFontCatalog({baseURL:services.bundledFontBaseURL,document:doc}):Promise.resolve(null);
  status.setAttribute('role','status');progress.setAttribute('role','status');load.textContent=t('Load installed font metadata');cancel.textContent=t('Cancel font scan');cancel.disabled=true;load.disabled=typeof services.fontMetadata!=='function';
  const boundary=doc.createElement('p');boundary.textContent=t(bundled.length?'Declared bundled fonts are available. Installed fonts require an admitted desktop provider.':'Bundled font assets are unavailable. A family fallback name is not a bundled font inventory.');

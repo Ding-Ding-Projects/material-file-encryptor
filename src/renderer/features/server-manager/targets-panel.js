@@ -1,3 +1,4 @@
+import {withLabelIcon} from '../../icons.js';
 import {control} from '../../../shared/surface/controls.js';
 import {targetsTranslator} from './targets-copy.js';
 
@@ -51,7 +52,7 @@ export function mountServerTargets(host, services = {}) {
     : server.errorCode === 'ended' ? t('Ended on its own') : server.errorCode === 'spawn' ? t('Could not run') : t('See the reason below');
 
   function button(parent, label, onClick, {kind = 'outlined', disabled = false, title = ''} = {}) {
-    const node = control('button', {class: kind === 'primary' ? 'primary' : kind === 'text' ? '' : 'outlined', text: t(label)}, [], doc);
+    const node = withLabelIcon(control('button', {class: kind === 'primary' ? 'primary' : kind === 'text' ? '' : 'outlined', text: t(label)}, [], doc), label);
     node.type = 'button'; node.disabled = disabled; node.setAttribute('aria-label', t(label)); if (title) node.title = t(title);
     node.addEventListener('click', () => { if (node.disabled || !available()) return; void attempt(onClick); });
     parent.append(node); return node;

@@ -1,3 +1,4 @@
+import {withIcon} from '../../icons.js';
 import {SurfaceElement,element,register,localized} from '../../../shared/surface/registry.js';
 import {requestCue} from '../../../shared/surface/action-sounds.js';
 
@@ -21,7 +22,7 @@ export class UpdatesPanel extends SurfaceElement{
   this.heading=element('h2');this.status=element('p',{role:'status','aria-live':'polite','aria-atomic':'true'});this.warning=element('p',{class:'warning'});{const ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg'),path=document.createElementNS(ns,'path');svg.setAttribute('viewBox','0 0 24 24');svg.setAttribute('aria-hidden','true');path.setAttribute('d','M1 21h22L12 2 1 21Zm12-3h-2v-2h2v2Zm0-4h-2v-4h2v4Z');svg.append(path);this.warningText=element('span');this.warning.append(svg,this.warningText);}this.details=element('dl',{class:'details'});this.rows={};
   for(const key of ['version','target','source']){const label=element('dt'),value=element('dd');this.rows[key]={label,value};this.details.append(label,value);}
   this.reason=element('p');this.limit=element('p');this.rollback=element('p');this.progress=element('md-linear-progress',{indeterminate:true});this.progress.hidden=true;
-  this.buttons={};const actions=element('div',{class:'actions'});for(const key of ['check','download','install','later']){const button=element(key==='install'?'md-filled-button':'md-outlined-button',{type:'button'});button.addEventListener('click',()=>{if(button.disabled)return;if(key==='later'){this.deferred=true;this.render();}else void this.act(key);});this.buttons[key]=button;actions.append(button);}
+  this.buttons={};const actions=element('div',{class:'actions'});for(const key of ['check','download','install','later']){const button=withIcon(element(key==='install'?'md-filled-button':'md-outlined-button',{type:'button'}),{check:'refresh',download:'download',install:'update',later:'history'}[key]);button.addEventListener('click',()=>{if(button.disabled)return;if(key==='later'){this.deferred=true;this.render();}else void this.act(key);});this.buttons[key]=button;actions.append(button);}
   this.shadowRoot.append(this.heading,this.status,this.warning,this.details,this.reason,this.limit,this.rollback,this.progress,actions);this.render();
  }
  t(key){const [en,yue]=COPY[key]||[key,key],external=this.translateText(en);return external!==en?external:localized({en,yue},this.language);}

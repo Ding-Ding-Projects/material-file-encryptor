@@ -8,6 +8,7 @@ export const setInfoIconFactory = factory => { infoIconFactory = factory; };
 import { HUB_DRIVE_INFO_ICON_INVENTORY } from '../../../shared/local-ux/info-icon-docker-hub-drive.js';
 import { HUB_DRIVE_COPY } from './copy.js';
 import './picker.js';
+import { withKeyIcon } from '../../icons.js';
 import { runCreateFlow, runOpenFlow, validateNewDrive, validateOpenDrive, suggestedRepository, errorKey, normalizeDriveName, formatBytes, formatTime, fill, CREATE_STEPS, OPEN_STEPS } from './model.js';
 
 const STYLE = `
@@ -149,7 +150,7 @@ export class HubDriveDialog extends SurfaceElement {
     return Math.max(0, order.indexOf(alias[this.stage] ?? this.stage));
   }
   field(id, label, value, onInput, props = {}) { const node = element('input', { id, label, value, ...props }); node.addEventListener('input', () => onInput(node.value)); return element('div', { class: 'with-info' }, [node]); }
-  button(text, onClick, { filled = false, disabled = false } = {}) { const node = element(filled ? 'md-filled-button' : 'md-outlined-button', { text }); node.disabled = disabled; node.addEventListener('click', () => { if (!node.disabled) onClick(); }); return node; }
+  button(text, onClick, { filled = false, disabled = false } = {}) { const node = element(filled ? 'md-filled-button' : 'md-outlined-button', { text }); node.disabled = disabled; withKeyIcon(node, text, key => this.t(key)); node.addEventListener('click', () => { if (!node.disabled) onClick(); }); return node; }
   render() {
     const items = this.steps(), at = this.stageIndex();
     const title = this.t(this.mode === 'open' ? 'openTitle' : 'createTitle');

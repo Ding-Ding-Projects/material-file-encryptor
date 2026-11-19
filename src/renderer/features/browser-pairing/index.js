@@ -1,3 +1,4 @@
+import {withIcon} from '../../icons.js';
 import {control} from '../../../shared/surface/controls.js';
 import {textQrMatrix} from '../access/qr.js';
 
@@ -32,8 +33,8 @@ export function mountBrowserPairing(host,{translate=value=>value,request,now=Dat
   const qr=document.createElement('div');
   display.append(text,qr,remaining);
   const actions=document.createElement('div');actions.className='actions';
-  const show=control('button',{type:'button'});show.textContent=translate('Show pairing code');
-  const hide=control('button',{type:'button'});hide.textContent=translate('Hide pairing code');hide.hidden=true;
+  const show=withIcon(control('button',{type:'button'}),'link');show.textContent=translate('Show pairing code');
+  const hide=withIcon(control('button',{type:'button'}),'close');hide.textContent=translate('Hide pairing code');hide.hidden=true;
   actions.append(show,hide);host.append(title,help,status,display,actions);
   let expires=0,timer=null,generation=0,disposed=false;
   function clearDisplay(){if(timer!==null){stop(timer);timer=null;}expires=0;validSeconds=null;qrCode=null;text.textContent='';text.removeAttribute('aria-label');qr.replaceChildren();remaining.textContent='';display.hidden=true;hide.hidden=true;}

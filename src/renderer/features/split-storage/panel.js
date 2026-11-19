@@ -1,9 +1,11 @@
 import { SurfaceElement, element, localized, register } from '../../../shared/surface/registry.js';
+import { withIcon } from '../../icons.js';
 import { SPLIT_COPY } from './copy.js';
 import { SPLIT_METHODS, PHASES, normalizeSplitStatus, draftFromStatus, sharePercents, copiesWarning, draftProblem, buildConfig, formatBytes, formatTime, jobPercent, newId, fill } from './model.js';
 import { mountSplitInfoIcons } from './info-icons.js';
 
 const POLL_MS = 1500;
+const SPLIT_BUTTON_ICONS = { addFolder: 'folder', addRegistry: 'cloud', addRule: 'add', addMirrorFolder: 'folder', addMirrorRegistry: 'cloud', updateMirrors: 'sync', openMirrorDrive: 'open', retry: 'refresh', preview: 'search', save: 'save', apply: 'check', cancelJob: 'cancel', verify: 'shield', bringBack: 'restore', load: 'refresh' };
 const COLORS = ['var(--md-sys-color-primary,#4b57c9)', 'var(--md-sys-color-tertiary,#8b4a00)', 'var(--md-sys-color-secondary,#00696b)', 'var(--md-sys-color-error,#a23b72)', '#6b7a00', '#7a4fb3'];
 const STYLE = `
 section{display:grid;gap:12px;min-width:0}
@@ -76,7 +78,7 @@ export class SplitStoragePanel extends SurfaceElement {
 
   /** Builds the fixed controls once. Rows for locations and rules are rebuilt when they are added or removed. */
   build() {
-    const button = (key, tag = 'md-outlined-button') => { const node = element(tag, { type: 'button' }); node.addEventListener('click', () => { if (!node.disabled) void this[key](); }); return node; };
+    const button = (key, tag = 'md-outlined-button') => { const node = withIcon(element(tag, { type: 'button' }), SPLIT_BUTTON_ICONS[key] || 'check'); node.addEventListener('click', () => { if (!node.disabled) void this[key](); }); return node; };
     this.locationHeading = element('h3'); this.locationList = element('ul', { class: 'locations' });
     this.addFolderButton = button('addFolder'); this.addRegistryButton = button('addRegistry');
     this.bar = element('div', { class: 'bar', role: 'img' }); this.legend = element('div', { class: 'legend' });
@@ -148,15 +150,15 @@ export class SplitStoragePanel extends SurfaceElement {
     refs.label = element('input', { type: 'text', value: loc.label, maxLength: 80 }); refs.label.addEventListener('input', () => { loc.label = refs.label.value; this.touch(); });
     refs.target = isMain ? null : element('input', { type: 'text', value: loc.kind === 'registry' ? loc.repository : loc.path });
     refs.target?.addEventListener('input', () => { if (loc.kind === 'registry') loc.repository = refs.target.value; else loc.path = refs.target.value; this.touch(); });
-    refs.choose = !isMain && loc.kind === 'folder' ? element('md-outlined-button', { type: 'button' }) : null;
+    refs.choose = !isMain && loc.kind === 'folder' ? withIcon(element('md-outlined-button', { type: 'button' }), 'folder') : null;
     refs.choose?.addEventListener('click', () => void this.chooseFolder(loc));
     refs.weight = mirror ? null : element('input', { type: 'number', min: '1', step: 'any', value: String(loc.weight) }); refs.weight?.addEventListener('input', () => { loc.weight = Number(refs.weight.value); this.touch(); });
     refs.capacity = mirror ? null : element('input', { type: 'number', min: '0', step: 'any', value: String(loc.capacityBytes ? Math.round(loc.capacityBytes / 1073741824 * 100) / 100 : 0) });
     refs.capacity?.addEventListener('input', () => { loc.capacityBytes = Math.round(Number(refs.capacity.value) * 1073741824); this.touch(); });
     refs.enabled = isMain || mirror ? null : element('input', { type: 'checkbox', checked: loc.enabled }); refs.enabled?.addEventListener('change', () => { loc.enabled = refs.enabled.checked === true; this.touch(); });
-    refs.remove = isMain ? null : element('md-text-button', { type: 'button' }); refs.remove?.addEventListener('click', () => this.removeLocation(loc.id));
+    refs.remove = isMain ? null : withIcon(element('md-text-button', { type: 'button' }), 'delete'); refs.remove?.addEventListener('click', () => this.removeLocation(loc.id));
     refs.percent = mirror ? null : element('span', { class: 'pct' }); refs.mirrorState = mirror ? element('p', { class: 'mirror-state', role: 'status' }) : null; refs.sameDisk = mirror ? element('p', { class: 'notice', role: 'note' }) : null;
-    refs.verify = mirror ? element('md-outlined-button', { type: 'button' }) : null; refs.verify?.addEventListener('click', () => void this.verifyMirror(loc.id)); refs.meta = element('p', { class: 'meta' }); refs.errorText = element('p', { class: 'error' });
+    refs.verify = mirror ? withIcon(element('md-outlined-button', { type: 'button' }), 'shield') : null; refs.verify?.addEventListener('click', () => void this.verifyMirror(loc.id)); refs.meta = element('p', { class: 'meta' }); refs.errorText = element('p', { class: 'error' });
     refs.path = isMain ? element('p', { class: 'meta' }) : null;
     const item = element('li', { class: 'loc', 'data-id': loc.id }, [
       element('div', { class: 'head' }, [refs.name, refs.kind, refs.state, refs.removable, ...(refs.percent ? [refs.percent] : [])]),
@@ -168,7 +170,7 @@ export class SplitStoragePanel extends SurfaceElement {
   ruleRow(rule, index) {
     const match = element('input', { type: 'text', value: rule.match }); match.addEventListener('input', () => { rule.match = match.value; this.touch(); });
     const where = element('select', {}); where.addEventListener('change', () => { rule.location = where.value; this.touch(); });
-    const up = element('md-text-button', { type: 'button' }), down = element('md-text-button', { type: 'button' }), remove = element('md-text-button', { type: 'button' });
+    const up = withIcon(element('md-text-button', { type: 'button' }), 'arrow_up'), down = withIcon(element('md-text-button', { type: 'button' }), 'arrow_down'), remove = withIcon(element('md-text-button', { type: 'button' }), 'delete');
     up.addEventListener('click', () => this.moveRule(index, -1)); down.addEventListener('click', () => this.moveRule(index, 1)); remove.addEventListener('click', () => this.removeRule(index));
     const item = element('li', { class: 'rule' }, [match, where, element('div', { class: 'actions' }, [up, down, remove])]);
     this.ruleRows.push({ match, where, up, down, remove, rule });
