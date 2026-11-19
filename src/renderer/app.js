@@ -369,7 +369,7 @@ function mountState() {
 }
 function renderAvailability() {
  renderVaultSessions();
- featureMounts.get('storage')?.setVaultState?.(state);featureMounts.get('split-storage')?.setVaultState?.(state);
+ featureMounts.get('storage')?.setVaultState?.(state);featureMounts.get('split-storage')?.setVaultState?.(state);if(typeof refreshDriveAppearances==='function')void refreshDriveAppearances();
  historySelection?.refresh();
  $('upgrade-vault').hidden = state?.locked !== false || state?.storageFormat !== 1; $('upgrade-vault').disabled=busy;
  const unlocked = state && !state.locked, mounted = unlocked && state.mounted;
@@ -609,6 +609,31 @@ async function openHubDrive(mode) {
 }
 let shareView = null;
 /** The share dialog is loaded the first time it is needed: share the selected file, receive one, or list shares. */
+// Each drive's icon and banner as small data: URLs, refreshed when the drive set changes or an image is chosen.
+let driveAppearances = {}, appearanceVersion = 0, appearanceSessions = '';
+async function refreshDriveAppearances(force = false) {
+ if (!api?.driveAppearanceList) return;
+ const key = JSON.stringify((state?.sessions || []).map(session => [session.sessionId, session.locked]));
+ if (!force && key === appearanceSessions) return;
+ appearanceSessions = key;
+ try { driveAppearances = await api.driveAppearanceList() || {}; appearanceVersion++; foundation?.updateChrome?.(); driveList?.update(state); } catch { /* images are optional */ }
+}
+let appearanceView = null;
+async function openDriveAppearance(sessionId = state?.sessionId) {
+ if (!api?.driveAppearanceChoose || !sessionId) return;
+ if (!appearanceView) {
+  const module = await import('./features/drive-appearance/index.js');
+  appearanceView = module.mountDriveAppearanceDialog(document.body, { api, translate: t, language: preferences.language, onChanged: () => void refreshDriveAppearances(true) });
+  workspaceDisposers.push(subscribeLanguage(() => appearanceView?.setLanguage(preferences.language)), () => { appearanceView?.destroy(); appearanceView = null; });
+ }
+ const session = (state?.sessions || []).find(item => item.sessionId === sessionId);
+ appearanceView.open({ sessionId, name: session?.driveName || state?.driveName || '', images: driveAppearances[sessionId] || {} });
+}
+async function openStorageFolder(sessionId = state?.sessionId) {
+ if (!api?.openStorageFolder || !sessionId) return;
+ try { await api.openStorageFolder(sessionId); } catch (error) { showError(error); }
+}
+window.addEventListener('mfe:open-drive-appearance', event => void openDriveAppearance(event.detail?.sessionId));
 let hostingView = null;
 async function openFileHosting(mode = 'manage', detail = {}) {
  if (!api?.hostingInstances) { showError(t('File hosting needs the Windows desktop app.'),true); return; }
@@ -1059,7 +1084,7 @@ async function backUpAllFromCommand(){openBackupPage();for(let tries=0;tries<50&
 function backupCommands(){const available=Boolean(api?.autoBackupStatus);return[{id:'storage:backup-all',kind:'tool',label:{en:'Back up all now',yue:'立即全部備份'},description:{en:'Back up every drive automatic backup covers',yue:'即刻備份所有自動備份涵蓋嘅磁碟'},disabled:!available||!api?.autoBackupNow,run:()=>backUpAllFromCommand().catch(showError)},{id:'storage:docker-hub-backup',kind:'tool',label:{en:'Docker Hub backup',yue:'Docker Hub 備份'},description:{en:'Every drive, its last backup and its repository',yue:'所有磁碟、上次備份同 repository'},run:openBackupPage},{id:'settings:backup',kind:'setting',label:{en:'Backup settings',yue:'備份設定'},description:{en:'Automatic backup, schedule, retention and repositories',yue:'自動備份、時間表、保留同 repository'},run:openBackupSettings}];}
 function workspaceCommands() {
  const command=(id,label,run)=>({id,label:{en:label,yue:cantonese[label]||enhancedLabels[label]||label},run});
- const commands=[command('vault:create','Create a drive',()=>openVaultDialog('create')),command('vault:unlock','Unlock existing drive',()=>openVaultDialog('unlock')),command('vault:hub-create','New Docker Hub drive',()=>void openHubDrive('create')),command('vault:hub-open','Open a drive from Docker Hub',()=>void openHubDrive('open')),{id:'file:share',label:{en:'Share via Docker Hub…',yue:SHARE_UI_COPY['Share via Docker Hub…']},disabled:!api?.shareCreate,run:()=>void openShare('share')},{id:'share:receive',label:{en:'Receive a shared file…',yue:SHARE_UI_COPY['Receive a shared file…']},disabled:!api?.shareReceive,run:()=>void openShare('receive')},{id:'share:list',label:{en:'Shared files',yue:SHARE_UI_COPY['Shared files']},disabled:!api?.shareList,run:()=>void openShare('list')},{id:'hosting:manage',label:{en:'File hosting',yue:'檔案寄存'},disabled:!api?.hostingInstances,run:()=>void openFileHosting('manage')},{id:'hosting:setup',label:{en:'Set up file hosting…',yue:'設定檔案寄存…'},disabled:!api?.hostingDeploy,run:()=>void openFileHosting('setup')},{id:'hosting:link',label:{en:'Create a download link…',yue:'建立下載連結…'},disabled:!api?.hostingCreateLink,run:()=>void openFileHosting('link')},...backupCommands(),command('vault:lock','Lock drive',()=>$('lock-button').click()),command('vault:import','Import files',importFiles),command('vault:sync','Sync now',()=>$('sync-button').click()),command('file:open','Open',openSelected),command('file:export','Export copy',()=>$('export-button').click()),command('file:offline','Keep offline',()=>$('offline-button').click()),command('file:release','Remove offline copy',()=>$('release-button').click()),command('history:save','Save version now',()=>$('save-version').click()),command('settings:vocabulary','Your vocabulary',()=>{foundation.shell.activate('settings');$('vocabulary-label').focus();})];
+ const commands=[command('vault:create','Create a drive',()=>openVaultDialog('create')),command('vault:unlock','Unlock existing drive',()=>openVaultDialog('unlock')),command('vault:hub-create','New Docker Hub drive',()=>void openHubDrive('create')),command('vault:hub-open','Open a drive from Docker Hub',()=>void openHubDrive('open')),{id:'file:share',label:{en:'Share via Docker Hub…',yue:SHARE_UI_COPY['Share via Docker Hub…']},disabled:!api?.shareCreate,run:()=>void openShare('share')},{id:'share:receive',label:{en:'Receive a shared file…',yue:SHARE_UI_COPY['Receive a shared file…']},disabled:!api?.shareReceive,run:()=>void openShare('receive')},{id:'share:list',label:{en:'Shared files',yue:SHARE_UI_COPY['Shared files']},disabled:!api?.shareList,run:()=>void openShare('list')},{id:'drive:open-storage',label:{en:'Open encrypted storage folder',yue:'打開加密儲存資料夾'},disabled:!api?.openStorageFolder,run:()=>void openStorageFolder()},{id:'drive:appearance',label:{en:'Drive icon and banner…',yue:'磁碟圖示同橫額…'},disabled:!api?.driveAppearanceChoose,run:()=>void openDriveAppearance()},{id:'hosting:manage',label:{en:'File hosting',yue:'檔案寄存'},disabled:!api?.hostingInstances,run:()=>void openFileHosting('manage')},{id:'hosting:setup',label:{en:'Set up file hosting…',yue:'設定檔案寄存…'},disabled:!api?.hostingDeploy,run:()=>void openFileHosting('setup')},{id:'hosting:link',label:{en:'Create a download link…',yue:'建立下載連結…'},disabled:!api?.hostingCreateLink,run:()=>void openFileHosting('link')},...backupCommands(),command('vault:lock','Lock drive',()=>$('lock-button').click()),command('vault:import','Import files',importFiles),command('vault:sync','Sync now',()=>$('sync-button').click()),command('file:open','Open',openSelected),command('file:export','Export copy',()=>$('export-button').click()),command('file:offline','Keep offline',()=>$('offline-button').click()),command('file:release','Remove offline copy',()=>$('release-button').click()),command('history:save','Save version now',()=>$('save-version').click()),command('settings:vocabulary','Your vocabulary',()=>{foundation.shell.activate('settings');$('vocabulary-label').focus();})];
  for(const key of ['theme','language','emoji','funnyEnglish','funnyCantonese']){const field=$(`${key}-setting`);const label=field.getAttribute('aria-label')||key;commands.push({id:`settings:${key}`,label:{en:label,yue:cantonese[label]||label},description:{en:'Application preferences',yue:'程式偏好設定'},group:{en:'Settings',yue:'設定'},control:{type:controlKind(field)==='select'?'select':['switch','checkbox'].includes(controlKind(field))?'switch':'range',min:Number(field.min)||0,max:Number(field.max)||100,options:controlKind(field)==='select'?[...field.options].map(option=>({value:option.value,label:{en:option.textContent,yue:cantonese[option.textContent]||option.textContent}})):undefined,get:()=>preferences[key],set:value=>{preferences[key]=value;savePreferences();applyPreferences();}},reveal:()=>{foundation.shell.activate('settings');field.scrollIntoView({block:'center'});field.focus();}});}
  // Every personalization setting is reachable from the palette, whichever Personalization tab is showing.
  commands.push(...personalizationSettingCommands({translate:text=>translateWorkspace(text,{language:'yue'}),open:(tab,label)=>{foundation.model.openTab({id:'personalization',label:canonicalViewLabels.personalization});foundation.shell.activate('personalization');const mounted=featureMounts.get('personalization');mounted?.open?.(tab);queueMicrotask(()=>{const root=document.getElementById('view-personalization');const wanted=t(label);const target=[...root?.querySelectorAll(CONTROL_SELECTOR+',input,select')||[]].find(node=>[node.getAttribute('aria-label'),node.label].includes(wanted)||[node.getAttribute('aria-label'),node.label].includes(label));target?.scrollIntoView?.({block:'center'});target?.focus?.();});}}));
@@ -1140,10 +1165,11 @@ function setupEnhancedWorkspace() {
   listVersions:id=>api?.listVersions?api.listVersions(id):Promise.resolve([]),
   backupStatus:()=>api?.registryStorageStatus?api.registryStorageStatus():Promise.resolve(null),
   autoBackupStatus:api?.autoBackupStatus?()=>api.autoBackupStatus():null,
-  formatBytes,backingUp:()=>Date.now()<backupBusyUntil,getTextScale:()=>shellPreferences.textScale/100
+  formatBytes,backingUp:()=>Date.now()<backupBusyUntil,getTextScale:()=>shellPreferences.textScale/100,
+  driveAppearance:id=>driveAppearances[id]||null,appearanceVersion:()=>appearanceVersion
  }});
  unlockCard=mountUnlockCard({doc:document,translate:t,hooks:{isBusy:()=>busy,chooseKeyFile:()=>api.chooseKeyFile(),unlock:unlockInline}});
- driveList=mountDriveList({doc:document,translate:t,getLanguage:()=>preferences.language,hooks:{selectSession:id=>{const picker=$('vault-session');picker.value=id;picker.dispatchEvent(new Event('change'));},newOnThisPc:()=>openVaultDialog('create'),newHubDrive:()=>openHubDrive('create-direct'),openHubDrive:()=>openHubDrive('open'),openSettings:()=>{foundation.model.openTab({id:'settings',label:canonicalViewLabels.settings||'Settings'});foundation.shell.activate('settings');}}});driveList.update(state);
+ driveList=mountDriveList({doc:document,translate:t,getLanguage:()=>preferences.language,hooks:{openStorage:id=>void openStorageFolder(id),appearance:id=>driveAppearances[id]||null,appearanceVersion:()=>appearanceVersion,openAppearance:id=>void openDriveAppearance(id),selectSession:id=>{const picker=$('vault-session');picker.value=id;picker.dispatchEvent(new Event('change'));},newOnThisPc:()=>openVaultDialog('create'),newHubDrive:()=>openHubDrive('create-direct'),openHubDrive:()=>openHubDrive('open'),openSettings:()=>{foundation.model.openTab({id:'settings',label:canonicalViewLabels.settings||'Settings'});foundation.shell.activate('settings');}}});driveList.update(state);
  foundation.chrome=chrome;foundation.updateChrome=updateChrome;foundation.refreshChrome=()=>{unlockCard?.update(state);driveList?.update(state);chrome?.refreshOverflow();};
  workspaceDisposers.push(subscribeLanguage(()=>{updateChrome();syncShellControls();}));
  applyShellPreferences(document.documentElement,shellPreferences);syncShellControls();chrome.refreshViewport();

@@ -1,3 +1,4 @@
+import { publishAppearance } from './drive-appearance/appearance-publish.js';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { constants } from 'node:fs';
@@ -65,7 +66,7 @@ export async function createFile(root, relative, bytes) {
 }
 
 /** Main-process orchestration. No registry endpoint or filesystem path is accepted from a renderer. */
-export function createRegistrySyncService({ root, contexts, nativeRequest, authorize, chooseRestore, backgroundRegistration = async () => {}, storageFactory = createRegistryStorage, testDestination = null, now = Date.now, leaseRetryMs = 15 * 60000, nativeStallMs = 10 * 60000, releaseTimeoutMs = 30000, yieldWaitMs = 30000, resumeDelayMs = 60000, lateLeaseWaitMs = 20000, progressPollMs = 500, onChanged = () => {},
+export function createRegistrySyncService({ root, contexts, nativeRequest, authorize, chooseRestore, backgroundRegistration = async () => {}, storageFactory = createRegistryStorage, testDestination = null, now = Date.now, leaseRetryMs = 15 * 60000, nativeStallMs = 10 * 60000, releaseTimeoutMs = 30000, yieldWaitMs = 30000, resumeDelayMs = 60000, lateLeaseWaitMs = 20000, progressPollMs = 500, onChanged = () => {}, appearance = null,
   // Pruning: a delete-scoped authorization, an optional tag removal fallback, older snapshot dates and the rules.
   authorizeDelete = null, deleteTag = null, tagDates = null, retention = () => DEFAULT_RETENTION, readers = snapshotReaders, timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC' }) {
   let rows = {}, loaded = false, loading = null, configuring = false, ticking = false, saving = Promise.resolve(), active = null;
@@ -191,6 +192,15 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
     row.state = name;
     row.progress = { step: name, phase: counts.phase || name, startedAt: row.operationStartedAt ?? now(), stepStartedAt: now(), unit: 'files',
       completedFiles: 0, totalFiles: null, completedBytes: 0, totalBytes: null, ...counts };
+  }
+  /**
+   * The drive's icon and banner travel as their own small public artifact beside its backups. A failure here never
+   * fails the backup; it is recorded so the page can say the images were not updated.
+   */
+  async function shareAppearance(row, client, vaultId, signal) {
+    if (typeof appearance !== 'function') return;
+    try { const result = await publishAppearance({ storage: client, vaultId, appearance: await appearance(vaultId), signal }); row.appearanceError = null; row.appearancePublished = result.published ? new Date(now()).toISOString() : row.appearancePublished ?? null; }
+    catch (error) { if (signal.aborted) throw error; row.appearanceError = 'The drive icon and banner could not be published. The backup itself finished.'; }
   }
   /**
    * Packs the drive's files into parts of its configured size before a snapshot is staged. Writes land as one small
@@ -478,6 +488,7 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
           if (row.lastResult?.fingerprint === fingerprint && revisions.some(item => item.digest === row.lastResult.digest)) {
             const unchanged = { ...row.lastResult, downloaded, replayDeferred, published: false, verifiedAt: new Date(now()).toISOString() };
             await prune(row, revisions, ownVaultId, unchanged.digest, signal);
+            await shareAppearance(row, client, ownVaultId, signal);
             row.state = 'verified'; return row.lastResult = { ...unchanged, prune: summary(row.lastPrune) };
           }
           step(row, 'uploading', { phase: 'preparing-upload', totalFiles: plan.upload.length, totalBytes: plan.uploadBytes });
@@ -492,6 +503,7 @@ export function createRegistrySyncService({ root, contexts, nativeRequest, autho
           row.lastResult = published; row.snapshotCount++; if (Number.isSafeInteger(row.tagCount)) row.tagCount++;
           if (typeof result?.tag === 'string' && typeof result?.digest === 'string')
             await prune(row, [...revisions, { digest: result.digest, tag: result.tag, snapshot: { vaultId: ownVaultId }, createdAt: Date.parse(result.createdAt ?? '') }], ownVaultId, result.digest, signal);
+          await shareAppearance(row, client, ownVaultId, signal);
           row.state = 'verified'; return row.lastResult = { ...published, prune: summary(row.lastPrune) };
         } finally { if (plan) await plan.dispose(); }
       }, true, 'sync');

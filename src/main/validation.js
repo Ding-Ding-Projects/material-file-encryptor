@@ -6,6 +6,7 @@ import { SPLIT_STORAGE_METHODS, validateSplitStorageRequest } from './split-stor
 import { AUTO_BACKUP_METHODS, validateAutoBackupRequest } from './auto-backup/ipc.js';
 import { SHARE_METHODS, validateShareRequest } from './share/ipc.js';
 import { HOSTING_METHODS, validateHostingRequest } from './file-hosting/ipc.js';
+import { APPEARANCE_METHODS, validateAppearanceRequest } from './drive-appearance/ipc.js';
 
 // Managed-server (flavor, container and SSH target) requests. Only fixed identifiers and bounded plain values are accepted: no
 // path, URL, command, key path or password can be expressed here. File and key choosers run in the main process.
@@ -124,6 +125,7 @@ export function validateRequest(method, value = {}) {
   if (AUTO_BACKUP_METHODS.has(method)) return validateAutoBackupRequest(method, value);
   if (SHARE_METHODS.has(method)) return validateShareRequest(method, value);
   if (HOSTING_METHODS.has(method)) return validateHostingRequest(method, value);
+  if (APPEARANCE_METHODS.has(method)) return validateAppearanceRequest(method, value);
   if (REGISTRY_CONFLICT_METHODS.has(method)) return validateRegistryConflictRequest(method, value);
   if (method === 'configureRegistryStorage') {
     if (!Object.hasOwn(value, 'repository') || !Object.hasOwn(value, 'schedule') || Object.keys(value).some(key => !['repository', 'visibility', 'schedule'].includes(key)) || !['private', 'public'].includes(value.visibility === undefined ? 'public' : value.visibility) || typeof value.repository !== 'string' || !/^[a-z0-9][a-z0-9_-]{1,38}\/[a-z0-9]+(?:(?:[._]|__|-+)[a-z0-9]+)*$/.test(value.repository) || value.repository.length > 220) throw Error('Invalid registry destination.');
