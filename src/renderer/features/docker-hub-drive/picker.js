@@ -1,4 +1,5 @@
 import { SurfaceElement, element, localized, register } from '../../../shared/surface/registry.js';
+import { withIcon } from '../../icons.js';
 import { HUB_DRIVE_COPY } from './copy.js';
 import { CHIPS, chipCounts, searchRows, visibleRepositories, plainMatcher, regexMatcher, suggestedRepository, catalogProblem, catalogBusy, repositoryProblemKey, formatBytes, formatTime, fill } from './model.js';
 
@@ -48,16 +49,16 @@ export class HubRepositoryPicker extends SurfaceElement {
     this.style(STYLE);
     this.help = element('p', { class: 'meta' });
     this.search = element('mfe-search'); this.search.addEventListener('search-change', event => { this.query = event.detail || this.query; void this.applySearch(); });
-    this.refreshButton = element('md-outlined-button'); this.refreshButton.addEventListener('click', () => { void this.load(true); });
+    this.refreshButton = withIcon(element('md-outlined-button'), 'refresh'); this.refreshButton.addEventListener('click', () => { void this.load(true); });
     // The help text is always shown as a caption, so the bare (i) toggle stays hidden.
     this.infoButton = element('button', { type: 'button', class: 'info', id: 'hub-picker-info', text: 'i', hidden: true });
-    this.newButton = element('md-outlined-button', { id: 'hub-new-repository' }); this.newButton.addEventListener('click', () => { this.newOpen = !this.newOpen; this.renderNewRow(); if (this.newOpen) this.newName?.focus?.(); });
+    this.newButton = withIcon(element('md-outlined-button', { id: 'hub-new-repository' }), 'add'); this.newButton.addEventListener('click', () => { this.newOpen = !this.newOpen; this.renderNewRow(); if (this.newOpen) this.newName?.focus?.(); });
     this.newRow = element('div', { class: 'new-repo', hidden: true });
     this.chipsGroup = element('md-chip-set', { class: 'chips', role: 'group' });
     this.status = element('p', { class: 'meta', role: 'status', 'aria-live': 'polite' });
     this.progress = element('md-linear-progress', { indeterminate: true });
     this.problem = element('div', { class: 'problem', role: 'alert' });
-    this.signInButton = element('md-filled-button'); this.signInButton.addEventListener('click', () => this.emit('hub-sign-in-needed', {}));
+    this.signInButton = withIcon(element('md-filled-button'), 'key'); this.signInButton.addEventListener('click', () => this.emit('hub-sign-in-needed', {}));
     this.problemText = element('span', { class: 'grow' }); this.problem.append(this.problemText, this.signInButton);
     this.notes = element('div', { class: 'stack' });
     this.list = element('ul', { class: 'list', role: 'listbox' });
@@ -147,7 +148,7 @@ export class HubRepositoryPicker extends SurfaceElement {
     if (this.newRow.hidden) return;
     const name = this.newName ||= element('input', { id: 'hub-new-repository-name', maxLength: 255, autocomplete: 'off', spellcheck: false });
     name.label = this.t('newRepositoryName'); name.setAttribute?.('aria-label', this.t('newRepositoryName'));
-    const use = element('md-filled-button', { id: 'hub-new-repository-use', text: this.t('newRepositoryUse') });
+    const use = withIcon(element('md-filled-button', { id: 'hub-new-repository-use', text: this.t('newRepositoryUse') }), 'check');
     const error = element('p', { class: 'meta error', role: 'alert', hidden: true });
     use.addEventListener('click', () => {
       const value = String(name.value ?? '').trim();

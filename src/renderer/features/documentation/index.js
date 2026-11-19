@@ -1,3 +1,4 @@
+import {withIcon} from '../../icons.js';
 import {control} from '../../../shared/surface/controls.js';
 import { createScopedSearch } from '../../scoped-search.js';
 import { renderMarkdown } from './markdown.js';
@@ -8,7 +9,7 @@ export function mountDocumentation(host, { catalog, translate = value => value, 
   if (!catalog || !Array.isArray(catalog.documents)) throw new TypeError('A bundled documentation catalog is required.');
   host.replaceChildren();
   const searchHost = element('div'), navigation = element('nav'), article = element('article'), message = element('p');
-  const actions = element('div'), exportButton = element('button', translate('Export article'));
+  const actions = element('div'), exportButton = withIcon(element('button', translate('Export article')), 'export');
   exportButton.type = 'button'; actions.append(exportButton);
   navigation.setAttribute('aria-label', translate('Documentation articles')); navigation.className = 'docs-nav'; article.tabIndex = -1;
   const workspace = element('div'); workspace.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:16px;min-height:0;max-height:65dvh;overflow:auto';
@@ -30,7 +31,7 @@ export function mountDocumentation(host, { catalog, translate = value => value, 
     renderStatistics(document, statsSection.body, [[translate('Entries'), catalog.documents.length], [translate('Shown'), rows.length], [translate('Categories'), new Set(catalog.documents.map(row => row.category).filter(Boolean)).size]]);
     filterSection.setActive(activeFilterText(translate('Filter active'), rows.length, catalog.documents.length));
     navigation.replaceChildren();
-    for (const row of rows) { const button = element('button', row.title); button.type = 'button'; button.setAttribute('aria-current', String(active?.id === row.id)); button.toggleAttribute('data-current', active?.id === row.id); button.addEventListener('click', () => open(row.id)); navigation.append(button); }
+    for (const row of rows) { const button = withIcon(element('button', row.title), 'book'); button.type = 'button'; button.setAttribute('aria-current', String(active?.id === row.id)); button.toggleAttribute('data-current', active?.id === row.id); button.addEventListener('click', () => open(row.id)); navigation.append(button); }
     message.textContent = rows.length ? '' : translate('No matching articles.');finishReady(result.outcome);
     }catch(error){if(!disposed&&request===generation)finishReady('failed');throw error;}
   }

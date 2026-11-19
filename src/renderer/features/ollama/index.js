@@ -3,6 +3,7 @@ import {ollamaCantonese} from './locales.js';
 import {createProviderTranscript} from './provider-content.js';
 import { control, connectSelectSearch } from '../../../shared/surface/controls.js';
 import { createScopedSearch } from '../../scoped-search.js';
+import { withIcon, iconForLabel } from '../../icons.js';
 /** Local-only UI. The host supplies an authenticated request and event bridge. */
 export function mountOllama(root,{services,translate=(s)=>s,confirm:confirmAction=async()=>false}={}) {
   const bridge=services?.ollama;if(!root||!bridge?.request)throw new Error('The authenticated local model bridge is required.');
@@ -11,7 +12,7 @@ export function mountOllama(root,{services,translate=(s)=>s,confirm:confirmActio
   let searchRevision=0;const disposers=[];const doc=root.ownerDocument||document;
   const labels=createLiveLabels(root,t),selectSearches=new Map(),scopedSearches=[];const section=doc.createElement('section');section.className='ollama-suite';labels.attribute(section,'aria-label','Local models');root.append(section);
   const el=(tag,text,parent=section)=>{const e=control(tag,{},[],doc);if(text)labels.text(e,text);parent.append(e);return e;};
-  const button=(text,parent,fn)=>{const b=el('button',text,parent);b.type='button';b.addEventListener('click',()=>safe(fn));return b;};
+  const button=(text,parent,fn,iconName)=>{const b=el('button',text,parent);withIcon(b,iconName||iconForLabel(text));b.type='button';b.addEventListener('click',()=>safe(fn));return b;};
   const label=(text,tag,parent,type='text')=>{const l=el('label',null,parent),input=control(tag,{type,label:t(text),'aria-label':t(text)},[],doc);l.append(input);labels.attribute(input,'label',text);labels.attribute(input,'aria-label',text);return input;};
   const row=parent=>{const r=el('div',null,parent);r.className='ollama-row';return r;};
   const select=(text,values,parent)=>{const s=label(text,'select',parent);for(const [value,name] of values){const o=el('option',name,s);o.value=value;}s.value=values[0]?.[0]||'';selectSearches.set(s,connectSelectSearch(s,{language}));return s;};
@@ -46,7 +47,7 @@ export function mountOllama(root,{services,translate=(s)=>s,confirm:confirmActio
     if(disposed||revision!==searchRevision)return;
     filtered.sort(sort.value==='size'?(a,b)=>(a.sizeBytes??Infinity)-(b.sizeBytes??Infinity):(a,b)=>a.tag.localeCompare(b.tag));list.replaceChildren();
     el('p',`${filtered.length} ${t('matching variants')}`,list);
-    for(const m of filtered.slice(0,200)){const b=button(`${m.tag} · ${m.installed?t('Installed'):t('Available')} · ${m.fit?.verdict||t('Unknown')} · ${m.sizeBytes?formatBytes(m.sizeBytes):t('Size unknown')}`,list,()=>showModel(m));b.className='ollama-model';b.setAttribute('aria-pressed',String(selected?.tag===m.tag));}
+    for(const m of filtered.slice(0,200)){const b=button(`${m.tag} · ${m.installed?t('Installed'):t('Available')} · ${m.fit?.verdict||t('Unknown')} · ${m.sizeBytes?formatBytes(m.sizeBytes):t('Size unknown')}`,list,()=>showModel(m),'drive');b.className='ollama-model';b.setAttribute('aria-pressed',String(selected?.tag===m.tag));}
     if(filtered.length>200)el('p','Refine the search to show more variants. All variants are included in filtering.',list);labels.prune();
   }
   for(const control of [installedFilter,capability,fitFilter,sort])control.addEventListener('input',()=>safe(renderModels));
@@ -106,6 +107,7 @@ export function createRuntimeInstallationPanel(parent,{request,configureRuntime,
  let disposed=false,runtime=null,snapshot=null,pending=false,cancelling=false,revision=0,notice='',poll=null,restoring=false,startupResult=null,stopNotice='',runtimeRequestRevision=0;const retired=new Set(),labels=[];
  const language=()=>{const value=getLanguage();return ['en','yue','bilingual'].includes(value)?value:'en';};
  const text=(node,en)=>{node.replaceChildren();const yue=ollamaCantonese[en]||en,mode=language();const primary=doc.createElement('span');primary.textContent=mode==='yue'?yue:en;node.append(primary);if(mode==='bilingual'&&yue!==en){const secondary=doc.createElement('span');secondary.className='ollama-secondary';secondary.lang='yue-Hant';secondary.textContent=yue;node.append(secondary);}};
+ const BUTTON_ICONS={'Install managed Ollama runtime':'download','Cancel installation':'cancel','Check runtime':'refresh','Start verified local runtime':'play','Stop owned runtime':'stop','Locate installed runtime':'folder'};
  const named=(tag,en,host=region)=>{const node=doc.createElement(tag);host.append(node);labels.push([node,en]);text(node,en);return node;};
  const heading=named('h4','Local runtime');heading.tabIndex=-1;
  named('p','Install a verified, application-managed copy of the official Ollama command-line runtime. No model is downloaded, no existing process is stopped, and the runtime is not started.');
@@ -118,7 +120,7 @@ export function createRuntimeInstallationPanel(parent,{request,configureRuntime,
  const bytes=doc.createElement('p');region.append(bytes);
  const actions=doc.createElement('div');actions.className='ollama-runtime-actions';region.append(actions);
  const active=()=>snapshot&&snapshot.phase!=='idle'&&snapshot.phase!=='complete';
- const invoke=(name,fn,primary=false)=>{const button=named(primary?'md-filled-button':'md-outlined-button',name,actions);button.type='button';button.addEventListener('click',()=>{if(!button.disabled&&!disposed)void fn().catch(()=>{if(!disposed){notice='The runtime request could not be completed. Check runtime before retrying.';paint();}});});return button;};
+ const invoke=(name,fn,primary=false)=>{const button=withIcon(named(primary?'md-filled-button':'md-outlined-button',name,actions),BUTTON_ICONS[name]||'check');button.type='button';button.addEventListener('click',()=>{if(!button.disabled&&!disposed)void fn().catch(()=>{if(!disposed){notice='The runtime request could not be completed. Check runtime before retrying.';paint();}});});return button;};
  const install=invoke('Install managed Ollama runtime',async()=>{
   if(pending||active())return;pending=true;runtimeRequestRevision++;notice='';paint();
   try{const result=await request('runtimeInstall',{confirmed:true,language:language()});if(!disposed)consume(result,true);}
@@ -142,10 +144,10 @@ export function createRuntimeInstallationPanel(parent,{request,configureRuntime,
  const stopReason=doc.createElement('p');stopReason.id='ollama-stop-reason-'+(++runtimePanelSequence);stopReason.className='ollama-runtime-stop-reason';region.append(stopReason);stop.setAttribute('aria-describedby',stopReason.id);
  const locate=invoke('Locate installed runtime',async()=>{if(pending||active())return;pending=true;runtimeRequestRevision++;paint();try{await request('chooseRuntimeExecutable');await refresh();}finally{pending=false;if(!disposed)paint();}});
  const advanced=doc.createElement('div');advanced.id='ollama-runtime-connection-'+(++runtimePanelSequence);advanced.hidden=true;
- const connectionToggle=named('md-outlined-button','Connection settings');connectionToggle.type='button';connectionToggle.setAttribute('aria-controls',advanced.id);connectionToggle.setAttribute('aria-expanded','false');connectionToggle.addEventListener('click',()=>{if(disposed)return;advanced.hidden=!advanced.hidden;connectionToggle.setAttribute('aria-expanded',String(!advanced.hidden));});region.append(advanced);
+ const connectionToggle=withIcon(named('md-outlined-button','Connection settings'),'settings');connectionToggle.type='button';connectionToggle.setAttribute('aria-controls',advanced.id);connectionToggle.setAttribute('aria-expanded','false');connectionToggle.addEventListener('click',()=>{if(disposed)return;advanced.hidden=!advanced.hidden;connectionToggle.setAttribute('aria-expanded',String(!advanced.hidden));});region.append(advanced);
  const connection=doc.createElement('div');connection.className='ollama-runtime-actions';advanced.append(connection);
  const port=doc.createElement('md-outlined-text-field');port.type='number';port.min='1024';port.max='65535';port.value='11434';connection.append(port);
- const apply=named('md-outlined-button','Apply runtime port',connection);apply.type='button';apply.addEventListener('click',()=>{if(apply.disabled)return;void(async()=>{const value=Number(port.value);if(!Number.isInteger(value)||value<1024||value>65535){notice='Choose a port from 1024 to 65535.';paint();return;}pending=true;runtimeRequestRevision++;paint();try{await configureRuntime({port:value});await refresh();}catch{notice='The runtime request could not be completed. Check runtime before retrying.';}finally{pending=false;if(!disposed)paint();}})();});
+ const apply=withIcon(named('md-outlined-button','Apply runtime port',connection),'check');apply.type='button';apply.addEventListener('click',()=>{if(apply.disabled)return;void(async()=>{const value=Number(port.value);if(!Number.isInteger(value)||value<1024||value>65535){notice='Choose a port from 1024 to 65535.';paint();return;}pending=true;runtimeRequestRevision++;paint();try{await configureRuntime({port:value});await refresh();}catch{notice='The runtime request could not be completed. Check runtime before retrying.';}finally{pending=false;if(!disposed)paint();}})();});
  function local(en){const yue=ollamaCantonese[en]||en;return language()==='yue'?yue:language()==='bilingual'&&yue!==en?en+' · '+yue:en;}
  function paint(){if(disposed)return;const working=active(),locked=pending||working;const previous=doc.activeElement;
   text(install,snapshot&&['failed','cancelled'].includes(snapshot.outcome)?'Retry managed installation':'Install managed Ollama runtime');

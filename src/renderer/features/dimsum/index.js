@@ -1,4 +1,5 @@
 import {control} from '../../../shared/surface/controls.js';
+import {withIcon} from '../../icons.js';
 import {createScopedSearch} from '../../scoped-search.js';
 import {createCollapsibleSection} from '../../../shared/surface/collapsible-section.js';
 import {categories, searchDishes, dishName, dishDescription, readFavourites, toggleFavourite} from '../../../features/dimsum/catalogue.mjs';
@@ -14,13 +15,13 @@ export function mountDimsum(host, {translate = value => value, getLanguage = () 
   host.replaceChildren();
   let disposed = false, catalogue = null, photos = new Map(), selected = null, limit = PAGE, mineOnly = false, loadToken = 0, renderToken = 0;
   const el = (tag, text, className) => { const node = document.createElement(tag); if (text !== undefined) node.textContent = text; if (className) node.className = className; return node; };
-  const button = (text, handler, kind = 'md-outlined-button') => { const node = control('button', {type: 'button'}); node.textContent = text; node.addEventListener('click', handler); return node; };
+  const button = (text, handler, iconName = 'check') => { const node = control('button', {type: 'button'}); node.textContent = text; withIcon(node, iconName); node.addEventListener('click', handler); return node; };
 
   const title = el('h2', translate('Dim sum catalogue'));
   const intro = el('p', translate('The catalogue is loaded from GitHub only when you press Load. Nothing else in the app needs the network for it. Pictures are generated illustrations, not photographs of real dishes.'));
   const actions = el('div', undefined, 'dimsum-actions');
-  const load = button(translate('Load the catalogue'), () => void loadCatalogue(false));
-  const refresh = button(translate('Refresh the catalogue'), () => void loadCatalogue(true));
+  const load = button(translate('Load the catalogue'), () => void loadCatalogue(false), 'download');
+  const refresh = button(translate('Refresh the catalogue'), () => void loadCatalogue(true), 'refresh');
   refresh.disabled = true;
   actions.append(load, refresh);
   const status = el('p'); status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite');
@@ -28,13 +29,13 @@ export function mountDimsum(host, {translate = value => value, getLanguage = () 
 
   const searchHost = el('div');
   const category = control('select'); category.label = translate('Category'); category.setAttribute('aria-label', translate('Category'));
-  const mine = button(translate('Show my list'), () => { mineOnly = !mineOnly; limit = PAGE; void render(); });
+  const mine = button(translate('Show my list'), () => { mineOnly = !mineOnly; limit = PAGE; void render(); }, 'book');
   mine.setAttribute('aria-pressed', 'false');
   const filterRow = el('div', undefined, 'dimsum-filters'); filterRow.append(category, mine);
   const filters = createCollapsibleSection({doc: document, id: 'desktop-dimsum-filters', title: translate('Search and filters'), storage, open: true, children: [searchHost, filterRow]});
   const count = el('p'); count.setAttribute('role', 'status'); count.setAttribute('aria-live', 'polite');
   const list = el('ul', undefined, 'dimsum-list'); list.setAttribute('aria-label', translate('Dim sum catalogue'));
-  const more = button(translate('Show more dishes'), () => { limit += PAGE; void render(); }); more.hidden = true;
+  const more = button(translate('Show more dishes'), () => { limit += PAGE; void render(); }, 'arrow_down'); more.hidden = true;
   const detail = el('section', undefined, 'dimsum-detail'); detail.tabIndex = -1;
   const layout = el('div', undefined, 'dimsum-layout');
   const results = el('div'); results.append(count, list, more);
@@ -83,7 +84,7 @@ export function mountDimsum(host, {translate = value => value, getLanguage = () 
     count.textContent = `${found.length} ${translate('of')} ${catalogue.total} ${translate('dishes')}`;
     more.hidden = found.length <= limit;
     list.replaceChildren(...shown.map(dish => {
-      const item = el('li'); const choose = button(`${dishName(dish, language)}${favourites.has(dish.id) ? ' ★' : ''}`, () => { selected = dish.id; void render(); detail.focus(); });
+      const item = el('li'); const choose = button(`${dishName(dish, language)}${favourites.has(dish.id) ? ' ★' : ''}`, () => { selected = dish.id; void render(); detail.focus(); }, 'open');
       if (dish.id === selected) choose.setAttribute('aria-current', 'true');
       item.append(choose); return item;
     }));
@@ -100,7 +101,7 @@ export function mountDimsum(host, {translate = value => value, getLanguage = () 
       const outcome = toggleFavourite(storage, dish.id);
       if (outcome.error) status.textContent = translate(outcome.error === 'full' ? 'Your list holds 200 dishes; remove one first.' : 'Your list could not be saved on this device.');
       void render();
-    });
+    }, favourites.has(dish.id) ? 'delete' : 'add');
     detail.append(toggle);
     const figure = el('figure', undefined, 'dimsum-figure'); detail.append(figure);
     if (!dish.imageFile || !photos.has(dish.imageFile)) { figure.append(el('p', translate('No illustration has been published for this dish yet.'))); return; }
@@ -112,7 +113,7 @@ export function mountDimsum(host, {translate = value => value, getLanguage = () 
         const image = document.createElement('img'); image.src = result.dataUrl; image.alt = language === 'yue' ? (dish.alt.yue || dish.alt.en) : (dish.alt.en || dishName(dish, language));
         figure.replaceChildren(image, el('figcaption', translate('Generated illustration from the public dim sum catalogue, not a photograph of a real dish.')));
       } catch { if (!disposed) figure.replaceChildren(el('p', translate('The illustration could not be loaded.'))); }
-    });
+    }, 'image');
     figure.append(show);
   }
 

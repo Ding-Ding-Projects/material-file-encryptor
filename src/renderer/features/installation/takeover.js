@@ -1,6 +1,7 @@
 // Full-window installation takeover. A success celebrates and closes by itself; a failure raises an alarm that stays
 // until it is dismissed. Both show only real values: a row is omitted when its value is not known. The surface needs
 // only a small DOM subset, so it is exercised by tests with a minimal document.
+import {withIcon, iconForLabel} from '../../icons.js';
 import {lastOutputLines, maskSecrets} from './mask-secrets.js';
 
 export const SUCCESS_AUTO_DISMISS_MS = 6000;
@@ -52,8 +53,8 @@ export function createInstallationTakeover({
     return node;
   };
 
-  function button(label, run, variant = 'outlined') {
-    const node = el('button', `button ${variant}`, label);
+  function button(label, run, variant = 'outlined', iconName = 'check') {
+    const node = withIcon(el('button', `button ${variant}`, label), iconName);
     node.type = 'button';
     node.addEventListener('click', event => { event.stopPropagation?.(); run(); });
     return node;
@@ -140,15 +141,15 @@ export function createInstallationTakeover({
     status.setAttribute('role', 'status');
     const controls = [];
     for (const action of item.recovery) {
-      const node = button(action.label, async () => { try { await action.run(); } catch (error) { status.textContent = String(error?.message || error); } if (action.dismiss !== false) close('recovery'); }, 'tonal');
+      const node = button(action.label, async () => { try { await action.run(); } catch (error) { status.textContent = String(error?.message || error); } if (action.dismiss !== false) close('recovery'); }, 'tonal', iconForLabel(action.label));
       controls.push(node);
     }
     if (failure) {
       controls.push(button(t('Copy details'), async () => {
         try { await copyText(plainDetails(item)); status.textContent = t('Details copied.'); } catch { status.textContent = t('Details could not be copied.'); }
-      }));
+      }, 'outlined', 'copy'));
     }
-    const dismiss = button(t('Dismiss'), () => close('dismissed'), 'primary');
+    const dismiss = button(t('Dismiss'), () => close('dismissed'), 'primary', 'close');
     dismiss.setAttribute('aria-label', t('Dismiss installation result'));
     controls.push(dismiss);
     actions.append(...controls);

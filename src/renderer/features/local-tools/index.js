@@ -1,6 +1,7 @@
 import {localized, text} from '../../../shared/surface/registry.js';
 import {LOCAL_TOOL_LABELS, LOCAL_TOOL_SUMMARIES, LOCAL_TOOL_KEYWORDS, localToolGroups, LOCAL_TOOLS_LABEL} from '../../../shared/surface/local-tools-catalog.js';
 import '../../../shared/surface/search.js';
+import {withIcon} from '../../icons.js';
 
 /**
  * The Local tools page as a dense list: a search with its regex builder, a Group by choice (category or name), a
@@ -25,7 +26,7 @@ export function mountLocalTools(host, {isRegistered = () => true, open = () => {
   search.language = language();
   const groupLabel = el('span', {class: 'local-tools-group-label'});
   const groupChoice = el('div', {class: 'segmented', role: 'radiogroup'});
-  const openTab = el('md-text-button', {id: 'local-tools-open-tab', type: 'button'});
+  const openTab = withIcon(el('md-text-button', {id: 'local-tools-open-tab', type: 'button'}), 'open');
   toolbar.append(el('div', {class: 'local-tools-search'}, [search]), groupLabel, groupChoice, openTab);
   const table = el('table', {class: 'local-tools-table'});
   const head = el('thead'), body = el('tbody');
@@ -87,9 +88,9 @@ export function mountLocalTools(host, {isRegistered = () => true, open = () => {
     const entry = entries().find(item => item.id === selected);
     openTab.disabled = !entry;
     if (!entry) { details.replaceChildren(el('p', {class: 'muted', text: t('Select a tool to see what it does.', '揀一個工具就會見到佢嘅用途。')})); return; }
-    const openButton = el('md-filled-button', {type: 'button', id: 'local-tools-open'}, [el('span', {text: t('Open', '開啟')})]);
+    const openButton = withIcon(el('md-filled-button', {type: 'button', id: 'local-tools-open'}, [el('span', {text: t('Open', '開啟')})]), 'play');
     openButton.addEventListener('click', () => open(entry.id));
-    const inTab = el('md-outlined-button', {type: 'button'}, [el('span', {text: t('Open in new tab', '喺新分頁開啟')})]);
+    const inTab = withIcon(el('md-outlined-button', {type: 'button'}, [el('span', {text: t('Open in new tab', '喺新分頁開啟')})]), 'open');
     inTab.addEventListener('click', () => openInTab(entry.id));
     details.replaceChildren(el('h2', {text: localized(entry.label, language())}), el('p', {class: 'muted', text: localized(entry.summary, language())}), el('dl', {}, [el('dt', {text: t('Category', '類別')}), el('dd', {text: localized(entry.group.label, language())})]), el('div', {class: 'actions'}, [openButton, inTab]));
   }

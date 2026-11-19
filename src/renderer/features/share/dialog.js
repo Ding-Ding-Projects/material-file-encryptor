@@ -3,6 +3,7 @@ import { RegistryLoginPanel } from '../storage-maintenance/registry-login-panel.
 import { registryLoginText } from '../storage-maintenance/registry-login-text.js';
 import { createInfoIconController } from '../../../shared/surface/info-icon-controller.js';
 import { SHARE_INFO_ICON_INVENTORY } from '../../../shared/local-ux/info-icon-share.js';
+import { withKeyIcon } from '../../icons.js';
 import { SHARE_COPY } from './copy.js';
 import { fill, formatBytes, formatTime, shareErrorKey, passphraseProblems, shareBlocker, looksLikeShare, SHARE_LIMIT_BYTES } from './model.js';
 
@@ -93,7 +94,7 @@ export class ShareDialog extends SurfaceElement {
   openList() { this.reset(); this.mode = 'list'; this.stage = 'list'; this.entries = null; this.show(); void this.loadList(); }
 
   button(text, onClick, { filled = false, disabled = false, id } = {}) {
-    const node = element(filled ? 'md-filled-button' : 'md-outlined-button', { text, ...(id ? { id } : {}) }); node.disabled = disabled;
+    const node = element(filled ? 'md-filled-button' : 'md-outlined-button', { text, ...(id ? { id } : {}) }); node.disabled = disabled; withKeyIcon(node, text, key => this.t(key));
     node.addEventListener('click', () => { if (!node.disabled) onClick(); }); return node;
   }
   field(id, label, value, onInput, props = {}) { const node = element('input', { id, label, value, ...props }); node.addEventListener('input', () => onInput(node.value)); return element('div', { class: 'with-info' }, [node]); }
