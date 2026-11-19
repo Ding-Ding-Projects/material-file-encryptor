@@ -653,6 +653,12 @@
       "translationSha256": "93a6a155ed1fe29decca4e3e6f66fa2b82d87b31f1658792147aa2b4e454b899"
     },
     {
+      "source": "docs/features/storage/file-hosting.md",
+      "translation": "docs/features/storage/file-hosting.zh-HK.md",
+      "sourceSha256": "d3deb76443f8ff9ba67ed8dd628d311e10fa2b49b25698832dfbbb92f86f3b2b",
+      "translationSha256": "b827a74d055590475f6a3fc3b4777527da1aac997551f1e2f079095d8c46d3ae"
+    },
+    {
       "source": "docs/features/storage/split-storage.md",
       "translation": "docs/features/storage/split-storage.zh-HK.md",
       "sourceSha256": "e86c5bc6e0e7064c078e6da730dd49c54c7f88b5336e4ca511a74f8a2b1e4a80",

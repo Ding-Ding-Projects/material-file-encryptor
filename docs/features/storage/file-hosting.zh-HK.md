@@ -12,7 +12,7 @@
 
 瀏覽器從來唔會將 `#` 後面嗰段傳去伺服器，所以寄存伺服器只會有密文，睇唔到內容，連檔名都唔知：檔名喺加密資料入面，網頁由第一段加密資料讀出嚟。
 
-![下載網頁](../../images/captures/file-hosting/download-page-dark-en.jpg)
+![下載網頁](../../images/captures/file-hosting/download-page-dark-en.png)
 
 有密碼短語嘅分享仍然要輸入密碼短語：網頁會問，再喺瀏覽器解開鎖匙（scrypt，參數同程式一樣）。密碼短語錯就會清楚講明。
 

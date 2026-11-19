@@ -45,6 +45,10 @@ export function installShadowReducedMotion(doc = globalThis.document) {
   const media = view.matchMedia?.('(prefers-reduced-motion: reduce)');
   let scheduled = false;
   let disposed = false;
+  // Added elements since the last pass. A full document walk happens only when the motion preference itself changes
+  // or a custom element upgrades; ordinary DOM churn (a status line, a re-rendered list) only visits what was added.
+  const added = new Set();
+  let fullPending = true;
 
   const adopt = shadow => {
     if (!shadow.adoptedStyleSheets.includes(sheet)) shadow.adoptedStyleSheets = [...shadow.adoptedStyleSheets, sheet];
@@ -55,7 +59,10 @@ export function installShadowReducedMotion(doc = globalThis.document) {
   const watch = root => {
     if (observed.has(root) || !view.MutationObserver) return;
     observed.add(root);
-    new view.MutationObserver(schedule).observe(root, {childList: true, subtree: true});
+    new view.MutationObserver(records => {
+      for (const record of records) for (const node of record.addedNodes) if (node.nodeType === 1) added.add(node);
+      if (added.size) schedule();
+    }).observe(root, {childList: true, subtree: true});
   };
   const walk = (root, reduced) => {
     for (const element of root.querySelectorAll('*')) {
@@ -66,7 +73,7 @@ export function installShadowReducedMotion(doc = globalThis.document) {
       } else if (isMaterialHost(element) && !view.customElements.get(element.localName) && !pending.has(element.localName)) {
         // The element is not upgraded yet, so it has no shadow root. Refresh once its definition arrives.
         pending.add(element.localName);
-        view.customElements.whenDefined(element.localName).then(() => { pending.delete(element.localName); schedule(); }, () => pending.delete(element.localName));
+        view.customElements.whenDefined(element.localName).then(() => { pending.delete(element.localName); fullPending = true; schedule(); }, () => pending.delete(element.localName));
       }
     }
   };
@@ -74,13 +81,26 @@ export function installShadowReducedMotion(doc = globalThis.document) {
     scheduled = false;
     if (disposed) return;
     const reduced = reducedMotionRequested(doc);
+    fullPending = false; added.clear();
     walk(doc, reduced);
     if (reduced) finishShadowAnimations(doc);
+  };
+  const step = () => {
+    if (fullPending) { refresh(); return; }
+    scheduled = false;
+    if (disposed) return;
+    const reduced = reducedMotionRequested(doc), nodes = [...added];
+    added.clear();
+    for (const node of nodes) {
+      if (!node.isConnected) continue;
+      if (node.shadowRoot) { if (isMaterialHost(node)) reduced ? adopt(node.shadowRoot) : release(node.shadowRoot); watch(node.shadowRoot); walk(node.shadowRoot, reduced); }
+      walk(node, reduced);
+    }
   };
   function schedule() {
     if (scheduled || disposed) return;
     scheduled = true;
-    view.requestAnimationFrame ? view.requestAnimationFrame(refresh) : Promise.resolve().then(refresh);
+    view.requestAnimationFrame ? view.requestAnimationFrame(step) : Promise.resolve().then(step);
   }
 
   const events = ['pointerdown', 'pointerup', 'click', 'keydown', 'keyup', 'focusin', 'input', 'change'];

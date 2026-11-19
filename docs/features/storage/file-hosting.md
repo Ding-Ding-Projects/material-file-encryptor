@@ -12,7 +12,7 @@
 
 The part after `#` is never sent to any server by a browser, so the hosting server only ever holds ciphertext and cannot read what it hosts. It never learns the file name either: the name is inside the encrypted data and the page reads it from the first encrypted chunk.
 
-![The download page](../../images/captures/file-hosting/download-page-dark-en.jpg)
+![The download page](../../images/captures/file-hosting/download-page-dark-en.png)
 
 A share protected with a passphrase still needs it: the page asks for it and unwraps the key in the browser (scrypt, the same parameters as the app). A wrong passphrase is refused with a plain message.
 

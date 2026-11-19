@@ -11,17 +11,12 @@ h2,h3,p{margin:0;overflow-wrap:anywhere}
 .head{display:flex;align-items:center;gap:10px}.head h2{flex:1;font-size:20px}
 .head md-icon-button{width:48px;height:48px;font-size:26px}
 .steps{display:flex;gap:6px;flex-wrap:wrap;list-style:none;margin:0;padding:0}
-.steps button{min-height:44px;padding:0 14px;border-radius:22px;border:1px solid var(--md-sys-color-outline-variant,#c6c8d8);background:transparent;font:inherit;color:inherit;cursor:pointer}
-.steps button[aria-current=step]{background:var(--md-sys-color-secondary-container,#e3e6fa);font-weight:650;border-color:transparent}
 .choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
-.choice{display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left;padding:16px;border-radius:16px;min-height:96px;cursor:pointer;font:inherit;color:inherit;
-  background:var(--md-sys-color-surface,#fff);border:2px solid var(--md-sys-color-outline-variant,#dcdee8);animation:rise 260ms cubic-bezier(.05,.7,.1,1) both}
-.choice[aria-checked=true]{border-color:var(--md-sys-color-primary,#3f51b5);background:var(--md-sys-color-primary-container,#eef0ff)}
-.choice b{font-size:15px}.choice span{color:var(--md-sys-color-on-surface-variant,#454652);line-height:1.5}
+.choice{border-radius:16px;min-height:96px;border:2px solid var(--md-sys-color-outline-variant,#dcdee8);--md-list-item-supporting-text-line-height:1.5;--md-list-item-label-text-size:16px;--md-list-item-label-text-weight:650;--md-list-item-two-line-container-height:96px;animation:rise 260ms cubic-bezier(.05,.7,.1,1) both}
+.choice [slot=supporting-text]{white-space:normal}
+.choice.selected{border-color:var(--md-sys-color-primary,#3f51b5);background:var(--md-sys-color-primary-container,#2f4f3a);--md-list-item-container-color:var(--md-sys-color-primary-container,#2f4f3a)}
 .fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
 .chips{display:flex;gap:8px;flex-wrap:wrap}
-.chip{min-height:44px;padding:0 16px;border-radius:12px;border:1px solid var(--md-sys-color-outline,#74768a);background:transparent;font:inherit;color:inherit;cursor:pointer}
-.chip[aria-pressed=true]{background:var(--md-sys-color-secondary-container,#e3e6fa);border-color:var(--md-sys-color-primary,#3f51b5);font-weight:650}
 .note{padding:12px 14px;border-radius:12px;background:var(--md-sys-color-surface-container,#f1f2f8);line-height:1.5}
 .ok{padding:14px 16px;border-radius:14px;background:var(--md-sys-color-tertiary-container,#cdefe3);color:var(--md-sys-color-on-tertiary-container,#063d31);display:grid;gap:6px;animation:rise 300ms both}
 .warn{padding:12px 14px;border-radius:12px;background:var(--md-sys-color-error-container,#ffdad6);color:var(--md-sys-color-on-error-container,#410002);font-weight:600;line-height:1.5}
@@ -137,9 +132,9 @@ export class FileHostingDialog extends SurfaceElement {
   field(id, label, value, onInput, props = {}) { const node = element('input', { id, label, value: String(value ?? ''), ...props }); node.addEventListener('input', () => onInput(node.value)); return node; }
   check(id, label, checked, onChange) { const box = element('input', { id, type: 'checkbox', 'aria-label': label }); box.checked = checked; box.addEventListener('change', () => onChange(Boolean(box.checked))); return element('label', { class: 'check' }, [box, element('span', { text: label })]); }
   chips(label, choices, current, onPick) {
-    return element('div', { class: 'chips', role: 'group', 'aria-label': label }, choices.map(choice => { const node = nativeButton({ class: 'chip', text: this.t(choice.label), 'aria-pressed': String(current === choice.id) }); node.addEventListener('click', () => onPick(choice.id)); return node; }));
+    return element('div', { class: 'chips', role: 'group', 'aria-label': label }, choices.map(choice => { const node = chipNode(this.t(choice.label), current === choice.id); node.addEventListener('click', event => { event.preventDefault(); onPick(choice.id); }); return node; }));
   }
-  choice(title, help, checked, onPick) { const node = nativeButton({ class: 'choice', role: 'radio', 'aria-checked': String(checked) }, [element('b', { text: title }), element('span', { text: help })]); node.addEventListener('click', onPick); return node; }
+  choice(title, help, checked, onPick) { const node = element('md-list-item', { type: 'button', class: checked ? 'choice selected' : 'choice', role: 'radio', 'aria-checked': String(checked) }, [element('div', { slot: 'headline', text: title }), element('div', { slot: 'supporting-text', text: help })]); node.addEventListener('click', onPick); return node; }
   actions(nodes) { return element('div', { class: 'actions' }, nodes); }
   messages() {
     const out = [];
@@ -162,8 +157,8 @@ export class FileHostingDialog extends SurfaceElement {
   renderSetup() {
     const labels = ['stepWhere', 'stepPort', 'stepAddress', 'stepDeploy'];
     const steps = element('ol', { class: 'steps', 'aria-label': this.t('stepOf', { n: this.step + 1 }) }, labels.map((key, index) => {
-      const node = nativeButton({ text: `${index + 1}. ${this.t(key)}`, ...(index === this.step ? { 'aria-current': 'step' } : {}) });
-      node.disabled = Boolean(this.deployStatus); node.addEventListener('click', () => { this.step = index; this.error = null; this.render(); });
+      const node = chipNode(`${index + 1}. ${this.t(key)}`, index === this.step, index === this.step ? { 'aria-current': 'step' } : {});
+      node.disabled = Boolean(this.deployStatus); node.addEventListener('click', event => { event.preventDefault(); this.step = index; this.error = null; this.render(); });
       return element('li', {}, [node]);
     }));
     const out = [element('p', { text: this.t('intro') }), steps];
@@ -390,11 +385,9 @@ export class FileHostingDialog extends SurfaceElement {
   destroy() { this.disposed = true; clearTimeout(this.pollTimer); }
 }
 
-/** A plain native button: the shared element() helper turns 'button' into a Material text button, which cannot hold a two-line card. */
-function nativeButton(props, children = []) {
-  const node = document.createElement('button'); node.type = 'button';
-  for (const [key, value] of Object.entries(props)) { if (key === 'text') node.textContent = value; else if (key === 'class') node.className = value; else node.setAttribute(key, value); }
-  node.append(...children); return node;
+/** A Material filter chip used as a toggle. */
+function chipNode(label, on, props = {}) {
+  const node = element('md-filter-chip', { label, ...props }); node.selected = Boolean(on); return node;
 }
 function buildSettings(draft) {
   return { name: String(draft.name).trim(), target: draft.target, port: Number(draft.port), cacheGb: Number(draft.cacheGb), tunnel: draft.tunnel,

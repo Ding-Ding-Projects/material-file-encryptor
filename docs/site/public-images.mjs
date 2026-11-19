@@ -145,6 +145,9 @@ export const publicImages=Object.freeze([
  {source:'docs/images/captures/redesign-dc166dc9/local-access-light-en.png',route:'images/captures/redesign-dc166dc9/local-access-light-en.png',sha256:'55e38b02489a96118a49d4b1750828f924835355884630e1a556ba975dfa870e',bytes:68169,width:1440,height:900},
  {source:'docs/images/captures/redesign-dc166dc9/docker-hub-initial-light-en.png',route:'images/captures/redesign-dc166dc9/docker-hub-initial-light-en.png',sha256:'84c72447d8e72d808f0350e0c1d98efaf64ce3066b952dd07194013625537357',bytes:102282,width:1440,height:900},
  {source:'docs/images/captures/redesign-dc166dc9/docker-hub-sign-in-unfinished-light-en.png',route:'images/captures/redesign-dc166dc9/docker-hub-sign-in-unfinished-light-en.png',sha256:'e5f046570098ccec8ffcabcf03a30ab745b5a2058c8920f5f98315bd3b793970',bytes:103128,width:1440,height:900},
+ {source:'docs/images/captures/file-hosting/setup-where-dark-en.png',route:'images/captures/file-hosting/setup-where-dark-en.png',sha256:'de4311c93ac3ad71018e6dca6f58663304eea51ebd960cd38bd410cab614d441',bytes:119438,width:1770,height:1277},
+ {source:'docs/images/captures/file-hosting/setup-public-address-dark-en.png',route:'images/captures/file-hosting/setup-public-address-dark-en.png',sha256:'0a1a301618576c1d46c46be9d23e358420517c70afd19ed888e34197c771d657',bytes:135210,width:1770,height:1277},
+ {source:'docs/images/captures/file-hosting/download-page-dark-en.png',route:'images/captures/file-hosting/download-page-dark-en.png',sha256:'b286f31c1f8a2ff8a0892cce021814e1393ba6f7936e33d114705371f5aed961',bytes:25848,width:1280,height:860},
 ].map(Object.freeze));
 
 export function resolvePublicImage(source,url,images) {
