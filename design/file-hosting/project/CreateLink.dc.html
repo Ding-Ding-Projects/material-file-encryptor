@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Create a download link</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..800&amp;family=Roboto+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+@keyframes rise{from{transform:translateY(10px);opacity:0}to{transform:none;opacity:1}}
+@keyframes pop{0%{transform:scale(.85);opacity:0}100%{transform:none;opacity:1}}
+[data-motion=off] *{animation:none!important;transition:none!important}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+button,input,select{font:inherit;color:inherit}
+</style>
+</helmet>
+<div data-motion="{{motion}}" style="width:1440px;height:960px;position:relative;font-family:'Roboto Flex',system-ui,sans-serif;font-size:14px;color:#1A1B24;background:#E9EBF2;overflow:hidden">
+<div aria-hidden="true" style="position:absolute;inset:0;background:rgba(26,27,36,.42)"></div>
+<section role="dialog" aria-modal="true" aria-labelledby="ttl" style="position:absolute;left:220px;top:70px;width:1000px;height:820px;border-radius:24px;background:#FFFFFF;box-shadow:0 12px 40px rgba(0,0,0,.28);display:flex;flex-direction:column;overflow:hidden;animation:rise 300ms cubic-bezier(.05,.7,.1,1) both">
+<header style="display:flex;align-items:center;gap:12px;padding:18px 24px;border-bottom:1px solid #ECEDF3">
+<h1 id="ttl" style="margin:0;font-size:20px;font-weight:650;flex:1">Create a download link</h1>
+<button type="button" aria-label="Close" style="width:48px;height:48px;border:0;border-radius:24px;background:transparent;font-size:22px">×</button>
+</header>
+<div style="flex:1;display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:0;min-height:0">
+<div style="padding:22px 26px;display:flex;flex-direction:column;gap:18px;overflow:auto">
+<div style="display:flex;gap:14px;align-items:center;padding:14px 16px;border-radius:16px;background:#F1F2F8">
+<svg aria-hidden="true" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#3F51B5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"></path><path d="M14 3v5h5"></path></svg>
+<div style="flex:1;display:flex;flex-direction:column;gap:2px"><strong>Quarterly report.pdf</strong><span style="color:#454652;font-size:13px">4.2 MB · shared 18 Nov 2026 at 13:05 · passphrase off</span></div>
+<span style="padding:4px 10px;border-radius:8px;background:#CDEFE3;color:#063D31;font-size:12px;font-weight:700">On Docker Hub</span>
+</div>
+<fieldset style="border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:10px">
+<legend style="font-weight:650;font-size:16px;margin-bottom:10px">Link expires</legend>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<sc-for list="{{expiries}}" as="e" hint-placeholder-count="5">
+<button type="button" aria-pressed="{{e.on}}" onClick="{{e.pick}}" style="{{e.style}}">{{e.label}}</button>
+</sc-for>
+</div>
+<sc-if value="{{custom}}" hint-placeholder-val="{{ false }}">
+<label style="display:flex;flex-direction:column;gap:6px;max-width:320px">Expires at (24-hour)<input type="datetime-local" value="2026-11-25T18:00" style="height:44px;border:1px solid #9A9CAC;border-radius:8px;padding:0 12px"></label>
+</sc-if>
+</fieldset>
+<fieldset style="border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:10px">
+<legend style="font-weight:650;font-size:16px;margin-bottom:10px">Delete after</legend>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<sc-for list="{{limits}}" as="l" hint-placeholder-count="5">
+<button type="button" aria-pressed="{{l.on}}" onClick="{{l.pick}}" style="{{l.style}}">{{l.label}}</button>
+</sc-for>
+</div>
+</fieldset>
+<label style="display:flex;align-items:center;gap:12px;min-height:48px"><input type="checkbox" checked style="width:22px;height:22px">Also remove the file from Docker Hub when the link ends</label>
+<label style="display:flex;align-items:center;gap:12px;min-height:48px"><input type="checkbox" checked style="width:22px;height:22px">Download it into the server cache now, so the first visitor waits less</label>
+<p style="margin:0;padding:12px 14px;border-radius:12px;background:#F1F2F8;line-height:1.5">The key that opens the file stays after the # in the link. Browsers never send that part, so the server only ever holds the encrypted file.</p>
+</div>
+<aside aria-label="Link and QR code" style="background:#F7F8FB;border-left:1px solid #ECEDF3;padding:22px;display:flex;flex-direction:column;gap:14px;align-items:center">
+<sc-if value="{{made}}" hint-placeholder-val="{{ false }}">
+<div role="img" aria-label="QR code for the download link" style="padding:14px;background:#FFFFFF;border-radius:16px;box-shadow:0 1px 3px rgba(0,0,0,.15);animation:pop 260ms both">
+<div style="display:grid;grid-template-columns:repeat(25,8px);grid-auto-rows:8px">
+<sc-for list="{{qr}}" as="c" hint-placeholder-count="625"><span style="background:{{c}}"></span></sc-for>
+</div>
+</div>
+<p style="margin:0;font-size:12px;color:#454652;text-align:center">Scan with a phone camera. Sample pattern in this design.</p>
+<div style="width:100%;font-family:'Roboto Mono',monospace;font-size:12px;padding:10px 12px;border-radius:10px;border:1px solid #C6C8D8;background:#FFFFFF;overflow-wrap:anywhere;user-select:all">https://files.example.com/d/k3Vq9pXa#Zx…redacted</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+<button type="button" style="min-height:48px;padding:0 18px;border-radius:24px;border:0;background:{{accent}};color:#FFFFFF;font-weight:650">Copy link</button>
+<button type="button" style="min-height:48px;padding:0 18px;border-radius:24px;border:1px solid #74768A;background:#FFFFFF">Save QR as PNG</button>
+</div>
+<p style="margin:0;color:#454652;line-height:1.5;text-align:center">Ends {{endsText}}. {{limitText}}.</p>
+</sc-if>
+<sc-if value="{{notMade}}" hint-placeholder-val="{{ true }}">
+<div style="flex:1;display:grid;place-items:center;text-align:center;color:#454652;line-height:1.6;padding:20px">The link and its QR code appear here after you create it.</div>
+</sc-if>
+</aside>
+</div>
+<footer style="display:flex;gap:10px;justify-content:flex-end;padding:14px 24px;border-top:1px solid #ECEDF3">
+<button type="button" onClick="{{reset}}" style="min-height:48px;padding:0 22px;border-radius:24px;border:1px solid #74768A;background:#FFFFFF">Cancel</button>
+<button type="button" onClick="{{create}}" style="min-height:48px;padding:0 26px;border-radius:24px;border:0;background:{{accent}};color:#FFFFFF;font-weight:650">Create link</button>
+</footer>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#3F51B5","options":["#3F51B5","#1D6B3A","#9C4A00","#6B3FA0"]},"motion":{"editor":"enum","options":["on","off"],"default":"on"},"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  constructor(p){ super(p); this.state = { expiry: '7d', limit: 'none', made: false }; }
+  renderVals() {
+    const accent = this.props.accent ?? '#3F51B5';
+    const s = this.state;
+    const chip = on => 'min-height:44px;padding:0 18px;border-radius:12px;cursor:pointer;border:1px solid ' + (on ? accent : '#74768A') + ';background:' + (on ? accent + '22' : '#FFFFFF') + ';font-weight:' + (on ? 650 : 400);
+    const expiryDefs = [['1h', '1 hour'], ['1d', '1 day'], ['7d', '7 days'], ['30d', '30 days'], ['custom', 'Pick a date']];
+    const limitDefs = [['none', 'No limit'], ['1', '1 download'], ['3', '3 downloads'], ['10', '10 downloads'], ['custom', 'Custom']];
+    const qr = [];
+    for (let y = 0; y < 25; y++) for (let x = 0; x < 25; x++) {
+      const finder = (a, b) => { const dx = x - a, dy = y - b; if (dx < 0 || dy < 0 || dx > 6 || dy > 6) return null; return (dx === 0 || dy === 0 || dx === 6 || dy === 6 || (dx > 1 && dx < 5 && dy > 1 && dy < 5)); };
+      const f = finder(0, 0) ?? finder(18, 0) ?? finder(0, 18);
+      const dark = f === null ? ((x * 7 + y * 13 + x * y) % 5 < 2) : f;
+      qr.push(dark ? '#1A1B24' : '#FFFFFF');
+    }
+    const ends = { '1h': '18 Nov 2026 at 15:05', '1d': '19 Nov 2026 at 14:05', '7d': '25 Nov 2026 at 14:05', '30d': '18 Dec 2026 at 14:05', custom: '25 Nov 2026 at 18:00' };
+    return {
+      accent, motion: this.props.motion ?? 'on',
+      expiries: expiryDefs.map(([id, label]) => ({ label, on: String(s.expiry === id), style: chip(s.expiry === id), pick: () => this.setState({ expiry: id }) })),
+      limits: limitDefs.map(([id, label]) => ({ label, on: String(s.limit === id), style: chip(s.limit === id), pick: () => this.setState({ limit: id }) })),
+      custom: s.expiry === 'custom',
+      made: s.made, notMade: !s.made, qr,
+      endsText: ends[s.expiry],
+      limitText: s.limit === 'none' ? 'No download limit' : s.limit === 'custom' ? 'Deletes after 5 downloads' : 'Deletes after ' + s.limit + (s.limit === '1' ? ' download' : ' downloads'),
+      create: () => this.setState({ made: true }),
+      reset: () => this.setState({ made: false })
+    };
+  }
+}
+</script>
+</body>
+</html>

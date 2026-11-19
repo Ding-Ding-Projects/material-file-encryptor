@@ -205,6 +205,6 @@ test('a cancelled or paused synchronization is described plainly instead of as a
   await paused.panel.sync();
   assert.match(paused.panel.statusText.textContent, /Backup paused while you used the drive/);
   state = 'uploading'; await panel.refresh();
-  assert.match(panel.progressText.textContent, /Uploading encrypted objects · 5 of 10 files · 512 B of 1\.0 KB · Step time 1:0\d, total 2:0\d/);
+  assert.match(panel.progressText.textContent, /Uploading encrypted objects · 50% · 5 of 10 files · 512 B of 1\.0 KB · \d+ B\/s · about 1:0\d left · Step time 1:0\d, total 2:0\d/);
   assert.equal(panel.progress.indeterminate, false); assert.equal(panel.progress.value, 0.5);
 });

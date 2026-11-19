@@ -1,3 +1,10 @@
+# File hosting for shared files, 2026-11-18
+
+- New: host your Docker Hub shares as ordinary web links. A setup wizard deploys a small download server on this computer or on an SSH host in one click, with a LAN address, a quick Cloudflare tunnel or your own tunnel.
+- Each link has an expiry, an optional download limit and a QR code, and can remove the file from Docker Hub when it ends. The server only stores encrypted data; the browser decrypts with the key after `#`.
+- Web link… on every active shared file, and File hosting, Set up file hosting… and Create a download link… in the command palette.
+- Not yet: the published server image, SSH and tunnel runs on real hosts, and a sidebar page. See ROADMAP.md.
+
 # Seamless Docker Hub backup, 2026-11-18
 
 - Drives back up to Docker Hub on their own once you are signed in and have read the public repository notice once: about 1 minute after changes, every hour, on lock and on app close with changes waiting, and when the connection returns. Failures retry after 1, 5 and 15 minutes, then hourly. Each drive has its own switch.

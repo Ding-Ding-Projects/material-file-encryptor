@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "workflow": ".github/workflows/file-hosting-image.yml",
+  "freshEnvironmentVerification": "Pending the first hosted run",
+  "jobs": {
+    "build": {
+      "tools": [
+        "Docker Engine",
+        "POSIX shell (bash)",
+        "GitHub Container Registry login"
+      ],
+      "versions": "Docker Engine supplied by the ubuntu-24.04 and ubuntu-24.04-arm hosted images; node:24-alpine base pulled fresh by docker build --pull",
+      "bootstrapMarkers": [
+        "actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+        "docker login ghcr.io",
+        "docker build --pull",
+        "docker push"
+      ],
+      "route": "Native amd64 and arm64 hosted machines build the image from file-hosting/ and push an architecture sha tag. No tests or lint."
+    },
+    "publish": {
+      "tools": [
+        "Docker Buildx",
+        "jq",
+        "POSIX shell (bash)",
+        "GitHub Container Registry login"
+      ],
+      "versions": "Docker Buildx and jq supplied by the ubuntu-24.04 hosted image",
+      "bootstrapMarkers": [
+        "actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+        "docker buildx imagetools create",
+        "jq -r .version file-hosting/server/package.json"
+      ],
+      "route": "Joins the two architecture images under the commit sha tag; on main also the server version and latest. No tests or lint."
+    }
+  }
+}

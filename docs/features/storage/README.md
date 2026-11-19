@@ -29,3 +29,5 @@ This category has no public HTTP API. A Postman collection is not applicable.
 - [唔使揀資料夾嘅 Docker Hub 磁碟](docker-hub-drive.zh-HK.md)
 - [Share a file through Docker Hub](share-via-docker-hub.md)
 - [經 Docker Hub 分享檔案](share-via-docker-hub.zh-HK.md)
+- [File hosting: web links for shared files](file-hosting.md)
+- [檔案寄存：分享檔案嘅網頁連結](file-hosting.zh-HK.md)

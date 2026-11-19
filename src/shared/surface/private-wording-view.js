@@ -5,8 +5,11 @@ export function createPrivateWordingView({root=globalThis.document?.body,replace
  const originals=new WeakMap(),attributes=new WeakMap(),observers=new Map(),tracked=new Set();
  const limit=Math.max(1,Math.min(2000,Number(maxNodes)||500));
  const excluded='script,style,code,pre,input,textarea,select,[contenteditable]:not([contenteditable="false"]),[data-private-wording-ignore]';
- let mutationQueued=false,pendingMutations=[],destroyed=false,task=null,work=null,resolve=null,settled=Promise.resolve({projected:false,reason:'inactive'});
+ let mutationQueued=false,pendingMutations=[],destroyed=false,task=null,work=null,queue=[],queued=new Set(),resolve=null,settled=Promise.resolve({projected:false,reason:'inactive'});
  const belongs=scope=>{let node=scope.host||scope.parentElement||scope;while(node){if(node===root)return true;node=node.parentNode||node.parentElement||node.host||node.getRootNode?.().host;}return false;};
+ // A real DOM node answers isConnected cheaply; anything else falls back to walking its ancestry.
+ const wholeDocument=root===document||root===document.body||root===document.documentElement;
+ const attached=node=>typeof node.isConnected==='boolean'&&!node.host?(node.isConnected&&(wholeDocument||belongs(node))):belongs(node);
  const active=()=>{try{return !destroyed&&Boolean(isActive());}catch{return false;}};
  function restore(node){
   const record=originals.get(node);
@@ -14,7 +17,7 @@ export function createPrivateWordingView({root=globalThis.document?.body,replace
   for(const [name,record]of attributes.get(node)||[])if(node.getAttribute(name)===record.rendered){node.setAttribute(name,record.canonical);record.rendered=record.canonical;}
  }
  function restoreAll(){for(const node of tracked)restore(node);tracked.clear();}
- function finish(result){work=null;if(resolve){resolve(result);resolve=null;}return result;}
+ function finish(result){work=null;queue=[];queued.clear();if(resolve){resolve(result);resolve=null;}return result;}
  function stop(reason){if(task!==null)cancelTask(task);task=null;return finish({projected:false,reason});}
  function observe(scope){if(!Observer||observers.has(scope))return;const observer=new Observer(changed);observers.set(scope,observer);observer.observe(scope,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['aria-label','aria-description','title','placeholder','alt','label','supporting-text','error-text','headline','data-private-wording-ignore','contenteditable']});}
  function* visit(node){
@@ -42,7 +45,8 @@ export function createPrivateWordingView({root=globalThis.document?.body,replace
   task=null;if(!active()){restoreAll();return stop(destroyed?'destroyed':'inactive');}
   try{
    let count=0;
-   while(work&&count++<limit){const next=work.next();if(next.done)return finish({projected:true,reason:'active'});if(belongs(next.value))project(next.value);}
+   // Roots are checked once when they are queued; everything visited under a root belongs with it.
+   while(count++<limit){if(!work){const next=queue.shift();if(!next)return finish({projected:true,reason:'active'});queued.delete(next);work=visit(next);}const item=work.next();if(item.done){work=null;continue;}project(item.value);}
    if(!active()){restoreAll();return stop('inactive');}
   }catch{restoreAll();return stop('replacement-failed');}
   finally{for(const observer of observers.values())observer.takeRecords?.();}
@@ -51,8 +55,8 @@ export function createPrivateWordingView({root=globalThis.document?.body,replace
  function enqueue(nodes){
   if(destroyed)return{projected:false,reason:'destroyed'};
   if(!active()){restoreAll();return stop('inactive');}
-  const previous=work;
-  work=(function*(){if(previous)yield*previous;for(const node of nodes)yield*visit(node);})();
+  // A flat queue of roots: nesting a new generator around the previous one on every change made each step slower.
+  for(const node of nodes)if(node&&!queued.has(node)&&belongs(node)){queued.add(node);queue.push(node);}
   if(!resolve)settled=new Promise(done=>{resolve=done;});
   if(task===null)return slice();return{projected:false,reason:'pending'};
  }
@@ -60,10 +64,18 @@ export function createPrivateWordingView({root=globalThis.document?.body,replace
   pendingMutations.push(...(records||[]));if(mutationQueued||destroyed)return;mutationQueued=true;queueMicrotask(()=>{mutationQueued=false;const batch=pendingMutations;pendingMutations=[];if(!destroyed)processChanges(batch);});
  }
  function processChanges(records){
-  for(const node of tracked)if(!belongs(node)){restore(node);tracked.delete(node);}
-  for(const [scope,observer]of observers)if(!belongs(scope)){observer.disconnect();observers.delete(scope);}
+  // Detached nodes are released only after a removal, and isConnected is checked first: walking the ancestry of every
+  // replaced node on every change was the largest cost while the app was idle.
+  if((records||[]).some(record=>record.removedNodes?.length)||!records?.length){
+   for(const node of tracked)if(!attached(node)){restore(node);tracked.delete(node);}
+   for(const [scope,observer]of observers)if(!attached(scope)){observer.disconnect();observers.delete(scope);}
+  }
   const nodes=[];
-  for(const record of records||[]){if(record.type==='childList')nodes.push(...record.addedNodes);else nodes.push(record.target);}
+  // A changed text or attribute only needs that one node projected; only added nodes need their subtree walked.
+  const direct=new Set();
+  for(const record of records||[]){if(record.type==='childList')nodes.push(...record.addedNodes);else if(record.target)direct.add(record.target);}
+  if(direct.size&&active()){try{for(const node of direct)if(!queued.has(node)&&belongs(node))project(node);}catch{restoreAll();stop('replacement-failed');return;}finally{for(const observer of observers.values())observer.takeRecords?.();}}
+  if(!nodes.length&&direct.size)return;
   // Some observer adapters provide only a notification, not mutation records.
   enqueue(nodes.length?nodes:[root]);
  }

@@ -37,6 +37,18 @@
       "bootstrapApplicable": false,
       "reason": "Retired job uses only the hosted runner POSIX shell echo. It installs no project runtime, builds nothing and publishes nothing.",
       "onlyRun": "echo 'Preview publication runs once in windows.yml. This retired route never publishes.'"
+    },
+    {
+      "workflow": ".github/workflows/file-hosting-image.yml",
+      "job": "build",
+      "inventory": ".github/workflows/file-hosting-image.dependencies.json",
+      "record": "jobs.build"
+    },
+    {
+      "workflow": ".github/workflows/file-hosting-image.yml",
+      "job": "publish",
+      "inventory": ".github/workflows/file-hosting-image.dependencies.json",
+      "record": "jobs.publish"
     }
   ]
 }

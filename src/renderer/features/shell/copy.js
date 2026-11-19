@@ -63,6 +63,7 @@ export const SHELL_COPY = Object.freeze({
   'Not synced yet': '未同步過',
   'Backed up {ago}': '{ago}備份咗',
   'Backing up… {percent}%': '備份中… {percent}%',
+  'Backing up… {percent}% · {done} of {total} files': '備份中… {percent}% · {done} / {total} 個檔案',
   'Paused': '暫停咗',
   'Waiting for connection': '等緊網絡連線',
   'Needs attention': '需要處理',

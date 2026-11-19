@@ -4,9 +4,9 @@
 // How long each step normally takes before the page says it is taking longer than usual (milliseconds).
 export const SLOW_AFTER_MS = Object.freeze({
   discovering: 60000, 'waiting-drive': 60000, downloading: 5 * 60000, applying: 3 * 60000,
-  preparing: 10 * 60000, uploading: 15 * 60000, verifying: 2 * 60000, restoring: 10 * 60000,
+  packing: 20 * 60000, preparing: 10 * 60000, uploading: 15 * 60000, verifying: 2 * 60000, restoring: 10 * 60000,
 });
-export const STEP_KEYS = Object.freeze(['discovering', 'waiting-drive', 'downloading', 'applying', 'preparing', 'uploading', 'verifying', 'restoring']);
+export const STEP_KEYS = Object.freeze(['discovering', 'waiting-drive', 'downloading', 'applying', 'packing', 'preparing', 'uploading', 'verifying', 'restoring']);
 const count = value => Number.isSafeInteger(value) && value >= 0;
 
 export function formatBytes(bytes, locale = 'en') {
@@ -53,7 +53,11 @@ export function progressView(progress, nowMs = Date.now()) {
   const elapsedMs = started === null ? null : Math.max(0, nowMs - started);
   const totalElapsedMs = Number.isFinite(progress.startedAt) ? Math.max(0, nowMs - progress.startedAt) : null;
   const slow = elapsedMs !== null && elapsedMs >= SLOW_AFTER_MS[step];
-  const phase = ['copying', 'checking', 'checking-copy', 'staging', 'waiting-drive', 'drive-busy'].includes(progress.phase) ? progress.phase : null;
-  return { step, phase, unit, done, total, bytesDone, bytesTotal, fraction, elapsedMs, totalElapsedMs, slow,
+  const phase = ['copying', 'checking', 'checking-copy', 'staging', 'waiting-drive', 'drive-busy', 'packing', 'packing-publication'].includes(progress.phase) ? progress.phase : null;
+  // Speed and time left come from this step's own bytes, once there is enough of a sample to mean anything.
+  const rate = bytesDone !== null && elapsedMs !== null && elapsedMs >= 3000 && bytesDone > 0 ? bytesDone / (elapsedMs / 1000) : null;
+  const remainingMs = rate !== null && bytesTotal !== null && bytesTotal > bytesDone ? Math.round((bytesTotal - bytesDone) / rate * 1000) : null;
+  const percent = fraction === null ? null : Math.max(0, Math.min(100, Math.floor(fraction * 100)));
+  return { step, phase, unit, done, total, bytesDone, bytesTotal, fraction, percent, rate, remainingMs, elapsedMs, totalElapsedMs, slow,
     pendingCommits: count(progress.pendingCommits) ? progress.pendingCommits : null };
 }

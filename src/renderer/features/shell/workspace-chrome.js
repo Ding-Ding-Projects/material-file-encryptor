@@ -345,7 +345,9 @@ export function mountWorkspaceChrome({doc = document, translate, getLanguage, ho
   const hiddenCommands = () => commandButtons().filter(button => !button.hidden && button.dataset.overflow === 'true');
   // The information icon in front of a command travels with it.
   const guideOf = button => (button.previousElementSibling?.localName === 'mfe-control-guidance' ? button.previousElementSibling : null);
-  const setOverflow = (button, value) => { for (const node of [button, guideOf(button)]) { if (!node) continue; if (value) node.dataset.overflow = 'true'; else delete node.dataset.overflow; } };
+  // Attributes are written only when they change: every write is a DOM mutation that other observers react to.
+  const setOverflow = (button, value) => { for (const node of [button, guideOf(button)]) { if (!node) continue; if (value) { if (node.dataset.overflow !== 'true') node.dataset.overflow = 'true'; } else if (node.dataset.overflow !== undefined) delete node.dataset.overflow; } };
+  let overflowKey = null, barWidth = null;
   /**
    * Fits the commands to the bar: while they do not fit, the least important visible command moves into the More menu.
    * Higher priority numbers leave first; equal priorities leave from the end of the bar.
@@ -355,12 +357,18 @@ export function mountWorkspaceChrome({doc = document, translate, getLanguage, ho
     const bar = doc.querySelector('#command-bar .file-actions');
     if (!more || !bar) return;
     const buttons = commandButtons();
+    // Fitting forces several layouts. State updates arrive often and rarely change the bar, so skip when its width,
+    // its visible commands and their labels are what they were last time.
+    // The width comes from the resize observer, so an unchanged bar costs no layout read at all.
+    const key = [barWidth, t('More commands'), ...buttons.map(button => `${button.id}:${button.hidden ? 0 : 1}:${button.textContent.length}`)].join('|');
+    if (key === overflowKey) return;
+    overflowKey = key;
     for (const button of buttons) {
-      if (button.id === 'force-lock-button') button.dataset.priority = '4';
-      if (button.id === 'file-details-button') button.dataset.priority = '3';
+      if (button.id === 'force-lock-button' && button.dataset.priority !== '4') button.dataset.priority = '4';
+      if (button.id === 'file-details-button' && button.dataset.priority !== '3') button.dataset.priority = '3';
       setOverflow(button, false);
     }
-    more.setAttribute('aria-label', t('More commands'));
+    if (more.getAttribute('aria-label') !== t('More commands')) more.setAttribute('aria-label', t('More commands'));
     more.hidden = false;
     const shown = buttons.filter(button => !button.hidden);
     const order = shown.map((button, index) => ({button, index, priority: Number(button.dataset.priority ?? 2)})).sort((a, b) => b.priority - a.priority || b.index - a.index);
@@ -376,7 +384,7 @@ export function mountWorkspaceChrome({doc = document, translate, getLanguage, ho
     menu($('more-button'), event, entries);
   });
   if (commandBar && typeof ResizeObserver === 'function') {
-    const observer = new ResizeObserver(() => renderOverflow());
+    const observer = new ResizeObserver(entries => { const width = entries.at(-1)?.contentRect?.width; barWidth = Number.isFinite(width) ? Math.round(width) : null; renderOverflow(); });
     observer.observe(commandBar);
     disposers.push(() => observer.disconnect());
   }
@@ -514,7 +522,7 @@ export function mountWorkspaceChrome({doc = document, translate, getLanguage, ho
       const ago = !line.ago ? '' : line.ago.key === 'date'
         ? new Date(line.ago.time).toLocaleString(language === 'yue' ? 'zh-HK' : 'en', {month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'})
         : translate(line.ago.key, {language, values: {count: line.ago.count}});
-      return translate(line.key, {language, values: {percent: line.percent, ago}});
+      return translate(line.key, {language, values: {percent: line.percent, done: line.done, total: line.total, ago}});
     };
     const language = getLanguage();
     if (language === 'bilingual') { const en = render('en'), yue = render('yue'); return en === yue ? en : `${en} · ${yue}`; }

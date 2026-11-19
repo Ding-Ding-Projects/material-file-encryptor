@@ -1,0 +1,45 @@
+# File hosting for Material File Encryptor shares.
+#
+# The desktop app writes this file and hosting.env for you. To run it by hand:
+#   1. Create hosting.env next to this file with ADMIN_TOKEN=<at least 32 random characters>
+#      For your own Cloudflare tunnel, also create tunnel.env with TUNNEL_TOKEN=<token>.
+#   2. docker compose up -d                                 network only
+#      docker compose --profile quick-tunnel up -d          temporary trycloudflare.com address
+#      docker compose --profile named-tunnel up -d          your own Cloudflare tunnel
+#
+# Settings (environment or .env): INSTANCE, PORT, CACHE_MAX_GB, FILE_HOSTING_IMAGE.
+name: ${INSTANCE:-file-hosting}
+
+services:
+  file-hosting:
+    image: ${FILE_HOSTING_IMAGE:-ghcr.io/ding-ding-projects/material-file-encryptor-hosting:latest}
+    restart: unless-stopped
+    env_file:
+      - path: hosting.env
+        required: true
+    environment:
+      CACHE_MAX_GB: ${CACHE_MAX_GB:-10}
+    ports:
+      - "${PORT:-8790}:8080"
+    volumes:
+      - data:/data
+
+  quick-tunnel:
+    image: cloudflare/cloudflared:2026.10.1
+    profiles: ["quick-tunnel"]
+    restart: unless-stopped
+    command: ["tunnel", "--no-autoupdate", "--url", "http://file-hosting:8080"]
+    depends_on: [file-hosting]
+
+  named-tunnel:
+    image: cloudflare/cloudflared:2026.10.1
+    profiles: ["named-tunnel"]
+    restart: unless-stopped
+    command: ["tunnel", "--no-autoupdate", "run"]
+    env_file:
+      - path: tunnel.env
+        required: true
+    depends_on: [file-hosting]
+
+volumes:
+  data:

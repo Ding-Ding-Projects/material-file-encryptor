@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Download a shared file</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..800&amp;family=Roboto+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+@keyframes rise{from{transform:translateY(12px);opacity:0}to{transform:none;opacity:1}}
+@keyframes shimmer{from{background-position:-200px 0}to{background-position:200px 0}}
+[data-motion=off] *{animation:none!important;transition:none!important}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+button,input{font:inherit;color:inherit}
+</style>
+</helmet>
+<div data-motion="{{motion}}" style="min-height:{{minH}};box-sizing:border-box;font-family:'Roboto Flex',system-ui,sans-serif;font-size:15px;color:#1A1B24;background:#E9EBF2;display:flex;flex-direction:column;align-items:center;padding:24px 16px">
+<header style="width:100%;max-width:640px;display:flex;align-items:center;gap:10px;padding:8px 0 20px">
+<svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="{{accent}}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><rect x="9" y="11" width="6" height="5" rx="1"></rect><path d="M10 11V9.5a2 2 0 0 1 4 0V11"></path></svg>
+<span style="font-weight:650">Encrypted file download</span>
+</header>
+<main style="width:100%;max-width:640px;background:#FFFFFF;border-radius:24px;padding:28px;box-sizing:border-box;display:flex;flex-direction:column;gap:18px;animation:rise 320ms cubic-bezier(.05,.7,.1,1) both">
+<sc-if value="{{live}}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+<div aria-hidden="true" style="width:56px;height:56px;border-radius:16px;background:{{accentSoft}};display:grid;place-items:center"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="{{accent}}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"></path><path d="M14 3v5h5"></path></svg></div>
+<div style="flex:1;min-width:200px;display:flex;flex-direction:column;gap:4px">
+<h1 style="margin:0;font-size:22px;overflow-wrap:anywhere">{{fileName}}</h1>
+<span style="color:#454652">{{sizeText}}</span>
+</div>
+</div>
+<dl style="margin:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px">
+<div style="padding:12px 14px;border-radius:14px;background:#F1F2F8"><dt style="font-size:12px;color:#454652">Link expires</dt><dd style="margin:4px 0 0;font-weight:600">25 Nov 2026, 14:05</dd></div>
+<div style="padding:12px 14px;border-radius:14px;background:#F1F2F8"><dt style="font-size:12px;color:#454652">Downloads left</dt><dd style="margin:4px 0 0;font-weight:600">8 of 10</dd></div>
+</dl>
+<sc-if value="{{askPass}}" hint-placeholder-val="{{ false }}">
+<label style="display:flex;flex-direction:column;gap:6px">This file needs its passphrase<input type="password" placeholder="Passphrase" style="height:48px;border:1px solid #9A9CAC;border-radius:10px;padding:0 14px"></label>
+</sc-if>
+<sc-if value="{{busy}}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;justify-content:space-between"><span>Downloading and decrypting in your browser</span><span>{{pct}}%</span></div>
+<div aria-hidden="true" style="height:10px;border-radius:5px;background:#E3E5EE;overflow:hidden"><div style="width:{{pct}}%;height:100%;background:{{accent}};background-image:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);background-size:200px 100%;animation:shimmer 1.2s linear infinite"></div></div>
+</div>
+</sc-if>
+<sc-if value="{{done}}" hint-placeholder-val="{{ false }}">
+<p style="margin:0;padding:14px 16px;border-radius:14px;background:#CDEFE3;color:#063D31;font-weight:600">Saved. Every part passed its integrity check.</p>
+</sc-if>
+<button type="button" onClick="{{go}}" style="min-height:52px;border-radius:26px;border:0;background:{{accent}};color:#FFFFFF;font-weight:650;font-size:16px">{{buttonLabel}}</button>
+<p style="margin:0;color:#454652;font-size:13px;line-height:1.55">The file is decrypted on this device with the key in your link. The server only stores the encrypted copy and never sees the key.</p>
+</sc-if>
+<sc-if value="{{gone}}" hint-placeholder-val="{{ false }}">
+<h1 style="margin:0;font-size:22px">This link has ended</h1>
+<p style="margin:0;color:#454652;line-height:1.55">It expired or reached its download limit, and the file was removed from this server. Ask the person who sent it for a new link.</p>
+</sc-if>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#3F51B5","options":["#3F51B5","#1D6B3A","#9C4A00","#6B3FA0"]},"motion":{"editor":"enum","options":["on","off"],"default":"on"},"view":{"editor":"enum","options":["ready","passphrase","downloading","done","expired"],"default":"ready"},"minH":{"editor":null,"default":"860px"},"$preview":{"width":1280,"height":860}}'>
+class Component extends DCLogic {
+  constructor(p){ super(p); this.state = { local: null }; }
+  renderVals() {
+    const accent = this.props.accent ?? '#3F51B5';
+    const v = this.state.local ?? this.props.view ?? 'ready';
+    return {
+      accent, accentSoft: accent + '22', motion: this.props.motion ?? 'on', minH: this.props.minH ?? '860px',
+      live: v !== 'expired', gone: v === 'expired', askPass: v === 'passphrase', busy: v === 'downloading', done: v === 'done',
+      pct: 62, fileName: 'Quarterly report.pdf', sizeText: '4.2 MB, encrypted end to end',
+      buttonLabel: v === 'downloading' ? 'Cancel' : v === 'done' ? 'Download again' : 'Download',
+      go: () => this.setState({ local: v === 'downloading' ? 'ready' : v === 'ready' || v === 'passphrase' ? 'downloading' : 'ready' })
+    };
+  }
+}
+</script>
+</body>
+</html>

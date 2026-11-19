@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Download a shared file on a phone</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..800&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div style="width:390px;height:844px;overflow:auto;background:#E9EBF2;font-family:'Roboto Flex',system-ui,sans-serif">
+<dc-import name="Download" accent="{{accent}}" motion="{{motion}}" view="{{view}}" min-h="844px" hint-size="390px,844px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#3F51B5","options":["#3F51B5","#1D6B3A","#9C4A00","#6B3FA0"]},"motion":{"editor":"enum","options":["on","off"],"default":"on"},"view":{"editor":"enum","options":["ready","passphrase","downloading","done","expired"],"default":"passphrase"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { accent: this.props.accent ?? '#3F51B5', motion: this.props.motion ?? 'on', view: this.props.view ?? 'passphrase' };
+  }
+}
+</script>
+</body>
+</html>
