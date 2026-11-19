@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Appearance</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..900&amp;family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..600,0..1,0&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.ms{font-family:'Material Symbols Rounded';font-weight:400;font-style:normal;font-size:24px;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;white-space:nowrap;direction:ltr;-webkit-font-feature-settings:'liga';font-feature-settings:'liga';user-select:none}
+.ms.fill{font-variation-settings:'FILL' 1}
+@keyframes enter{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes pop{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
+[data-motion=off] *{animation:none!important;transition:none!important}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+button,input,select{font:inherit;color:inherit}
+</style>
+</helmet>
+<div data-motion="{{motion}}" style="width:1440px;height:960px;display:flex;font-family:'Roboto Flex',system-ui,sans-serif;font-size:14px;line-height:20px;color:{{onSurface}};background:{{surface}};overflow:hidden">
+<nav aria-label="Sections" style="flex:0 0 96px;display:flex;flex-direction:column;align-items:center;gap:12px;padding-top:24px">
+<button type="button" aria-label="New drive" style="width:56px;height:56px;border-radius:16px;border:0;background:{{primaryContainer}};color:{{onPrimaryContainer}};display:grid;place-items:center;margin-bottom:16px;box-shadow:0 2px 6px {{shadow}}"><span class="ms" aria-hidden="true">add</span></button>
+<sc-for list="{{rail}}" as="r" hint-placeholder-count="8">
+<a href="#" style="display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;color:{{r.color}};width:80px"><span style="{{r.pill}}"><span class="{{r.iconClass}}" aria-hidden="true">{{r.icon}}</span></span><span style="font-size:12px;line-height:16px;font-weight:500">{{r.label}}</span></a>
+</sc-for>
+</nav>
+<main style="flex:1;padding:24px 24px 24px 0;display:flex;min-width:0">
+<div style="flex:1;border-radius:28px;background:{{surfaceContainerLow}};padding:24px;display:flex;flex-direction:column;gap:20px;min-width:0;overflow:hidden">
+<header style="display:flex;align-items:center;gap:12px">
+<div style="flex:1"><h1 style="margin:0;font-size:32px;line-height:40px;font-weight:400">Appearance</h1><p style="margin:4px 0 0;color:{{onSurfaceVariant}};font-size:16px;line-height:24px">Colors, text and motion for every window. Changes apply right away.</p></div>
+<button type="button" onClick="{{resetAll}}" style="height:40px;padding:0 24px 0 16px;border-radius:999px;border:1px solid {{outline}};background:transparent;color:{{primary}};display:flex;align-items:center;gap:8px;font-weight:500"><span class="ms" aria-hidden="true" style="font-size:18px">restart_alt</span>Reset appearance</button>
+</header>
+<div style="flex:1;display:flex;gap:20px;min-height:0">
+<div style="flex:1;display:flex;flex-direction:column;gap:16px;min-width:0">
+<div style="display:flex;gap:16px">
+<section aria-label="Seed color" style="flex:1.15;border-radius:12px;background:{{surfaceContainerHighest}};padding:16px;display:flex;flex-direction:column;gap:12px">
+<h2 style="margin:0;font-size:16px;line-height:24px;font-weight:500">Seed color</h2>
+<div role="radiogroup" aria-label="Seed color" style="display:flex;gap:12px">
+<sc-for list="{{seeds}}" as="s" hint-placeholder-count="3"><button type="button" role="radio" aria-checked="{{s.checked}}" onClick="{{s.pick}}" style="{{s.style}}"><span aria-hidden="true" style="{{s.swatch}}"><span class="ms" style="{{s.checkStyle}}">check</span></span><span style="font-weight:500">{{s.label}}</span></button></sc-for>
+</div>
+</section>
+<section aria-label="Theme and contrast" style="flex:1.5;border-radius:12px;background:{{surfaceContainerHighest}};padding:16px;display:flex;flex-direction:column;gap:12px">
+<h2 style="margin:0;font-size:16px;line-height:24px;font-weight:500">Theme and contrast</h2>
+<div role="radiogroup" aria-label="Theme" style="{{segWrap}}">
+<sc-for list="{{themes}}" as="o" hint-placeholder-count="3"><button type="button" role="radio" aria-checked="{{o.checked}}" onClick="{{o.pick}}" style="{{o.style}}"><span class="ms" aria-hidden="true" style="{{o.checkStyle}}">check</span>{{o.label}}</button></sc-for>
+</div>
+<div role="radiogroup" aria-label="Contrast" style="{{segWrap}}">
+<sc-for list="{{contrasts}}" as="o" hint-placeholder-count="3"><button type="button" role="radio" aria-checked="{{o.checked}}" onClick="{{o.pick}}" style="{{o.style}}"><span class="ms" aria-hidden="true" style="{{o.checkStyle}}">check</span>{{o.label}}</button></sc-for>
+</div>
+</section>
+</div>
+<section aria-label="Text size" style="border-radius:12px;background:{{surfaceContainerHighest}};padding:16px;display:flex;gap:24px;align-items:center">
+<div style="flex:1;display:flex;flex-direction:column;gap:8px">
+<h2 style="margin:0;font-size:16px;line-height:24px;font-weight:500">Text size</h2>
+<div style="display:flex;align-items:center;gap:12px"><span style="font-size:12px;color:{{onSurfaceVariant}}">A</span><input type="range" min="85" max="130" value="{{textSize}}" onInput="{{onText}}" aria-label="Text size" style="flex:1;accent-color:{{primary}}"><span style="font-size:22px;color:{{onSurfaceVariant}}">A</span><span style="width:48px;text-align:right;font-weight:500">{{textText}}</span></div>
+</div>
+<div style="flex:1.2;border-radius:12px;border:1px solid {{outlineVariant}};padding:12px 16px;overflow:hidden"><p style="{{textPreviewTitle}}">Quarterly report.pdf</p><p style="{{textPreviewBody}}">Shared from Studio at 18:05 and opened twice today.</p></div>
+</section>
+<section aria-label="Motion" style="flex:1;border-radius:12px;background:{{surfaceContainerHighest}};padding:16px;display:flex;flex-direction:column;min-height:0">
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:4px"><h2 style="margin:0;font-size:16px;line-height:24px;font-weight:500;flex:1">Motion editor</h2>
+<span style="color:{{onSurfaceVariant}}">Reduce all motion</span>
+<button type="button" role="switch" aria-checked="{{reducedOn}}" aria-label="Reduce all motion" onClick="{{toggleReduced}}" style="{{reducedTrack}}"><span style="{{reducedHandle}}"></span></button></div>
+<div role="list" style="display:flex;flex-direction:column">
+<sc-for list="{{motions}}" as="m" hint-placeholder-count="4">
+<div role="listitem" style="display:flex;align-items:center;gap:16px;min-height:64px;border-bottom:1px solid {{outlineVariant}}">
+<span class="ms" aria-hidden="true" style="color:{{onSurfaceVariant}}">{{m.icon}}</span>
+<span style="flex:0 0 150px"><span style="display:block;font-size:16px;line-height:24px;font-weight:500">{{m.label}}</span><span style="display:block;color:{{onSurfaceVariant}};font-size:12px;line-height:16px">{{m.sub}}</span></span>
+<span style="flex:1;display:flex;align-items:center;gap:12px"><span class="ms" aria-hidden="true" style="font-size:20px;color:{{onSurfaceVariant}}">speed</span><input type="range" min="25" max="200" value="{{m.speed}}" onInput="{{m.onSpeed}}" aria-label="{{m.label}} speed" style="flex:1;accent-color:{{primary}}"><span style="width:52px;text-align:right;font-weight:500">{{m.speedText}}</span></span>
+<button type="button" role="switch" aria-checked="{{m.on}}" aria-label="{{m.label}} motion" onClick="{{m.toggle}}" style="{{m.track}}"><span style="{{m.handle}}"></span></button>
+</div>
+</sc-for>
+</div>
+</section>
+</div>
+<aside aria-label="Live preview" style="flex:0 0 400px;border-radius:28px;background:{{p.surface}};border:1px solid {{outlineVariant}};padding:24px;display:flex;flex-direction:column;gap:16px;color:{{p.onSurface}};overflow:hidden">
+<div style="display:flex;align-items:center;gap:8px;color:{{p.onSurfaceVariant}}"><span class="ms" aria-hidden="true" style="font-size:20px">visibility</span><span style="font-weight:500">Live preview</span><span style="flex:1"></span><span style="font-size:12px">{{previewNote}}</span></div>
+<div style="{{pv.card}}"><div style="display:flex;align-items:center;gap:12px"><span aria-hidden="true" style="width:40px;height:40px;border-radius:999px;display:grid;place-items:center;background:{{p.primaryContainer}};color:{{p.onPrimaryContainer}};font-weight:500">S</span><span style="flex:1"><span style="display:block;{{pv.title}}">Studio</span><span style="display:block;color:{{p.onSurfaceVariant}};{{pv.small}}">Q: · 2.8 GB · unlocked</span></span><span class="ms" aria-hidden="true" style="color:{{p.onSurfaceVariant}}">lock_open</span></div>
+<p style="margin:12px 0 0;color:{{p.onSurfaceVariant}};{{pv.body}}">Backed up today at 02:00. Next backup tonight.</p></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<button type="button" style="height:40px;padding:0 24px 0 16px;border-radius:999px;border:0;background:{{p.primary}};color:{{p.onPrimary}};display:flex;align-items:center;gap:8px;font-weight:500"><span class="ms" aria-hidden="true" style="font-size:18px">lock</span>Lock</button>
+<button type="button" style="height:40px;padding:0 24px 0 16px;border-radius:999px;border:0;background:{{p.secondaryContainer}};color:{{p.onSecondaryContainer}};display:flex;align-items:center;gap:8px;font-weight:500"><span class="ms" aria-hidden="true" style="font-size:18px">share</span>Share</button>
+<button type="button" style="height:40px;padding:0 24px 0 16px;border-radius:999px;border:1px solid {{p.outline}};background:transparent;color:{{p.primary}};display:flex;align-items:center;gap:8px;font-weight:500"><span class="ms" aria-hidden="true" style="font-size:18px">history</span>History</button>
+</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<span style="display:flex;align-items:center;gap:6px;height:32px;padding:0 12px 0 8px;border-radius:8px;background:{{p.secondaryContainer}};color:{{p.onSecondaryContainer}};font-weight:500"><span class="ms" aria-hidden="true" style="font-size:18px">check</span>Backed up</span>
+<span style="display:flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:8px;border:1px solid {{p.outlineVariant}};color:{{p.onSurfaceVariant}};font-weight:500">Encrypted</span>
+<span style="display:flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:8px;background:{{p.tertiaryContainer}};color:{{p.onTertiaryContainer}};font-weight:500">80 MiB parts</span>
+</div>
+<div style="border-radius:12px;background:{{p.surfaceContainerHigh}};padding:16px;display:flex;flex-direction:column;gap:8px"><span style="display:flex;align-items:center;gap:8px;font-weight:500"><span class="ms fill" aria-hidden="true" style="color:{{p.primary}}">cloud_upload</span>Backing up Photos 2026</span>
+<div aria-hidden="true" style="height:4px;border-radius:999px;background:{{p.secondaryContainer}};overflow:hidden"><div style="width:62%;height:100%;background:{{p.primary}};border-radius:999px"></div></div>
+<span style="color:{{p.onSurfaceVariant}};font-size:12px;line-height:16px">62% · about 0:24 left</span></div>
+<div style="margin-top:auto;display:flex;align-items:center;gap:12px;height:48px;padding:0 16px;border-radius:4px;background:{{p.inverseSurface}};color:{{p.inverseOnSurface}}"><span style="flex:1">Appearance saved</span><span style="color:{{p.primary}};font-weight:500">Undo</span></div>
+</aside>
+</div>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"seed":{"editor":"enum","options":["green","indigo","amber"],"default":"green"},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"motion":{"editor":"enum","options":["on","off"],"default":"on"},"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  constructor(p){ super(p); this.state = { seed: 'green', theme: 'dark', contrast: 'Standard', size: 100, reduced: false, m: { entry:[100,true], dialogs:[100,true], menus:[120,true], progress:[80,true] } }; }
+  renderVals() {
+    const t = scheme(this.props.seed ?? 'green', this.props.theme ?? 'dark');
+    const S = this.state;
+    const p = scheme(S.seed, S.theme === 'Light' ? 'light' : 'dark');
+    const railDefs = [['Home','home'],['Drives','hard_drive'],['Offline','offline_pin'],['History','history'],['Backup','cloud_upload'],['Shared','share'],['Tools','build'],['Settings','settings']];
+    const swatches = { green:'#2B6A4E', indigo:'#4D5C92', amber:'#835416' };
+    const sw = (on) => ({
+      track: 'position:relative;flex:0 0 52px;width:52px;height:32px;padding:0;border-radius:999px;cursor:pointer;box-sizing:border-box;background:' + (on ? t.primary : t.surfaceContainerHighest) + ';border:' + (on ? '0' : '2px solid ' + t.outline),
+      handle: 'position:absolute;top:' + (on ? '4px' : '6px') + ';left:' + (on ? '24px' : '6px') + ';width:' + (on ? '24px' : '16px') + ';height:' + (on ? '24px' : '16px') + ';border-radius:999px;background:' + (on ? t.onPrimary : t.outline) });
+    const seg = (label, on, pick) => ({ label, checked: String(on), pick,
+      style: 'flex:1;height:40px;border:0;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;font-weight:500;border-left:1px solid ' + t.outline + ';background:' + (on ? t.secondaryContainer : 'transparent') + ';color:' + (on ? t.onSecondaryContainer : t.onSurface),
+      checkStyle: on ? 'font-size:18px' : 'display:none' });
+    const themeNames = ['Light', 'Dark', 'Follow Windows'];
+    const motionDefs = [['entry','Page entry','swap_horiz','Screens sliding into place'],['dialogs','Dialogs','web_asset','Windows that open on top'],['menus','Menus','menu_open','Pop-up menus and lists'],['progress','Progress','autorenew','Bars and counters']];
+    const size = S.size / 100;
+    const rsw = sw(S.reduced);
+    return { ...t, motion: this.props.motion ?? 'on', p,
+      rail: railDefs.map(([label, icon], i) => ({ label, icon, iconClass: i === 7 ? 'ms fill' : 'ms', color: i === 7 ? t.onSurface : t.onSurfaceVariant,
+        pill: 'width:56px;height:32px;border-radius:16px;display:grid;place-items:center;background:' + (i === 7 ? t.secondaryContainer : 'transparent') + ';color:' + (i === 7 ? t.onSecondaryContainer : 'inherit') })),
+      resetAll: () => this.setState({ seed: 'green', theme: 'dark', contrast: 'Standard', size: 100, reduced: false }),
+      seeds: ['green','indigo','amber'].map(k => { const on = S.seed === k; return { label: k[0].toUpperCase() + k.slice(1), checked: String(on), pick: () => this.setState({ seed: k }),
+        style: 'flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;padding:8px 0;border-radius:12px;border:0;background:' + (on ? t.secondaryContainer : 'transparent') + ';color:' + (on ? t.onSecondaryContainer : t.onSurface) + ';cursor:pointer',
+        swatch: 'width:48px;height:48px;border-radius:999px;display:grid;place-items:center;color:#fff;background:' + swatches[k] + ';box-shadow:0 0 0 ' + (on ? '3px ' + t.primary : '0 transparent'),
+        checkStyle: on ? 'font-size:24px' : 'display:none' }; }),
+      segWrap: 'display:flex;border-radius:999px;border:1px solid ' + t.outline + ';overflow:hidden',
+      themes: themeNames.map(n => seg(n, S.theme === n, () => this.setState({ theme: n }))),
+      contrasts: ['Standard','Medium','High'].map(n => seg(n, S.contrast === n, () => this.setState({ contrast: n }))),
+      textSize: String(S.size), textText: S.size + '%', onText: (e) => this.setState({ size: Number(e.target.value) }),
+      textPreviewTitle: 'margin:0;font-weight:500;font-size:' + Math.round(16 * size) + 'px;line-height:' + Math.round(24 * size) + 'px',
+      textPreviewBody: 'margin:0;color:' + t.onSurfaceVariant + ';font-size:' + Math.round(14 * size) + 'px;line-height:' + Math.round(20 * size) + 'px',
+      reducedOn: String(S.reduced), reducedTrack: rsw.track, reducedHandle: rsw.handle, toggleReduced: () => this.setState({ reduced: !S.reduced }),
+      motions: motionDefs.map(([k, label, icon, sub]) => { const [sp, on] = S.m[k]; const s = sw(on && !S.reduced);
+        return { label, icon, sub, speed: String(sp), speedText: (sp / 100).toFixed(2).replace(/0$/, '') + 'x', on: String(on && !S.reduced), track: s.track, handle: s.handle,
+          toggle: () => this.setState({ m: { ...S.m, [k]: [sp, !on] } }),
+          onSpeed: (e) => this.setState({ m: { ...S.m, [k]: [Number(e.target.value), on] } }) }; }),
+      previewNote: S.seed + ' · ' + (S.theme === 'Light' ? 'light' : 'dark') + ' · ' + S.contrast.toLowerCase() + ' contrast',
+      pv: { card: 'border-radius:12px;padding:16px;background:' + p.surfaceContainerHighest + ';border:' + (S.contrast === 'High' ? '2px solid ' + p.outline : S.contrast === 'Medium' ? '1px solid ' + p.outline : '1px solid transparent'),
+        title: 'font-weight:500;font-size:' + Math.round(16 * size) + 'px;line-height:' + Math.round(24 * size) + 'px', small: 'font-size:' + Math.round(14 * size) + 'px;line-height:' + Math.round(20 * size) + 'px', body: 'font-size:' + Math.round(14 * size) + 'px;line-height:' + Math.round(20 * size) + 'px' }
+    };
+  }
+}
+function scheme(seed, theme) {
+  const dark = theme !== 'light';
+  const seeds = {
+    green:  dark ? { primary:'#8FD6B0', onPrimary:'#003825', primaryContainer:'#00513A', onPrimaryContainer:'#AAF2CB', secondaryContainer:'#354B40', onSecondaryContainer:'#CFE9D9', tertiaryContainer:'#234C5D', onTertiaryContainer:'#C1E8FB' }
+                 : { primary:'#2B6A4E', onPrimary:'#FFFFFF', primaryContainer:'#AFF1CE', onPrimaryContainer:'#002114', secondaryContainer:'#CFE9D9', onSecondaryContainer:'#0B1F15', tertiaryContainer:'#C1E8FB', onTertiaryContainer:'#001F2A' },
+    indigo: dark ? { primary:'#B9C3FF', onPrimary:'#1F2C61', primaryContainer:'#364379', onPrimaryContainer:'#DDE1FF', secondaryContainer:'#424659', onSecondaryContainer:'#DFE1F9', tertiaryContainer:'#5C3D58', onTertiaryContainer:'#FFD6F7' }
+                 : { primary:'#4D5C92', onPrimary:'#FFFFFF', primaryContainer:'#DDE1FF', onPrimaryContainer:'#05164B', secondaryContainer:'#DFE1F9', onSecondaryContainer:'#171B2C', tertiaryContainer:'#FFD6F7', onTertiaryContainer:'#2C1229' },
+    amber:  dark ? { primary:'#F5BD6F', onPrimary:'#452B00', primaryContainer:'#633F00', onPrimaryContainer:'#FFDDB3', secondaryContainer:'#574431', onSecondaryContainer:'#FBDEBC', tertiaryContainer:'#3E4E2E', onTertiaryContainer:'#D5EDBA' }
+                 : { primary:'#835416', onPrimary:'#FFFFFF', primaryContainer:'#FFDDB3', onPrimaryContainer:'#2A1700', secondaryContainer:'#FBDEBC', onSecondaryContainer:'#271904', tertiaryContainer:'#D5EDBA', onTertiaryContainer:'#11200A' }
+  };
+  const neutral = dark
+    ? { surface:'#101413', surfaceContainerLowest:'#0B0F0E', surfaceContainerLow:'#181D1B', surfaceContainer:'#1C211F', surfaceContainerHigh:'#272B29', surfaceContainerHighest:'#313634', onSurface:'#E0E3E0', onSurfaceVariant:'#C0C9C3', outline:'#8A938D', outlineVariant:'#404944', error:'#FFB4AB', onError:'#690005', errorContainer:'#93000A', onErrorContainer:'#FFDAD6', inverseSurface:'#E0E3E0', inverseOnSurface:'#2D3130', scrim:'rgba(0,0,0,.5)', shadow:'rgba(0,0,0,.45)' }
+    : { surface:'#F7FAF7', surfaceContainerLowest:'#FFFFFF', surfaceContainerLow:'#F1F4F1', surfaceContainer:'#EBEFEB', surfaceContainerHigh:'#E6E9E6', surfaceContainerHighest:'#E0E3E0', onSurface:'#191C1B', onSurfaceVariant:'#404944', outline:'#707973', outlineVariant:'#C0C9C3', error:'#BA1A1A', onError:'#FFFFFF', errorContainer:'#FFDAD6', onErrorContainer:'#410002', inverseSurface:'#2D3130', inverseOnSurface:'#EEF1EE', scrim:'rgba(0,0,0,.32)', shadow:'rgba(0,0,0,.18)' };
+  return { ...neutral, ...(seeds[seed] || seeds.green) };
+}
+</script>
+</body>
+</html>

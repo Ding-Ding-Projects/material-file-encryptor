@@ -1,0 +1,495 @@
+{
+ "v": 3,
+ "createdOnFiles": {
+  "v": 1,
+  "at": "2026-11-18T22:40:00Z"
+ },
+ "title": "Encryptor Modern Redesign",
+ "launch": {
+  "view": "canvas",
+  "page": "home"
+ },
+ "pages": [
+  {
+   "id": "home",
+   "name": "Home and drives"
+  },
+  {
+   "id": "backup",
+   "name": "Backup and sharing"
+  },
+  {
+   "id": "settings",
+   "name": "Settings and tools"
+  },
+  {
+   "id": "help",
+   "name": "Setup and help"
+  },
+  {
+   "id": "phone",
+   "name": "Phone width"
+  }
+ ],
+ "boards": {
+  "Main.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 960,
+   "page": "home",
+   "title": "Home",
+   "is_interactive": true
+  },
+  "Drive.dc.html": {
+   "x": 1960,
+   "y": 0,
+   "w": 1440,
+   "h": 960,
+   "page": "home",
+   "title": "My drive",
+   "is_interactive": true
+  },
+  "ContextMenu.dc.html": {
+   "x": 0,
+   "y": 1100,
+   "w": 1440,
+   "h": 960,
+   "page": "home",
+   "title": "Right-click menu",
+   "is_interactive": true
+  },
+  "Unlock.dc.html": {
+   "x": 1960,
+   "y": 1100,
+   "w": 1440,
+   "h": 960,
+   "page": "home",
+   "title": "Unlock a drive",
+   "is_interactive": true
+  },
+  "CreateDrive.dc.html": {
+   "x": 0,
+   "y": 2200,
+   "w": 1440,
+   "h": 960,
+   "page": "home",
+   "title": "New drive",
+   "is_interactive": true
+  },
+  "DriveAppearance.dc.html": {
+   "x": 1960,
+   "y": 2200,
+   "w": 1440,
+   "h": 960,
+   "page": "home",
+   "title": "Icon and banner",
+   "is_interactive": true
+  },
+  "Offline.dc.html": {
+   "x": 0,
+   "y": 3300,
+   "w": 1440,
+   "h": 960,
+   "page": "home",
+   "title": "Available offline",
+   "is_interactive": true
+  },
+  "History.dc.html": {
+   "x": 1960,
+   "y": 3300,
+   "w": 1440,
+   "h": 960,
+   "page": "home",
+   "title": "History",
+   "is_interactive": true
+  },
+  "Recycle.dc.html": {
+   "x": 0,
+   "y": 4400,
+   "w": 1440,
+   "h": 960,
+   "page": "home",
+   "title": "Recycle Bin",
+   "is_interactive": true
+  },
+  "Backup.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 960,
+   "page": "backup",
+   "title": "Docker Hub backup",
+   "is_interactive": true
+  },
+  "Shared.dc.html": {
+   "x": 1960,
+   "y": 0,
+   "w": 1440,
+   "h": 960,
+   "page": "backup",
+   "title": "Shared files",
+   "is_interactive": true
+  },
+  "Hosting.dc.html": {
+   "x": 0,
+   "y": 1100,
+   "w": 1440,
+   "h": 960,
+   "page": "backup",
+   "title": "File hosting",
+   "is_interactive": true
+  },
+  "CreateLink.dc.html": {
+   "x": 1960,
+   "y": 1100,
+   "w": 1440,
+   "h": 960,
+   "page": "backup",
+   "title": "Create a download link",
+   "is_interactive": true
+  },
+  "Settings.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 960,
+   "page": "settings",
+   "title": "Settings",
+   "is_interactive": true
+  },
+  "Personalization.dc.html": {
+   "x": 1960,
+   "y": 0,
+   "w": 1440,
+   "h": 960,
+   "page": "settings",
+   "title": "Appearance",
+   "is_interactive": true
+  },
+  "LocalAccess.dc.html": {
+   "x": 0,
+   "y": 1100,
+   "w": 1440,
+   "h": 960,
+   "page": "settings",
+   "title": "Local access",
+   "is_interactive": true
+  },
+  "Updates.dc.html": {
+   "x": 1960,
+   "y": 1100,
+   "w": 1440,
+   "h": 960,
+   "page": "settings",
+   "title": "Updates",
+   "is_interactive": true
+  },
+  "Tools.dc.html": {
+   "x": 0,
+   "y": 2200,
+   "w": 1440,
+   "h": 960,
+   "page": "settings",
+   "title": "Local tools",
+   "is_interactive": true
+  },
+  "Setup.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 960,
+   "page": "help",
+   "title": "Setup guide",
+   "is_interactive": true
+  },
+  "Docs.dc.html": {
+   "x": 1960,
+   "y": 0,
+   "w": 1440,
+   "h": 960,
+   "page": "help",
+   "title": "Documentation",
+   "is_interactive": true
+  },
+  "Changelog.dc.html": {
+   "x": 0,
+   "y": 1100,
+   "w": 1440,
+   "h": 960,
+   "page": "help",
+   "title": "Changelog",
+   "is_interactive": true
+  },
+  "PhoneHome.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 390,
+   "h": 844,
+   "page": "phone",
+   "title": "Home at 390 px",
+   "is_interactive": true
+  },
+  "PhoneDrive.dc.html": {
+   "x": 910,
+   "y": 0,
+   "w": 390,
+   "h": 844,
+   "page": "phone",
+   "title": "My drive at 390 px",
+   "is_interactive": true
+  }
+ },
+ "order": [
+  "Main.dc.html",
+  "Drive.dc.html",
+  "ContextMenu.dc.html",
+  "Unlock.dc.html",
+  "CreateDrive.dc.html",
+  "DriveAppearance.dc.html",
+  "Offline.dc.html",
+  "History.dc.html",
+  "Recycle.dc.html",
+  "Backup.dc.html",
+  "Shared.dc.html",
+  "Hosting.dc.html",
+  "CreateLink.dc.html",
+  "Settings.dc.html",
+  "Personalization.dc.html",
+  "LocalAccess.dc.html",
+  "Updates.dc.html",
+  "Tools.dc.html",
+  "Setup.dc.html",
+  "Docs.dc.html",
+  "Changelog.dc.html",
+  "PhoneHome.dc.html",
+  "PhoneDrive.dc.html"
+ ],
+ "notes": {
+  "homeTitle": {
+   "x": 0,
+   "y": -300,
+   "text": "Material File Encryptor in pure Material 3: home and drives",
+   "kind": "title1",
+   "maxW": 3800,
+   "page": "home"
+  },
+  "noteMain": {
+   "x": 1480,
+   "y": 0,
+   "w": 360,
+   "fill": "yellow",
+   "page": "home",
+   "text": "Home. Pure Material 3: navigation rail with a New drive FAB, drive cards with their own banner and icon, the running backup card with speed and time left, quick actions and recent activity.\n\nTry: the seed, theme and motion tweaks.\n\nUnbuilt: all of it."
+  },
+  "noteDrive": {
+   "x": 3440,
+   "y": 0,
+   "w": 360,
+   "fill": "yellow",
+   "page": "home",
+   "text": "My drive. Drive header card with banner and Lock, a toolbar where every button has an icon, search plus Regex, the file list and a details panel with Open encrypted storage folder.\n\nTry: click a file row.\n\nUnbuilt: all of it."
+  },
+  "noteContextMenu": {
+   "x": 1480,
+   "y": 1100,
+   "w": 360,
+   "fill": "yellow",
+   "page": "home",
+   "text": "Redesigned right-click menu. Material 3 menu with a file header, leading icons, shortcuts, grouped dividers, an Open with submenu and Delete in the error colour.\n\nTry: hover the items.\n\nUnbuilt: all of it."
+  },
+  "noteUnlock": {
+   "x": 3440,
+   "y": 1100,
+   "w": 360,
+   "fill": "yellow",
+   "page": "home",
+   "text": "Unlock. One centered card: password with show and hide, key file, Remember on this PC, and the other drives with their lock state.\n\nTry: Show wrong password.\n\nUnbuilt: all of it."
+  },
+  "noteCreateDrive": {
+   "x": 1480,
+   "y": 2200,
+   "w": 360,
+   "fill": "yellow",
+   "page": "home",
+   "text": "New drive. The name comes first and Next stays off until it is typed, then Where, Password, Drive letter and Review.\n\nTry: type a name, then Next and Back.\n\nUnbuilt: all of it."
+  },
+  "noteDriveAppearance": {
+   "x": 3440,
+   "y": 2200,
+   "w": 360,
+   "fill": "yellow",
+   "page": "home",
+   "text": "Icon and banner. The public warning sits at the top, and Choose stays off until the person ticks that they understand the images are public.\n\nTry: tick the checkbox.\n\nUnbuilt: the new look; the feature itself is built."
+  },
+  "noteOffline": {
+   "x": 1480,
+   "y": 3300,
+   "w": 360,
+   "fill": "yellow",
+   "page": "home",
+   "text": "Available offline. Summary of what is kept on this PC, a drive filter and a remove button on every row.\n\nTry: the All, Studio, Work filter.\n\nUnbuilt: all of it."
+  },
+  "noteHistory": {
+   "x": 3440,
+   "y": 3300,
+   "w": 360,
+   "fill": "yellow",
+   "page": "home",
+   "text": "History. Changes grouped by day with Restore on each, filter chips, and a version preview with Restore this version and Save a copy.\n\nTry: the chips, click a row.\n\nUnbuilt: all of it."
+  },
+  "noteRecycle": {
+   "x": 1480,
+   "y": 4400,
+   "w": 360,
+   "fill": "yellow",
+   "page": "home",
+   "text": "Recycle Bin. Original folder, deleted time and time left on every item, Restore and Delete permanently, and Empty Recycle Bin in the error colour.\n\nTry: tick some rows.\n\nUnbuilt: all of it."
+  },
+  "backupTitle": {
+   "x": 0,
+   "y": -300,
+   "text": "Material File Encryptor in pure Material 3: backup and sharing",
+   "kind": "title1",
+   "maxW": 3800,
+   "page": "backup"
+  },
+  "noteBackup": {
+   "x": 1480,
+   "y": 0,
+   "w": 360,
+   "fill": "yellow",
+   "page": "backup",
+   "text": "Docker Hub backup, built for many drives. One slim pinned strip for the running backup, filter chips with counts, search plus Regex, sort, and dense rows that expand in place instead of one big card per drive.\n\nTry: the chips, search, click a row.\n\nUnbuilt: all of it."
+  },
+  "noteShared": {
+   "x": 3440,
+   "y": 0,
+   "w": 360,
+   "fill": "yellow",
+   "page": "backup",
+   "text": "Shared files. Every share with its passphrase badge and state, with Copy command, Web link and Revoke.\n\nTry: Revoke a row.\n\nUnbuilt: all of it."
+  },
+  "noteHosting": {
+   "x": 1480,
+   "y": 1100,
+   "w": 360,
+   "fill": "yellow",
+   "page": "backup",
+   "text": "File hosting. Instance cards with health, cache use and addresses, and the download links list with Copy, QR and End now.\n\nTry: End now on a link.\n\nUnbuilt: the new look; file hosting itself is built."
+  },
+  "noteCreateLink": {
+   "x": 3440,
+   "y": 1100,
+   "w": 360,
+   "fill": "yellow",
+   "page": "backup",
+   "text": "Create a download link. Expiry, Delete after, the two switches and the QR code beside the link.\n\nTry: change the expiry and the chips.\n\nUnbuilt: the new look."
+  },
+  "settingsTitle": {
+   "x": 0,
+   "y": -300,
+   "text": "Material File Encryptor in pure Material 3: settings and tools",
+   "kind": "title1",
+   "maxW": 3800,
+   "page": "settings"
+  },
+  "noteSettings": {
+   "x": 1480,
+   "y": 0,
+   "w": 360,
+   "fill": "yellow",
+   "page": "settings",
+   "text": "Settings. Category list, big search with the regex builder strip, and rows with switches, selects and sliders. Search filters across every category.\n\nTry: type in search, turn on Regex.\n\nUnbuilt: all of it."
+  },
+  "notePersonalization": {
+   "x": 3440,
+   "y": 0,
+   "w": 360,
+   "fill": "yellow",
+   "page": "settings",
+   "text": "Appearance. Seed colours, theme, contrast, text size and a motion editor, with a live preview that follows every choice.\n\nTry: pick a seed and theme.\n\nUnbuilt: all of it."
+  },
+  "noteLocalAccess": {
+   "x": 1480,
+   "y": 1100,
+   "w": 360,
+   "fill": "yellow",
+   "page": "settings",
+   "text": "Local access. Authenticator codes with countdowns, the app lock and per-feature locks.\n\nTry: the switches.\n\nUnbuilt: all of it."
+  },
+  "noteUpdates": {
+   "x": 3440,
+   "y": 1100,
+   "w": 360,
+   "fill": "yellow",
+   "page": "settings",
+   "text": "Updates. Current version, the Update coming soon card with each stage, 24-hour times and a labelled estimate, the channel and release notes.\n\nTry: the channel selector.\n\nUnbuilt: all of it."
+  },
+  "noteTools": {
+   "x": 1480,
+   "y": 2200,
+   "w": 360,
+   "fill": "yellow",
+   "page": "settings",
+   "text": "Local tools. A card per tool with search plus Regex and recently used chips.\n\nTry: search, click a chip.\n\nUnbuilt: all of it."
+  },
+  "helpTitle": {
+   "x": 0,
+   "y": -300,
+   "text": "Material File Encryptor in pure Material 3: setup and help",
+   "kind": "title1",
+   "maxW": 3800,
+   "page": "help"
+  },
+  "noteSetup": {
+   "x": 1480,
+   "y": 0,
+   "w": 360,
+   "fill": "yellow",
+   "page": "help",
+   "text": "Setup guide. Step list, progress, the Look and language step with a live preview, and Back, Skip, Save and close, Next.\n\nTry: the theme and swatches.\n\nUnbuilt: all of it."
+  },
+  "noteDocs": {
+   "x": 3440,
+   "y": 0,
+   "w": 360,
+   "fill": "yellow",
+   "page": "help",
+   "text": "Documentation. Task-led home with search plus Regex, topic cards and an open article with steps, a note and related topics.\n\nUnbuilt: all of it."
+  },
+  "noteChangelog": {
+   "x": 1480,
+   "y": 1100,
+   "w": 360,
+   "fill": "yellow",
+   "page": "help",
+   "text": "Changelog. A card per version with New and Fixed badges and a filter.\n\nTry: All, New, Fixed.\n\nUnbuilt: all of it."
+  },
+  "phoneTitle": {
+   "x": 0,
+   "y": -300,
+   "text": "Material File Encryptor in pure Material 3: phone width",
+   "kind": "title1",
+   "maxW": 3800,
+   "page": "phone"
+  },
+  "notePhoneHome": {
+   "x": 430,
+   "y": 0,
+   "w": 360,
+   "fill": "yellow",
+   "page": "phone",
+   "text": "Home at 390 px. The rail becomes a navigation bar, the running backup stays on top, drive cards stack and New drive is an extended FAB.\n\nUnbuilt: all of it."
+  },
+  "notePhoneDrive": {
+   "x": 1340,
+   "y": 0,
+   "w": 360,
+   "fill": "yellow",
+   "page": "phone",
+   "text": "My drive at 390 px. Scrolling filter chips, file rows and a bottom sheet with every file action, so nothing is lost on a narrow window.\n\nTry: tap a file, tap the dimmed area.\n\nUnbuilt: all of it."
+  }
+ },
+ "designSystems": []
+}

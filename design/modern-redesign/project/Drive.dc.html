@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>My drive</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..900&amp;family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..600,0..1,0&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.ms{font-family:'Material Symbols Rounded';font-weight:400;font-style:normal;font-size:24px;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;white-space:nowrap;direction:ltr;-webkit-font-feature-settings:'liga';font-feature-settings:'liga';user-select:none}
+.ms.fill{font-variation-settings:'FILL' 1}
+@keyframes enter{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes pop{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
+[data-motion=off] *{animation:none!important;transition:none!important}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+button,input,select{font:inherit;color:inherit}
+</style>
+</helmet>
+<div data-motion="{{motion}}" style="width:1440px;height:960px;display:flex;font-family:'Roboto Flex',system-ui,sans-serif;font-size:14px;line-height:20px;color:{{onSurface}};background:{{surface}};overflow:hidden">
+<nav aria-label="Sections" style="flex:0 0 96px;display:flex;flex-direction:column;align-items:center;gap:12px;padding-top:24px">
+<button type="button" aria-label="Import files" style="width:56px;height:56px;border-radius:16px;border:0;background:{{primaryContainer}};color:{{onPrimaryContainer}};display:grid;place-items:center;margin-bottom:16px;box-shadow:0 2px 6px {{shadow}}"><span class="ms" aria-hidden="true">upload_file</span></button>
+<sc-for list="{{rail}}" as="r" hint-placeholder-count="8">
+<a href="#" style="display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;color:{{r.color}};width:80px"><span style="{{r.pill}}"><span class="{{r.iconClass}}" aria-hidden="true">{{r.icon}}</span></span><span style="font-size:12px;line-height:16px;font-weight:500">{{r.label}}</span></a>
+</sc-for>
+</nav>
+<main style="flex:1;padding:24px 24px 24px 0;display:flex;min-width:0">
+<div style="flex:1;border-radius:28px;background:{{surfaceContainerLow}};padding:24px;display:flex;flex-direction:column;gap:16px;min-width:0;overflow:hidden">
+<header style="display:flex;align-items:center;gap:12px">
+<div style="flex:1"><h1 style="margin:0;font-size:32px;line-height:40px;font-weight:400">My drive</h1><p style="margin:4px 0 0;color:{{onSurfaceVariant}};font-size:16px;line-height:24px">Studio · 8 items · encrypted on this PC</p></div>
+<label style="{{searchBox}}"><span class="ms" aria-hidden="true" style="color:{{onSurfaceVariant}}">search</span><input placeholder="Search in Studio" aria-label="Search in Studio" style="flex:1;border:0;background:transparent;outline:0;font-size:16px"></label>
+<button type="button" style="{{btnRegex}}"><span class="ms" aria-hidden="true" style="font-size:18px">regular_expression</span>Regex</button>
+</header>
+<section aria-label="Drive" style="border-radius:28px;background:{{surfaceContainerHighest}};overflow:hidden;display:flex;flex-direction:column;animation:enter 320ms cubic-bezier(.05,.7,.1,1) both">
+<div aria-hidden="true" style="height:72px;background:linear-gradient(120deg,#3B5BA9,#8E5EA8 55%,#D98E5A)"></div>
+<div style="display:flex;align-items:center;gap:16px;padding:16px 24px">
+<span aria-hidden="true" style="width:48px;height:48px;border-radius:999px;display:grid;place-items:center;font-size:20px;font-weight:500;background:{{primaryContainer}};color:{{onPrimaryContainer}}">S</span>
+<div style="flex:1"><div style="font-size:22px;line-height:28px">Studio</div><div style="color:{{onSurfaceVariant}}">Q: · 2.8 GB</div></div>
+<span style="{{chipSelected}}"><span class="ms" aria-hidden="true" style="font-size:18px">lock_open</span>Unlocked</span>
+<button type="button" style="{{btnOutlined}}"><span class="ms" aria-hidden="true" style="font-size:18px">lock</span>Lock</button>
+</div>
+</section>
+<div role="toolbar" aria-label="Drive actions" style="display:flex;align-items:center;gap:8px">
+<button type="button" style="{{btnFilled}}"><span class="ms" aria-hidden="true" style="font-size:18px">upload_file</span>Import</button>
+<button type="button" style="{{btnTonal}}"><span class="ms" aria-hidden="true" style="font-size:18px">create_new_folder</span>New folder</button>
+<button type="button" style="{{btnOutlined}}"><span class="ms" aria-hidden="true" style="font-size:18px">sync</span>Sync now</button>
+<button type="button" style="{{btnOutlined}}"><span class="ms" aria-hidden="true" style="font-size:18px">offline_pin</span>Keep offline</button>
+<button type="button" style="{{btnOutlined}}"><span class="ms" aria-hidden="true" style="font-size:18px">share</span>Share</button>
+<span style="flex:1"></span>
+<button type="button" aria-label="More actions" style="{{iconBtn}}"><span class="ms" aria-hidden="true">more_vert</span></button>
+</div>
+<div style="flex:1;display:flex;gap:16px;min-height:0">
+<section aria-label="Files" style="flex:1;min-width:0;display:flex;flex-direction:column;border-radius:12px;background:{{surfaceContainerHighest}};overflow:hidden">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 120px 150px 40px;gap:12px;align-items:center;height:40px;padding:0 16px;color:{{onSurfaceVariant}};font-weight:500;border-bottom:1px solid {{outlineVariant}}"><span style="display:flex;align-items:center;gap:4px">Name<span class="ms" aria-hidden="true" style="font-size:18px">arrow_upward</span></span><span>Size</span><span>Modified</span><span></span></div>
+<div role="list" style="flex:1;overflow:hidden">
+<sc-for list="{{rows}}" as="f" hint-placeholder-count="8">
+<button type="button" onClick="{{f.pick}}" aria-pressed="{{f.pressed}}" style="{{f.row}}">
+<span style="display:flex;align-items:center;gap:16px;min-width:0"><span style="{{f.iconBox}}"><span class="ms" aria-hidden="true" style="font-size:20px">{{f.icon}}</span></span><span style="font-size:16px;line-height:24px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{f.name}}</span></span>
+<span style="color:{{onSurfaceVariant}}">{{f.size}}</span>
+<span style="color:{{onSurfaceVariant}}">{{f.mod}}</span>
+<span class="ms" aria-hidden="true" style="font-size:20px;color:{{onSurfaceVariant}}">{{f.state}}</span>
+</button>
+</sc-for>
+</div>
+</section>
+<aside aria-label="Details" style="flex:0 0 340px;border-radius:12px;border:1px solid {{outlineVariant}};padding:20px;display:flex;flex-direction:column;gap:12px;overflow:hidden">
+<div style="display:flex;align-items:center;gap:16px"><span style="{{sel.iconBox}}"><span class="ms fill" aria-hidden="true" style="font-size:28px">{{sel.icon}}</span></span><div style="min-width:0"><div style="font-size:16px;line-height:24px;font-weight:500">{{sel.name}}</div><div style="color:{{onSurfaceVariant}}">{{sel.type}}</div></div></div>
+<div role="list" style="display:flex;flex-direction:column">
+<sc-for list="{{facts}}" as="x" hint-placeholder-count="4"><div role="listitem" style="display:flex;align-items:center;gap:12px;min-height:40px;border-bottom:1px solid {{outlineVariant}}"><span class="ms" aria-hidden="true" style="font-size:20px;color:{{onSurfaceVariant}}">{{x.icon}}</span><span style="flex:1;color:{{onSurfaceVariant}}">{{x.label}}</span><span style="font-weight:500">{{x.value}}</span></div></sc-for>
+</div>
+<div style="margin-top:auto;display:flex;flex-direction:column;gap:8px">
+<button type="button" style="{{btnFilledWide}}"><span class="ms" aria-hidden="true" style="font-size:18px">open_in_new</span>Open</button>
+<button type="button" style="{{btnTonalWide}}"><span class="ms" aria-hidden="true" style="font-size:18px">share</span>Share via Docker Hub</button>
+<button type="button" style="{{btnOutlinedWide}}"><span class="ms" aria-hidden="true" style="font-size:18px">history</span>All versions</button>
+<button type="button" style="{{btnTextWide}}"><span class="ms" aria-hidden="true" style="font-size:18px">folder_open</span>Open encrypted storage folder</button>
+</div>
+</aside>
+</div>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"seed":{"editor":"enum","options":["green","indigo","amber"],"default":"green"},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"motion":{"editor":"enum","options":["on","off"],"default":"on"},"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  constructor(p){ super(p); this.state = { sel: 0 }; }
+  renderVals() {
+    const t = scheme(this.props.seed ?? 'green', this.props.theme ?? 'dark');
+    const u = ui(t, 1);
+    const files = [
+      { name:'Quarterly report.pdf', icon:'picture_as_pdf', type:'PDF document', size:'4.2 MB', mod:'Today 19:12', off:true, ver:6 },
+      { name:'Contract.pdf', icon:'picture_as_pdf', type:'PDF document', size:'1.1 MB', mod:'Today 11:02', off:false, ver:3 },
+      { name:'Brand guidelines.pptx', icon:'slideshow', type:'Presentation', size:'38.6 MB', mod:'Yesterday 16:40', off:true, ver:4 },
+      { name:'Logo-final.svg', icon:'image', type:'SVG image', size:'212 KB', mod:'Yesterday 09:15', off:false, ver:9 },
+      { name:'Interview notes.docx', icon:'description', type:'Word document', size:'86 KB', mod:'14 Nov 21:30', off:false, ver:2 },
+      { name:'Budget 2026.xlsx', icon:'table_chart', type:'Spreadsheet', size:'640 KB', mod:'12 Nov 08:48', off:true, ver:12 },
+      { name:'Product photos', icon:'folder', type:'Folder · 148 items', size:'1.2 GB', mod:'10 Nov 17:20', off:false, ver:1 },
+      { name:'Demo reel.mp4', icon:'movie', type:'Video', size:'512 MB', mod:'8 Nov 13:05', off:false, ver:1 }
+    ];
+    const box = (on) => 'width:40px;height:40px;border-radius:12px;display:grid;place-items:center;flex:0 0 auto;background:' + (on ? t.primaryContainer : t.surfaceContainerHigh) + ';color:' + (on ? t.onPrimaryContainer : t.onSurfaceVariant);
+    const s = this.state.sel;
+    const cur = files[s];
+    return { ...t, ...u, motion: this.props.motion ?? 'on',
+      rows: files.map((f, i) => ({ ...f, pressed: String(i === s), pick: () => this.setState({ sel: i }),
+        state: f.off ? 'offline_pin' : 'lock',
+        iconBox: box(i === s),
+        row: 'display:grid;grid-template-columns:minmax(0,1fr) 120px 150px 40px;gap:12px;align-items:center;width:100%;height:56px;padding:0 16px;border:0;text-align:left;cursor:pointer;color:inherit;border-bottom:1px solid ' + t.outlineVariant + ';background:' + (i === s ? t.secondaryContainer : 'transparent') })),
+      sel: { ...cur, iconBox: 'width:56px;height:56px;border-radius:16px;display:grid;place-items:center;flex:0 0 auto;background:' + t.primaryContainer + ';color:' + t.onPrimaryContainer },
+      facts: [['draft','Type',cur.type],['data_usage','Size',cur.size],['schedule','Modified',cur.mod],['history','Versions',String(cur.ver)],['offline_pin','Offline',cur.off ? 'Kept on this PC' : 'Not kept']].map(([icon,label,value]) => ({ icon, label, value }))
+    };
+  }
+}
+function ui(t, selected) {
+  const railDefs = [['Home','home'],['Drives','hard_drive'],['Offline','offline_pin'],['History','history'],['Backup','cloud_upload'],['Shared','share'],['Tools','build'],['Settings','settings']];
+  const B = (bg, fg, border, pad, extra) => 'height:40px;padding:' + (pad || '0 24px 0 16px') + ';border-radius:999px;border:' + (border || '0') + ';background:' + bg + ';color:' + fg + ';display:flex;align-items:center;justify-content:center;gap:8px;font-weight:500;cursor:pointer;white-space:nowrap;' + (extra || '');
+  return {
+    rail: railDefs.map(([label, icon], i) => ({ label, icon, iconClass: i === selected ? 'ms fill' : 'ms', color: i === selected ? t.onSurface : t.onSurfaceVariant,
+      pill: 'width:56px;height:32px;border-radius:16px;display:grid;place-items:center;background:' + (i === selected ? t.secondaryContainer : 'transparent') + ';color:' + (i === selected ? t.onSecondaryContainer : 'inherit') })),
+    btnFilled: B(t.primary, t.onPrimary), btnTonal: B(t.secondaryContainer, t.onSecondaryContainer), btnOutlined: B('transparent', t.primary, '1px solid ' + t.outline), btnText: B('transparent', t.primary, '0', '0 12px'),
+    btnFilledWide: B(t.primary, t.onPrimary, '0', null, 'width:100%'), btnTonalWide: B(t.secondaryContainer, t.onSecondaryContainer, '0', null, 'width:100%'), btnOutlinedWide: B('transparent', t.primary, '1px solid ' + t.outline, null, 'width:100%'), btnTextWide: B('transparent', t.primary, '0', '0 12px', 'width:100%'),
+    btnRegex: B(t.secondaryContainer, t.onSecondaryContainer, '0', '0 16px 0 12px'),
+    iconBtn: 'width:40px;height:40px;border-radius:999px;border:0;background:transparent;color:' + t.onSurfaceVariant + ';display:grid;place-items:center;cursor:pointer',
+    searchBox: 'display:flex;align-items:center;gap:12px;width:420px;height:56px;border-radius:999px;background:' + t.surfaceContainerHigh + ';padding:0 8px 0 16px',
+    chipSelected: 'display:flex;align-items:center;gap:8px;height:32px;padding:0 12px 0 8px;border-radius:8px;font-weight:500;background:' + t.secondaryContainer + ';color:' + t.onSecondaryContainer
+  };
+}
+function scheme(seed, theme) {
+  const dark = theme !== 'light';
+  const seeds = {
+    green:  dark ? { primary:'#8FD6B0', onPrimary:'#003825', primaryContainer:'#00513A', onPrimaryContainer:'#AAF2CB', secondaryContainer:'#354B40', onSecondaryContainer:'#CFE9D9', tertiaryContainer:'#234C5D', onTertiaryContainer:'#C1E8FB' }
+                 : { primary:'#2B6A4E', onPrimary:'#FFFFFF', primaryContainer:'#AFF1CE', onPrimaryContainer:'#002114', secondaryContainer:'#CFE9D9', onSecondaryContainer:'#0B1F15', tertiaryContainer:'#C1E8FB', onTertiaryContainer:'#001F2A' },
+    indigo: dark ? { primary:'#B9C3FF', onPrimary:'#1F2C61', primaryContainer:'#364379', onPrimaryContainer:'#DDE1FF', secondaryContainer:'#424659', onSecondaryContainer:'#DFE1F9', tertiaryContainer:'#5C3D58', onTertiaryContainer:'#FFD6F7' }
+                 : { primary:'#4D5C92', onPrimary:'#FFFFFF', primaryContainer:'#DDE1FF', onPrimaryContainer:'#05164B', secondaryContainer:'#DFE1F9', onSecondaryContainer:'#171B2C', tertiaryContainer:'#FFD6F7', onTertiaryContainer:'#2C1229' },
+    amber:  dark ? { primary:'#F5BD6F', onPrimary:'#452B00', primaryContainer:'#633F00', onPrimaryContainer:'#FFDDB3', secondaryContainer:'#574431', onSecondaryContainer:'#FBDEBC', tertiaryContainer:'#3E4E2E', onTertiaryContainer:'#D5EDBA' }
+                 : { primary:'#835416', onPrimary:'#FFFFFF', primaryContainer:'#FFDDB3', onPrimaryContainer:'#2A1700', secondaryContainer:'#FBDEBC', onSecondaryContainer:'#271904', tertiaryContainer:'#D5EDBA', onTertiaryContainer:'#11200A' }
+  };
+  const neutral = dark
+    ? { surface:'#101413', surfaceContainerLowest:'#0B0F0E', surfaceContainerLow:'#181D1B', surfaceContainer:'#1C211F', surfaceContainerHigh:'#272B29', surfaceContainerHighest:'#313634', onSurface:'#E0E3E0', onSurfaceVariant:'#C0C9C3', outline:'#8A938D', outlineVariant:'#404944', error:'#FFB4AB', onError:'#690005', errorContainer:'#93000A', onErrorContainer:'#FFDAD6', inverseSurface:'#E0E3E0', inverseOnSurface:'#2D3130', scrim:'rgba(0,0,0,.5)', shadow:'rgba(0,0,0,.45)' }
+    : { surface:'#F7FAF7', surfaceContainerLowest:'#FFFFFF', surfaceContainerLow:'#F1F4F1', surfaceContainer:'#EBEFEB', surfaceContainerHigh:'#E6E9E6', surfaceContainerHighest:'#E0E3E0', onSurface:'#191C1B', onSurfaceVariant:'#404944', outline:'#707973', outlineVariant:'#C0C9C3', error:'#BA1A1A', onError:'#FFFFFF', errorContainer:'#FFDAD6', onErrorContainer:'#410002', inverseSurface:'#2D3130', inverseOnSurface:'#EEF1EE', scrim:'rgba(0,0,0,.32)', shadow:'rgba(0,0,0,.18)' };
+  return { ...neutral, ...(seeds[seed] || seeds.green) };
+}
+</script>
+</body>
+</html>

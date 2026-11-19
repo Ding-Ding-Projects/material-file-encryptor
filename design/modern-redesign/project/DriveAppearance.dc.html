@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Studio: icon and banner</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..900&amp;family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..600,0..1,0&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.ms{font-family:'Material Symbols Rounded';font-weight:400;font-style:normal;font-size:24px;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;white-space:nowrap;direction:ltr;-webkit-font-feature-settings:'liga';font-feature-settings:'liga';user-select:none}
+.ms.fill{font-variation-settings:'FILL' 1}
+@keyframes enter{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes pop{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
+[data-motion=off] *{animation:none!important;transition:none!important}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+button,input,select{font:inherit;color:inherit}
+</style>
+</helmet>
+<div data-motion="{{motion}}" style="position:relative;width:1440px;height:960px;display:flex;font-family:'Roboto Flex',system-ui,sans-serif;font-size:14px;line-height:20px;color:{{onSurface}};background:{{surface}};overflow:hidden">
+<nav aria-hidden="true" style="flex:0 0 96px;display:flex;flex-direction:column;align-items:center;gap:12px;padding-top:24px">
+<span style="width:56px;height:56px;border-radius:16px;background:{{primaryContainer}};color:{{onPrimaryContainer}};display:grid;place-items:center;margin-bottom:16px"><span class="ms">add</span></span>
+<sc-for list="{{rail}}" as="r" hint-placeholder-count="8">
+<span style="display:flex;flex-direction:column;align-items:center;gap:4px;color:{{r.color}};width:80px"><span style="{{r.pill}}"><span class="{{r.iconClass}}">{{r.icon}}</span></span><span style="font-size:12px;line-height:16px;font-weight:500">{{r.label}}</span></span>
+</sc-for>
+</nav>
+<main aria-hidden="true" style="flex:1;padding:24px 24px 24px 0;display:flex;min-width:0">
+<div style="flex:1;border-radius:28px;background:{{surfaceContainerLow}};padding:24px;display:flex;flex-direction:column;gap:24px;overflow:hidden">
+<h1 style="margin:0;font-size:32px;line-height:40px;font-weight:400">Drives</h1>
+<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px"><div style="height:200px;border-radius:12px;background:{{surfaceContainerHighest}}"></div><div style="height:200px;border-radius:12px;background:{{surfaceContainerHighest}}"></div><div style="height:200px;border-radius:12px;background:{{surfaceContainerHighest}}"></div><div style="height:200px;border-radius:12px;background:{{surfaceContainerHighest}}"></div></div>
+</div>
+</main>
+<div style="position:absolute;inset:0;background:{{scrim}}"></div>
+<div role="dialog" aria-modal="true" aria-labelledby="dlg-title" style="position:absolute;left:330px;top:48px;width:780px;box-sizing:border-box;border-radius:28px;background:{{surfaceContainerHigh}};overflow:hidden;box-shadow:0 8px 24px {{shadow}};animation:pop 200ms cubic-bezier(.05,.7,.1,1) both">
+<div style="position:relative;height:200px;background:linear-gradient(120deg,#3B5BA9,#8E5EA8 55%,#D98E5A)">
+<span style="position:absolute;right:16px;top:16px;display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px 0 8px;border-radius:999px;background:rgba(0,0,0,.45);color:#FFFFFF;font-size:12px;font-weight:500"><span class="ms" aria-hidden="true" style="font-size:16px">public</span>Banner preview</span>
+<span aria-hidden="true" style="position:absolute;left:24px;bottom:-40px;width:96px;height:96px;border-radius:999px;border:4px solid {{surfaceContainerHigh}};box-sizing:border-box;background:{{primaryContainer}};color:{{onPrimaryContainer}};display:grid;place-items:center;font-size:40px;font-weight:500">S</span>
+</div>
+<div style="padding:56px 24px 24px;display:flex;flex-direction:column;gap:20px">
+<div>
+<h2 id="dlg-title" style="margin:0;font-size:24px;line-height:32px;font-weight:400">Studio: icon and banner</h2>
+<p style="margin:4px 0 0;color:{{onSurfaceVariant}}">Shown on the drive card and before it is unlocked.</p>
+</div>
+<div role="alert" style="display:flex;gap:16px;padding:16px;border-radius:16px;background:{{errorContainer}};color:{{onErrorContainer}}">
+<span class="ms fill" aria-hidden="true" style="flex:0 0 24px">warning</span>
+<p style="margin:0;font-size:14px;line-height:20px">These images are public. They are uploaded unencrypted with this drive's backups to your public Docker Hub repository, so the drive can show them before it is unlocked. Anyone can see them.</p>
+</div>
+<button type="button" role="checkbox" aria-checked="{{ackChecked}}" onClick="{{toggleAck}}" style="display:flex;align-items:center;gap:12px;height:48px;padding:0 8px;border:0;background:transparent;text-align:left;cursor:pointer;font-size:16px">
+<span aria-hidden="true" style="{{box}}"><span class="ms" style="{{tick}}">check</span></span>
+I understand the icon and banner are public
+</button>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px">
+<sc-for list="{{cards}}" as="c" hint-placeholder-count="2">
+<div style="border-radius:12px;border:1px solid {{outlineVariant}};padding:16px;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;gap:12px"><span class="ms" aria-hidden="true" style="color:{{onSurfaceVariant}}">{{c.icon}}</span><span style="flex:1"><span style="display:block;font-size:16px;line-height:24px;font-weight:500">{{c.title}}</span><span style="display:block;color:{{onSurfaceVariant}};font-size:12px;line-height:16px">{{c.limit}}</span></span></div>
+<div style="display:flex;gap:8px">
+<button type="button" aria-disabled="{{c.disabled}}" style="{{c.choose}}"><span class="ms" aria-hidden="true" style="font-size:18px">upload</span>Choose</button>
+<button type="button" style="{{btnText}}"><span class="ms" aria-hidden="true" style="font-size:18px">delete</span>Remove</button>
+</div>
+</div>
+</sc-for>
+</div>
+<div style="display:flex;justify-content:flex-end"><button type="button" style="{{btnFilled}}"><span class="ms" aria-hidden="true" style="font-size:18px">check</span>Done</button></div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"seed":{"editor":"enum","options":["green","indigo","amber"],"default":"green"},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"motion":{"editor":"enum","options":["on","off"],"default":"on"},"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  constructor(p){ super(p); this.state = { ack:false }; }
+  renderVals() {
+    const t = scheme(this.props.seed ?? 'green', this.props.theme ?? 'dark');
+    const s = this.state;
+    const railDefs = [['Home','home'],['Drives','hard_drive'],['Offline','offline_pin'],['History','history'],['Backup','cloud_upload'],['Shared','share'],['Tools','build'],['Settings','settings']];
+    const sel = 1;
+    const base = 'height:40px;padding:0 24px 0 16px;border-radius:999px;display:flex;align-items:center;gap:8px;font-weight:500;white-space:nowrap;';
+    const on = s.ack;
+    return { ...t, motion: this.props.motion ?? 'on',
+      btnFilled: base + 'cursor:pointer;border:0;background:' + t.primary + ';color:' + t.onPrimary,
+      btnText: base + 'cursor:pointer;padding:0 12px;border:0;background:transparent;color:' + t.primary,
+      ackChecked: on ? 'true' : 'false',
+      toggleAck: () => this.setState({ ack: !on }),
+      box: 'flex:0 0 18px;width:18px;height:18px;border-radius:2px;box-sizing:border-box;display:grid;place-items:center;border:' + (on ? '0' : '2px solid ' + t.onSurfaceVariant) + ';background:' + (on ? t.primary : 'transparent'),
+      tick: 'font-size:16px;font-weight:700;color:' + t.onPrimary + ';display:' + (on ? 'inline-block' : 'none'),
+      cards: [['account_circle','Icon','Up to 512 KB · square image'],['panorama','Banner','Up to 1 MB · wide image']].map(([icon, title, limit]) => ({ icon, title, limit,
+        disabled: on ? 'false' : 'true',
+        choose: base + 'border:0;background:' + (on ? t.secondaryContainer : t.onSurface + '1F') + ';color:' + (on ? t.onSecondaryContainer : t.onSurface + '61') + ';cursor:' + (on ? 'pointer' : 'not-allowed') + ';opacity:' + (on ? '1' : '.5') })),
+      rail: railDefs.map(([label, icon], i) => ({ label, icon, iconClass: i === sel ? 'ms fill' : 'ms', color: i === sel ? t.onSurface : t.onSurfaceVariant,
+        pill: 'width:56px;height:32px;border-radius:16px;display:grid;place-items:center;background:' + (i === sel ? t.secondaryContainer : 'transparent') + ';color:' + (i === sel ? t.onSecondaryContainer : 'inherit') }))
+    };
+  }
+}
+function scheme(seed, theme) {
+  const dark = theme !== 'light';
+  const seeds = {
+    green:  dark ? { primary:'#8FD6B0', onPrimary:'#003825', primaryContainer:'#00513A', onPrimaryContainer:'#AAF2CB', secondaryContainer:'#354B40', onSecondaryContainer:'#CFE9D9', tertiaryContainer:'#234C5D', onTertiaryContainer:'#C1E8FB' }
+                 : { primary:'#2B6A4E', onPrimary:'#FFFFFF', primaryContainer:'#AFF1CE', onPrimaryContainer:'#002114', secondaryContainer:'#CFE9D9', onSecondaryContainer:'#0B1F15', tertiaryContainer:'#C1E8FB', onTertiaryContainer:'#001F2A' },
+    indigo: dark ? { primary:'#B9C3FF', onPrimary:'#1F2C61', primaryContainer:'#364379', onPrimaryContainer:'#DDE1FF', secondaryContainer:'#424659', onSecondaryContainer:'#DFE1F9', tertiaryContainer:'#5C3D58', onTertiaryContainer:'#FFD6F7' }
+                 : { primary:'#4D5C92', onPrimary:'#FFFFFF', primaryContainer:'#DDE1FF', onPrimaryContainer:'#05164B', secondaryContainer:'#DFE1F9', onSecondaryContainer:'#171B2C', tertiaryContainer:'#FFD6F7', onTertiaryContainer:'#2C1229' },
+    amber:  dark ? { primary:'#F5BD6F', onPrimary:'#452B00', primaryContainer:'#633F00', onPrimaryContainer:'#FFDDB3', secondaryContainer:'#574431', onSecondaryContainer:'#FBDEBC', tertiaryContainer:'#3E4E2E', onTertiaryContainer:'#D5EDBA' }
+                 : { primary:'#835416', onPrimary:'#FFFFFF', primaryContainer:'#FFDDB3', onPrimaryContainer:'#2A1700', secondaryContainer:'#FBDEBC', onSecondaryContainer:'#271904', tertiaryContainer:'#D5EDBA', onTertiaryContainer:'#11200A' }
+  };
+  const neutral = dark
+    ? { surface:'#101413', surfaceContainerLowest:'#0B0F0E', surfaceContainerLow:'#181D1B', surfaceContainer:'#1C211F', surfaceContainerHigh:'#272B29', surfaceContainerHighest:'#313634', onSurface:'#E0E3E0', onSurfaceVariant:'#C0C9C3', outline:'#8A938D', outlineVariant:'#404944', error:'#FFB4AB', onError:'#690005', errorContainer:'#93000A', onErrorContainer:'#FFDAD6', inverseSurface:'#E0E3E0', inverseOnSurface:'#2D3130', scrim:'rgba(0,0,0,.5)', shadow:'rgba(0,0,0,.45)' }
+    : { surface:'#F7FAF7', surfaceContainerLowest:'#FFFFFF', surfaceContainerLow:'#F1F4F1', surfaceContainer:'#EBEFEB', surfaceContainerHigh:'#E6E9E6', surfaceContainerHighest:'#E0E3E0', onSurface:'#191C1B', onSurfaceVariant:'#404944', outline:'#707973', outlineVariant:'#C0C9C3', error:'#BA1A1A', onError:'#FFFFFF', errorContainer:'#FFDAD6', onErrorContainer:'#410002', inverseSurface:'#2D3130', inverseOnSurface:'#EEF1EE', scrim:'rgba(0,0,0,.32)', shadow:'rgba(0,0,0,.18)' };
+  return { ...neutral, ...(seeds[seed] || seeds.green) };
+}
+</script>
+</body>
+</html>

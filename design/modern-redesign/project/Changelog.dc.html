@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Changelog</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..900&amp;family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..600,0..1,0&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.ms{font-family:'Material Symbols Rounded';font-weight:400;font-style:normal;font-size:24px;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;white-space:nowrap;direction:ltr;-webkit-font-feature-settings:'liga';font-feature-settings:'liga';user-select:none}
+.ms.fill{font-variation-settings:'FILL' 1}
+@keyframes enter{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes pop{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:none}}
+[data-motion=off] *{animation:none!important;transition:none!important}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+button,input,select{font:inherit;color:inherit}
+</style>
+</helmet>
+<div data-motion="{{motion}}" style="width:1440px;height:960px;display:flex;font-family:'Roboto Flex',system-ui,sans-serif;font-size:14px;line-height:20px;color:{{onSurface}};background:{{surface}};overflow:hidden">
+<nav aria-label="Sections" style="flex:0 0 96px;display:flex;flex-direction:column;align-items:center;gap:12px;padding-top:24px">
+<button type="button" aria-label="New drive" style="width:56px;height:56px;border-radius:16px;border:0;background:{{primaryContainer}};color:{{onPrimaryContainer}};display:grid;place-items:center;margin-bottom:16px;box-shadow:0 2px 6px {{shadow}}"><span class="ms" aria-hidden="true">add</span></button>
+<sc-for list="{{rail}}" as="r" hint-placeholder-count="8">
+<a href="#" style="display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;color:{{r.color}};width:80px"><span style="{{r.pill}}"><span class="{{r.iconClass}}" aria-hidden="true">{{r.icon}}</span></span><span style="font-size:12px;line-height:16px;font-weight:500">{{r.label}}</span></a>
+</sc-for>
+</nav>
+<main style="flex:1;padding:24px 24px 24px 0;display:flex;min-width:0">
+<div style="flex:1;border-radius:28px;background:{{surfaceContainerLow}};padding:24px;display:flex;flex-direction:column;gap:20px;min-width:0;overflow:hidden">
+<header style="display:flex;align-items:center;gap:12px">
+<div style="flex:1"><h1 style="margin:0;font-size:32px;line-height:40px;font-weight:400">What's new</h1><p style="margin:4px 0 0;color:{{onSurfaceVariant}};font-size:16px;line-height:24px">You have version 1.948.1 · up to date, checked 19:52</p></div>
+<div role="group" aria-label="Filter changes" style="display:inline-flex;height:40px;border-radius:999px;border:1px solid {{outline}};overflow:hidden">
+<sc-for list="{{filters}}" as="f" hint-placeholder-count="3"><button type="button" onClick="{{f.pick}}" style="{{f.style}}"><span class="ms" aria-hidden="true" style="font-size:18px;{{f.checkStyle}}">check</span>{{f.label}}</button></sc-for>
+</div>
+<button type="button" style="height:40px;padding:0 24px 0 16px;border-radius:999px;border:0;background:{{secondaryContainer}};color:{{onSecondaryContainer}};display:flex;align-items:center;gap:8px;font-weight:500"><span class="ms" aria-hidden="true" style="font-size:18px">update</span>Check for updates</button>
+</header>
+<section aria-label="Versions" style="flex:1;display:flex;flex-direction:column;gap:0;min-height:0;overflow:hidden">
+<sc-for list="{{versions}}" as="v" hint-placeholder-count="3">
+<div style="display:flex;gap:20px;{{v.show}}">
+<div aria-hidden="true" style="flex:0 0 24px;display:flex;flex-direction:column;align-items:center;padding-top:22px"><span style="{{v.dot}}"></span><span style="flex:1;width:2px;background:{{outlineVariant}};margin-top:4px;border-radius:999px"></span></div>
+<article style="flex:1;min-width:0;border-radius:12px;background:{{surfaceContainerHighest}};padding:20px 24px;margin-bottom:16px;animation:enter 320ms cubic-bezier(.05,.7,.1,1) both">
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+<h2 style="margin:0;font-size:22px;line-height:28px;font-weight:400">{{v.version}}</h2>
+<span style="{{v.currentBadge}}">Installed</span>
+<span style="flex:1"></span>
+<span style="color:{{onSurfaceVariant}};display:flex;align-items:center;gap:6px"><span class="ms" aria-hidden="true" style="font-size:18px">schedule</span>{{v.date}}</span>
+</div>
+<div style="display:flex;gap:8px;margin-bottom:8px">
+<span style="{{v.newBadge}}"><span class="ms" aria-hidden="true" style="font-size:16px">add_circle</span>New {{v.newCount}}</span>
+<span style="{{v.fixBadge}}"><span class="ms" aria-hidden="true" style="font-size:16px">build_circle</span>Fixed {{v.fixCount}}</span>
+</div>
+<ul style="margin:0;padding:0;list-style:none">
+<sc-for list="{{v.items}}" as="i" hint-placeholder-count="3"><li style="display:flex;align-items:center;gap:16px;min-height:44px;{{i.show}}"><span class="ms" aria-hidden="true" style="color:{{i.color}}">{{i.icon}}</span><span style="flex:1;font-size:16px;line-height:24px">{{i.text}}</span><span style="{{i.tag}}">{{i.kind}}</span></li></sc-for>
+</ul>
+</article>
+</div>
+</sc-for>
+</section>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"seed":{"editor":"enum","options":["green","indigo","amber"],"default":"green"},"theme":{"editor":"enum","options":["dark","light"],"default":"dark"},"motion":{"editor":"enum","options":["on","off"],"default":"on"},"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  constructor(p){ super(p); this.state = { filter: 'all' }; }
+  renderVals() {
+    const t = scheme(this.props.seed ?? 'green', this.props.theme ?? 'dark');
+    const s = this.state;
+    const railDefs = [['Home','home'],['Drives','hard_drive'],['Offline','offline_pin'],['History','history'],['Backup','cloud_upload'],['Shared','share'],['Tools','build'],['Settings','settings']];
+    const SEL = -1;
+    const data = [
+      { version:'1.948.1', date:'17 Nov 2026, 19:41', current:true, items:[
+        ['new','cloud_upload','Backups show speed, time left and parts sent while they run'],
+        ['new','image','Add an icon and a banner picture to any drive'],
+        ['fix','lock','Unlock no longer asks twice after a wrong password'] ] },
+      { version:'1.946.1', date:'12 Nov 2026, 08:15', current:false, items:[
+        ['new','link','Create a download link for a file and set when it expires'],
+        ['fix','sync','Large backups resume after the network drops'] ] },
+      { version:'1.945.1', date:'5 Nov 2026, 21:03', current:false, items:[
+        ['new','history','History lists every version of a file'],
+        ['fix','folder_open','Drive letters stay put after restarting Windows'] ] }
+    ];
+    const badge = (on, kind) => 'display:flex;align-items:center;gap:6px;height:24px;padding:0 10px 0 6px;border-radius:8px;font-size:12px;font-weight:500;background:' + (kind === 'new' ? t.primaryContainer : t.tertiaryContainer) + ';color:' + (kind === 'new' ? t.onPrimaryContainer : t.onTertiaryContainer) + (on ? '' : ';display:none');
+    return { ...t, motion: this.props.motion ?? 'on',
+      rail: railDefs.map(([label, icon], i) => ({ label, icon, iconClass: i === SEL ? 'ms fill' : 'ms', color: t.onSurfaceVariant,
+        pill: 'width:56px;height:32px;border-radius:16px;display:grid;place-items:center;background:transparent;color:inherit' })),
+      filters: [['all','All'],['new','New'],['fix','Fixed']].map(([id, label], i) => { const on = s.filter === id; return { label, pick: () => this.setState({ filter: id }), checkStyle: on ? '' : 'display:none',
+        style: 'display:flex;align-items:center;gap:8px;height:40px;padding:0 20px;border:0;cursor:pointer;font-weight:500;background:' + (on ? t.secondaryContainer : 'transparent') + ';color:' + (on ? t.onSecondaryContainer : t.onSurface) + ';' + (i > 0 ? 'border-left:1px solid ' + t.outline : '') }; }),
+      versions: data.map(v => { const items = v.items.filter(([k]) => s.filter === 'all' || s.filter === k);
+        const nc = v.items.filter(([k]) => k === 'new').length, fc = v.items.filter(([k]) => k === 'fix').length;
+        return { version: v.version, date: v.date, newCount: nc, fixCount: fc,
+          show: items.length ? 'display:flex' : 'display:none',
+          dot: 'width:16px;height:16px;border-radius:999px;background:' + (v.current ? t.primary : 'transparent') + ';border:2px solid ' + (v.current ? t.primary : t.outline),
+          currentBadge: 'height:24px;padding:0 10px;border-radius:8px;font-size:12px;line-height:24px;font-weight:500;background:' + t.secondaryContainer + ';color:' + t.onSecondaryContainer + (v.current ? '' : ';display:none'),
+          newBadge: badge(nc > 0, 'new'), fixBadge: badge(fc > 0, 'fix'),
+          items: v.items.map(([kind, icon, text]) => ({ icon, text, kind: kind === 'new' ? 'New' : 'Fixed',
+            show: s.filter === 'all' || s.filter === kind ? '' : 'display:none',
+            color: kind === 'new' ? t.primary : t.onTertiaryContainer,
+            tag: 'font-size:12px;line-height:16px;font-weight:500;padding:4px 8px;border-radius:8px;background:' + (kind === 'new' ? t.primaryContainer : t.tertiaryContainer) + ';color:' + (kind === 'new' ? t.onPrimaryContainer : t.onTertiaryContainer) })) }; })
+    };
+  }
+}
+function scheme(seed, theme) {
+  const dark = theme !== 'light';
+  const seeds = {
+    green:  dark ? { primary:'#8FD6B0', onPrimary:'#003825', primaryContainer:'#00513A', onPrimaryContainer:'#AAF2CB', secondaryContainer:'#354B40', onSecondaryContainer:'#CFE9D9', tertiaryContainer:'#234C5D', onTertiaryContainer:'#C1E8FB' }
+                 : { primary:'#2B6A4E', onPrimary:'#FFFFFF', primaryContainer:'#AFF1CE', onPrimaryContainer:'#002114', secondaryContainer:'#CFE9D9', onSecondaryContainer:'#0B1F15', tertiaryContainer:'#C1E8FB', onTertiaryContainer:'#001F2A' },
+    indigo: dark ? { primary:'#B9C3FF', onPrimary:'#1F2C61', primaryContainer:'#364379', onPrimaryContainer:'#DDE1FF', secondaryContainer:'#424659', onSecondaryContainer:'#DFE1F9', tertiaryContainer:'#5C3D58', onTertiaryContainer:'#FFD6F7' }
+                 : { primary:'#4D5C92', onPrimary:'#FFFFFF', primaryContainer:'#DDE1FF', onPrimaryContainer:'#05164B', secondaryContainer:'#DFE1F9', onSecondaryContainer:'#171B2C', tertiaryContainer:'#FFD6F7', onTertiaryContainer:'#2C1229' },
+    amber:  dark ? { primary:'#F5BD6F', onPrimary:'#452B00', primaryContainer:'#633F00', onPrimaryContainer:'#FFDDB3', secondaryContainer:'#574431', onSecondaryContainer:'#FBDEBC', tertiaryContainer:'#3E4E2E', onTertiaryContainer:'#D5EDBA' }
+                 : { primary:'#835416', onPrimary:'#FFFFFF', primaryContainer:'#FFDDB3', onPrimaryContainer:'#2A1700', secondaryContainer:'#FBDEBC', onSecondaryContainer:'#271904', tertiaryContainer:'#D5EDBA', onTertiaryContainer:'#11200A' }
+  };
+  const neutral = dark
+    ? { surface:'#101413', surfaceContainerLowest:'#0B0F0E', surfaceContainerLow:'#181D1B', surfaceContainer:'#1C211F', surfaceContainerHigh:'#272B29', surfaceContainerHighest:'#313634', onSurface:'#E0E3E0', onSurfaceVariant:'#C0C9C3', outline:'#8A938D', outlineVariant:'#404944', error:'#FFB4AB', onError:'#690005', errorContainer:'#93000A', onErrorContainer:'#FFDAD6', inverseSurface:'#E0E3E0', inverseOnSurface:'#2D3130', scrim:'rgba(0,0,0,.5)', shadow:'rgba(0,0,0,.45)' }
+    : { surface:'#F7FAF7', surfaceContainerLowest:'#FFFFFF', surfaceContainerLow:'#F1F4F1', surfaceContainer:'#EBEFEB', surfaceContainerHigh:'#E6E9E6', surfaceContainerHighest:'#E0E3E0', onSurface:'#191C1B', onSurfaceVariant:'#404944', outline:'#707973', outlineVariant:'#C0C9C3', error:'#BA1A1A', onError:'#FFFFFF', errorContainer:'#FFDAD6', onErrorContainer:'#410002', inverseSurface:'#2D3130', inverseOnSurface:'#EEF1EE', scrim:'rgba(0,0,0,.32)', shadow:'rgba(0,0,0,.18)' };
+  return { ...neutral, ...(seeds[seed] || seeds.green) };
+}
+</script>
+</body>
+</html>
