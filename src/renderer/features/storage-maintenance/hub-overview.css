@@ -88,3 +88,6 @@
 .hub-remove .tag-list{margin:0;max-height:160px;overflow:auto;padding:6px 8px;font-size:12px;background:var(--v2-surface);border:1px solid var(--v2-line2);border-radius:8px;width:100%;box-sizing:border-box}
 .hub-remove .actions{display:flex;gap:6px;flex-wrap:wrap}
 .hub-remove .danger{--md-filled-button-container-color:var(--v2-bad);--md-filled-button-label-text-color:var(--md-sys-color-on-error)}
+/* State changes ease in with the standard Material motion; reduced motion turns them off below. */
+.hub-btn,.hub-chip,.hub-menu-item,.hub-search{transition:background-color var(--md-sys-motion-duration-short4,200ms) var(--md-sys-motion-easing-standard,cubic-bezier(.2,0,0,1)),border-color var(--md-sys-motion-duration-short4,200ms) var(--md-sys-motion-easing-standard,cubic-bezier(.2,0,0,1)),color var(--md-sys-motion-duration-short4,200ms) var(--md-sys-motion-easing-standard,cubic-bezier(.2,0,0,1))}
+@media (prefers-reduced-motion:reduce){.hub-btn,.hub-chip,.hub-menu-item,.hub-search{transition:none}}
