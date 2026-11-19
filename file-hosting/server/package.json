@@ -1,0 +1,11 @@
+{
+  "name": "material-file-encryptor-hosting",
+  "version": "1.0.0",
+  "description": "Self-hosted download links for encrypted Material File Encryptor shares stored on Docker Hub.",
+  "private": true,
+  "type": "module",
+  "main": "src/index.js",
+  "engines": { "node": ">=22" },
+  "scripts": { "start": "node src/index.js" },
+  "license": "GPL-3.0-only"
+}

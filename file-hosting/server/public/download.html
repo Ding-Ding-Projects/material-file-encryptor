@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Encrypted file download</title>
+<link rel="icon" href="/assets/icon.svg">
+<link rel="stylesheet" href="/assets/download.css">
+<script type="module" src="/assets/download.js"></script>
+</head>
+<body>
+<header class="top">
+<img src="/assets/icon.svg" alt="" width="28" height="28">
+<span data-text="brand">Encrypted file download</span>
+</header>
+<main class="card" aria-live="polite">
+<section id="live" hidden>
+<div class="file">
+<div class="file-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg></div>
+<div class="file-text">
+<h1 id="file-name" data-text="encryptedFile">Encrypted file</h1>
+<span id="file-size"></span>
+</div>
+</div>
+<dl class="facts">
+<div><dt data-text="expires">Link expires</dt><dd id="expires"></dd></div>
+<div><dt data-text="left">Downloads left</dt><dd id="left"></dd></div>
+</dl>
+<form id="pass-form" hidden>
+<label for="passphrase" data-text="passLabel">This file needs its passphrase</label>
+<input id="passphrase" type="password" autocomplete="off" required>
+<button id="unlock" type="submit" class="button tonal" data-text="unlock">Unlock</button>
+</form>
+<div id="progress" hidden>
+<div class="row"><span id="progress-label" data-text="downloading">Downloading and decrypting in your browser</span><span id="percent">0%</span></div>
+<div class="bar" role="progressbar" aria-labelledby="progress-label" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="bar-fill"></div></div>
+</div>
+<p id="done" class="ok" hidden data-text="saved">Saved. Every part passed its integrity check.</p>
+<p id="problem" class="warn" role="alert" hidden></p>
+<button id="download" type="button" class="button filled" data-text="download">Download</button>
+<p class="note" data-text="note">The file is decrypted on this device with the key in your link. The server only stores the encrypted copy and never sees the key.</p>
+</section>
+<section id="gone" hidden>
+<h1 data-text="endedTitle">This link has ended</h1>
+<p id="gone-text" class="muted" data-text="endedBody">It expired or reached its download limit, and the file was removed from this server. Ask the person who sent it for a new link.</p>
+</section>
+<section id="loading">
+<p class="muted" data-text="checking">Checking the link…</p>
+</section>
+</main>
+<footer class="foot"><span data-text="footer">Hosted with Material File Encryptor</span></footer>
+</body>
+</html>

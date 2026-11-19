@@ -54,6 +54,12 @@ import { createSessionEnd } from './session-end.js';
 import { createShareService } from './share/share-service.js';
 import { createShareListStore, safeStorageProtection } from './share/share-list-store.js';
 import { SHARE_METHODS, dispatchShare, receiveArgument } from './share/ipc.js';
+import { createHostingService } from './file-hosting/hosting-service.js';
+import { createHostingStore } from './file-hosting/hosting-store.js';
+import { HOSTING_METHODS, dispatchHosting } from './file-hosting/ipc.js';
+import { execFile as execFileCallback, spawn as spawnProcess } from 'node:child_process';
+import { promisify } from 'node:util';
+import { networkInterfaces } from 'node:os';
 
 import { desktopIconPath, brandedBrowserWindow } from './desktop-icons.js';
 
@@ -210,6 +216,18 @@ const shareService = createShareService({
     if (state.locked || !state.mounted) throw shareError('NOT_MOUNTED', 'Unlock and mount the drive to save into it.');
     return uniqueExportName(mountedPath(), name);
   },
+});
+// Self-hosted download links for shared files. The admin key and link addresses stay in protected storage.
+const hostingService = createHostingService({
+  store: createHostingStore({ file: path.join(app.getPath('userData'), 'file-hosting.bin'), protection: safeStorageProtection(safeStorage) }),
+  shares: {
+    entry: async id => (await shareService.list()).entries.find(item => item.id === id) ?? null,
+    command: async id => (await shareService.command(id)).command,
+    revoke: id => shareService.revoke(id)
+  },
+  exec: promisify(execFileCallback), spawn: spawnProcess,
+  userDir: path.join(app.getPath('userData'), 'file-hosting'),
+  interfaces: networkInterfaces
 });
 /** A share link or --receive command from the command line is held here; only an id reaches the renderer. */
 function handleIncomingShare(argv) {
@@ -413,6 +431,10 @@ async function dispatchRequest(method, params, context) {
     if (method === 'startRegistryLogin') return registryLogin.start();
     return registryLogin.openPage();
   }
+  if (HOSTING_METHODS.has(method)) {
+    if (!['hostingStatus', 'hostingCancel', 'hostingInstances', 'hostingLinkUrl'].includes(method) && (quitPending || shuttingDown || updateInstallLease)) throw Error('The application is preparing to close.');
+    return dispatchHosting(hostingService, method, params);
+  }
   if (SHARE_METHODS.has(method)) {
     if (!['shareStatus', 'shareCancel', 'shareList', 'shareReceiveDiscard'].includes(method) && (quitPending || shuttingDown || updateInstallLease)) throw Error('The application is preparing to close.');
     return dispatchShare(shareService, method, params);
@@ -568,7 +590,7 @@ async function lockAllVaults() {
 async function hasActiveWork() {
   if (restartPreparation.started) return false;
   const active=await vaultSessions.operations();
-  return Boolean(operation || registryLogin.pending || registryBackupAll.pending || shareService.pending || registrySync.pending || splitStorage.pending || vaultImages.pending || browserHandoff?.pending || await features?.pending() || active.some(item=>['queued','running','cancelling'].includes(item.state)));
+  return Boolean(operation || registryLogin.pending || registryBackupAll.pending || shareService.pending || hostingService.pending || registrySync.pending || splitStorage.pending || vaultImages.pending || browserHandoff?.pending || await features?.pending() || active.some(item=>['queued','running','cancelling'].includes(item.state)));
 }
 async function updateStatus() {
   const snapshot=updates?.status()||{state:'unavailable',reason:'NOT_INITIALIZED'};
@@ -612,7 +634,7 @@ async function acquireUpdateLease() {
 const restartPreparation=createRestartPreparation({
   verify:async()=>{if(!updateInstallLease||!vaultSessions.safelyLocked||await hasActiveWork())throw new Error('The application is not ready to restart safely.');},
   preflight:async()=>{verificationStartup?.restore();},
-  closeServices:async()=>{shareService.close();await closeBrowserHandoff();await localAdapter?.close();await features?.close();await registryLogin.close();hubCatalog.cancel();registrySync.close();splitStorage.close();await vaultImages.close();},
+  closeServices:async()=>{shareService.close();hostingService.close();await closeBrowserHandoff();await localAdapter?.close();await features?.close();await registryLogin.close();hubCatalog.cancel();registrySync.close();splitStorage.close();await vaultImages.close();},
   clearMarker:()=>fs.rm(sessionMarkerPath(),{force:true}),
   disposeHelper:async()=>{helper?.dispose();},
   prepared:()=>{shuttingDown=true;}
@@ -662,7 +684,7 @@ async function quit(ownRequest = false) {
     features.beginExit();
     if (helper) await perform('unmounting', lockAllVaults);
     if (!vaultSessions.safelyLocked) throw new Error('All vaults must confirm that they are locked.');
-    await closeBrowserHandoff();await updates?.dispose();await localAdapter?.close();await features?.close();await registryLogin.close();registrySync.close();shareService.close();await vaultImages.close(); verificationStartup?.restore();await fs.rm(sessionMarkerPath(),{force:true});shuttingDown = true; helper?.dispose(); setImmediate(() => app.quit());
+    await closeBrowserHandoff();await updates?.dispose();await localAdapter?.close();await features?.close();await registryLogin.close();registrySync.close();shareService.close();hostingService.close();await vaultImages.close(); verificationStartup?.restore();await fs.rm(sessionMarkerPath(),{force:true});shuttingDown = true; helper?.dispose(); setImmediate(() => app.quit());
   } catch (error) { showWindow(); await uiDialog.showMessageBox(window, { type: 'error', title: 'Application is still running', message: error.message }); }
   finally {quitPending=false;if(!shuttingDown)features.endExit();}
 }
