@@ -1,0 +1,170 @@
+/* Material 3 frame. Loaded last. It replaces the compact version 2 look with the approved Material 3 redesign:
+   colour roles from the design kit scheme, the Material type scale, pill buttons, rounded surfaces, a navigation
+   drawer of pill items with a floating create action, 52 to 56 px table rows and rounded dialogs and menus.
+   Everything is expressed through tokens, so dark and light themes, high contrast, the personal accent, the text scale
+   and reduced motion keep working. No network assets: the local font family is kept. */
+
+:root{
+  /* Colour roles, light scheme (green seed). */
+  --m3-primary:#2B6A4E;--m3-on-primary:#FFFFFF;--m3-primary-container:#AFF1CE;--m3-on-primary-container:#002114;
+  --m3-secondary-container:#CFE9D9;--m3-on-secondary-container:#0B1F15;
+  --m3-tertiary-container:#C1E8FB;--m3-on-tertiary-container:#001F2A;
+  --m3-surface:#F7FAF7;--m3-surface-lowest:#FFFFFF;--m3-surface-low:#F1F4F1;--m3-surface-container:#EBEFEB;--m3-surface-high:#E6E9E6;--m3-surface-highest:#E0E3E0;
+  --m3-on-surface:#191C1B;--m3-on-surface-variant:#404944;--m3-outline:#707973;--m3-outline-variant:#C0C9C3;
+  --m3-error:#BA1A1A;--m3-on-error:#FFFFFF;--m3-error-container:#FFDAD6;--m3-on-error-container:#410002;
+  --m3-inverse-surface:#2D3130;--m3-inverse-on-surface:#EEF1EE;--m3-scrim:rgba(0,0,0,.32);--m3-shadow:rgba(0,0,0,.18);
+  /* Shape scale. */
+  --m3-shape-xs:4px;--m3-shape-sm:8px;--m3-shape-md:12px;--m3-shape-lg:16px;--m3-shape-xl:28px;--m3-shape-full:999px;
+  --m3-control:40px;
+}
+:root[data-theme=dark]{
+  --m3-primary:#8FD6B0;--m3-on-primary:#003825;--m3-primary-container:#00513A;--m3-on-primary-container:#AAF2CB;
+  --m3-secondary-container:#354B40;--m3-on-secondary-container:#CFE9D9;
+  --m3-tertiary-container:#234C5D;--m3-on-tertiary-container:#C1E8FB;
+  --m3-surface:#101413;--m3-surface-lowest:#0B0F0E;--m3-surface-low:#181D1B;--m3-surface-container:#1C211F;--m3-surface-high:#272B29;--m3-surface-highest:#313634;
+  --m3-on-surface:#E0E3E0;--m3-on-surface-variant:#C0C9C3;--m3-outline:#8A938D;--m3-outline-variant:#404944;
+  --m3-error:#FFB4AB;--m3-on-error:#690005;--m3-error-container:#93000A;--m3-on-error-container:#FFDAD6;
+  --m3-inverse-surface:#E0E3E0;--m3-inverse-on-surface:#2D3130;--m3-scrim:rgba(0,0,0,.5);--m3-shadow:rgba(0,0,0,.45);
+}
+/* The personal accent replaces the primary family, light and dark, exactly as the earlier tokens did. */
+:root[data-local-accent]{--m3-primary:var(--local-ux-accent-light-primary);--m3-on-primary:var(--local-ux-accent-light-on-primary);--m3-primary-container:var(--local-ux-accent-light-primary-container);--m3-on-primary-container:var(--local-ux-accent-light-on-primary-container);
+  --m3-secondary-container:color-mix(in srgb,var(--m3-primary-container) 55%,var(--m3-surface));--m3-on-secondary-container:var(--m3-on-primary-container)}
+:root[data-local-accent][data-theme=dark]{--m3-primary:var(--local-ux-accent-dark-primary);--m3-on-primary:var(--local-ux-accent-dark-on-primary);--m3-primary-container:var(--local-ux-accent-dark-primary-container);--m3-on-primary-container:var(--local-ux-accent-dark-on-primary-container);
+  --m3-secondary-container:color-mix(in srgb,var(--m3-primary-container) 60%,var(--m3-surface));--m3-on-secondary-container:var(--m3-on-primary-container)}
+:root[data-contrast=high]{--m3-outline:color-mix(in srgb,var(--m3-on-surface) 78%,var(--m3-surface));--m3-outline-variant:color-mix(in srgb,var(--m3-on-surface) 55%,var(--m3-surface));--m3-on-surface-variant:var(--m3-on-surface)}
+
+/* Map every earlier token family onto the roles so all existing surfaces follow. */
+:root,:root[data-theme=dark]{
+  --v2-accent:var(--m3-primary);--v2-on-accent:var(--m3-on-primary);
+  --v2-bg:var(--m3-surface);--v2-side:var(--m3-surface);--v2-surface:var(--m3-surface-low);--v2-line:var(--m3-outline-variant);--v2-line2:var(--m3-outline-variant);
+  --v2-text:var(--m3-on-surface);--v2-text2:var(--m3-on-surface-variant);--v2-text3:var(--m3-on-surface-variant);
+  --v2-ok:var(--m3-primary);--v2-warn:#9A5B00;--v2-bad:var(--m3-error);
+  --v2-hover:color-mix(in srgb,var(--m3-on-surface) 8%,transparent);
+  --v2-selected:var(--m3-secondary-container);--v2-selected-line:var(--m3-secondary-container);
+  --v2-row:52px;--v2-nav-row:48px;--v2-control:var(--m3-control);--v2-radius:var(--m3-shape-full);--v2-bar:56px;--v2-status:32px;
+  --primary:var(--m3-primary);--on-primary:var(--m3-on-primary);--primary-container:var(--m3-primary-container);--on-primary-container:var(--m3-on-primary-container);
+  --surface:var(--m3-surface-low);--frame:var(--m3-surface);--container:var(--m3-surface-container);--container-high:var(--m3-surface-high);
+  --text:var(--m3-on-surface);--muted:var(--m3-on-surface-variant);--outline:var(--m3-outline);--line:var(--m3-outline-variant);
+  --error:var(--m3-error);--error-bg:var(--m3-error-container);
+  --row-height:var(--v2-row);--bar-height:var(--v2-bar);--status-height:var(--v2-status);
+  --fs:calc(14px*var(--mfe-text-scale,1));--fs-small:calc(12px*var(--mfe-text-scale,1));--fs-label:calc(12px*var(--mfe-text-scale,1));
+  --md-sys-color-primary:var(--m3-primary);--md-sys-color-on-primary:var(--m3-on-primary);--md-sys-color-primary-container:var(--m3-primary-container);--md-sys-color-on-primary-container:var(--m3-on-primary-container);
+  --md-sys-color-secondary:var(--m3-primary);--md-sys-color-secondary-container:var(--m3-secondary-container);--md-sys-color-on-secondary-container:var(--m3-on-secondary-container);
+  --md-sys-color-tertiary-container:var(--m3-tertiary-container);--md-sys-color-on-tertiary-container:var(--m3-on-tertiary-container);
+  --md-sys-color-surface:var(--m3-surface);--md-sys-color-on-surface:var(--m3-on-surface);--md-sys-color-on-surface-variant:var(--m3-on-surface-variant);
+  --md-sys-color-surface-variant:var(--m3-surface-highest);--md-sys-color-surface-container-lowest:var(--m3-surface-lowest);--md-sys-color-surface-container-low:var(--m3-surface-low);
+  --md-sys-color-surface-container:var(--m3-surface-container);--md-sys-color-surface-container-high:var(--m3-surface-high);--md-sys-color-surface-container-highest:var(--m3-surface-highest);
+  --md-sys-color-outline:var(--m3-outline);--md-sys-color-outline-variant:var(--m3-outline-variant);
+  --md-sys-color-error:var(--m3-error);--md-sys-color-on-error:var(--m3-on-error);--md-sys-color-error-container:var(--m3-error-container);--md-sys-color-on-error-container:var(--m3-on-error-container);
+  --md-sys-color-inverse-surface:var(--m3-inverse-surface);--md-sys-color-inverse-on-surface:var(--m3-inverse-on-surface);--md-sys-color-scrim:var(--m3-scrim);
+  --md-sys-shape-corner-extra-small:4px;--md-sys-shape-corner-small:8px;--md-sys-shape-corner-medium:12px;--md-sys-shape-corner-large:16px;--md-sys-shape-corner-extra-large:28px;--md-sys-shape-corner-full:999px;
+  /* Material Web components: 40 px pill buttons, 14 px labels. */
+  --md-filled-button-container-height:40px;--md-outlined-button-container-height:40px;--md-text-button-container-height:40px;--md-filled-tonal-button-container-height:40px;
+  --md-filled-button-container-shape:999px;--md-outlined-button-container-shape:999px;--md-text-button-container-shape:999px;--md-filled-tonal-button-container-shape:999px;
+  --md-filled-button-label-text-size:14px;--md-outlined-button-label-text-size:14px;--md-text-button-label-text-size:14px;--md-filled-tonal-button-label-text-size:14px;
+  --md-filled-button-label-text-weight:500;--md-outlined-button-label-text-weight:500;--md-text-button-label-text-weight:500;--md-filled-tonal-button-label-text-weight:500;
+  --md-filled-button-leading-space:24px;--md-filled-button-trailing-space:24px;--md-outlined-button-leading-space:24px;--md-outlined-button-trailing-space:24px;--md-filled-tonal-button-leading-space:24px;--md-filled-tonal-button-trailing-space:24px;
+  --md-filled-button-with-leading-icon-leading-space:16px;--md-outlined-button-with-leading-icon-leading-space:16px;--md-filled-tonal-button-with-leading-icon-leading-space:16px;--md-text-button-with-leading-icon-leading-space:12px;
+  --md-text-button-leading-space:12px;--md-text-button-trailing-space:12px;
+  --md-filled-button-icon-size:18px;--md-outlined-button-icon-size:18px;--md-text-button-icon-size:18px;--md-filled-tonal-button-icon-size:18px;
+  --md-outlined-button-outline-color:var(--m3-outline);--md-outlined-button-label-text-color:var(--m3-primary);--md-outlined-button-icon-color:var(--m3-primary);
+  --md-text-button-label-text-color:var(--m3-primary);--md-text-button-icon-color:var(--m3-primary);
+  --md-outlined-text-field-container-shape:var(--m3-shape-xs);--md-filled-text-field-container-shape:var(--m3-shape-xs);--md-outlined-select-text-field-container-shape:var(--m3-shape-xs);
+  --md-outlined-text-field-top-space:16px;--md-outlined-text-field-bottom-space:16px;--md-outlined-text-field-input-text-size:16px;--md-outlined-text-field-label-text-size:16px;--md-outlined-text-field-outline-color:var(--m3-outline);
+  --md-outlined-select-text-field-top-space:16px;--md-outlined-select-text-field-bottom-space:16px;--md-outlined-select-text-field-input-text-size:16px;--md-outlined-select-text-field-outline-color:var(--m3-outline);
+  --md-menu-container-shape:16px;--md-menu-container-color:var(--m3-surface-container);--md-menu-item-one-line-container-height:48px;--md-menu-item-label-text-size:14px;--md-menu-item-top-space:12px;--md-menu-item-bottom-space:12px;
+  --md-dialog-container-shape:28px;--md-dialog-container-color:var(--m3-surface-high);
+  --md-chip-container-shape:8px;--md-filter-chip-container-shape:8px;--md-assist-chip-container-shape:8px;--md-suggestion-chip-container-shape:8px;--md-input-chip-container-shape:8px;
+  --md-filter-chip-selected-container-color:var(--m3-secondary-container);--md-filter-chip-selected-label-text-color:var(--m3-on-secondary-container);
+  --md-icon-button-icon-size:24px;
+  --md-switch-track-height:32px;--md-switch-track-width:52px;--md-switch-handle-width:16px;--md-switch-handle-height:16px;--md-switch-selected-handle-width:24px;--md-switch-selected-handle-height:24px;--md-switch-pressed-handle-width:28px;--md-switch-pressed-handle-height:28px;
+  font-size:14px;color:var(--m3-on-surface);
+}
+:root[data-density=comfortable]{--v2-row:56px;--m3-control:40px}
+:root[data-density=compact]{--v2-row:44px}
+html,body{background:var(--m3-surface);color:var(--m3-on-surface)}
+body{font-size:14px;line-height:20px}
+md-filled-button,md-filled-tonal-button,md-outlined-button,md-text-button{min-height:40px}
+md-filled-tonal-button{--md-filled-tonal-button-container-color:var(--m3-secondary-container);--md-filled-tonal-button-label-text-color:var(--m3-on-secondary-container);--md-filled-tonal-button-icon-color:var(--m3-on-secondary-container)}
+:focus-visible{outline-color:var(--m3-primary)}
+
+/* Buttons that carry an icon: icon 18 px with an 8 px gap. */
+md-filled-button [data-icon],md-filled-tonal-button [data-icon],md-outlined-button [data-icon],md-text-button [data-icon]{display:inline-flex;width:18px;height:18px;margin-inline-end:8px;vertical-align:middle}
+md-filled-button [data-icon] .icon,md-filled-tonal-button [data-icon] .icon,md-outlined-button [data-icon] .icon,md-text-button [data-icon] .icon{width:18px;height:18px}
+
+/* ---------- title bar ---------- */
+mfe-titlebar.titlebar{background:var(--m3-surface);border-bottom:0;flex-basis:56px;height:56px}
+mfe-titlebar .window-brand>[data-icon]{width:32px;height:32px;border-radius:var(--m3-shape-md);background:var(--m3-primary-container);color:var(--m3-on-primary-container)}
+mfe-titlebar .window-brand>[data-icon] .icon{width:20px;height:20px;color:var(--m3-on-primary-container)}
+.drive-switcher{--md-text-button-container-height:40px;min-height:40px;--md-text-button-label-text-color:var(--m3-on-surface);max-width:240px}
+.drive-tab{margin-top:10px;border-radius:var(--m3-shape-md) var(--m3-shape-md) 0 0;font-size:14px;font-weight:500;color:var(--m3-on-surface-variant)}
+.drive-tab[aria-selected=true]{background:var(--m3-surface-low);color:var(--m3-on-surface);box-shadow:none}
+.help-mode-toggle{width:40px;height:40px}
+.help-mode-toggle[aria-pressed=true]{background-color:var(--m3-primary)!important;border-radius:var(--m3-shape-full)}
+.window-controls md-icon-button{height:56px;width:48px}
+.help-tooltip,:root[data-theme=dark] .help-tooltip{border-radius:var(--m3-shape-xs);background:var(--m3-inverse-surface);color:var(--m3-inverse-on-surface)}
+
+/* ---------- panes: navigation drawer and the main surface panel ---------- */
+body>.app-shell{grid-template-columns:296px minmax(0,1fr);gap:0;padding:0 16px 16px 0;background:var(--m3-surface)}
+.app-shell>.sidebar{background:var(--m3-surface);border:0;padding:0 8px 0 12px}
+.sidebar mfe-navigation-rail{border:0}
+.sidebar mfe-build-provenance{padding:8px 16px;border-top:0;font-size:12px;color:var(--m3-on-surface-variant)}
+.app-shell mfe-main-workspace{background:var(--m3-surface-low);border-radius:var(--m3-shape-xl);overflow:hidden}
+
+.tree-drive{border-radius:var(--m3-shape-full);min-height:48px;padding:0 16px 0 24px;font-size:14px;font-weight:500;gap:12px}
+.tree-drive[aria-current=true]{background:var(--m3-secondary-container);color:var(--m3-on-secondary-container)}
+.tree-drive .icon{width:20px;height:20px;color:var(--m3-on-surface-variant)}
+.tree-row{min-height:40px;border-radius:var(--m3-shape-full);font-size:14px}
+.tree-row[aria-selected=true]{background:var(--m3-secondary-container);color:var(--m3-on-secondary-container)}
+
+/* ---------- pages, headers and cards ---------- */
+.view:not(#view-drive){padding:24px}
+.view .page-header{margin:0 0 16px;min-height:56px}
+.view .page-header h1{font-size:28px;line-height:36px;font-weight:400}
+.settings-section{border:1px solid var(--m3-outline-variant);border-radius:var(--m3-shape-md);padding:16px;margin:0 0 16px;background:var(--m3-surface-container)}
+.settings-section h2{font-size:16px;line-height:24px;font-weight:500;margin:0 0 12px}
+.setting-row{min-height:56px;padding:8px 0;gap:16px;border-bottom:1px solid var(--m3-outline-variant)}
+.card{border-radius:var(--m3-shape-md);background:var(--m3-surface-highest);box-shadow:none}
+.notice{border-radius:var(--m3-shape-md);padding:12px 16px;margin:0 0 12px;font-size:14px;background:var(--m3-surface-container);color:var(--m3-on-surface)}
+.notice.error,.notice[data-tone=error]{background:var(--m3-error-container);color:var(--m3-on-error-container)}
+
+/* ---------- toolbar, path bar and tables ---------- */
+#command-bar{min-height:64px;padding:8px 16px;gap:8px;border-bottom:1px solid var(--m3-outline-variant);background:var(--m3-surface-low)}
+#command-bar .file-actions{gap:4px}
+#command-bar .file-actions>:is(md-text-button,md-outlined-button){--md-text-button-container-height:40px;min-height:40px;font-size:14px}
+#command-bar #new-button{--md-text-button-label-text-color:var(--m3-on-primary-container);--md-text-button-icon-color:var(--m3-on-primary-container);--md-text-button-hover-label-text-color:var(--m3-on-primary-container);--md-text-button-focus-label-text-color:var(--m3-on-primary-container);--md-text-button-pressed-label-text-color:var(--m3-on-primary-container);background:var(--m3-primary-container);color:var(--m3-on-primary-container);border-radius:var(--m3-shape-full);margin-inline-end:8px}
+.path-bar{min-height:48px;padding:4px 16px;border-bottom:1px solid var(--m3-outline-variant)}
+.breadcrumb{font-size:14px}
+#view-drive th,table th{height:48px;font-size:12px;line-height:16px;font-weight:500;color:var(--m3-on-surface-variant);background:var(--m3-surface-low);border-bottom:1px solid var(--m3-outline-variant)}
+#file-list>tr>td,table td{height:var(--v2-row);font-size:14px;border-bottom:1px solid var(--m3-outline-variant)}
+#file-list>tr.selected{background:var(--m3-secondary-container);color:var(--m3-on-secondary-container);box-shadow:none}
+#file-list>tr:hover:not(.selected){background:var(--v2-hover)}
+.inspector{background:var(--m3-surface-low);border:1px solid var(--m3-outline-variant);border-radius:var(--m3-shape-md);margin:12px 12px 12px 0}
+.inspector-section{padding:16px;border-bottom:1px solid var(--m3-outline-variant)}
+.inspector-section .pane-label,.pane-label{font-size:12px;line-height:16px;font-weight:500;letter-spacing:.5px;color:var(--m3-on-surface-variant)}
+.transfers-strip{border-top:1px solid var(--m3-outline-variant);padding:8px 16px}
+
+/* ---------- fields, chips, dialogs, snackbars ---------- */
+md-outlined-text-field,md-outlined-select{--md-outlined-field-top-space:16px;--md-outlined-field-bottom-space:16px}
+mfe-top-bar{--md-outlined-button-container-height:40px;--md-outlined-button-container-shape:999px}
+md-dialog{--md-dialog-container-shape:28px;--md-dialog-container-color:var(--m3-surface-high)}
+md-menu{--md-menu-container-shape:16px}
+
+/* ---------- status bar ---------- */
+.status-bar{height:32px;min-height:32px;padding:0 24px;gap:24px;font-size:12px;line-height:16px;background:var(--m3-surface);color:var(--m3-on-surface-variant);border-top:0}
+.status-bar .badge{color:var(--m3-on-surface-variant)}
+.status-bar #status-sync[data-tone=warn]{color:var(--v2-warn)}
+.status-bar #status-sync[data-tone=error]{color:var(--m3-error)}
+
+/* ---------- narrow windows: the drawer opens over the content ---------- */
+:root[data-max839] body>.app-shell{grid-template-columns:minmax(0,1fr);padding:0 8px 8px}
+:root[data-max839] .sidebar{background:var(--m3-surface-container);border-radius:0 var(--m3-shape-xl) var(--m3-shape-xl) 0;box-shadow:0 8px 24px var(--m3-shadow)}
+:root[data-max839] .app-shell mfe-main-workspace{border-radius:var(--m3-shape-lg)}
+@media (max-width:600px){
+  .view:not(#view-drive){padding:16px}
+  .view .page-header h1{font-size:24px;line-height:32px}
+  .status-bar{padding:0 12px;gap:12px}
+  #command-bar{padding:8px;min-height:56px}
+}
+@media (pointer:coarse){md-filled-button,md-outlined-button,md-text-button,md-filled-tonal-button{--md-filled-button-container-height:48px;--md-outlined-button-container-height:48px;--md-text-button-container-height:48px;--md-filled-tonal-button-container-height:48px}}
+@media (prefers-reduced-motion:reduce){.tree-drive,.tree-row{transition:none}}
