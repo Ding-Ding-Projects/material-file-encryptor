@@ -1,3 +1,17 @@
+## Material 3 redesign, 2026-11-18
+
+- [x] Material 3 colour roles, shapes, type scale and components across the app, with dark, light, high contrast and the personal accent.
+- [x] Navigation drawer with a New drive button, pill items and no sideways scrolling.
+- [x] An icon on every labelled button in the main window, Home and the feature pages, with a scan test.
+- [x] Docker Hub backup page for many drives: pinned running strip, filter chips with counts, search with regex, sort, expandable dense rows.
+- [x] Material 3 right-click menus with icons, groups, shortcuts and a red Delete; icons on the backup row menu.
+- [x] Settings categories with icons and a filled selected pill; rounded settings search.
+- [x] Checked in the built app on a hidden desktop: Home (dark and light), backup page, backup row menu and Settings.
+- [ ] Home drive cards with banners and a running-backup card, as on the Home board.
+- [ ] Rename, Copy, Open with and Create a download link in the file menu.
+- [ ] Bottom navigation bar under 600 px wide.
+- [ ] Fresh captures for every README section; the older captures below show the version 2 look.
+
 ## File hosting for shared files, 2026-11-18
 
 Branch `ai/feature/20261118-file-hosting`. Design boards: `design/file-hosting/`. Ticks mean implemented with focused tests passing; live proof is stated per item.

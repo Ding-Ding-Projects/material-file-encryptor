@@ -1,3 +1,13 @@
+# Material 3 redesign, 2026-11-18
+
+- The whole app follows the new Material 3 design: colour roles from a green seed (light, dark, high contrast and your accent still work), pill buttons, a rounded content panel, Material type sizes, 52 px table rows, rounded menus and dialogs.
+- The sidebar is a Material 3 navigation drawer with a New drive button at the top. It keeps the drive and folder tree, so it stays a drawer rather than a narrow rail.
+- Every labelled button now carries an icon, in the main window, on Home and on the feature pages. A test fails if a new labelled button arrives without one.
+- Docker Hub backup is built for many drives: the running backup sits in one pinned strip, filter chips with live counts (All, Needs attention, Running, Queued, Up to date), search with a regex option, sort, and dense rows that expand in place with every per-drive action.
+- Right-click menus have a header for files, an icon on every item, groups with dividers, the Enter shortcut for Open and Delete in the error colour. The drive row menu on the backup page has icons too.
+- Settings has an icon for each category, the selected one in a filled pill, and a rounded search field.
+- Not yet: Rename, Copy and Open with in the file menu (no handlers yet), a bottom navigation bar on very narrow windows, and the redesigned Home drive cards with banners. See ROADMAP.md.
+
 # File hosting for shared files, 2026-11-18
 
 - New: host your Docker Hub shares as ordinary web links. A setup wizard deploys a small download server on this computer or on an SSH host in one click, with a LAN address, a quick Cloudflare tunnel or your own tunnel.
