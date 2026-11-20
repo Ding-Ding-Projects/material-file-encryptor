@@ -18,7 +18,7 @@ import { NativeClient } from './native-client.js';
 import { VaultSessions } from './vault-sessions.js';
 import { createVaultSessionSettings } from './vault-session-settings.js';
 import { createVaultImageService } from './vault-image-service.js';
-import { createRegistrySyncService } from './registry-sync-service.js';
+import { createRegistrySyncService, BACKUP_PART_SIZE_BYTES } from './registry-sync-service.js';
 import { createRegistryLogin } from './registry-login.js';
 import { createRegistryBackupAll } from './registry-backup-all.js';
 import { createTagDates } from './auto-backup/tag-dates.js';
@@ -244,10 +244,11 @@ async function driveAppearanceRequest(method, params) {
   if (method === 'openStorageFolder') {
     // Opens the drive's encrypted storage folder in Explorer. It only holds ciphertext, so nothing readable is exposed.
     const row = vaultSessions.rows.get(params.sessionId);
-    const storageDir = row?.state?.storageDir || row?.preferences?.storageDir;
-    if (!storageDir) throw Object.assign(Error('This drive has no encrypted storage folder yet.'), { code: 'NO_STORAGE' });
+    const cache = params.which === 'cache';
+    const storageDir = cache ? row?.state?.cacheDir || row?.preferences?.cacheDir : row?.state?.storageDir || row?.preferences?.storageDir;
+    if (!storageDir) throw Object.assign(Error(cache ? 'This drive has no encrypted cache folder yet.' : 'This drive has no encrypted storage folder yet.'), { code: 'NO_STORAGE' });
     const stat = await fs.stat(storageDir).catch(() => null);
-    if (!stat?.isDirectory()) throw Object.assign(Error('The encrypted storage folder is not reachable. It may be on a drive that is not connected.'), { code: 'NO_STORAGE' });
+    if (!stat?.isDirectory()) throw Object.assign(Error(cache ? 'The encrypted cache folder is not reachable. It may be on a drive that is not connected.' : 'The encrypted storage folder is not reachable. It may be on a drive that is not connected.'), { code: 'NO_STORAGE' });
     await openPath(storageDir);
     return { opened: true };
   }
@@ -596,12 +597,25 @@ async function dispatchRequest(method, params, context) {
       await backend('setPerformanceMode', { mode: preferences.performanceMode || 'responsive' });
       await backend('setHistoryRetention', { days: preferences.historyRetentionDays });
       const response = await backend('mount', { driveLetter: params.driveLetter, driveName: preferences.driveName });
+      void ensureStandardPartSize();
       return { ...response, preferences: { ...preferences } };
     });
   }
   const commands = { mount: 'mount', unmount: 'unmount', lockVault: 'lock', keepOffline: 'keepOffline', releaseOffline: 'releaseOffline', setPartSize: 'setPartSize', resplit: 'resplit', sync: 'sync' };
   if(['lockVault','unmount'].includes(method))browserHandoff?.revoke('lock');
   return perform(['lockVault', 'unmount'].includes(method) ? 'unmounting' : method === 'mount' ? 'mounting' : method, () => backend(commands[method], params));
+}
+// Drives made with small parts (older drives were made with 1 MiB) are moved to the standard 80 MiB part size and
+// repacked in the background after unlock. Packing keeps the original parts until the new ones are written, so an
+// interrupted pass leaves the drive readable and the next unlock resumes it.
+async function ensureStandardPartSize() {
+  try {
+    if (!helper) return;
+    const info = await helper.request('storageDiagnostics', {});
+    const current = Number(info?.targetPartSizeBytes);
+    if (!Number.isFinite(current) || current >= BACKUP_PART_SIZE_BYTES) return;
+    await helper.request('startPacking', { partSizeBytes: BACKUP_PART_SIZE_BYTES });
+  } catch { /* Repacking is retried on the next unlock and before every backup. */ }
 }
 async function currentFileInventory() {
   const files=[];let cursor=0,revision;

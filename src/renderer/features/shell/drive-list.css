@@ -79,3 +79,6 @@
 .drive-icon{width:24px;height:24px;border-radius:6px;object-fit:cover;vertical-align:middle;flex:none}
 tr.has-banner>td:first-child{background:linear-gradient(90deg,var(--md-sys-color-surface,#1a1b21) 30%,color-mix(in srgb,var(--md-sys-color-surface,#1a1b21) 50%,transparent)),var(--drive-banner) center/cover no-repeat}
 .drive-appearance-button{margin:6px 0}
+/* Drive details: each encrypted folder path has an Open button beside it. */
+.drive-list-facts .drive-list-path{display:flex;flex-direction:column;align-items:flex-start;gap:4px;margin:0}
+.drive-list-path-text{overflow-wrap:anywhere}

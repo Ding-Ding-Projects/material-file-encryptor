@@ -54,7 +54,7 @@ import {mountHomeDashboard} from './features/home-dashboard/index.js';
 import {mountSettingsLayout} from './features/settings-layout/index.js';
 import {SHELL_COPY} from './features/shell/copy.js';
 import {SHARE_UI_COPY} from './features/share/copy.js';
-import {registerContextActions} from '../shared/surface/overlay.js';
+import {registerContextActions, openContextMenu} from '../shared/surface/overlay.js';
 import {loadShellPreferences,saveShellPreferences,applyShellPreferences,normalizeShellPreferences} from './features/shell/shell-preferences.js';
 const rendererTiming=createRendererTiming(),timingLifetime=new AbortController();
 rendererTiming.finish(rendererTiming.begin('renderer-entry'),'settled');
@@ -597,6 +597,13 @@ function prepareVaultForm(mode) {
 }
 let hubDriveView = null;
 /** The Docker Hub drive dialog is loaded the first time it is needed. It owns no folder choice: the host allocates the folders. */
+// The New drive button in the navigation drawer opens the same choices as the drive list's New menu, anchored to itself.
+function openNewDriveMenu(anchor,event){const pick=(en)=>({en,yue:SHELL_COPY[en]||en});const language=preferences.language==='zh-HK'?'yue':preferences.language;openContextMenu({anchor,event,target:anchor,language,items:[
+ {id:'new:pc',section:0,icon:'computer',label:pick('New drive on this PC'),description:pick('Encrypted folder on this computer.'),run:()=>openVaultDialog('create')},
+ {id:'new:hub',section:0,icon:'cloud',label:pick('New Docker Hub drive'),description:pick('No folder to choose; backed up to Docker Hub.'),run:()=>openHubDrive('create-direct')},
+ {id:'new:open',section:1,icon:'download',label:pick('Open drive from Docker Hub'),description:pick('Restore a drive that is already on Docker Hub.'),run:()=>openHubDrive('open')},
+ {id:'new:existing',section:1,icon:'lock_open',label:{en:'Unlock existing drive',yue:SHELL_COPY['Unlock existing drive']||'解鎖現有磁碟'},description:pick('Choose the encrypted storage folder of a drive made earlier.'),run:()=>$('unlock-button')?.click()}
+]});}
 async function openHubDrive(mode) {
  if (!api?.hubDriveFolders) { showError(t('Docker Hub drives need the Windows desktop app.'),true); return; }
  if (!hubDriveView) {
@@ -629,9 +636,9 @@ async function openDriveAppearance(sessionId = state?.sessionId) {
  const session = (state?.sessions || []).find(item => item.sessionId === sessionId);
  appearanceView.open({ sessionId, name: session?.driveName || state?.driveName || '', images: driveAppearances[sessionId] || {} });
 }
-async function openStorageFolder(sessionId = state?.sessionId) {
+async function openStorageFolder(sessionId = state?.sessionId, which) {
  if (!api?.openStorageFolder || !sessionId) return;
- try { await api.openStorageFolder(sessionId); } catch (error) { showError(error); }
+ try { await api.openStorageFolder(sessionId, which); } catch (error) { showError(error); }
 }
 window.addEventListener('mfe:open-drive-appearance', event => void openDriveAppearance(event.detail?.sessionId));
 let hostingView = null;
@@ -1137,7 +1144,7 @@ async function homeActivityRows() {
  return rows.filter(row=>!Number.isNaN(new Date(row.time).getTime())).sort((a,b)=>new Date(b.time)-new Date(a.time)).slice(0,6);
 }
 function setupEnhancedWorkspace() {
- const main=document.querySelector('mfe-main-workspace');foundation=mountSurfaceFoundation({host:main,before:main.firstChild,storage:localStorage,sounds,language:preferences.language,tabs:[{id:'drive',label:'My drive',labelYue:'我嘅磁碟'},{id:'offline',label:'Available offline',labelYue:'可離線使用'},{id:'history',label:'History',labelYue:'歷史記錄'},{id:'recycle',label:'Recycle Bin',labelYue:'資源回收筒'},{id:'settings',label:'Settings',labelYue:'設定'},{id:'help',label:'How it works',labelYue:'使用方法'}],onActivate:changeView,homeStatus:homeStatusRows,homeActivity:homeActivityRows,commands:workspaceCommands(),onExport:exportText,renderText:t,onNotification:(record,options)=>narrationEvents.notify(record,options),onQuit:()=>quitApplication(),onAddDrive:()=>changeVaultSession('add'),homeDashboard:{state:()=>state,mount:root=>mountHomeDashboard(root,{hooks:{newOnThisPc:()=>openVaultDialog('create'),newHubDrive:()=>openHubDrive('create-direct'),openHubDrive:()=>openHubDrive('open'),backupAll:()=>{foundation.model.openTab({id:'storage',label:'Docker Hub storage'});foundation.shell.activate('storage');},openView:id=>{foundation.model.openTab({id,label:canonicalViewLabels[id]||id});foundation.shell.activate(id);},openDrive:id=>{if(id&&id!==state?.sessionId){const picker=$('vault-session');picker.value=id;picker.dispatchEvent(new Event('change'));}foundation.model.openTab({id:'drive',label:canonicalViewLabels.drive||'My drive'});foundation.shell.activate('drive');}}})},onNotificationAction:async action=>{if(action==='retry-files'){filePageRevision=null;return loadFilePage();}if(action.startsWith('cancel-operation:'))return api.cancelOperation(action.slice('cancel-operation:'.length));if(action==='open-operations'){foundation.shell.activate('drive');$('active-operations').scrollIntoView({block:'center'});return;}throw Error('This recovery action is no longer available.');}});
+ const main=document.querySelector('mfe-main-workspace');foundation=mountSurfaceFoundation({host:main,before:main.firstChild,storage:localStorage,sounds,language:preferences.language,tabs:[{id:'drive',label:'My drive',labelYue:'我嘅磁碟'},{id:'offline',label:'Available offline',labelYue:'可離線使用'},{id:'history',label:'History',labelYue:'歷史記錄'},{id:'recycle',label:'Recycle Bin',labelYue:'資源回收筒'},{id:'settings',label:'Settings',labelYue:'設定'},{id:'help',label:'How it works',labelYue:'使用方法'}],onActivate:changeView,homeStatus:homeStatusRows,homeActivity:homeActivityRows,commands:workspaceCommands(),onExport:exportText,renderText:t,onNotification:(record,options)=>narrationEvents.notify(record,options),onQuit:()=>quitApplication(),onAddDrive:()=>changeVaultSession('add'),onNewDrive:(anchor,event)=>openNewDriveMenu(anchor,event),homeDashboard:{state:()=>state,mount:root=>mountHomeDashboard(root,{hooks:{newOnThisPc:()=>openVaultDialog('create'),newHubDrive:()=>openHubDrive('create-direct'),openHubDrive:()=>openHubDrive('open'),backupAll:()=>{foundation.model.openTab({id:'storage',label:'Docker Hub storage'});foundation.shell.activate('storage');},openView:id=>{foundation.model.openTab({id,label:canonicalViewLabels[id]||id});foundation.shell.activate(id);},openDrive:id=>{if(id&&id!==state?.sessionId){const picker=$('vault-session');picker.value=id;picker.dispatchEvent(new Event('change'));}foundation.model.openTab({id:'drive',label:canonicalViewLabels.drive||'My drive'});foundation.shell.activate('drive');}}})},onNotificationAction:async action=>{if(action==='retry-files'){filePageRevision=null;return loadFilePage();}if(action.startsWith('cancel-operation:'))return api.cancelOperation(action.slice('cancel-operation:'.length));if(action==='open-operations'){foundation.shell.activate('drive');$('active-operations').scrollIntoView({block:'center'});return;}throw Error('This recovery action is no longer available.');}});
  // Offline filtering reuses the drive panel and its persisted layout.
  for(const id of ['drive','history','recycle','settings','help'])foundation.registerPanel(id,$(`view-${id}`));
  for(const [id,label]of Object.entries(canonicalViewLabels))foundation.model.registerCanonicalTab(id,label);
@@ -1177,7 +1184,7 @@ function setupEnhancedWorkspace() {
   driveAppearance:id=>driveAppearances[id]||null,appearanceVersion:()=>appearanceVersion
  }});
  unlockCard=mountUnlockCard({doc:document,translate:t,hooks:{isBusy:()=>busy,chooseKeyFile:()=>api.chooseKeyFile(),unlock:unlockInline}});
- driveList=mountDriveList({doc:document,translate:t,getLanguage:()=>preferences.language,hooks:{openStorage:id=>void openStorageFolder(id),appearance:id=>driveAppearances[id]||null,appearanceVersion:()=>appearanceVersion,openAppearance:id=>void openDriveAppearance(id),selectSession:id=>{const picker=$('vault-session');picker.value=id;picker.dispatchEvent(new Event('change'));},newOnThisPc:()=>openVaultDialog('create'),newHubDrive:()=>openHubDrive('create-direct'),openHubDrive:()=>openHubDrive('open'),openSettings:()=>{foundation.model.openTab({id:'settings',label:canonicalViewLabels.settings||'Settings'});foundation.shell.activate('settings');}}});driveList.update(state);
+ driveList=mountDriveList({doc:document,translate:t,getLanguage:()=>preferences.language,hooks:{openStorage:(id,which)=>void openStorageFolder(id,which),appearance:id=>driveAppearances[id]||null,appearanceVersion:()=>appearanceVersion,openAppearance:id=>void openDriveAppearance(id),selectSession:id=>{const picker=$('vault-session');picker.value=id;picker.dispatchEvent(new Event('change'));},newOnThisPc:()=>openVaultDialog('create'),newHubDrive:()=>openHubDrive('create-direct'),openHubDrive:()=>openHubDrive('open'),openSettings:()=>{foundation.model.openTab({id:'settings',label:canonicalViewLabels.settings||'Settings'});foundation.shell.activate('settings');}}});driveList.update(state);
  foundation.chrome=chrome;foundation.updateChrome=updateChrome;foundation.refreshChrome=()=>{unlockCard?.update(state);driveList?.update(state);chrome?.refreshOverflow();};
  workspaceDisposers.push(subscribeLanguage(()=>{updateChrome();syncShellControls();}));
  applyShellPreferences(document.documentElement,shellPreferences);syncShellControls();chrome.refreshViewport();
