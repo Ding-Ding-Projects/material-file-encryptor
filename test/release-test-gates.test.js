@@ -8,9 +8,9 @@ function releaseProblems(text, receipt) {
   const problems = [];
   if (/node\s+--test|dotnet\s+run\s+--project\s+\S*\.Tests|MFE_VERIFIED_CI_TEST_GATES/.test(text + receipt)) problems.push('CI test execution or inference');
   if (!receipt.includes('testsRunInCI=$false; ciTestGates=@()')) problems.push('untruthful test receipt');
-  // The publication check is paused as a release prerequisite but must stay defined so it still reports.
-  if (!text.includes('needs: [select-runner]') && !text.includes('needs: [select-runner, publication-language]')) problems.push('runner prerequisite missing');
-  if (!/^  publication-language:\r?$/m.test(text)) problems.push('publication check job removed');
+  // The publication scan was removed from the release workflow at the owner's request (2026-11-19); releases need only the runner.
+  if (!text.includes('needs: [select-runner]')) problems.push('runner prerequisite missing');
+  if (/^  publication-language:\r?$/m.test(text)) problems.push('publication scan is back in the release workflow');
   if (/^    env:\r?\n      GH_TOKEN:/m.test(text)) problems.push('job-wide release authority');
   return problems;
 }
@@ -26,6 +26,6 @@ test('release contract rejects test execution, invented receipts and broad autho
   assert.ok(releaseProblems(workflow + '\nrun: node --test test/example.test.js', publisher).length);
   assert.ok(releaseProblems(workflow, publisher.replace('testsRunInCI=$false', 'testsRunInCI=$true')).length);
   assert.ok(releaseProblems(workflow.replace('needs: [select-runner]', 'needs: other'), publisher).length);
-  assert.ok(releaseProblems(workflow.replace(/^  publication-language:\r?$/m, '  publication-removed:'), publisher).length);
+  assert.ok(releaseProblems(workflow.replace('jobs:', 'jobs:\n  publication-language:'), publisher).length);
   assert.ok(releaseProblems(workflow + '\n    env:\n      GH_TOKEN: broad\n', publisher).length);
 });
