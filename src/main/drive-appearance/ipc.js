@@ -7,7 +7,7 @@ const SESSION = /^[A-Za-z0-9_-]{1,64}$/;
 export function validateAppearanceRequest(method, value = {}) {
   if (!plain(value)) throw invalid();
   if (method === 'driveAppearanceList') { if (Object.keys(value).length) throw invalid(); return {}; }
-  if (method === 'openStorageFolder') { if (Object.keys(value).some(key => key !== 'sessionId') || !SESSION.test(value.sessionId ?? '')) throw invalid(); return { sessionId: value.sessionId }; }
+  if (method === 'openStorageFolder') { if (Object.keys(value).some(key => key !== 'sessionId' && key !== 'which') || !SESSION.test(value.sessionId ?? '') || (value.which !== undefined && value.which !== 'storage' && value.which !== 'cache')) throw invalid(); return value.which === 'cache' ? { sessionId: value.sessionId, which: 'cache' } : { sessionId: value.sessionId }; }
   const allowed = method === 'driveAppearanceChoose' ? ['sessionId', 'kind', 'acknowledged'] : ['sessionId', 'kind'];
   if (Object.keys(value).some(key => !allowed.includes(key)) || !SESSION.test(value.sessionId ?? '') || !['icon', 'banner'].includes(value.kind)) throw invalid();
   if (method === 'driveAppearanceChoose' && value.acknowledged !== true) throw invalid();

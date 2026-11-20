@@ -115,9 +115,15 @@ export function mountDriveList({doc = document, translate, getLanguage, hooks}) 
     if (hooks.openAppearance) { const change = node('md-outlined-button', {text: t('Icon and banner…'), class: 'drive-appearance-button'}); withIcon(change, 'image'); change.addEventListener('click', () => hooks.openAppearance(session.sessionId)); details.append(change); }
     if (hooks.openStorage) { const open = node('md-outlined-button', {text: t('Open encrypted storage folder'), class: 'drive-appearance-button'}); withIcon(open, 'folder'); open.addEventListener('click', () => hooks.openStorage(session.sessionId)); details.append(open); }
     const list = node('dl', {class: 'drive-list-facts'});
-    const fact = (label, value) => { if (!value) return; list.append(node('dt', {text: t(label)}), node('dd', {text: value, title: value})); };
-    fact('Encrypted storage', state?.storageDir || '');
-    fact('Encrypted cache', state?.cacheDir || '');
+    const fact = (label, value, which) => {
+      if (!value) return;
+      const dd = node('dd', {class: which ? 'drive-list-path' : '', title: value}, [node('span', {class: 'drive-list-path-text', text: value})]);
+      // Each folder has its own Open button beside its path, so the path is never just text to copy by hand.
+      if (which && hooks.openStorage) { const open = node('md-text-button', {class: 'drive-list-path-open', 'data-open': which, 'aria-label': t(which === 'cache' ? 'Open encrypted cache folder' : 'Open encrypted storage folder')}, [node('span', {text: t('Open')})]); withIcon(open, 'folder'); open.addEventListener('click', () => hooks.openStorage(session.sessionId, which)); dd.append(open); }
+      list.append(node('dt', {text: t(label)}), dd);
+    };
+    fact('Encrypted storage', state?.storageDir || '', 'storage');
+    fact('Encrypted cache', state?.cacheDir || '', 'cache');
     fact('Drive letter', letter);
     details.append(list);
   }
